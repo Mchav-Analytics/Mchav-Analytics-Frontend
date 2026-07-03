@@ -1,0 +1,38 @@
+# Dependency directories
+/frontend/node_modules/
+/backend/venv/
+/backend/env/
+env/
+venv/
+
+# Environment variables (secrets)
+/backend/.env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python caches and compiled files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+/backend/__pycache__/
+
+# Production builds
+/frontend/dist/
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
