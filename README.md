@@ -1,131 +1,16 @@
-# MCHAV Analytics Frontend
+# React + Vite
 
-> Dashboard interactivo para visualización de KPIs y métricas de equipos de desarrollo integrados con Jira Cloud.
+This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
-![React](https://img.shields.io/badge/React-TypeScript-61DAFB?style=for-the-badge\&logo=react)
-![Vite](https://img.shields.io/badge/Vite-Frontend-646CFF?style=for-the-badge\&logo=vite)
-![Chart.js](https://img.shields.io/badge/Charts-Chart.js-FF6384?style=for-the-badge\&logo=chartdotjs)
-![JWT](https://img.shields.io/badge/Auth-JWT-black?style=for-the-badge)
+Currently, two official plugins are available:
 
----
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-## Descripción
+## React Compiler
 
-MCHAV Analytics Frontend es el cliente web encargado de visualizar métricas de rendimiento de equipos de desarrollo mediante dashboards dinámicos, gráficos interactivos y analítica en tiempo real.
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-La plataforma consume la API del backend para transformar datos de Jira Cloud en información estratégica.
+## Expanding the Oxlint configuration
 
----
-
-## Características
-
-* Dashboards interactivos en tiempo real
-* Visualización de KPIs mediante gráficos
-* Autenticación JWT
-* Rutas protegidas y control por roles
-* Filtros por sprint, proyecto y rango de fechas
-* Exportación de reportes PDF
-* Diseño responsive
-* Integración con API REST FastAPI
-
----
-
-## KPIs Soportados
-
-* Sprint Velocity
-* Lead Time
-* Cycle Time
-* Throughput
-* Reopen Rate
-* Resolution Rate
-
----
-
-## Stack Tecnológico
-
-| Tecnología   | Propósito              |
-| ------------ | ---------------------- |
-| React        | Interfaz frontend      |
-| TypeScript   | Tipado seguro          |
-| Vite         | Bundler                |
-| Chart.js     | Visualización de datos |
-| Axios        | Comunicación con API   |
-| React Router | Navegación             |
-| JWT          | Autenticación          |
-
----
-
-## Estructura del Proyecto
-
-```bash
-src/
-├── components/
-├── pages/
-├── services/
-├── hooks/
-├── routes/
-├── context/
-├── assets/
-└── utils/
-```
-
----
-
-## Instalación
-
-### Clonar repositorio
-
-```bash
-git clone https://github.com/tu-org/mchav-analytics-frontend.git
-```
-
----
-
-### Instalar dependencias
-
-```bash
-npm install
-```
-
----
-
-### Variables de entorno
-
-```env
-VITE_API_URL=http://localhost:8000
-```
-
----
-
-### Ejecutar proyecto
-
-```bash
-npm run dev
-```
-
----
-
-## Seguridad
-
-* Autenticación JWT
-* Rutas protegidas
-* Control de acceso por roles
-* Comunicación segura con API
-
----
-
-## Capturas
-
-Agregar:
-
-* Login
-* Dashboard
-* KPIs
-* Gráficos
-* Reportes
-
----
-
-## Equipo
-
-Desarrollado para Grupo ASD SAS bajo metodología Scrum.
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
