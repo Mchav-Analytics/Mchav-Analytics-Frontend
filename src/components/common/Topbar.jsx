@@ -9,7 +9,9 @@ function Topbar({
   setSelectedProjectId, 
   syncLoading, 
   handleSyncNow,
-  userProfile
+  userProfile,
+  dateFilter,
+  setDateFilter
 }) {
   
   // Obtener iniciales del usuario para el avatar
@@ -30,27 +32,24 @@ function Topbar({
       </div>
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        {/* Botón Sincronizar (MCHAV) */}
-        {handleSyncNow && (
-          <button 
-            onClick={handleSyncNow} 
-            disabled={syncLoading} 
-            className="sync-btn"
-            style={{ height: '34px', padding: '0 12.5px', fontSize: '0.8rem', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', margin: '0' }}
-          >
-            <RefreshCw size={14} className={syncLoading ? 'animate-spin' : ''} />
-            {syncLoading ? "Sincronizando..." : "Sincronizar"}
-          </button>
-        )}
+
 
         {/* Filtro Rango Fecha */}
-        <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem' }}>
-          <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>📅</span>
-          <select style={{ border: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
-            <option>1 may - 31 may 2025</option>
-            <option>Todos los tiempos</option>
-          </select>
-        </div>
+        {setDateFilter && (
+          <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem' }}>
+            <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>📅</span>
+            <select 
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              style={{ border: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
+            >
+              <option value="all">Todos los tiempos</option>
+              <option value="30d">Últimos 30 días</option>
+              <option value="60d">Últimos 2 meses</option>
+              <option value="90d">Últimos 3 meses</option>
+            </select>
+          </div>
+        )}
 
         {/* Filtro Proyecto */}
         {setSelectedProjectId && (
@@ -71,11 +70,7 @@ function Topbar({
           </div>
         )}
 
-        {/* Notificaciones */}
-        <button style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '50%', width: '38px', height: '38px', position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-main)' }}>
-          <span style={{ fontSize: '1.1rem' }}>🔔</span>
-          <span style={{ position: 'absolute', top: '2px', right: '2px', background: '#EF4444', color: 'white', borderRadius: '50%', width: '16px', height: '16px', fontSize: '0.65rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>3</span>
-        </button>
+
 
         {/* Perfil */}
         <div 

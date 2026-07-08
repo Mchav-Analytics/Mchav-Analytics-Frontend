@@ -15,9 +15,12 @@ function MainLayout({
   syncLoading,
   handleSyncNow,
   topbarTitle,
-  topbarSubtitle
+  topbarSubtitle,
+  dateFilter,
+  setDateFilter
 }) {
   const [userProfile, setUserProfile] = useState(null);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Cargar perfil de usuario en el layout
   useEffect(() => {
@@ -31,12 +34,14 @@ function MainLayout({
   }, []);
 
   return (
-    <div className={`dashboard-layout ${isDarkMode ? 'dark-theme' : ''}`}>
+    <div className={`dashboard-layout ${isDarkMode ? 'dark-theme dark' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <Sidebar 
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
         isDarkMode={isDarkMode} 
         setIsDarkMode={setIsDarkMode} 
+        isCollapsed={isSidebarCollapsed}
+        setIsCollapsed={setIsSidebarCollapsed}
       />
       
       <main className="main-content">
@@ -49,6 +54,8 @@ function MainLayout({
           syncLoading={syncLoading}
           handleSyncNow={handleSyncNow}
           userProfile={userProfile}
+          dateFilter={dateFilter}
+          setDateFilter={setDateFilter}
         />
         
         <div className="dashboard-inner">

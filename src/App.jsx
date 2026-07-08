@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './index.css';
 
@@ -6,16 +6,16 @@ import './index.css';
 import LoginView from './views/auth/LoginView';
 import MainLayout from './components/common/MainLayout';
 import DashboardView from './views/common/DashboardView';
-import MetricsView from './views/common/MetricsView';
-import SyncView from './views/admin/SyncView';
-import ConfigView from './views/admin/ConfigView';
+import UserManagementTab from './views/admin/UserManagementTab';
+import SystemSyncTab from './views/admin/SystemSyncTab';
 
 // Servicios API
 import { jiraService, projectService } from './services/api';
 
 function Dashboard() {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'proyectos' | 'sincronizacion' | 'configuracion'
+  const [dateFilter, setDateFilter] = useState('all');
   
   // Estados para métricas "al vuelo"
   const [metrics, setMetrics] = useState({
@@ -42,11 +42,6 @@ function Dashboard() {
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
 
-  // Estados para configuración de flujos
-  const [projectStatuses, setProjectStatuses] = useState([]);
-  const [statusMappings, setStatusMappings] = useState({});
-  const [configLoading, setConfigLoading] = useState(false);
-  const [configSuccessMsg, setConfigSuccessMsg] = useState('');
 
   // 1. Cargar métricas generales al inicio
   useEffect(() => {
@@ -129,6 +124,27 @@ function Dashboard() {
       });
   };
 
+  const filteredKpis = useMemo(() => {
+    if (!kpis || kpis.length === 0 || dateFilter === 'all') return kpis;
+    const now = new Date();
+    return kpis.filter(kpi => {
+      let targetDate = new Date(kpi.fecha_calculo);
+      if (kpi.id_sprint) {
+        const spr = sprints.find(s => s.id_sprint === kpi.id_sprint);
+        if (spr && spr.fecha_fin) {
+          targetDate = new Date(spr.fecha_fin);
+        }
+      }
+      const diffTime = Math.abs(now - targetDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (dateFilter === '30d') return diffDays <= 30;
+      if (dateFilter === '60d') return diffDays <= 60;
+      if (dateFilter === '90d') return diffDays <= 90;
+      return true;
+    });
+  }, [kpis, dateFilter, sprints]);
+
   const fetchSyncLogs = () => {
     jiraService.getSyncLogs()
       .then(data => {
@@ -139,64 +155,7 @@ function Dashboard() {
       });
   };
 
-  // Cargar configuraciones si estamos en la pestaña de configuración
-  useEffect(() => {
-    if (activeTab === 'configuracion' && selectedProjectId) {
-      fetchProjectStatusesAndMappings(selectedProjectId);
-    }
-  }, [activeTab, selectedProjectId]);
 
-  const fetchProjectStatusesAndMappings = (projectId) => {
-    setConfigLoading(true);
-    setConfigSuccessMsg('');
-    
-    Promise.all([
-      projectService.getStatuses(projectId),
-      projectService.getMappings(projectId)
-    ])
-      .then(([statuses, mappings]) => {
-        setProjectStatuses(statuses);
-        
-        const mappingObj = {};
-        mappings.forEach(m => {
-          mappingObj[m.estado_jira] = m.estado_base;
-        });
-        setStatusMappings(mappingObj);
-        setConfigLoading(false);
-      })
-      .catch(err => {
-        console.error("Error loading config:", err);
-        setConfigLoading(false);
-      });
-  };
-
-  const handleSaveMappings = () => {
-    setConfigLoading(true);
-    setConfigSuccessMsg('');
-    
-    const mappingsData = Object.entries(statusMappings).map(([estado_jira, estado_base]) => ({
-      estado_jira,
-      estado_base
-    }));
-    
-    projectService.saveMappings(selectedProjectId, mappingsData)
-      .then(() => {
-        setConfigSuccessMsg("Configuración de flujo guardada y KPIs recalculados con éxito.");
-        setConfigLoading(false);
-        fetchKpis(selectedProjectId, selectedSprintId);
-      })
-      .catch(err => {
-        console.error("Error saving mappings:", err);
-        setConfigLoading(false);
-      });
-  };
-
-  const handleMappingChange = (statusName, baseState) => {
-    setStatusMappings(prev => ({
-      ...prev,
-      [statusName]: baseState
-    }));
-  };
 
   const handleSyncNow = () => {
     setSyncLoading(true);
@@ -237,16 +196,17 @@ function Dashboard() {
           title: "Métricas de Rendimiento 📈",
           subtitle: "Analíticas avanzadas del rendimiento del equipo en sprints."
         };
+      case 'usuarios':
+        return {
+          title: "Seguridad y RBAC 🔐",
+          subtitle: "Control de accesos y administración de roles del equipo."
+        };
       case 'sincronizacion':
         return {
           title: "Auditoría de ETL 🔄",
           subtitle: "Historial de sincronización y estado de los datos."
         };
-      case 'configuracion':
-        return {
-          title: "Mapeo de Flujos 🛠️",
-          subtitle: "Configuración personalizada para el motor de KPIs."
-        };
+
       case 'dashboard':
       default:
         return {
@@ -271,6 +231,8 @@ function Dashboard() {
       handleSyncNow={activeTab === 'dashboard' ? handleSyncNow : null} // Solo mostrar botón sinc en Topbar para el Dashboard
       topbarTitle={headerDetails.title}
       topbarSubtitle={headerDetails.subtitle}
+      dateFilter={dateFilter}
+      setDateFilter={setDateFilter}
     >
       {activeTab === 'dashboard' && (
         <DashboardView 
@@ -278,43 +240,18 @@ function Dashboard() {
           metricsLoading={metricsLoading}
           metricsError={metricsError}
           syncSuccessMsg={syncSuccessMsg}
-          kpis={kpis}
+          kpis={filteredKpis}
           selectedProjectId={selectedProjectId}
           setActiveTab={setActiveTab}
         />
       )}
 
-      {activeTab === 'proyectos' && (
-        <MetricsView 
-          selectedProjectId={selectedProjectId}
-          setSelectedProjectId={setSelectedProjectId}
-          projects={projects}
-          selectedSprintId={selectedSprintId}
-          setSelectedSprintId={setSelectedSprintId}
-          sprints={sprints}
-          kpis={kpis}
-          kpisLoading={kpisLoading}
-        />
-      )}
-
       {activeTab === 'sincronizacion' && (
-        <SyncView 
-          syncLogs={syncLogs}
-        />
+        <SystemSyncTab />
       )}
 
-      {activeTab === 'configuracion' && (
-        <ConfigView 
-          selectedProjectId={selectedProjectId}
-          setSelectedProjectId={setSelectedProjectId}
-          projects={projects}
-          configLoading={configLoading}
-          projectStatuses={projectStatuses}
-          configSuccessMsg={configSuccessMsg}
-          statusMappings={statusMappings}
-          handleMappingChange={handleMappingChange}
-          handleSaveMappings={handleSaveMappings}
-        />
+      {activeTab === 'usuarios' && (
+        <UserManagementTab />
       )}
     </MainLayout>
   );

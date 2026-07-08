@@ -1,7 +1,7 @@
 import React from 'react';
 
-const Logo = () => (
-  <svg viewBox="0 0 200 200" style={{ width: '38px', height: '38px', marginRight: '8px' }}>
+const Logo = ({ style }) => (
+  <svg viewBox="0 0 200 200" style={{ width: '38px', height: '38px', marginRight: '8px', ...style }}>
     <defs>
       <linearGradient id="mchavLogoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
         <stop offset="0%" stopColor="#1e3a8a" />
