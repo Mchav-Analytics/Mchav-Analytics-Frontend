@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   RefreshCcw, 
   Clock, 
@@ -10,6 +10,7 @@ import {
   Zap,
   Settings2
 } from 'lucide-react';
+import { jiraService } from '../../services/api';
 
 interface SyncStatus {
   lastSync: string;
@@ -55,18 +56,50 @@ const initialLogs: SyncLog[] = [
 
 export default function SystemSyncTab() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
-    lastSync: '2026-07-06 23:00:00',
-    nextScheduledSync: '2026-07-07 23:00:00',
+    lastSync: 'Sin registros',
+    nextScheduledSync: 'Hoy 23:00:00',
     status: 'IDLE'
   });
   
-  const [logs, setLogs] = useState<SyncLog[]>(initialLogs);
+  const [logs, setLogs] = useState<SyncLog[]>([]);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [syncErrorMsg, setSyncErrorMsg] = useState('');
   
   // Configuración de Cron
   const [cronTime, setCronTime] = useState('23:00');
   const [savedCronTime, setSavedCronTime] = useState('23:00');
   const [isSavingCron, setIsSavingCron] = useState(false);
+
+  const mapApiLogToSyncLog = (apiLog: any): SyncLog => ({
+    id: `log-${apiLog.id_log}`,
+    timestamp: apiLog.fecha_ejecucion.replace('T', ' ').substring(0, 19),
+    executionType: apiLog.tipo_sincronizacion === 'AUTOMATIC' ? 'AUTOMATIC' : 'MANUAL',
+    processedIssues: apiLog.issues_procesados,
+    durationSeconds: apiLog.tiempo_ejecucion_segundos,
+    result: apiLog.resultado === 'SUCCESS' ? 'SUCCESS' : 'FAILED'
+  });
+
+  const fetchLogsFromApi = () => {
+    jiraService.getSyncLogs()
+      .then((data: any[]) => {
+        const mapped = data.map(mapApiLogToSyncLog);
+        setLogs(mapped);
+        if (mapped.length > 0) {
+          setSyncStatus(prev => ({
+            ...prev,
+            lastSync: mapped[0].timestamp,
+            status: data[0].resultado === 'RUNNING' ? 'SYNCING' : (data[0].resultado === 'FAILED' ? 'FAILED' : 'IDLE')
+          }));
+        }
+      })
+      .catch(err => {
+        console.error("Error fetching sync logs on SystemSyncTab:", err);
+      });
+  };
+
+  useEffect(() => {
+    fetchLogsFromApi();
+  }, []);
 
   const handleCronTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCronTime(e.target.value);
@@ -78,7 +111,6 @@ export default function SystemSyncTab() {
       setSavedCronTime(cronTime);
       setIsSavingCron(false);
       
-      // Actualizar la fecha de la próxima sincronización para reflejar la nueva hora
       const nextDate = syncStatus.nextScheduledSync.split(' ')[0];
       setSyncStatus(prev => ({
         ...prev,
@@ -92,33 +124,49 @@ export default function SystemSyncTab() {
     
     setSyncStatus(prev => ({ ...prev, status: 'SYNCING' }));
     setShowSuccessAlert(false);
+    setSyncErrorMsg('');
 
-    // Simulate FastAPI Background Worker delay (3 seconds)
-    setTimeout(() => {
-      const now = new Date();
-      const newTimestamp = now.toISOString().replace('T', ' ').substring(0, 19);
-      
-      const newLog: SyncLog = {
-        id: `log-${Date.now().toString().slice(-4)}`,
-        timestamp: newTimestamp,
-        executionType: 'MANUAL',
-        processedIssues: Math.floor(Math.random() * 50) + 5,
-        durationSeconds: 3,
-        result: 'SUCCESS'
-      };
-
-      setLogs(prev => [newLog, ...prev]);
-      setSyncStatus(prev => ({ 
-        ...prev, 
-        status: 'IDLE',
-        lastSync: newTimestamp
-      }));
-      
-      setShowSuccessAlert(true);
-      
-      // Hide alert after 4 seconds
-      setTimeout(() => setShowSuccessAlert(false), 4000);
-    }, 3000);
+    jiraService.triggerSync()
+      .then(() => {
+        let attempts = 0;
+        const interval = setInterval(() => {
+          jiraService.getSyncLogs()
+            .then((logRes: any[]) => {
+              const mapped = logRes.map(mapApiLogToSyncLog);
+              setLogs(mapped);
+              attempts++;
+              
+              if (logRes.length > 0) {
+                const latestLog = logRes[0];
+                if (latestLog.resultado !== 'RUNNING' || attempts > 15) {
+                  clearInterval(interval);
+                  setSyncStatus(prev => ({
+                    ...prev,
+                    status: latestLog.resultado === 'SUCCESS' ? 'IDLE' : 'FAILED',
+                    lastSync: mapped[0].timestamp
+                  }));
+                  
+                  if (latestLog.resultado === 'SUCCESS') {
+                    setShowSuccessAlert(true);
+                    setTimeout(() => setShowSuccessAlert(false), 5000);
+                  } else {
+                    setSyncErrorMsg(latestLog.detalle_error || "Error durante la ejecución del job.");
+                  }
+                }
+              }
+            })
+            .catch(err => {
+              console.error("Error polling logs:", err);
+              clearInterval(interval);
+              setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
+            });
+        }, 3000);
+      })
+      .catch(err => {
+        console.error("Error triggerSync:", err);
+        setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
+        setSyncErrorMsg("No se pudo iniciar el proceso en segundo plano.");
+      });
   };
 
   return (
@@ -140,6 +188,13 @@ export default function SystemSyncTab() {
         <div className="animate-in slide-in-from-top-2 fade-in duration-300 flex items-center gap-3 p-4 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-800 dark:text-emerald-400">
           <CheckCircle2 size={18} />
           <p className="text-sm font-medium">Sincronización manual completada con éxito. Base de datos actualizada.</p>
+        </div>
+      )}
+
+      {syncErrorMsg && (
+        <div className="animate-in slide-in-from-top-2 fade-in duration-300 flex items-center gap-3 p-4 rounded-lg bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-800 dark:text-rose-400">
+          <XCircle size={18} />
+          <p className="text-sm font-medium">Error de Sincronización: {syncErrorMsg}</p>
         </div>
       )}
 

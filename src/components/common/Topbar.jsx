@@ -73,11 +73,21 @@ function Topbar({
 
 
         {/* Perfil */}
-        <div 
-          style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.85rem' }}
-          title={userProfile ? `${userProfile.nombre} (${userProfile.rol || 'Sin Rol'})` : 'Usuario'}
-        >
-          {getUserInitials()}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }} className="user-profile-text">
+            <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-main)', lineHeight: '1.2' }}>
+              {userProfile ? userProfile.nombre : 'Usuario'}
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.2' }}>
+              {userProfile && userProfile.rol ? userProfile.rol : 'Administrador'}
+            </span>
+          </div>
+          <div 
+            style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.85rem' }}
+            title={userProfile ? `${userProfile.nombre} (${userProfile.rol || 'Administrador'})` : 'Usuario'}
+          >
+            {getUserInitials()}
+          </div>
         </div>
       </div>
     </header>
