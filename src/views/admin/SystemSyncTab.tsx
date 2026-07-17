@@ -29,7 +29,7 @@ interface SyncLog {
   executionType: 'AUTOMATIC' | 'MANUAL';
   processedIssues: number;
   durationSeconds: number;
-  result: 'SUCCESS' | 'FAILED';
+  result: 'SUCCESS' | 'FAILED' | 'RUNNING';
   ejecutadoPor: string;
   detalleError?: string;
 }
@@ -59,7 +59,7 @@ export default function SystemSyncTab() {
     executionType: apiLog.tipo_sincronizacion === 'AUTOMATIC' ? 'AUTOMATIC' : 'MANUAL',
     processedIssues: apiLog.issues_procesados,
     durationSeconds: apiLog.tiempo_ejecucion_segundos,
-    result: apiLog.resultado === 'SUCCESS' ? 'SUCCESS' : 'FAILED',
+    result: apiLog.resultado as 'SUCCESS' | 'FAILED' | 'RUNNING',
     ejecutadoPor: apiLog.ejecutado_por || 'Sistema',
     detalleError: apiLog.detalle_error
   });
@@ -466,6 +466,10 @@ export default function SystemSyncTab() {
                             {log.result === 'SUCCESS' ? (
                               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
                                 <CheckCircle2 size={12} /> Completado
+                              </span>
+                            ) : log.result === 'RUNNING' ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
+                                <RefreshCcw size={12} className="animate-spin" /> Procesando...
                               </span>
                             ) : (
                               <div className="relative group inline-block">
