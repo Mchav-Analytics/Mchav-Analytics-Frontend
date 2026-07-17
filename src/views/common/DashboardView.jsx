@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { 
   ClipboardList, 
   CheckCircle, 
@@ -67,13 +67,49 @@ function DashboardView({
   selectedProjectId,
   setActiveTab 
 }) {
+  const [selectedSprintId, setSelectedSprintId] = useState('general');
+
+  // Resetear el selector a general si cambia de proyecto
+  useEffect(() => {
+    setSelectedSprintId('general');
+  }, [selectedProjectId]);
+
+  const sprintsList = useMemo(() => {
+    if (!kpis) return [];
+    const unique = [];
+    const seen = new Set();
+    for (const k of kpis) {
+      if (k.id_sprint && !seen.has(k.id_sprint)) {
+        seen.add(k.id_sprint);
+        unique.push({ id_sprint: k.id_sprint, nombre: k.sprintName });
+      }
+    }
+    return unique;
+  }, [kpis]);
+
+  const activeKpi = useMemo(() => {
+    if (!kpis || kpis.length === 0) return null;
+    if (selectedSprintId === 'general') {
+      return kpis.find(k => k.id_sprint === null || k.id_sprint === undefined) || kpis[0];
+    }
+    return kpis.find(k => k.id_sprint === selectedSprintId) || kpis[0];
+  }, [kpis, selectedSprintId]);
+
+  const prevKpi = useMemo(() => {
+    if (!kpis || kpis.length < 2) return null;
+    if (selectedSprintId === 'general') {
+      return null;
+    }
+    const sprintKpis = kpis.filter(k => k.id_sprint !== null && k.id_sprint !== undefined);
+    const idx = sprintKpis.findIndex(k => k.id_sprint === selectedSprintId);
+    if (idx > 0) return sprintKpis[idx - 1];
+    return null;
+  }, [kpis, selectedSprintId]);
+
   const sparklineData = useMemo(() => {
     if (!kpis || kpis.length === 0) return [];
     return kpis.slice(-7);
   }, [kpis]);
-
-  const latestKpi = kpis && kpis.length > 0 ? kpis[kpis.length - 1] : null;
-  const prevKpi = kpis && kpis.length > 1 ? kpis[kpis.length - 2] : null;
 
   return (
     <div className="w-full space-y-8">
@@ -101,7 +137,28 @@ function DashboardView({
         <>
           {/* SECCIÓN 1: VOLUMEN Y VELOCIDAD */}
           <div className="space-y-4">
-            <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">⚡ Volumen y Velocidad de Trabajo</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
+              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">⚡ Volumen y Velocidad de Trabajo</h2>
+              
+              {/* Selector de Sprint Local */}
+              {sprintsList.length > 0 && (
+                <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center' }}>
+                  <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>🏃</span>
+                  <select 
+                    value={selectedSprintId} 
+                    onChange={(e) => setSelectedSprintId(e.target.value)}
+                    style={{ border: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}
+                  >
+                    <option value="general" className="bg-white dark:bg-slate-900">Proyecto General (Acumulado)</option>
+                    {sprintsList.map(s => (
+                      <option key={s.id_sprint} value={s.id_sprint} className="bg-white dark:bg-slate-900">
+                        {s.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
               {/* Tickets Activos */}
@@ -132,11 +189,11 @@ function DashboardView({
                 </div>
                 <div className="mt-2 relative z-10">
                   <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {latestKpi ? latestKpi.throughput_issues : (metrics.completed_tickets || 0)}
+                    {activeKpi ? activeKpi.throughput_issues : (metrics.completed_tickets || 0)}
                   </p>
                   <div className="mt-1">
                     <TrendBadge 
-                      current={latestKpi ? latestKpi.throughput_issues : null} 
+                      current={activeKpi ? activeKpi.throughput_issues : null} 
                       previous={prevKpi ? prevKpi.throughput_issues : null} 
                     />
                   </div>
@@ -163,11 +220,11 @@ function DashboardView({
                 </div>
                 <div className="mt-2 relative z-10">
                   <p className="text-3xl font-bold text-slate-900 dark:text-white">
-                    {latestKpi ? latestKpi.velocity_total_sp : "0"}
+                    {activeKpi ? activeKpi.velocity_total_sp : "0"}
                   </p>
                   <div className="mt-1">
                     <TrendBadge 
-                      current={latestKpi ? latestKpi.velocity_total_sp : null} 
+                      current={activeKpi ? activeKpi.velocity_total_sp : null} 
                       previous={prevKpi ? prevKpi.velocity_total_sp : null} 
                     />
                   </div>
@@ -230,11 +287,11 @@ function DashboardView({
                   </div>
                   <div className="mt-4">
                     <p className="text-4xl font-bold text-slate-900 dark:text-white">
-                      {latestKpi ? `${latestKpi.cycle_time_promedio_dias}d` : "N/A"}
+                      {activeKpi ? `${Number(activeKpi.cycle_time_promedio_dias).toFixed(1)}d` : "0d"}
                     </p>
                     <div className="mt-2">
                       <TrendBadge 
-                        current={latestKpi ? latestKpi.cycle_time_promedio_dias : null} 
+                        current={activeKpi ? activeKpi.cycle_time_promedio_dias : null} 
                         previous={prevKpi ? prevKpi.cycle_time_promedio_dias : null} 
                         inverse={true}
                       />
@@ -252,11 +309,11 @@ function DashboardView({
                   </div>
                   <div className="mt-4">
                     <p className="text-4xl font-bold text-slate-900 dark:text-white">
-                      {latestKpi ? `${latestKpi.lead_time_promedio_dias}d` : "N/A"}
+                      {activeKpi ? `${Number(activeKpi.lead_time_promedio_dias).toFixed(1)}d` : "0d"}
                     </p>
                     <div className="mt-2">
                       <TrendBadge 
-                        current={latestKpi ? latestKpi.lead_time_promedio_dias : null} 
+                        current={activeKpi ? activeKpi.lead_time_promedio_dias : null} 
                         previous={prevKpi ? prevKpi.lead_time_promedio_dias : null} 
                         inverse={true}
                       />
