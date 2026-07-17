@@ -123,19 +123,21 @@ export default function SystemSyncTab() {
               
               if (logRes.length > 0) {
                 const latestLog = logRes[0];
-                if (latestLog.resultado !== 'RUNNING' || attempts > 15) {
+                if (latestLog.result !== 'RUNNING' || attempts > 120) {
                   clearInterval(interval);
                   setSyncStatus(prev => ({
                     ...prev,
-                    status: latestLog.resultado === 'SUCCESS' ? 'IDLE' : 'FAILED',
+                    status: latestLog.result === 'SUCCESS' ? 'IDLE' : (latestLog.result === 'RUNNING' ? 'SYNCING' : 'FAILED'),
                     lastSync: formatTimestamp(mapped[0].timestamp)
                   }));
                   
-                  if (latestLog.resultado === 'SUCCESS') {
+                  if (latestLog.result === 'SUCCESS') {
                     setShowSuccessAlert(true);
                     setTimeout(() => setShowSuccessAlert(false), 5000);
+                  } else if (latestLog.result === 'RUNNING') {
+                    setSyncErrorMsg("La sincronización está tomando más tiempo del habitual, pero sigue ejecutándose en segundo plano.");
                   } else {
-                    setSyncErrorMsg(latestLog.detalle_error || "Error durante la ejecución del job.");
+                    setSyncErrorMsg(latestLog.detalleError || "Error durante la ejecución del job.");
                   }
                 }
               }
@@ -212,51 +214,7 @@ export default function SystemSyncTab() {
   });
 
   return (
-    <main className="main-content">
-      {/* Topbar maquetada */}
-      <header className="topbar flex items-center justify-between pb-6 mb-6 border-b border-slate-200 dark:border-slate-800">
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--text-main)', margin: '0px' }}>
-            Auditoría de ETL 🔄
-          </h1>
-          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '0px' }}>
-            Historial de sincronización y estado de los datos.
-          </p>
-        </div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem' }}>
-            <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>📅</span>
-            <select 
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              style={{ borderWidth: 'medium', borderStyle: 'none', borderColor: 'currentcolor', borderImage: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-            >
-              <option value="all">Todos los tiempos</option>
-              <option value="30d">Últimos 30 días</option>
-              <option value="60d">Últimos 2 meses</option>
-              <option value="90d">Últimos 3 meses</option>
-            </select>
-          </div>
-          
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <div className="user-profile-text" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.2 }}>
-                salamancamai12
-              </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.2 }}>
-                Administrador
-              </span>
-            </div>
-            <div 
-              title="salamancamai12 (Administrador)" 
-              style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, rgb(30, 58, 138) 0%, rgb(13, 148, 136) 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.85rem' }}
-            >
-              SA
-            </div>
-          </div>
-        </div>
-      </header>
+    <main className="main-content pt-4">
 
       {/* Alertas */}
       {showSuccessAlert && (
@@ -417,11 +375,28 @@ export default function SystemSyncTab() {
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                  <span className={`h-2 w-2 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : 'bg-teal-500'}`} />
-                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
-                    {syncStatus.status === 'SYNCING' ? 'Worker Activo' : 'Worker en Reposo'}
-                  </span>
+                <div className="flex items-center gap-3">
+                  {/* Filtro Temporal */}
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <span className="text-[11px] font-bold text-slate-400">📅</span>
+                    <select 
+                      value={timeFilter}
+                      onChange={(e) => setTimeFilter(e.target.value)}
+                      className="bg-transparent text-[11px] font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer border-0 p-0"
+                    >
+                      <option value="all" className="bg-white dark:bg-slate-900">Todos los tiempos</option>
+                      <option value="30d" className="bg-white dark:bg-slate-900">Últimos 30 días</option>
+                      <option value="60d" className="bg-white dark:bg-slate-900">Últimos 2 meses</option>
+                      <option value="90d" className="bg-white dark:bg-slate-900">Últimos 3 meses</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <span className={`h-2 w-2 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : 'bg-teal-500'}`} />
+                    <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+                      {syncStatus.status === 'SYNCING' ? 'Worker Activo' : 'Worker en Reposo'}
+                    </span>
+                  </div>
                 </div>
               </div>
 
