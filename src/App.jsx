@@ -125,8 +125,11 @@ function Dashboard() {
   };
 
   const filteredKpis = useMemo(() => {
-    if (!kpis || kpis.length === 0 || dateFilter === 'all') return kpis;
+    if (!kpis || kpis.length === 0) return kpis;
+    if (!dateFilter || dateFilter === 'all' || (typeof dateFilter === 'object' && dateFilter.type === 'all')) return kpis;
+
     const now = new Date();
+
     return kpis.filter(kpi => {
       let targetDate = new Date(kpi.fecha_calculo);
       if (kpi.id_sprint) {
@@ -135,12 +138,57 @@ function Dashboard() {
           targetDate = new Date(spr.fecha_fin);
         }
       }
-      const diffTime = Math.abs(now - targetDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      
-      if (dateFilter === '30d') return diffDays <= 30;
-      if (dateFilter === '60d') return diffDays <= 60;
-      if (dateFilter === '90d') return diffDays <= 90;
+
+      if (typeof dateFilter === 'string') {
+        const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (dateFilter === '30d') return diffDays <= 30;
+        if (dateFilter === '60d') return diffDays <= 60;
+        if (dateFilter === '90d') return diffDays <= 90;
+        return true;
+      }
+
+      if (typeof dateFilter === 'object') {
+        const { type, startDate, endDate, year, month, day } = dateFilter;
+
+        if (type === '30d') {
+          const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 30;
+        }
+        if (type === '60d') {
+          const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 60;
+        }
+        if (type === '90d') {
+          const diffTime = Math.abs(now.getTime() - targetDate.getTime());
+          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 90;
+        }
+
+        if (type === 'day' && day) {
+          const kpiDayStr = targetDate.toISOString().split('T')[0];
+          return kpiDayStr === day;
+        }
+
+        if (type === 'month' && month) {
+          const kpiMonthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
+          return kpiMonthStr === month;
+        }
+
+        if (type === 'year' && year) {
+          return targetDate.getFullYear() === parseInt(year, 10);
+        }
+
+        if (type === 'range') {
+          if (startDate && new Date(startDate) > targetDate) return false;
+          if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            if (end < targetDate) return false;
+          }
+          return true;
+        }
+      }
+
       return true;
     });
   }, [kpis, dateFilter, sprints]);

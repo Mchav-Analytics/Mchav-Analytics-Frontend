@@ -1,5 +1,4 @@
-import React from 'react';
-import { RefreshCw } from 'lucide-react';
+import DatePickerDropdown from './DatePickerDropdown';
 
 function Topbar({ 
   title = "Resumen 👋", 
@@ -33,22 +32,9 @@ function Topbar({
       
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
 
-
-        {/* Filtro Rango Fecha */}
+        {/* Filtro Rango Fecha (Calendario Seleccionable por Día, Mes, Año y Rango) */}
         {setDateFilter && (
-          <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem' }}>
-            <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>📅</span>
-            <select 
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              style={{ border: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-            >
-              <option value="all">Todos los tiempos</option>
-              <option value="30d">Últimos 30 días</option>
-              <option value="60d">Últimos 2 meses</option>
-              <option value="90d">Últimos 3 meses</option>
-            </select>
-          </div>
+          <DatePickerDropdown dateFilter={dateFilter} setDateFilter={setDateFilter} />
         )}
 
         {/* Filtro Proyecto */}
