@@ -1,4 +1,5 @@
 import DatePickerDropdown from './DatePickerDropdown';
+import ProjectPickerDropdown from './ProjectPickerDropdown';
 
 function Topbar({ 
   title = "Resumen 👋", 
@@ -37,23 +38,13 @@ function Topbar({
           <DatePickerDropdown dateFilter={dateFilter} setDateFilter={setDateFilter} />
         )}
 
-        {/* Filtro Proyecto */}
+        {/* Filtro Proyecto (Componente Desplegable Visualmente Mejorado) */}
         {setSelectedProjectId && (
-          <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem' }}>
-            <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>📁</span>
-            <select 
-              value={selectedProjectId} 
-              onChange={(e) => setSelectedProjectId(e.target.value)}
-              style={{ border: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem' }}
-            >
-              <option value="">Todos los proyectos</option>
-              {projects.map(p => (
-                <option key={p.id_proyecto} value={p.id_proyecto}>
-                  {p.nombre}
-                </option>
-              ))}
-            </select>
-          </div>
+          <ProjectPickerDropdown
+            projects={projects}
+            selectedProjectId={selectedProjectId}
+            setSelectedProjectId={setSelectedProjectId}
+          />
         )}
 
 

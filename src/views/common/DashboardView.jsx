@@ -140,24 +140,11 @@ function DashboardView({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
               <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider">⚡ Volumen y Velocidad de Trabajo</h2>
               
-              {/* Selector de Sprint Local */}
-              {sprintsList.length > 0 && (
-                <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 12px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center' }}>
-                  <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>🏃</span>
-                  <select 
-                    value={selectedSprintId} 
-                    onChange={(e) => setSelectedSprintId(e.target.value)}
-                    style={{ border: 'none', background: 'none', color: 'var(--text-main)', outline: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 'bold' }}
-                  >
-                    <option value="general" className="bg-white dark:bg-slate-900">Proyecto General (Acumulado)</option>
-                    {sprintsList.map(s => (
-                      <option key={s.id_sprint} value={s.id_sprint} className="bg-white dark:bg-slate-900">
-                        {s.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              {/* Indicador de Total de Sprints */}
+              <div style={{ background: 'var(--input-bg)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '6px 14px', fontSize: '0.85rem', display: 'inline-flex', alignItems: 'center', fontWeight: '600' }}>
+                <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>🏃</span>
+                <span className="text-slate-700 dark:text-slate-200">Total Sprints: <strong className="text-indigo-600 dark:text-indigo-400">{sprintsList.length}</strong></span>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               
