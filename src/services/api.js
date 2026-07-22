@@ -15,6 +15,12 @@ export const authService = {
   },
   getCurrentUser() {
     return api.get('/api/auth/me').then(res => res.data);
+  },
+  getJiraCredentials() {
+    return api.get('/api/auth/jira-credentials').then(res => res.data);
+  },
+  saveJiraCredentials(payload) {
+    return api.post('/api/auth/jira-credentials', payload).then(res => res.data);
   }
 };
 
