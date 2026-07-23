@@ -1,6 +1,6 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
 import { authService } from '../../services/api';
+import logoImg from '../../assets/logo.jpg';
 
 function LoginView() {
   const handleJiraLogin = () => {
@@ -8,11 +8,17 @@ function LoginView() {
   };
 
   return (
-    <div className="dark-theme dark" style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-dark)', backgroundImage: 'radial-gradient(circle at 15% 50%, rgba(0, 82, 204, 0.15) 0%, transparent 50%), radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%)' }}>
-      <div className="login-container">
-        <div className="logo-icon">
-          <Activity />
+    <div className="dark-theme dark" style={{ width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-dark)', backgroundImage: 'radial-gradient(circle at 15% 50%, rgba(13, 148, 136, 0.2) 0%, transparent 50%), radial-gradient(circle at 85% 30%, rgba(30, 58, 138, 0.2) 0%, transparent 50%)' }}>
+      <div className="login-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ position: 'relative', marginBottom: '1.25rem' }}>
+          <div style={{ position: 'absolute', inset: '-4px', borderRadius: '24px', background: 'linear-gradient(135deg, #0d9488, #3b82f6, #8b5cf6)', filter: 'blur(12px)', opacity: 0.6 }} />
+          <img 
+            src={logoImg} 
+            alt="MCHAV Analytics Logo" 
+            style={{ position: 'relative', width: '84px', height: '84px', borderRadius: '20px', objectFit: 'cover', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)' }} 
+          />
         </div>
+
         <h1 className="login-title">MCHAV Analytics</h1>
         <p className="login-subtitle">
           Conecta tu espacio de trabajo para visualizar métricas avanzadas y tomar decisiones basadas en datos.

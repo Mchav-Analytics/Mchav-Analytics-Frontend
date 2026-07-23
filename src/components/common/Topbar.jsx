@@ -1,5 +1,8 @@
+import React, { useState } from 'react';
 import DatePickerDropdown from './DatePickerDropdown';
 import ProjectPickerDropdown from './ProjectPickerDropdown';
+import ProfileSettingsModal from './ProfileSettingsModal';
+import { Settings } from 'lucide-react';
 
 function Topbar({ 
   title = "Resumen 👋", 
@@ -13,7 +16,8 @@ function Topbar({
   dateFilter,
   setDateFilter
 }) {
-  
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
   // Obtener iniciales del usuario para el avatar
   const getUserInitials = () => {
     if (!userProfile || !userProfile.nombre) return "AD";
@@ -47,11 +51,14 @@ function Topbar({
           />
         )}
 
-
-
-        {/* Perfil */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }} className="user-profile-text">
+        {/* Botón e Información de Perfil con Configuración */}
+        <button
+          type="button"
+          onClick={() => setIsProfileModalOpen(true)}
+          className="flex items-center gap-2.5 p-1.5 rounded-2xl hover:bg-slate-100 dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800 transition-all cursor-pointer text-left"
+          title="Ver perfil y configuración de credenciales"
+        >
+          <div className="flex flex-col items-end user-profile-text">
             <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-main)', lineHeight: '1.2' }}>
               {userProfile ? userProfile.nombre : 'Usuario'}
             </span>
@@ -59,14 +66,25 @@ function Topbar({
               {userProfile && userProfile.rol ? userProfile.rol : 'Administrador'}
             </span>
           </div>
+
           <div 
             style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.85rem' }}
-            title={userProfile ? `${userProfile.nombre} (${userProfile.rol || 'Administrador'})` : 'Usuario'}
           >
             {getUserInitials()}
           </div>
-        </div>
+
+          <div className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">
+            <Settings size={15} />
+          </div>
+        </button>
       </div>
+
+      {/* Modal de Perfil y Configuración */}
+      <ProfileSettingsModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        userProfile={userProfile}
+      />
     </header>
   );
 }

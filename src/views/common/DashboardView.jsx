@@ -53,7 +53,7 @@ const TrendBadge = ({ current, previous, inverse = false }) => {
   
   return (
     <span className={`text-xs font-medium flex items-center gap-1 ${colorClass}`}>
-      <Icon size={14}/> {pct.toFixed(1)}% vs sprint anterior
+      <Icon size={14}/> {pct.toFixed(1)}% vs periodo anterior
     </span>
   );
 };
@@ -98,6 +98,14 @@ function DashboardView({
   const prevKpi = useMemo(() => {
     if (!kpis || kpis.length < 2) return null;
     if (selectedSprintId === 'general') {
+      const generalKpis = kpis.filter(k => k.id_sprint === null || k.id_sprint === undefined);
+      if (generalKpis.length >= 2) {
+        return generalKpis[generalKpis.length - 2];
+      }
+      const sprintKpis = kpis.filter(k => k.id_sprint !== null && k.id_sprint !== undefined);
+      if (sprintKpis.length >= 2) {
+        return sprintKpis[sprintKpis.length - 2];
+      }
       return null;
     }
     const sprintKpis = kpis.filter(k => k.id_sprint !== null && k.id_sprint !== undefined);

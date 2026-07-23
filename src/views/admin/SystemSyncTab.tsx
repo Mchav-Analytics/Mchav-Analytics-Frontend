@@ -82,52 +82,9 @@ export default function SystemSyncTab() {
       });
   };
 
-  // Configuración de API Token de Jira
-  const [jiraDomainInput, setJiraDomainInput] = useState('');
-  const [jiraEmailInput, setJiraEmailInput] = useState('');
-  const [jiraTokenInput, setJiraTokenInput] = useState('');
-  const [isLinkedToken, setIsLinkedToken] = useState(false);
-  const [isTestingCredentials, setIsTestingCredentials] = useState(false);
-  const [credentialsSuccessMsg, setCredentialsSuccessMsg] = useState('');
-  const [credentialsErrorMsg, setCredentialsErrorMsg] = useState('');
-
   useEffect(() => {
     fetchLogsFromApi();
-    authService.getJiraCredentials()
-      .then((data: any) => {
-        if (data) {
-          setJiraDomainInput(data.jira_domain || '');
-          setJiraEmailInput(data.jira_email || '');
-          setIsLinkedToken(data.api_token_vinculado);
-        }
-      })
-      .catch(err => console.error("Error fetching Jira credentials:", err));
   }, []);
-
-  const handleSaveJiraCredentials = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsTestingCredentials(true);
-    setCredentialsErrorMsg('');
-    setCredentialsSuccessMsg('');
-
-    authService.saveJiraCredentials({
-      jira_domain: jiraDomainInput,
-      jira_email: jiraEmailInput,
-      jira_api_token: jiraTokenInput
-    })
-      .then(() => {
-        setIsTestingCredentials(false);
-        setIsLinkedToken(true);
-        setJiraTokenInput('');
-        setCredentialsSuccessMsg("¡Credenciales verificadas y vinculadas con éxito!");
-        setTimeout(() => setCredentialsSuccessMsg(''), 5000);
-      })
-      .catch((err: any) => {
-        setIsTestingCredentials(false);
-        const msg = err.response?.data?.detail || "No se pudieron verificar las credenciales con Jira.";
-        setCredentialsErrorMsg(msg);
-      });
-  };
 
   const handleCronTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCronTime(e.target.value);
@@ -288,105 +245,6 @@ export default function SystemSyncTab() {
           {/* COLUMNA IZQUIERDA: CONTROL Y CRON (1/3) */}
           <div className="lg:col-span-1 space-y-6">
             
-            {/* Card 0: Vinculación de API Token de Jira */}
-            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
-              <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-2.5">
-                  <Lock className="text-indigo-600 dark:text-indigo-400" size={20} />
-                  <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                    Vinculación API Token
-                  </h2>
-                </div>
-                {isLinkedToken ? (
-                  <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 border border-emerald-200">
-                    ✓ Vinculado
-                  </span>
-                ) : (
-                  <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-600 border border-amber-200">
-                    Pendiente
-                  </span>
-                )}
-              </div>
-
-              <form onSubmit={handleSaveJiraCredentials} className="space-y-4">
-                {credentialsSuccessMsg && (
-                  <div className="p-3 rounded-lg bg-emerald-50 text-emerald-800 text-xs font-medium border border-emerald-200">
-                    {credentialsSuccessMsg}
-                  </div>
-                )}
-                {credentialsErrorMsg && (
-                  <div className="p-3 rounded-lg bg-rose-50 text-rose-800 text-xs font-medium border border-rose-200 break-words">
-                    {credentialsErrorMsg}
-                  </div>
-                )}
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                    Dominio de Jira
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="https://tuempresa.atlassian.net"
-                    value={jiraDomainInput}
-                    onChange={(e) => setJiraDomainInput(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-1">
-                    Correo de Jira
-                  </label>
-                  <input
-                    type="email"
-                    placeholder="usuario@empresa.com"
-                    value={jiraEmailInput}
-                    onChange={(e) => setJiraEmailInput(e.target.value)}
-                    required
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-
-                <div>
-                  <div className="flex justify-between items-center mb-1">
-                    <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                      API Token de Jira
-                    </label>
-                    <a
-                      href="https://id.atlassian.com/manage-profile/security/api-tokens"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] text-indigo-600 dark:text-indigo-400 hover:underline font-medium"
-                    >
-                      Generar Token ↗
-                    </a>
-                  </div>
-                  <input
-                    type="password"
-                    placeholder="ATATT3xFfGF0..."
-                    value={jiraTokenInput}
-                    onChange={(e) => setJiraTokenInput(e.target.value)}
-                    required={!isLinkedToken}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-xs text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/50"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isTestingCredentials}
-                  className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
-                >
-                  {isTestingCredentials ? (
-                    <>
-                      <RefreshCcw size={14} className="animate-spin" /> Verificando...
-                    </>
-                  ) : (
-                    'Verificar y Guardar Credenciales'
-                  )}
-                </button>
-              </form>
-            </div>
             <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
               <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
                 <Settings2 className="text-teal-600 dark:text-teal-500" size={20} />
