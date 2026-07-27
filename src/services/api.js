@@ -6,58 +6,59 @@ axios.defaults.withCredentials = true;
 export const BACKEND_URL = 'http://localhost:8000';
 
 const api = axios.create({
-  baseURL: BACKEND_URL,
+  baseURL: `${BACKEND_URL}/api/v1`,
+  withCredentials: true,
 });
 
 export const authService = {
   getLoginUrl() {
-    return `${BACKEND_URL}/api/auth/login`;
+    return `${BACKEND_URL}/api/v1/auth/login`;
   },
   getCurrentUser() {
-    return api.get('/api/auth/me').then(res => res.data);
+    return api.get('/auth/me').then(res => res.data);
   },
   getJiraCredentials() {
-    return api.get('/api/auth/jira-credentials').then(res => res.data);
+    return api.get('/auth/jira-credentials').then(res => res.data);
   },
   saveJiraCredentials(payload) {
-    return api.post('/api/auth/jira-credentials', payload).then(res => res.data);
+    return api.post('/auth/jira-credentials', payload).then(res => res.data);
   }
 };
 
 export const jiraService = {
   getMetrics() {
-    return api.get('/api/jira/metrics').then(res => res.data);
+    return api.get('/jira/metrics').then(res => res.data);
   },
   triggerSync() {
-    return api.post('/api/jira/sync').then(res => res.data);
+    return api.post('/jira/sync').then(res => res.data);
   },
   getSyncLogs() {
-    return api.get('/api/jira/sync/logs').then(res => res.data);
+    return api.get('/jira/sync/logs').then(res => res.data);
   }
 };
 
 export const projectService = {
   getProjects() {
-    return api.get('/api/projects').then(res => res.data);
+    return api.get('/projects').then(res => res.data);
   },
   getSprints(projectId) {
-    return api.get(`/api/projects/${projectId}/sprints`).then(res => res.data);
+    return api.get(`/projects/${projectId}/sprints`).then(res => res.data);
   },
   getKpis(projectId, sprintId = null) {
-    let url = `/api/projects/${projectId}/kpis`;
+    let url = `/projects/${projectId}/kpis`;
     if (sprintId) {
       url += `?sprint_id=${sprintId}`;
     }
     return api.get(url).then(res => res.data);
   },
   getStatuses(projectId) {
-    return api.get(`/api/projects/${projectId}/statuses`).then(res => res.data);
+    return api.get(`/projects/${projectId}/statuses`).then(res => res.data);
   },
   getMappings(projectId) {
-    return api.get(`/api/projects/${projectId}/mappings`).then(res => res.data);
+    return api.get(`/projects/${projectId}/mappings`).then(res => res.data);
   },
   saveMappings(projectId, mappingsData) {
-    return api.post(`/api/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
+    return api.post(`/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
   }
 };
 

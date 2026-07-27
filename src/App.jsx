@@ -42,7 +42,6 @@ function Dashboard() {
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
 
-
   // 1. Cargar métricas generales al inicio
   useEffect(() => {
     fetchGeneralMetrics();
