@@ -1,3 +1,8 @@
+// ============================================================================
+// COMPONENTE DE LOGOTIPO OFICIAL DE MCHAV ANALYTICS
+// ============================================================================
+// Carga la imagen oficial logo.jpg de los assets y la renderiza con border-radius y sombra.
+
 import React from 'react';
 import logoImg from '../../assets/logo.jpg';
 

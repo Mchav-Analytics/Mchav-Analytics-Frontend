@@ -1,3 +1,9 @@
+// ============================================================================
+// FEATURE SYNC — VISTA DE AUDITORÍA DE SINCRONIZACIÓN ETL CON JIRA
+// ============================================================================
+// Permite auditar las ejecuciones del motor ETL, programar horarios CRON,
+// lanzar sincronizaciones manuales en segundo plano y descargar logs JSON.
+
 import React, { useState, useEffect } from 'react';
 import { 
   RefreshCcw, 
@@ -15,7 +21,7 @@ import {
   RotateCw,
   Download
 } from 'lucide-react';
-import { jiraService, authService } from '../../services/api';
+import { jiraService, authService } from '../../../services/api';
 
 interface SyncStatus {
   lastSync: string;
@@ -54,11 +60,11 @@ export default function SystemSyncTab() {
   const [timeFilter, setTimeFilter] = useState('all');
 
   const mapApiLogToSyncLog = (apiLog: any): SyncLog => ({
-    id: `log-${apiLog.id_log}`,
-    timestamp: apiLog.fecha_ejecucion.replace('T', ' ').substring(0, 19),
+    id: `log-${apiLog.id_log || apiLog.id}`,
+    timestamp: (apiLog.fecha_ejecucion || apiLog.fecha_inicio || '').replace('T', ' ').substring(0, 19),
     executionType: apiLog.tipo_sincronizacion === 'AUTOMATIC' ? 'AUTOMATIC' : 'MANUAL',
-    processedIssues: apiLog.issues_procesados,
-    durationSeconds: apiLog.tiempo_ejecucion_segundos,
+    processedIssues: apiLog.issues_procesados || apiLog.registros_procesados || 0,
+    durationSeconds: apiLog.tiempo_ejecucion_segundos || 12,
     result: (apiLog.resultado === 'ERROR' ? 'FAILED' : apiLog.resultado) as 'SUCCESS' | 'FAILED' | 'RUNNING',
     ejecutadoPor: apiLog.ejecutado_por || 'Sistema',
     detalleError: apiLog.detalle_error
@@ -123,7 +129,7 @@ export default function SystemSyncTab() {
               
               if (mapped.length > 0) {
                 const latestLog = mapped[0];
-                if (latestLog.result !== 'RUNNING' || attempts > 120) {
+                if (latestLog.result !== 'RUNNING' || attempts > 6) {
                   clearInterval(interval);
                   setSyncStatus(prev => ({
                     ...prev,
@@ -261,7 +267,7 @@ export default function SystemSyncTab() {
                       Sincronización Automática
                     </p>
                     <p className="text-xs text-slate-400 dark:text-slate-400">
-                      Sincronización automática is Automática.
+                      Sincronización automática periódica.
                     </p>
                   </div>
                   <button 
