@@ -138,7 +138,7 @@ export default function IssuesTable({
     <div className="w-full space-y-10 animate-in fade-in duration-300 pb-16">
       
       {/* SECCIÓN 1: TARJETAS KPI RESUMEN AL ESTILO REPORTES */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6" style={{ marginBottom: '2.5rem' }}>
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
           <div className="flex items-start justify-between gap-4">
             <div className="space-y-2">
@@ -192,11 +192,17 @@ export default function IssuesTable({
         </div>
       </section>
 
-      {/* SECCIÓN 2: TARJETA PRINCIPAL DE TABLA CON ESPACIADO AMPLIO Y BOTÓN VERDE ESTILO REPORTES */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
+      {/* SECCIÓN 2: TARJETA PRINCIPAL DE TABLA CON MARGEN SUPERIOR SEPARADO */}
+      <div 
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300"
+        style={{ marginTop: '2.5rem' }}
+      >
         
-        {/* CABECERA DE LA TARJETA CON ALTO ESPACIADO */}
-        <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        {/* CABECERA DE LA TARJETA */}
+        <div 
+          className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:flex-row md:items-center justify-between gap-6"
+          style={{ padding: '1.75rem 2rem', marginBottom: '1.5rem' }}
+        >
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
               <ClipboardList size={22} />
@@ -221,10 +227,8 @@ export default function IssuesTable({
           </button>
         </div>
 
-        {/* BARRAS DE CONTROLES SEPARADAS CON ESPACIADO HOLGADO */}
-        <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 space-y-6">
-          
-          {/* Fila 1: Buscador Flexbox Seguro (IMPOSIBLE QUE LUPA SE TRASLAPE CON TEXTO) */}
+        {/* BUSCADOR CON ESPACIADO PROPIO */}
+        <div style={{ padding: '0 2rem', marginBottom: '1.5rem' }}>
           <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
             <Search size={18} className="text-slate-400 shrink-0" />
             <input
@@ -244,9 +248,11 @@ export default function IssuesTable({
               </button>
             )}
           </div>
+        </div>
 
-          {/* Fila 2: Píldoras de Filtro Holgadas */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+        {/* PÍLDORAS DE FILTRO CON ESPACIADO PROPIO */}
+        <div style={{ padding: '0 2rem', marginBottom: '2rem' }}>
+          <div className="flex flex-wrap items-center gap-3">
             <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-2 flex items-center gap-1.5">
               <Filter size={14} /> Filtrar por:
             </span>
@@ -311,7 +317,6 @@ export default function IssuesTable({
               <AlertTriangle size={14} className="text-rose-500" /> Alertas ({stats.critical})
             </button>
           </div>
-
         </div>
 
         {/* TABLA LIMPIA Y DESAHOGADA (SIN BARRAS GRISES BRUSCAS) */}
@@ -326,10 +331,10 @@ export default function IssuesTable({
               : 'No hay tareas registradas en este sprint.'}
           </div>
         ) : (
-          <div className="overflow-x-auto w-full">
+          <div className="overflow-x-auto w-full border-t border-slate-100 dark:border-slate-800">
             <table className="w-full text-left border-collapse min-w-[960px]">
               <thead>
-                <tr className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-transparent">
+                <tr className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20">
                   <th onClick={() => requestSort('key')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none w-32">
                     Clave {sortConfig.key === 'key' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
