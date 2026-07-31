@@ -1,6 +1,21 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Download, X, Clock, ShieldAlert, ArrowRight, User, Tag, Activity } from 'lucide-react';
+import { 
+  Search, 
+  Download, 
+  X, 
+  Clock, 
+  ShieldAlert, 
+  ArrowRight, 
+  User, 
+  Tag, 
+  Activity, 
+  ClipboardList, 
+  Filter, 
+  CheckCircle2, 
+  AlertTriangle,
+  UserCheck
+} from 'lucide-react';
 import { isCriticalBug, isBottleneck } from '../../../utils/issueHelpers';
 
 export default function IssuesTable({ 
@@ -12,6 +27,7 @@ export default function IssuesTable({
   setSelectedIssue
 }) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'MY_ISSUES' | 'IN_PROGRESS' | 'DONE' | 'CRITICAL'
   const [sortConfig, setSortConfig] = useState({ key: 'key', direction: 'asc' });
 
   const handleCloseDrawer = () => {
@@ -22,8 +38,24 @@ export default function IssuesTable({
   const sortedAndFilteredIssues = useMemo(() => {
     let result = [...issues];
 
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+    // Filtros rápidos por estado o mis tareas
+    if (statusFilter === 'MY_ISSUES') {
+      result = result.filter(iss => 
+        iss.assignee && (
+          iss.assignee.toLowerCase().includes('stephany') ||
+          iss.assignee.toLowerCase().includes('leon')
+        )
+      );
+    } else if (statusFilter === 'IN_PROGRESS') {
+      result = result.filter(iss => ['In Progress', 'En curso', 'En revisión'].includes(iss.status));
+    } else if (statusFilter === 'DONE') {
+      result = result.filter(iss => ['Done', 'Finalizado', 'Cerrado'].includes(iss.status));
+    } else if (statusFilter === 'CRITICAL') {
+      result = result.filter(iss => isCriticalBug(iss) || isBottleneck(iss));
+    }
+
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase().trim();
       result = result.filter(iss =>
         iss.key.toLowerCase().includes(term) ||
         iss.summary.toLowerCase().includes(term) ||
@@ -53,7 +85,7 @@ export default function IssuesTable({
     }
 
     return result;
-  }, [issues, searchTerm, sortConfig]);
+  }, [issues, searchTerm, statusFilter, sortConfig]);
 
   const requestSort = (key) => {
     let direction = 'asc';
@@ -89,328 +121,370 @@ export default function IssuesTable({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full space-y-6">
       
-      {/* Etiqueta de Metadatos de Tareas */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
-          Detalle de Tareas ({sortedAndFilteredIssues.length} de {issues.length} total)
-        </span>
-      </div>
-
-      {/* BARRA DE CONTROLES PRINCIPAL (TIPO JIRA/LINEAR CON ANCHO COMPLETO) */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full mb-10">
+      {/* TARJETA CONTENEDORA PRINCIPAL */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-sm overflow-hidden transition-all duration-300">
         
-        {/* Buscador Amplio y Visible */}
-        <div className="relative flex-1">
-          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-          <input
-            type="text"
-            placeholder="Buscar por clave, título, responsable o estado..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-[#0B0F19] border border-slate-200 dark:border-slate-700/60 hover:border-slate-400 dark:hover:border-slate-500 focus:border-indigo-550 dark:focus:border-indigo-500/80 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none transition-all shadow-sm"
-          />
+        {/* CABECERA CON TÍTULO Y BOTÓN EXPORTAR */}
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+              <ClipboardList size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-slate-850 dark:text-slate-100 flex items-center gap-2">
+                Tareas del Sprint ({sprintName || 'Sprint Activo'})
+              </h2>
+              <p className="text-xs text-slate-400 mt-0.5">
+                {sortedAndFilteredIssues.length} de {issues.length} tareas en este filtro.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={exportToCSV}
+            disabled={issues.length === 0}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer border-none disabled:opacity-50"
+          >
+            <Download size={14} /> Exportar CSV
+          </button>
         </div>
 
-        {/* Botón de Exportación Premium al lado */}
-        <button
-          onClick={exportToCSV}
-          disabled={issues.length === 0}
-          className="w-full sm:w-auto shrink-0 flex items-center justify-center gap-2 px-6 py-3 bg-[#0052CC] hover:bg-[#0065FF] text-white text-sm font-bold rounded-xl transition-all shadow-md cursor-pointer border-none"
-        >
-          <Download size={15} /> Exportar CSV
-        </button>
-      </div>
+        {/* CONTROLES DE BÚSQUEDA Y PÍLDORAS DE FILTRO */}
+        <div className="p-6 border-b border-slate-100 dark:border-slate-800/80 space-y-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            
+            {/* Campo de Búsqueda Limpio y Espacioso */}
+            <div className="relative flex-1">
+              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Buscar por clave (PA-101), título, responsable..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-9 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 text-xs outline-none transition-all"
+              />
+              {searchTerm && (
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </div>
 
-      {/* LISTADO DE TAREAS DIRECTO EN EL CANVAS (DISEÑO LIBRE / SIN BORDE OVULADO) */}
-      {issuesLoading ? (
-        <div className="py-24 text-center text-slate-500 animate-pulse text-xs font-bold">
-          Cargando listado de tareas del sprint...
+            {/* Píldoras de Filtro Rápido */}
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setStatusFilter('ALL')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  statusFilter === 'ALL'
+                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                Todas ({issues.length})
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('MY_ISSUES')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  statusFilter === 'MY_ISSUES'
+                    ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <UserCheck size={13} /> Solo Mis Tareas
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('IN_PROGRESS')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  statusFilter === 'IN_PROGRESS'
+                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                En Progreso
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('DONE')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  statusFilter === 'DONE'
+                    ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                Completadas
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStatusFilter('CRITICAL')}
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                  statusFilter === 'CRITICAL'
+                    ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40 shadow-sm'
+                    : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+                }`}
+              >
+                <AlertTriangle size={13} className="text-rose-500" /> Alertas
+              </button>
+            </div>
+
+          </div>
         </div>
-      ) : sortedAndFilteredIssues.length === 0 ? (
-        <div className="py-24 text-center text-slate-500 text-xs font-bold border-t border-white/5">
-          No se encontraron tareas con el término ingresado.
-        </div>
-      ) : (
-        <div className="overflow-x-auto w-full">
-          <table className="w-full min-w-[750px] text-left border-collapse text-xs table-fixed">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px] bg-transparent">
-                <th onClick={() => requestSort('key')} className="w-[10%] py-4 px-2 cursor-pointer hover:text-indigo-400 select-none">
-                  Clave {sortConfig.key === 'key' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
-                </th>
-                <th onClick={() => requestSort('summary')} className="w-[42%] py-4 px-2 cursor-pointer hover:text-indigo-400 select-none">
-                  Título / Resumen {sortConfig.key === 'summary' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
-                </th>
-                <th onClick={() => requestSort('assignee')} className="w-[20%] py-4 px-2 cursor-pointer hover:text-indigo-400 select-none">
-                  Responsable {sortConfig.key === 'assignee' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
-                </th>
-                <th onClick={() => requestSort('status')} className="w-[12%] py-4 px-2 cursor-pointer hover:text-indigo-400 select-none text-center">
-                  Estado {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
-                </th>
-                <th onClick={() => requestSort('cycle_time')} className="w-[8%] py-4 px-2 cursor-pointer hover:text-indigo-400 select-none text-right">
-                  Tiempo {sortConfig.key === 'cycle_time' ? (sortConfig.direction === 'asc' ? ' ▲' : ' ▼') : ''}
-                </th>
-                <th className="w-[8%] py-4 px-2 text-center select-none">Alerta</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-              {sortedAndFilteredIssues.map((iss) => {
-                const isBugActive = isCriticalBug(iss);
-                const isDelayActive = isBottleneck(iss);
 
-                return (
-                  <tr
-                    key={iss.key}
-                    className="hover:bg-slate-50 dark:hover:bg-white/[0.02] cursor-pointer transition-colors border-slate-100 dark:border-white/5"
-                    onClick={() => setSelectedIssue(iss)}
-                  >
-                    {/* Clave */}
-                    <td className="py-5 px-2 font-mono font-black text-indigo-600 dark:text-indigo-400">{iss.key}</td>
-                    
-                    {/* Título */}
-                    <td className="py-5 px-2 font-semibold text-slate-800 dark:text-white truncate pr-4" title={iss.summary}>
-                      {iss.summary}
-                    </td>
+        {/* TABLA DE TAREAS ESTRUCTURADA Y ELEGANTE */}
+        {issuesLoading ? (
+          <div className="py-20 text-center text-slate-400 animate-pulse text-xs font-bold">
+            Cargando listado de tareas del sprint...
+          </div>
+        ) : sortedAndFilteredIssues.length === 0 ? (
+          <div className="py-20 text-center text-slate-400 text-xs font-semibold">
+            {searchTerm || statusFilter !== 'ALL'
+              ? 'No se encontraron tareas que coincidan con los filtros seleccionados.'
+              : 'No hay tareas registradas en este sprint.'}
+          </div>
+        ) : (
+          <div className="overflow-x-auto w-full">
+            <table className="w-full text-xs text-left border-collapse">
+              <thead className="bg-slate-50/70 dark:bg-slate-955 text-slate-500 dark:text-slate-450 border-b border-slate-100 dark:border-slate-800 text-[10px] uppercase tracking-wider font-bold">
+                <tr>
+                  <th onClick={() => requestSort('key')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none w-28">
+                    Clave {sortConfig.key === 'key' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => requestSort('summary')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none">
+                    Título / Resumen {sortConfig.key === 'summary' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => requestSort('assignee')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none w-48">
+                    Responsable {sortConfig.key === 'assignee' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => requestSort('status')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none text-center w-32">
+                    Estado {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th onClick={() => requestSort('cycle_time')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none text-right w-24">
+                    Tiempo {sortConfig.key === 'cycle_time' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
+                  </th>
+                  <th className="px-6 py-4 text-center select-none w-28">Alerta</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">
+                {sortedAndFilteredIssues.map((iss) => {
+                  const isBugActive = isCriticalBug(iss);
+                  const isDelayActive = isBottleneck(iss);
 
-                    {/* Responsable con Avatar */}
-                    <td className="py-5 px-2 truncate">
-                      <div className="flex items-center gap-2">
-                        {iss.assignee ? (
-                          <>
-                            <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/25 text-[9px] font-black text-indigo-650 dark:text-indigo-300 font-mono">
-                              {iss.assignee.split(" ").map(n => n[0]).join("")}
-                            </span>
-                            <span className="truncate text-slate-700 dark:text-slate-200">{iss.assignee}</span>
-                          </>
+                  return (
+                    <tr
+                      key={iss.key}
+                      onClick={() => setSelectedIssue(iss)}
+                      className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 cursor-pointer transition-colors"
+                    >
+                      {/* Clave */}
+                      <td className="px-6 py-4 font-mono font-black text-indigo-600 dark:text-indigo-400">
+                        {iss.key}
+                      </td>
+
+                      {/* Título */}
+                      <td className="px-6 py-4 font-semibold text-slate-850 dark:text-slate-100" title={iss.summary}>
+                        {iss.summary}
+                      </td>
+
+                      {/* Responsable */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          {iss.assignee ? (
+                            <>
+                              <span className="w-6 h-6 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-mono shrink-0">
+                                {iss.assignee.split(" ").map(n => n[0]).join("")}
+                              </span>
+                              <span className="truncate text-slate-700 dark:text-slate-200 font-medium">{iss.assignee}</span>
+                            </>
+                          ) : (
+                            <span className="italic text-slate-400">Sin asignar</span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Estado */}
+                      <td className="px-6 py-4 text-center">
+                        <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
+                          iss.status === 'Done' || iss.status === 'Finalizado' || iss.status === 'Cerrado'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
+                            : iss.status === 'In Progress' || iss.status === 'En curso' || iss.status === 'En revisión'
+                              ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'
+                              : 'bg-slate-100 dark:bg-slate-800/60 text-slate-500 border border-slate-200 dark:border-slate-700'
+                        }`}>
+                          {iss.status}
+                        </span>
+                      </td>
+
+                      {/* Tiempo de Ciclo */}
+                      <td className="px-6 py-4 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                        {Number(iss.cycle_time).toFixed(1)}d
+                      </td>
+
+                      {/* Alerta */}
+                      <td className="px-6 py-4 text-center">
+                        {isBugActive ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
+                            Bug Crítico
+                          </span>
+                        ) : isDelayActive ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 animate-pulse">
+                            Demorado
+                          </span>
                         ) : (
-                          <span className="italic text-slate-500 dark:text-slate-650">Sin asignar</span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20 opacity-80">
+                            Normal
+                          </span>
                         )}
-                      </div>
-                    </td>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-                    {/* Estado */}
-                    <td className="py-5 px-2 text-center">
-                      <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wide uppercase ${
-                        iss.status === 'Done' || iss.status === 'Finalizado' || iss.status === 'Cerrado'
-                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 border border-emerald-500/20'
-                          : iss.status === 'In Progress' || iss.status === 'En curso' || iss.status === 'En revisión'
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-450 border border-amber-500/20'
-                            : 'bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-500 border border-slate-200 dark:border-slate-805/85'
-                      }`}>
-                        {iss.status}
-                      </span>
-                    </td>
-
-                    {/* Tiempo de Ciclo */}
-                    <td className="py-5 px-2 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
-                      {Number(iss.cycle_time).toFixed(1)}d
-                    </td>
-                    
-                    {/* Alerta */}
-                    <td className="py-5 px-2 text-center">
-                      {isBugActive ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-red-500/10 text-red-650 dark:text-red-400 border border-red-500/20">
-                          Bug Crítico
-                        </span>
-                      ) : isDelayActive ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse">
-                          Demorado
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-emerald-500/10 text-emerald-650 dark:text-emerald-455 border border-emerald-500/20 opacity-70">
-                          Normal
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
+      </div>
 
       {/* DRAWER LATERAL DE DETALLES DEL TICKET */}
       {selectedIssue && createPortal(
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/10 backdrop-blur-[1px] animate-fade-in">
+        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="flex-1" onClick={handleCloseDrawer} />
 
-          <div className="w-full max-w-lg bg-white dark:bg-[#0B0F19] shadow-2xl h-full flex flex-col border-l border-slate-200 dark:border-white/5 animate-slide-in-right overflow-hidden">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 shadow-2xl h-full flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-200 overflow-hidden">
             
             {/* Cabecera */}
-            <div 
-              className="flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-[#0e1422] shrink-0"
-              style={{ padding: '32px 32px 20px 32px' }}
-            >
+            <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 {selectedIssue.type === 'Bug' ? (
-                  <span className="bg-red-500/10 text-red-650 dark:text-red-405 border border-red-500/20 text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md">
+                  <span className="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md">
                     Bug
                   </span>
                 ) : (
-                  <span className="bg-violet-500/10 text-violet-650 dark:text-violet-400 border border-violet-500/20 text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-md">
+                  <span className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md">
                     {selectedIssue.type || 'Tarea'}
                   </span>
                 )}
-                <span className="font-mono font-black text-slate-500 dark:text-slate-400 text-sm tracking-wider">
+                <span className="font-mono font-black text-slate-800 dark:text-slate-100 text-sm">
                   {selectedIssue.key}
                 </span>
               </div>
               <button
                 onClick={handleCloseDrawer}
-                className="p-2 bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-550 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl transition-all border-none cursor-pointer"
-                title="Cerrar Detalles"
+                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none"
               >
-                <X size={16} />
+                <X size={18} />
               </button>
             </div>
 
             {/* Cuerpo */}
-            <div 
-              className="flex-1 overflow-y-auto space-y-7"
-              style={{ padding: '32px' }}
-            >
-              <div className="space-y-1.5">
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-450 uppercase tracking-widest block">Resumen</span>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-snug tracking-tight">
+            <div className="p-6 flex-1 overflow-y-auto space-y-6">
+              <div className="space-y-1">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Resumen</span>
+                <h3 className="text-base font-bold text-slate-850 dark:text-slate-100 leading-snug">
                   {selectedIssue.summary}
                 </h3>
               </div>
 
-              <div className="space-y-2.5 pt-5 border-t border-slate-150 dark:border-white/5">
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-455 uppercase tracking-widest block">Descripción</span>
-                <p className="text-xs text-slate-650 dark:text-slate-400 font-medium leading-relaxed">
+              <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Descripción</span>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                   {selectedIssue.type === 'Bug' 
-                    ? `Se reportó un fallo crítico relacionado con "${selectedIssue.summary}". El equipo de desarrollo debe revisar los logs del servidor y verificar si existe fuga de memoria o excepciones no controladas en el endpoint correspondiente.`
-                    : `Incidencia planificada para el sprint actual: "${selectedIssue.summary}". Incluye el análisis de requisitos, maquetación de la interfaz de usuario, pruebas unitarias y validación con el Product Owner.`
+                    ? `Se reportó un fallo crítico relacionado con "${selectedIssue.summary}". El equipo de desarrollo debe revisar los logs del servidor y verificar si existe excepción no controlada.`
+                    : `Incidencia planificada para el sprint actual: "${selectedIssue.summary}". Incluye análisis de requisitos, maquetación de la interfaz y validación con el equipo.`
                   }
                 </p>
               </div>
 
-              {/* Lista Vertical de Detalles con Separación Limpia */}
-              <div className="space-y-1.5 pt-6 border-t border-slate-150 dark:border-white/5">
-                <span className="text-[10px] font-black text-slate-500 dark:text-slate-455 uppercase tracking-widest block pb-1">Detalles de la Tarea</span>
+              {/* Lista Vertical de Detalles */}
+              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Detalles de la Tarea</span>
                 
-                <div className="space-y-1">
+                <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 space-y-3 text-xs">
                   
-                  {/* Fila 1: Estado */}
-                  <div className="flex items-center justify-between py-3.5 border-b border-slate-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-slate-550 dark:text-slate-450 uppercase tracking-wider flex items-center gap-2">
-                      <Activity size={13} className="text-slate-450 dark:text-slate-500" /> Estado
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
+                      <Activity size={13} className="text-indigo-500" /> Estado
                     </span>
-                    <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wide uppercase ${
-                      selectedIssue.status === 'Done' || selectedIssue.status === 'Finalizado' || selectedIssue.status === 'Cerrado'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-455 border border-emerald-500/20'
-                        : selectedIssue.status === 'In Progress' || selectedIssue.status === 'En curso' || selectedIssue.status === 'En revisión'
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-455 border border-amber-500/20'
-                          : 'bg-slate-200/50 dark:bg-slate-800/40 text-slate-650 dark:text-slate-500 border border-slate-200 dark:border-slate-800/80'
-                    }`}>
-                      {selectedIssue.status}
-                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedIssue.status}</span>
                   </div>
 
-                  {/* Fila 2: Responsable */}
-                  <div className="flex items-center justify-between py-3.5 border-b border-slate-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-slate-555 dark:text-slate-455 uppercase tracking-wider flex items-center gap-2">
-                      <User size={13} className="text-slate-450 dark:text-slate-500" /> Responsable
+                  <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
+                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
+                      <User size={13} className="text-indigo-500" /> Responsable
                     </span>
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200">
-                      {selectedIssue.assignee ? (
-                        <>
-                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[9px] font-black text-indigo-650 dark:text-indigo-300">
-                            {selectedIssue.assignee.split(" ").map(n => n[0]).join("")}
-                          </span>
-                          <span className="truncate">{selectedIssue.assignee}</span>
-                        </>
-                      ) : (
-                        <span className="italic text-slate-500">Sin asignar</span>
-                      )}
-                    </div>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedIssue.assignee || 'Sin asignar'}</span>
                   </div>
 
-                  {/* Fila 3: Prioridad */}
-                  <div className="flex items-center justify-between py-3.5 border-b border-slate-100 dark:border-white/5">
-                    <span className="text-[10px] font-extrabold text-slate-555 dark:text-slate-455 uppercase tracking-wider flex items-center gap-2">
-                      <Tag size={13} className="text-slate-455 dark:text-slate-500" /> Prioridad
+                  <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
+                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
+                      <Tag size={13} className="text-indigo-500" /> Prioridad
                     </span>
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase ${
-                      selectedIssue.priority === 'Highest' || selectedIssue.priority === 'Critical'
-                        ? 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'
-                        : selectedIssue.priority === 'High'
-                          ? 'bg-amber-500/10 text-amber-600 dark:text-amber-455 border border-amber-500/20'
-                          : 'bg-yellow-500/10 text-amber-700 dark:text-yellow-455 border border-yellow-500/20'
-                    }`}>
-                      {selectedIssue.priority}
-                    </span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedIssue.priority}</span>
                   </div>
 
-                  {/* Fila 4: Cycle Time */}
-                  <div className="flex items-center justify-between py-3.5">
-                    <span className="text-[10px] font-extrabold text-slate-555 dark:text-slate-455 uppercase tracking-wider flex items-center gap-2">
-                      <Clock size={13} className="text-slate-455 dark:text-slate-500" /> Cycle Time
+                  <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
+                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
+                      <Clock size={13} className="text-indigo-500" /> Cycle Time
                     </span>
-                    <div className="text-xs font-mono font-bold text-slate-750 dark:text-slate-200">
-                      {Number(selectedIssue.cycle_time).toFixed(1)} días
-                    </div>
+                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(selectedIssue.cycle_time).toFixed(1)} días</span>
                   </div>
 
                 </div>
               </div>
 
               {selectedIssue.type === 'Bug' && (selectedIssue.priority === 'Highest' || selectedIssue.priority === 'Critical') && (
-                <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-650 dark:text-rose-455 text-xs font-semibold leading-relaxed flex items-start gap-3">
-                  <ShieldAlert size={16} className="flex-shrink-0 mt-0.5" />
-                  <span>Este es un bug crítico de soporte. Requiere resolución inmediata y de alta prioridad.</span>
+                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-800 dark:text-rose-300 text-xs font-semibold leading-relaxed flex items-start gap-3">
+                  <ShieldAlert size={16} className="shrink-0 mt-0.5 text-rose-500" />
+                  <span>Este es un bug crítico de soporte. Requiere atención prioritaria.</span>
                 </div>
               )}
             </div>
 
             {/* Acciones */}
-            <div 
-              className="bg-slate-50 dark:bg-[#0e1422] border-t border-slate-200 dark:border-white/5 flex flex-col gap-4 shrink-0"
-              style={{ padding: '24px 32px 48px 32px' }}
-            >
-              <div className="flex items-center justify-between text-[10px] font-black text-slate-550 dark:text-slate-500 uppercase tracking-widest">
-                <span>Acciones Rápidas</span>
-                <span className="text-indigo-650 dark:text-indigo-400 font-mono text-[9px] font-bold">{selectedIssue.key}</span>
-              </div>
-              
-              <div className="flex gap-4">
-                <a
-                  href={`https://beltrancamilo592.atlassian.net/browse/${selectedIssue.key}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 bg-[#0052CC] hover:bg-[#0065FF] text-white font-bold text-sm py-4 px-4 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer no-underline text-center shadow-md border-none"
-                >
-                  Abrir en Jira ↗
-                </a>
+            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-center gap-3">
+              <a
+                href={`https://beltrancamilo592.atlassian.net/browse/${selectedIssue.key}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors text-center cursor-pointer no-underline border-none"
+              >
+                Abrir en Jira ↗
+              </a>
 
-                {onUpdateIssueStatus && (
-                  ['Done', 'Finalizado', 'Cerrado'].includes(selectedIssue.status) ? (
-                    <button
-                      onClick={() => {
-                        onUpdateIssueStatus(selectedIssue.key, 'In Progress');
-                        setSelectedIssue(prev => ({ ...prev, status: 'In Progress' }));
-                      }}
-                      className="flex-1 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-350 hover:text-slate-900 dark:hover:text-white font-bold text-sm py-4 px-4 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer border-none shadow-sm"
-                    >
-                      Reabrir Ticket
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        onUpdateIssueStatus(selectedIssue.key, 'Done');
-                        setSelectedIssue(prev => ({ ...prev, status: 'Done' }));
-                      }}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm py-4 px-4 rounded-2xl transition-all flex items-center justify-center gap-1.5 cursor-pointer border-none shadow-md"
-                    >
-                      ✓ Completar
-                    </button>
-                  )
-                )}
-              </div>
+              {onUpdateIssueStatus && (
+                ['Done', 'Finalizado', 'Cerrado'].includes(selectedIssue.status) ? (
+                  <button
+                    onClick={() => {
+                      onUpdateIssueStatus(selectedIssue.key, 'In Progress');
+                      setSelectedIssue(prev => ({ ...prev, status: 'In Progress' }));
+                    }}
+                    className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs py-3 px-4 rounded-xl transition-colors cursor-pointer border-none"
+                  >
+                    Reabrir Ticket
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      onUpdateIssueStatus(selectedIssue.key, 'Done');
+                      setSelectedIssue(prev => ({ ...prev, status: 'Done' }));
+                    }}
+                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors cursor-pointer border-none"
+                  >
+                    ✓ Completar
+                  </button>
+                )
+              )}
             </div>
 
           </div>
