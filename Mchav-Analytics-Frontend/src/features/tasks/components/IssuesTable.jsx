@@ -135,74 +135,74 @@ export default function IssuesTable({
   }, [issues]);
 
   return (
-    <div className="w-full space-y-8 animate-in fade-in duration-300 pb-12">
+    <div className="w-full space-y-10 animate-in fade-in duration-300 pb-16">
       
       {/* SECCIÓN 1: TARJETAS KPI RESUMEN AL ESTILO REPORTES */}
-      <section className="grid grid-cols-2 xl:grid-cols-4 gap-5 sm:gap-6">
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1.5">
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Tareas</p>
-              <p className="text-2xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.total}</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.total}</p>
               <p className="text-xs text-slate-400 font-medium">En este sprint</p>
             </div>
-            <div className="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30">
-              <ClipboardList size={18} />
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30">
+              <ClipboardList size={22} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1.5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">En Progreso</p>
-              <p className="text-2xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.inProgress}</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.inProgress}</p>
               <p className="text-xs text-slate-400 font-medium">En desarrollo activo</p>
             </div>
-            <div className="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30">
-              <Activity size={18} />
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/15 border-amber-200 dark:border-amber-500/30">
+              <Activity size={22} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1.5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Completadas</p>
-              <p className="text-2xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.completed}</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.completed}</p>
               <p className="text-xs text-slate-400 font-medium">Tickets entregados</p>
             </div>
-            <div className="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30">
-              <CheckCircle2 size={18} />
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30">
+              <CheckCircle2 size={22} />
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1.5">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Alertas / Bugs</p>
-              <p className="text-2xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.critical}</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.critical}</p>
               <p className="text-xs text-slate-400 font-medium">{stats.critical > 0 ? 'Requieren atención' : 'Sin bloqueos'}</p>
             </div>
-            <div className="w-10 h-10 rounded-xl border flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30">
-              <AlertTriangle size={18} />
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30">
+              <AlertTriangle size={22} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* SECCIÓN 2: TARJETA PRINCIPAL DE TABLA CON FORMATO DESAHOGADO AL ESTILO REPORTES */}
+      {/* SECCIÓN 2: TARJETA PRINCIPAL DE TABLA CON ESPACIADO AMPLIO Y BOTÓN VERDE ESTILO REPORTES */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300">
         
-        {/* CABECERA DE LA TARJETA */}
-        <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
-              <ClipboardList size={18} />
+        {/* CABECERA DE LA TARJETA CON ALTO ESPACIADO */}
+        <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+              <ClipboardList size={22} />
             </div>
             <div className="space-y-1">
-              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                 Tareas del Sprint ({sprintName || 'Sprint Activo'})
               </h2>
               <p className="text-xs text-slate-400">
@@ -211,33 +211,34 @@ export default function IssuesTable({
             </div>
           </div>
 
+          {/* BOTÓN ESTILO REPORTES (VERDE ESMERALDA TIPO "DESCARGAR PDF") */}
           <button
             onClick={exportToCSV}
             disabled={issues.length === 0}
-            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all shadow-md shadow-indigo-600/20 cursor-pointer border-none disabled:opacity-50 shrink-0"
+            className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#00A884] hover:bg-[#009172] text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#00A884]/20 cursor-pointer border-none disabled:opacity-50 shrink-0 hover:scale-[1.02]"
           >
-            <Download size={14} /> Exportar CSV
+            <Download size={16} /> Exportar CSV
           </button>
         </div>
 
-        {/* BARRAS DE CONTROLES SEPARADAS Y AMPLIAS (SIN COMPRESIÓN) */}
-        <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 space-y-5">
+        {/* BARRAS DE CONTROLES SEPARADAS CON ESPACIADO HOLGADO */}
+        <div className="p-6 sm:p-8 border-b border-slate-100 dark:border-slate-800 space-y-6">
           
-          {/* Fila 1: Buscador Desahogado con espacio amplio */}
-          <div className="relative w-full">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+          {/* Fila 1: Buscador Flexbox Seguro (IMPOSIBLE QUE LUPA SE TRASLAPE CON TEXTO) */}
+          <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+            <Search size={18} className="text-slate-400 shrink-0" />
             <input
               type="text"
               placeholder="Buscar por clave (ej. PA-101), título, responsable o estado..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-10 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 rounded-xl text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm outline-none transition-all"
+              className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm font-medium"
             />
             {searchTerm && (
               <button
                 type="button"
                 onClick={() => setSearchTerm('')}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent shrink-0"
               >
                 <X size={16} />
               </button>
@@ -245,18 +246,18 @@ export default function IssuesTable({
           </div>
 
           {/* Fila 2: Píldoras de Filtro Holgadas */}
-          <div className="flex flex-wrap items-center gap-2.5 pt-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400 mr-2 flex items-center gap-1">
-              <Filter size={13} /> Filtrar por:
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-2 flex items-center gap-1.5">
+              <Filter size={14} /> Filtrar por:
             </span>
 
             <button
               type="button"
               onClick={() => setStatusFilter('ALL')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                 statusFilter === 'ALL'
                   ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400'
               }`}
             >
               Todas ({issues.length})
@@ -265,10 +266,10 @@ export default function IssuesTable({
             <button
               type="button"
               onClick={() => setStatusFilter('MY_ISSUES')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                 statusFilter === 'MY_ISSUES'
                   ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400'
               }`}
             >
               <UserCheck size={14} /> Solo Mis Tareas
@@ -277,10 +278,10 @@ export default function IssuesTable({
             <button
               type="button"
               onClick={() => setStatusFilter('IN_PROGRESS')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                 statusFilter === 'IN_PROGRESS'
                   ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/40 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-amber-400'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-amber-400'
               }`}
             >
               En Progreso
@@ -289,10 +290,10 @@ export default function IssuesTable({
             <button
               type="button"
               onClick={() => setStatusFilter('DONE')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                 statusFilter === 'DONE'
                   ? 'bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-400'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-400'
               }`}
             >
               Completadas
@@ -301,10 +302,10 @@ export default function IssuesTable({
             <button
               type="button"
               onClick={() => setStatusFilter('CRITICAL')}
-              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
                 statusFilter === 'CRITICAL'
                   ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40 shadow-sm'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-rose-400'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-400'
               }`}
             >
               <AlertTriangle size={14} className="text-rose-500" /> Alertas ({stats.critical})
@@ -313,13 +314,13 @@ export default function IssuesTable({
 
         </div>
 
-        {/* TABLA LIMPIA IDÉNTICA A REPORTES (SIN BARRAS GRISES BRUSCAS) */}
+        {/* TABLA LIMPIA Y DESAHOGADA (SIN BARRAS GRISES BRUSCAS) */}
         {issuesLoading ? (
-          <div className="py-20 text-center text-slate-400 animate-pulse text-xs font-bold">
+          <div className="py-24 text-center text-slate-400 animate-pulse text-xs font-bold">
             Cargando listado de tareas del sprint...
           </div>
         ) : sortedAndFilteredIssues.length === 0 ? (
-          <div className="py-20 text-center text-slate-400 text-xs font-semibold">
+          <div className="py-24 text-center text-slate-400 text-xs font-semibold">
             {searchTerm || statusFilter !== 'ALL'
               ? 'No se encontraron tareas que coincidan con los filtros seleccionados.'
               : 'No hay tareas registradas en este sprint.'}
@@ -328,23 +329,23 @@ export default function IssuesTable({
           <div className="overflow-x-auto w-full">
             <table className="w-full text-left border-collapse min-w-[960px]">
               <thead>
-                <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20">
-                  <th onClick={() => requestSort('key')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none w-32">
+                <tr className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-transparent">
+                  <th onClick={() => requestSort('key')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none w-32">
                     Clave {sortConfig.key === 'key' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th onClick={() => requestSort('summary')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none">
+                  <th onClick={() => requestSort('summary')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none">
                     Título / Resumen {sortConfig.key === 'summary' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th onClick={() => requestSort('assignee')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none w-52">
+                  <th onClick={() => requestSort('assignee')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none w-52">
                     Responsable {sortConfig.key === 'assignee' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th onClick={() => requestSort('status')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none text-center w-36">
+                  <th onClick={() => requestSort('status')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none text-center w-36">
                     Estado {sortConfig.key === 'status' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th onClick={() => requestSort('cycle_time')} className="px-6 py-4 cursor-pointer hover:text-indigo-500 select-none text-right w-28">
+                  <th onClick={() => requestSort('cycle_time')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none text-right w-28">
                     Tiempo {sortConfig.key === 'cycle_time' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
-                  <th className="px-6 py-4 text-center select-none w-32">Alerta</th>
+                  <th className="px-6 py-5 text-center select-none w-32">Alerta</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -356,20 +357,20 @@ export default function IssuesTable({
                     <tr
                       key={iss.key}
                       onClick={() => setSelectedIssue(iss)}
-                      className="hover:bg-slate-50/90 dark:hover:bg-slate-950/50 transition-colors cursor-pointer"
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                     >
                       {/* Clave */}
-                      <td className="px-6 py-4 font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm">
+                      <td className="px-6 py-5 font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm">
                         {iss.key}
                       </td>
 
                       {/* Título */}
-                      <td className="px-6 py-4 font-semibold text-slate-700 dark:text-slate-200 text-sm" title={iss.summary}>
+                      <td className="px-6 py-5 font-semibold text-slate-800 dark:text-slate-100 text-sm" title={iss.summary}>
                         {iss.summary}
                       </td>
 
                       {/* Responsable */}
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-5">
                         <div className="flex items-center gap-2.5">
                           {iss.assignee ? (
                             <>
@@ -385,7 +386,7 @@ export default function IssuesTable({
                       </td>
 
                       {/* Estado */}
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-5 text-center">
                         <span className={`inline-block px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                           iss.status === 'Done' || iss.status === 'Finalizado' || iss.status === 'Cerrado'
                             ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20'
@@ -398,12 +399,12 @@ export default function IssuesTable({
                       </td>
 
                       {/* Tiempo de Ciclo */}
-                      <td className="px-6 py-4 text-right font-mono font-bold text-slate-700 dark:text-slate-200 text-xs">
+                      <td className="px-6 py-5 text-right font-mono font-bold text-slate-700 dark:text-slate-200 text-xs">
                         {Number(iss.cycle_time).toFixed(1)}d
                       </td>
 
                       {/* Alerta */}
-                      <td className="px-6 py-4 text-center">
+                      <td className="px-6 py-5 text-center">
                         {isBugActive ? (
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20">
                             Bug Crítico
