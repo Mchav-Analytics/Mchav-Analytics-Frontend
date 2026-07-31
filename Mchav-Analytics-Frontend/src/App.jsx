@@ -501,7 +501,7 @@ function Dashboard() {
 
       {activeTab === 'historial' && (
         <div className="w-full flex flex-col gap-y-8 text-slate-800 dark:text-slate-100 pb-8">
-          <ActivityTimeline recentActivity={recentActivity} />
+          <ActivityTimeline recentActivity={recentActivity} onSelectIssueKey={handleSelectIssue} />
         </div>
       )}
 

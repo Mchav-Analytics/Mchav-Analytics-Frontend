@@ -1,43 +1,45 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import {
   Bug,
   CheckCircle2,
   Clock3,
   PlusCircle,
   AlertTriangle,
+  Search,
+  Filter,
+  Users,
+  Activity,
+  Calendar,
+  Tag
 } from "lucide-react";
 
 const activityConfig = {
   created: {
-    icon: <PlusCircle size={10} />,
+    icon: <PlusCircle size={12} />,
     color: "text-sky-600 dark:text-sky-400",
-    bg: "bg-sky-500/10",
-    border: "border-sky-500/20",
-    badgeBg: "bg-sky-500",
+    bg: "bg-sky-50 dark:bg-sky-500/10",
+    border: "border-sky-200 dark:border-sky-500/20",
     title: "Tarea Creada",
   },
   closed: {
-    icon: <CheckCircle2 size={10} />,
+    icon: <CheckCircle2 size={12} />,
     color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
-    badgeBg: "bg-emerald-500",
+    bg: "bg-emerald-50 dark:bg-emerald-500/10",
+    border: "border-emerald-200 dark:border-emerald-500/20",
     title: "Tarea Completada",
   },
   bug: {
-    icon: <Bug size={10} />,
-    color: "text-rose-600 dark:text-rose-450",
-    bg: "bg-rose-500/10",
-    border: "border-rose-500/20",
-    badgeBg: "bg-rose-500",
+    icon: <Bug size={12} />,
+    color: "text-rose-600 dark:text-rose-400",
+    bg: "bg-rose-50 dark:bg-rose-500/10",
+    border: "border-rose-200 dark:border-rose-500/20",
     title: "Bug Reportado",
   },
   blocked: {
-    icon: <AlertTriangle size={10} />,
-    color: "text-amber-600 dark:text-amber-450",
-    bg: "bg-amber-500/10",
-    border: "border-amber-500/20",
-    badgeBg: "bg-amber-500",
+    icon: <AlertTriangle size={12} />,
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-50 dark:bg-amber-500/10",
+    border: "border-amber-200 dark:border-amber-500/20",
     title: "Alerta / Impedimento",
   },
 };
@@ -56,141 +58,299 @@ const getInitials = (name = "") => {
 const getUserGradient = (name = "") => {
   const lower = name.toLowerCase();
   if (lower.includes("stephany")) {
-    return "from-violet-500 to-indigo-600 text-white";
+    return "bg-indigo-600 text-white";
   }
   if (lower.includes("carlos")) {
-    return "from-amber-500 to-orange-600 text-white";
+    return "bg-amber-600 text-white";
   }
   if (lower.includes("sistema")) {
-    return "from-slate-600 to-slate-800 text-white";
+    return "bg-slate-700 text-white";
   }
-  return "from-emerald-500 to-teal-600 text-white";
+  return "bg-emerald-600 text-white";
 };
 
-export default function ActivityTimeline({ recentActivity = [] }) {
-  if (!recentActivity.length) {
-    return (
-      <div className="w-full rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#131B2E] p-16 shadow-md dark:shadow-xl text-center transition-all duration-300">
-        <Clock3 size={44} className="text-slate-400 dark:text-slate-500 mx-auto mb-4 animate-pulse" />
-        <h3 className="text-base font-bold text-slate-800 dark:text-white">No hay actividad registrada</h3>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium max-w-sm mx-auto">
-          Los eventos y cambios que realice el equipo durante este sprint aparecerán aquí organizados cronológicamente.
-        </p>
-      </div>
-    );
-  }
+export default function ActivityTimeline({ recentActivity = [], onSelectIssueKey }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL' | 'created' | 'closed' | 'bug' | 'blocked'
+
+  // Estadísticas para tarjetas KPI superiores
+  const stats = useMemo(() => {
+    const total = recentActivity.length;
+    const bugs = recentActivity.filter(a => a.type === 'bug').length;
+    const closed = recentActivity.filter(a => a.type === 'closed').length;
+    const users = new Set(recentActivity.map(a => a.user)).size;
+
+    return { total, bugs, closed, users };
+  }, [recentActivity]);
+
+  // Filtrado dinámico por búsqueda y tipo
+  const filteredActivity = useMemo(() => {
+    return recentActivity.filter(act => {
+      const matchesType = typeFilter === 'ALL' || act.type === typeFilter;
+      const term = searchTerm.trim().toLowerCase();
+      const matchesSearch = !term || 
+        act.user.toLowerCase().includes(term) ||
+        act.desc.toLowerCase().includes(term) ||
+        act.key.toLowerCase().includes(term);
+
+      return matchesType && matchesSearch;
+    });
+  }, [recentActivity, searchTerm, typeFilter]);
 
   return (
-    <div className="w-full rounded-3xl border border-slate-200 dark:border-white/5 bg-white dark:bg-[#131B2E] p-6 sm:p-8 shadow-md dark:shadow-xl space-y-7 transition-all duration-300">
+    <div className="w-full space-y-10 animate-in fade-in duration-300 pb-16">
       
-      {/* Cabecera */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-100 dark:border-white/5">
-        <div className="flex items-center gap-3.5">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-indigo-500/10 text-indigo-500 dark:text-indigo-400">
-            <Clock3 size={20} />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900 dark:text-white">
-              Historial de Actividad del Sprint
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-455 mt-0.5">
-              Línea de tiempo cronológica de incidencias y cambios
-            </p>
+      {/* SECCIÓN 1: TARJETAS KPI RESUMEN AL ESTILO REPORTES */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6" style={{ marginBottom: '2.5rem' }}>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Total Eventos</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.total}</p>
+              <p className="text-xs text-slate-400 font-medium">Registrados en sprint</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/30">
+              <Activity size={22} />
+            </div>
           </div>
         </div>
-        <span className="self-start sm:self-center rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-white/5 px-3.5 py-1 text-[10px] font-black text-slate-650 dark:text-slate-350 uppercase tracking-wider font-mono">
-          {recentActivity.length} eventos registrados
-        </span>
-      </div>
 
-      {/* Flujo de Línea de Tiempo Vertical */}
-      <div className="relative pl-1 sm:pl-3 py-2">
-        {/* Línea de conexión vertical central */}
-        <div className="absolute left-[20px] sm:left-[28px] top-4 bottom-8 w-0.5 bg-slate-150 dark:bg-white/5" />
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Bugs Detectados</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.bugs}</p>
+              <p className="text-xs text-slate-400 font-medium">Alertas en tiempo real</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/30">
+              <Bug size={22} />
+            </div>
+          </div>
+        </div>
 
-        <div className="space-y-6">
-          {recentActivity.map((act, index) => {
-            const cfg = activityConfig[act.type] || activityConfig.created;
-            const isFirst = index === 0;
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Tareas Entregadas</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.closed}</p>
+              <p className="text-xs text-slate-400 font-medium">Cierres completados</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/30">
+              <CheckCircle2 size={22} />
+            </div>
+          </div>
+        </div>
 
-            return (
-              <div key={index} className="relative flex items-start gap-4 sm:gap-5 group">
-                
-                {/* 1. NODO AVATAR DEL DESARROLLADOR */}
-                <div className="relative shrink-0 z-10">
-                  <div className={`
-                    flex h-10 w-10 items-center justify-center rounded-full 
-                    bg-gradient-to-br ${getUserGradient(act.user)}
-                    font-mono font-black text-[11px] tracking-wider
-                    shadow-md transition-all duration-300 group-hover:scale-105
-                  `}>
-                    {getInitials(act.user)}
-                  </div>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm hover:border-slate-300 dark:hover:border-slate-700 transition-all">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-2">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">Integrantes Activos</p>
+              <p className="text-3xl font-black text-slate-800 dark:text-slate-50 tracking-tight">{stats.users}</p>
+              <p className="text-xs text-slate-400 font-medium">Interactuando hoy</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-500/15 border-sky-200 dark:border-sky-500/30">
+              <Users size={22} />
+            </div>
+          </div>
+        </div>
+      </section>
 
-                  {/* Icono de Estado Overlapping (Diseño Slack) */}
-                  <div className={`
-                    absolute -bottom-0.5 -right-0.5 h-4.5 w-4.5 rounded-full 
-                    bg-white dark:bg-[#131B2E] border border-slate-200 dark:border-white/10
-                    flex items-center justify-center ${cfg.color} shadow-sm z-20
-                  `}>
-                    {cfg.icon}
-                  </div>
+      {/* SECCIÓN 2: TARJETA PRINCIPAL DE LÍNEA DE TIEMPO AL ESTILO REPORTES */}
+      <div 
+        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden transition-all duration-300"
+        style={{ marginTop: '2.5rem' }}
+      >
+        {/* CABECERA DE LA TARJETA */}
+        <div 
+          className="border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex flex-col md:flex-row md:items-center justify-between gap-6"
+          style={{ padding: '1.75rem 2rem', marginBottom: '1.5rem' }}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+              <Clock3 size={22} />
+            </div>
+            <div className="space-y-1">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-slate-100">
+                Historial de Actividad del Sprint
+              </h2>
+              <p className="text-xs text-slate-400">
+                Línea de tiempo cronológica de los últimos eventos y cambios del equipo.
+              </p>
+            </div>
+          </div>
 
-                  {/* Anillo de pulso sutil para el evento más reciente */}
-                  {isFirst && (
-                    <span className="absolute -inset-0.5 rounded-full bg-indigo-500/25 dark:bg-indigo-500/10 animate-ping -z-10" />
-                  )}
-                </div>
+          <span className="rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-1.5 text-xs font-mono font-bold text-slate-600 dark:text-slate-300 shrink-0">
+            {filteredActivity.length} eventos visibles
+          </span>
+        </div>
 
-                {/* 2. BURBUJA DE EVENTO ESTILIZADA */}
-                <div className={`
-                  flex-1 min-w-0 p-4.5 rounded-2xl border
-                  bg-slate-50/50 dark:bg-[#1B243B]/30 
-                  border-slate-200/60 dark:border-white/5
-                  transition-all duration-300 
-                  group-hover:bg-slate-50 dark:group-hover:bg-[#1B243B]/55
-                  group-hover:border-slate-300 dark:group-hover:border-white/10
-                  group-hover:shadow-sm
-                `}>
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                    
-                    {/* Detalles */}
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <strong className="text-sm font-bold text-slate-900 dark:text-white">
-                          {act.user}
-                        </strong>
-                        <span className={`
-                          text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md
-                          ${cfg.bg} ${cfg.color}
+        {/* BUSCADOR A LA IZQUIERDA Y PÍLDORAS DE FILTRO A LA DERECHA */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5" style={{ padding: '0 2rem', marginBottom: '2.5rem' }}>
+          
+          {/* Buscador a la izquierda */}
+          <div className="flex-1 min-w-[280px]">
+            <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+              <Search size={18} className="text-slate-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Buscar por usuario (ej. Stephany), evento o clave (PA-114)..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm font-medium"
+              />
+            </div>
+          </div>
+
+          {/* Filtros a la derecha */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 justify-start lg:justify-end">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1.5">
+              <Filter size={14} /> FILTRAR POR:
+            </span>
+
+            <button
+              type="button"
+              onClick={() => setTypeFilter('ALL')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                typeFilter === 'ALL'
+                  ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-indigo-400'
+              }`}
+            >
+              Todos ({recentActivity.length})
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTypeFilter('created')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                typeFilter === 'created'
+                  ? 'bg-sky-600 text-white border-sky-500 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-sky-400'
+              }`}
+            >
+              Creadas
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTypeFilter('closed')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                typeFilter === 'closed'
+                  ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-emerald-400'
+              }`}
+            >
+              Completadas
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTypeFilter('bug')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                typeFilter === 'bug'
+                  ? 'bg-rose-600 text-white border-rose-500 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-rose-400'
+              }`}
+            >
+              Bugs
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTypeFilter('blocked')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                typeFilter === 'blocked'
+                  ? 'bg-amber-600 text-white border-amber-500 shadow-sm'
+                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-amber-400'
+              }`}
+            >
+              Alertas
+            </button>
+          </div>
+
+        </div>
+
+        {/* LISTADO CRONOLÓGICO DE EVENTOS CON SEPARACIÓN AMPLIA */}
+        <div style={{ padding: '0 2rem 2.5rem 2rem' }}>
+          {filteredActivity.length === 0 ? (
+            <div className="py-20 text-center text-slate-400 text-xs font-semibold">
+              No se encontraron eventos con los criterios de búsqueda aplicados.
+            </div>
+          ) : (
+            <div className="relative pl-6 sm:pl-8 py-2">
+              {/* Línea vertical conectora */}
+              <div className="absolute left-[28px] sm:left-[36px] top-6 bottom-8 w-0.5 bg-slate-200 dark:bg-slate-800" />
+
+              <div className="space-y-6">
+                {filteredActivity.map((act, index) => {
+                  const cfg = activityConfig[act.type] || activityConfig.created;
+
+                  return (
+                    <div key={index} className="relative flex items-start gap-4 sm:gap-6 group">
+                      
+                      {/* Avatar del Usuario */}
+                      <div className="relative shrink-0 z-10">
+                        <div className={`
+                          w-11 h-11 rounded-2xl flex items-center justify-center
+                          ${getUserGradient(act.user)}
+                          font-mono font-black text-xs tracking-wider shadow-sm
                         `}>
-                          {cfg.title}
-                        </span>
+                          {getInitials(act.user)}
+                        </div>
+
+                        <div className={`
+                          absolute -bottom-1 -right-1 w-5 h-5 rounded-full 
+                          bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800
+                          flex items-center justify-center ${cfg.color} shadow-sm z-20
+                        `}>
+                          {cfg.icon}
+                        </div>
                       </div>
-                      <p className="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium">
-                        {act.desc}
-                      </p>
+
+                      {/* Tarjeta del Evento Desahogada */}
+                      <div className="flex-1 min-w-0 p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800 transition-all group-hover:border-slate-300 dark:group-hover:border-slate-700">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2.5 flex-wrap">
+                              <strong className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                                {act.user}
+                              </strong>
+                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                                {cfg.title}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
+                              {act.desc}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0">
+                            <span className="text-[11px] text-slate-400 font-medium font-mono">
+                              {act.time}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => onSelectIssueKey && onSelectIssueKey(act.key)}
+                              className="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 text-xs font-mono font-black tracking-wider text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 shadow-sm cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all"
+                            >
+                              {act.key}
+                            </button>
+                          </div>
+
+                        </div>
+                      </div>
+
                     </div>
-
-                    {/* Metadata y Tag de Jira */}
-                    <div className="flex items-center gap-3 sm:self-start shrink-0">
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold font-mono">
-                        {act.time}
-                      </span>
-                      <span className="rounded-lg bg-indigo-50 dark:bg-indigo-550/10 px-2.5 py-0.5 text-[10px] font-mono font-black tracking-widest text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/15 shadow-sm">
-                        {act.key}
-                      </span>
-                    </div>
-
-                  </div>
-                </div>
-
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
+
       </div>
 
     </div>
   );
-}
+}
