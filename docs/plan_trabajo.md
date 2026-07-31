@@ -82,14 +82,14 @@ Para facilitar el desarrollo del frontend de forma aislada y evitar lidiar con l
 ### 📌 SEMANA 4: Filtros, Exporte y Pruebas Unitarias
 *Enfoque: Refinamiento de la UX, descarga de reportes y aseguramiento de calidad.*
 
-*   [ ] **Filtros Avanzados en Dashboard:**
+*   [x] **Filtros Avanzados en Dashboard:**
     *   Habilitar filtros por fecha (rango de inicio/fin), selección de Proyectos y Sprints.
-*   [ ] **Búsqueda y Exportación de Datos:**
+*   [x] **Búsqueda y Exportación de Datos:**
     *   Permitir buscar tareas por texto en la tabla.
     *   Implementar un botón "Exportar a CSV" para descargar las métricas del Sprint actual en una hoja de cálculo.
-*   [ ] **Escribir Pruebas Unitarias (Vitest + Testing Library):**
+*   [x] **Escribir Pruebas Unitarias (Vitest + Testing Library):**
     *   Escribir casos de prueba para validar que los componentes del dashboard y filtros se rendericen correctamente, cubriendo al menos el 90% de los componentes críticos.
-*   [ ] **Optimización y Responsive Design:**
+*   [x] **Optimización y Responsive Design:**
     *   Garantizar que la aplicación sea responsiva en dispositivos móviles.
 
 ---
