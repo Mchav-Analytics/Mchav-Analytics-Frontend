@@ -47,11 +47,11 @@ Para facilitar el desarrollo del frontend de forma aislada y evitar lidiar con l
 ### 📌 SEMANA 2: Autenticación, Seguridad y Vistas por Rol
 *Enfoque: Control de acceso seguro por Jira OAuth, protección de rutas y perfiles de visualización.*
 
-*   [ ] **Diseñar Formulario de Login (Premium):**
-    *   Mejorar [LoginView.jsx](file:///c:/Users/hlozano/Desktop/Proyecto/Mchav-Analytics-Frontend/src/views/auth/LoginView.jsx) con una UI moderna que inicie el flujo OAuth llamando a `/api/auth/login`.
-*   [ ] **Implementar Rutas Protegidas (`ProtectedRoute`):**
+*   [x] **Diseñar Formulario de Login (Premium):**
+    *   Mejorar LoginView.jsx con una UI moderna que inicie el flujo OAuth llamando a `/api/auth/login`.
+*   [x] **Implementar Rutas Protegidas (`ProtectedRoute`):**
     *   Crear un componente para envolver `/dashboard`. Debe validar la sesión consultando `/api/auth/me` con Axios. Redirigir a `/login` si no hay sesión.
-*   [ ] **Implementar Control de Vistas por Rol (RBAC):**
+*   [x] **Implementar Control de Vistas por Rol (RBAC):**
     *   Adaptar la interfaz según el rol del usuario devuelto por el backend (`rol` de la sesión):
         *   🔑 **Rol: Administrador:** Acceso completo a todo el sistema (Dashboard general, Pestaña de Sincronización ETL y Pestaña de Gestión de Usuarios/Roles).
         *   📊 **Rol: Líder Técnico (Tech Lead):** Acceso al Dashboard de métricas avanzadas (Velocity, Lead Time y Cycle Time promedio del equipo, mapeo de estados), pero ocultando las pestañas de administración del sistema y usuarios.

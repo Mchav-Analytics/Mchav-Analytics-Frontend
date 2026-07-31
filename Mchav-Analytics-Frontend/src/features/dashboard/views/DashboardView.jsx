@@ -4,6 +4,7 @@ import { RefreshCw, ChevronDown, Activity, AlertTriangle } from 'lucide-react';
 // Importar los subcomponentes visuales refinados
 import KPIGrid from '../components/KPIGrid';
 import AdminKPIGrid from '../components/AdminKPIGrid';
+import DevKPIGrid from '../components/DevKPIGrid';
 import VelocityChart from '../../analytics/components/VelocityChart';
 import BurndownChart from '../../analytics/components/BurndownChart';
 import SprintHealth from '../components/SprintHealth';
@@ -178,9 +179,16 @@ export default function DashboardView({
 
           </div>
 
-          {/* 1. REJILLA DE KPIs CONSOLIDADOS */}
+          {/* 1. REJILLA DE KPIs CONSOLIDADOS Sopesados por Rol (RBAC) */}
           {userProfile?.rol === 'Administrador' ? (
             <AdminKPIGrid />
+          ) : userProfile?.rol === 'Desarrollador' ? (
+            <DevKPIGrid 
+              issues={issues}
+              userProfile={userProfile}
+              activeKpi={activeKpi}
+              prevKpi={prevKpi}
+            />
           ) : (
             <KPIGrid 
               activeKpi={activeKpi}
