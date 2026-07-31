@@ -26,15 +26,6 @@ function Sidebar({
 }) {
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      {/* Botón flotante para abrir/cerrar */}
-      <button 
-        onClick={() => setIsCollapsed(!isCollapsed)} 
-        className="sidebar-toggle-btn"
-        aria-label={isCollapsed ? "Expandir panel" : "Colapsar panel"}
-      >
-        {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-      </button>
-
       {/* Cabecera */}
       <div 
         className="sidebar-header" 

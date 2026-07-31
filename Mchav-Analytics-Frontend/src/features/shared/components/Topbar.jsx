@@ -19,7 +19,8 @@ function Topbar({
   onToggleMobileMenu,
   setActiveTab,
   issues = [],
-  onSelectIssue
+  onSelectIssue,
+  onRoleChange
 }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
@@ -190,6 +191,22 @@ function Topbar({
           )}
         </div>
 
+        {/* Selector Dinámico de Rol para Pruebas de Vistas (RBAC) */}
+        {onRoleChange && (
+          <div className="hidden md:flex items-center gap-1 bg-slate-100 dark:bg-[#131B2E] border border-slate-200 dark:border-white/5 rounded-xl px-2.5 py-1">
+            <span className="text-[10px] font-black text-slate-400 uppercase">Vista:</span>
+            <select
+              value={userProfile?.rol || 'Desarrollador'}
+              onChange={(e) => onRoleChange(e.target.value)}
+              className="bg-transparent text-indigo-600 dark:text-indigo-400 text-xs font-bold border-none outline-none cursor-pointer pr-1"
+            >
+              <option value="Desarrollador" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">💻 Desarrollador</option>
+              <option value="Líder Técnico" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">📊 Líder Técnico</option>
+              <option value="Administrador" className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">🔑 Administrador</option>
+            </select>
+          </div>
+        )}
+
         {/* Perfil e Configuración */}
         <button
           type="button"
@@ -202,7 +219,7 @@ function Topbar({
               {userProfile ? userProfile.nombre : 'Usuario'}
             </span>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: '1.2' }}>
-              {userProfile && userProfile.rol ? userProfile.rol : 'Administrador'}
+              {userProfile && userProfile.rol ? userProfile.rol : 'Desarrollador'}
             </span>
           </div>
 

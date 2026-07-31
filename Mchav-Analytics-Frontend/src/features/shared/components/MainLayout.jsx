@@ -20,6 +20,7 @@ function MainLayout({
   setDateFilter,
   issues = [],
   onSelectIssueKey,
+  onRoleChange,
   userProfile: propUserProfile
 }) {
   const [userProfile, setUserProfile] = useState(null);
@@ -40,6 +41,13 @@ function MainLayout({
         });
     }
   }, [propUserProfile]);
+
+  const handleRoleChange = (newRole) => {
+    setUserProfile(prev => ({ ...prev, rol: newRole }));
+    if (typeof onRoleChange === 'function') {
+      onRoleChange(newRole);
+    }
+  };
 
   // Cerrar el menú móvil automáticamente al cambiar de pestaña
   useEffect(() => {
@@ -81,6 +89,7 @@ function MainLayout({
           setActiveTab={setActiveTab}
           issues={issues}
           onSelectIssue={onSelectIssueKey}
+          onRoleChange={handleRoleChange}
         />
         
         <div className="dashboard-inner w-full px-6 sm:px-8">

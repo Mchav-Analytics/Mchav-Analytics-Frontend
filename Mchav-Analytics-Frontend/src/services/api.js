@@ -24,7 +24,7 @@ let mockCurrentUser = {
   id_usuario: 1,
   email: "stephanyleon326@gmail.com",
   nombre: "Stephany Leon",
-  rol: "Administrador", 
+  rol: "Desarrollador", 
   activo: true,
   api_token_vinculado: true
 };

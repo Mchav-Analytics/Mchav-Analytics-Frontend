@@ -466,6 +466,7 @@ function Dashboard() {
       setDateFilter={setDateFilter}
       issues={issues}
       onSelectIssueKey={handleSelectIssue}
+      onRoleChange={(newRole) => setUserProfile(prev => ({ ...prev, rol: newRole }))}
     >
       {activeTab === 'dashboard' && (
         <DashboardView 
