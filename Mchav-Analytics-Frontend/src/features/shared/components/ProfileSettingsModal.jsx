@@ -79,7 +79,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#030712]/80 backdrop-blur-md animate-in fade-in duration-200">
       <div 
         ref={modalRef}
-        className="w-full max-w-2xl bg-[#0B1120] border border-[#1E293B] rounded-[28px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-left flex flex-col max-h-[85vh]"
+        className="w-full max-w-2xl bg-[#0B1120] border border-[#1E293B] rounded-[28px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-left flex flex-col max-h-[90vh]"
       >
         
         {/* CABECERA DEL MODAL */}
@@ -110,8 +110,8 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
           </button>
         </div>
 
-        {/* CONTENIDO SCROLLABLE DEL MODAL */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-7 space-y-6">
+        {/* CONTENIDO SCROLLABLE DEL MODAL (CON min-h-0 PARA PREVENIR REBOSAMIENTO DE FLEXBOX) */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5">
           
           {/* PASO 1: INFORMACIÓN DE LA CUENTA */}
           <div className="space-y-3.5">
