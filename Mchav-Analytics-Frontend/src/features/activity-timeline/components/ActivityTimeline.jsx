@@ -98,7 +98,7 @@ export default function ActivityTimeline({ recentActivity = [], onSelectIssueKey
   }, [recentActivity, searchTerm, typeFilter]);
 
   return (
-    <div className="w-full space-y-10 animate-in fade-in duration-300 pb-16">
+    <div className="w-full p-6 sm:p-8 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-300 pb-16">
       
       {/* SECCIÓN 1: TARJETAS KPI RESUMEN AL ESTILO REPORTES */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6" style={{ marginBottom: '2.5rem' }}>

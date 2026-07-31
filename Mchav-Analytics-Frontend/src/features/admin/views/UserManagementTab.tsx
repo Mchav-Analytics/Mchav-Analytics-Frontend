@@ -168,7 +168,7 @@ export default function UserManagementTab() {
   const perms = selectedUser ? getPermissionsForRole(selectedUser.role) : { viewDashboard: false, syncData: false, manageUsers: false, systemConfig: false };
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full p-6 sm:p-8 space-y-8 max-w-[1600px] mx-auto">
       
       {/* Cabecera */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-4 border-b border-slate-200 dark:border-slate-800 gap-4">

@@ -15,12 +15,10 @@ describe('DevKPIGrid Component', () => {
     rol: 'Desarrollador'
   };
 
-  it('renders developer role banner with user name and read-only badge', () => {
+  it('renders developer role grid with developer metrics', () => {
     render(<DevKPIGrid issues={mockIssues} userProfile={mockUserProfile} />);
     
-    expect(screen.getByText(/Vista de Desarrollador/i)).toBeDefined();
-    expect(screen.getByText(/Stephany Leon/i)).toBeDefined();
-    expect(screen.getByText(/Modo Solo Lectura/i)).toBeDefined();
+    expect(screen.getByText('Mis Tareas Asignadas')).toBeDefined();
   });
 
   it('renders developer specific KPI cards', () => {

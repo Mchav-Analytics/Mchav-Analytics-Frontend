@@ -135,7 +135,7 @@ export default function IssuesTable({
   }, [issues]);
 
   return (
-    <div className="w-full space-y-10 animate-in fade-in duration-300 pb-16">
+    <div className="w-full p-6 sm:p-8 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-300 pb-16">
       
       {/* SECCIÓN 1: TARJETAS KPI RESUMEN AL ESTILO REPORTES */}
       <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6" style={{ marginBottom: '2.5rem' }}>
@@ -452,49 +452,127 @@ export default function IssuesTable({
 
       </div>
 
-      {/* DRAWER LATERAL DE DETALLES DEL TICKET */}
+      {/* MODAL CENTRADO Y AMPLIO CON RELLENOS AMPLIOS DE 3REM A LOS LADOS */}
       {selectedIssue && createPortal(
-        <div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="flex-1" onClick={handleCloseDrawer} />
-
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 shadow-2xl h-full flex flex-col border-l border-slate-200 dark:border-slate-800 animate-in slide-in-from-right duration-200 overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/45 animate-in fade-in duration-150">
+          <div 
+            className="w-full max-w-2xl bg-[#0B132B] border border-slate-800 rounded-[32px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-left flex flex-col max-h-[88vh]"
+          >
             
-            {/* Cabecera */}
-            <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-center justify-between">
+            {/* Cabecera con 3rem de padding lateral */}
+            <div 
+              className="border-b border-slate-800/80 bg-[#0B132B] flex items-center justify-between shrink-0"
+              style={{ padding: '1.75rem 3rem' }}
+            >
               <div className="flex items-center gap-3">
                 {selectedIssue.type === 'Bug' ? (
-                  <span className="bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md">
+                  <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg">
                     Bug
                   </span>
                 ) : (
-                  <span className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md">
+                  <span className="bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 text-xs font-black uppercase tracking-wider px-3 py-1 rounded-lg">
                     {selectedIssue.type || 'Tarea'}
                   </span>
                 )}
-                <span className="font-mono font-black text-slate-800 dark:text-slate-100 text-sm">
+                <span className="font-mono font-black text-white text-base">
                   {selectedIssue.key}
                 </span>
               </div>
               <button
                 onClick={handleCloseDrawer}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-none"
+                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer border-none bg-transparent"
               >
-                <X size={18} />
+                <X size={20} />
               </button>
             </div>
 
-            {/* Cuerpo */}
-            <div className="p-6 flex-1 overflow-y-auto space-y-6">
-              <div className="space-y-1">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Resumen</span>
-                <h3 className="text-base font-bold text-slate-850 dark:text-slate-100 leading-snug">
+            {/* Cuerpo Scrollable con 3rem de padding lateral */}
+            <div 
+              className="flex-1 min-h-0 overflow-y-auto space-y-7"
+              style={{ padding: '2.25rem 3rem' }}
+            >
+              
+              {/* Sección Resumen */}
+              <div>
+                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-1.5">
+                  RESUMEN
+                </span>
+                <h3 className="text-2xl font-black text-white leading-tight">
                   {selectedIssue.summary}
                 </h3>
               </div>
 
-              <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Descripción</span>
-                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              {/* Alerta de Bug Crítico (si corresponde) */}
+              {(selectedIssue.type === 'Bug' || selectedIssue.priority === 'Highest' || selectedIssue.priority === 'Critical') && (
+                <div className="p-4.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-semibold leading-relaxed flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full bg-rose-500/20 text-rose-400 font-bold text-sm flex items-center justify-center shrink-0">
+                    !
+                  </div>
+                  <span>Este es un bug crítico de soporte. Requiere atención prioritaria.</span>
+                </div>
+              )}
+
+              {/* Sección Detalles de la Tarea (Rejilla 2x2 de Tarjetas Amplias) */}
+              <div>
+                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-3.5">
+                  DETALLES DE LA TAREA
+                </span>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  
+                  {/* Tarjeta Estado */}
+                  <div className="bg-[#070D1B] border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                      <Activity size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">ESTADO:</p>
+                      <p className="text-sm font-bold text-indigo-400 truncate mt-0.5">{selectedIssue.status}</p>
+                    </div>
+                  </div>
+
+                  {/* Tarjeta Prioridad */}
+                  <div className="bg-[#070D1B] border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20 flex items-center justify-center shrink-0">
+                      <Tag size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">PRIORIDAD:</p>
+                      <p className="text-sm font-bold text-rose-400 uppercase truncate mt-0.5">{selectedIssue.priority}</p>
+                    </div>
+                  </div>
+
+                  {/* Tarjeta Responsable */}
+                  <div className="bg-[#070D1B] border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                      <User size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">RESPONSABLE:</p>
+                      <p className="text-sm font-bold text-white truncate mt-0.5">{selectedIssue.assignee || 'Stephany Leon'}</p>
+                    </div>
+                  </div>
+
+                  {/* Tarjeta Cycle Time */}
+                  <div className="bg-[#070D1B] border border-slate-800 rounded-2xl p-4 flex items-center gap-3.5">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                      <Clock size={20} />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">CYCLE TIME:</p>
+                      <p className="text-sm font-bold font-mono text-white truncate mt-0.5">{Number(selectedIssue.cycle_time || 0).toFixed(1)} días</p>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Sección Descripción */}
+              <div>
+                <span className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider block mb-2.5">
+                  DESCRIPCIÓN
+                </span>
+                <p className="text-xs text-slate-300 leading-relaxed font-medium">
                   {selectedIssue.type === 'Bug' 
                     ? `Se reportó un fallo crítico relacionado con "${selectedIssue.summary}". El equipo de desarrollo debe revisar los logs del servidor y verificar si existe excepción no controlada.`
                     : `Incidencia planificada para el sprint actual: "${selectedIssue.summary}". Incluye análisis de requisitos, maquetación de la interfaz y validación con el equipo.`
@@ -502,58 +580,34 @@ export default function IssuesTable({
                 </p>
               </div>
 
-              {/* Lista Vertical de Detalles */}
-              <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Detalles de la Tarea</span>
-                
-                <div className="bg-slate-50 dark:bg-slate-950/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 space-y-3 text-xs">
-                  
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
-                      <Activity size={13} className="text-indigo-500" /> Estado
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedIssue.status}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
-                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
-                      <User size={13} className="text-indigo-500" /> Responsable
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedIssue.assignee || 'Sin asignar'}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
-                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
-                      <Tag size={13} className="text-indigo-500" /> Prioridad
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">{selectedIssue.priority}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between border-t border-slate-200/50 dark:border-slate-800/50 pt-2.5">
-                    <span className="font-semibold text-slate-400 flex items-center gap-1.5">
-                      <Clock size={13} className="text-indigo-500" /> Cycle Time
-                    </span>
-                    <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{Number(selectedIssue.cycle_time).toFixed(1)} días</span>
-                  </div>
-
-                </div>
-              </div>
-
-              {selectedIssue.type === 'Bug' && (selectedIssue.priority === 'Highest' || selectedIssue.priority === 'Critical') && (
-                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-800 dark:text-rose-300 text-xs font-semibold leading-relaxed flex items-start gap-3">
-                  <ShieldAlert size={16} className="shrink-0 mt-0.5 text-rose-500" />
-                  <span>Este es un bug crítico de soporte. Requiere atención prioritaria.</span>
-                </div>
-              )}
             </div>
 
-            {/* Acciones */}
-            <div className="p-6 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex items-center gap-3">
+            {/* PIE DE PÁGINA CON 3REM DE PADDING LATERAL */}
+            <div 
+              className="border-t border-slate-800 bg-[#0B132B] flex items-center gap-4 shrink-0"
+              style={{ padding: '1.75rem 3rem 2.25rem 3rem' }}
+            >
               <a
                 href={`https://beltrancamilo592.atlassian.net/browse/${selectedIssue.key}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors text-center cursor-pointer no-underline border-none"
+                className="transition-all hover:bg-[#30386E] shadow-md"
+                style={{
+                  flex: 1,
+                  padding: '0.85rem 1.5rem',
+                  borderRadius: '0.75rem',
+                  backgroundColor: '#282E5C',
+                  border: '1px solid #3E4682',
+                  color: '#FFFFFF',
+                  fontSize: '0.875rem',
+                  fontWeight: '700',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  textDecoration: 'none',
+                  cursor: 'pointer'
+                }}
               >
                 Abrir en Jira ↗
               </a>
@@ -565,7 +619,22 @@ export default function IssuesTable({
                       onUpdateIssueStatus(selectedIssue.key, 'In Progress');
                       setSelectedIssue(prev => ({ ...prev, status: 'In Progress' }));
                     }}
-                    className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 font-bold text-xs py-3 px-4 rounded-xl transition-colors cursor-pointer border-none"
+                    className="transition-all hover:bg-slate-700"
+                    style={{
+                      flex: 1,
+                      padding: '0.85rem 1.5rem',
+                      borderRadius: '0.75rem',
+                      backgroundColor: '#1E293B',
+                      border: '1px solid #334155',
+                      color: '#F8FAFC',
+                      fontSize: '0.875rem',
+                      fontWeight: '700',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      cursor: 'pointer'
+                    }}
                   >
                     Reabrir Ticket
                   </button>
@@ -575,9 +644,24 @@ export default function IssuesTable({
                       onUpdateIssueStatus(selectedIssue.key, 'Done');
                       setSelectedIssue(prev => ({ ...prev, status: 'Done' }));
                     }}
-                    className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-3 px-4 rounded-xl transition-colors cursor-pointer border-none"
+                    className="transition-all hover:bg-[#1B7059] shadow-md"
+                    style={{
+                      flex: 1,
+                      padding: '0.85rem 1.5rem',
+                      borderRadius: '0.75rem',
+                      backgroundColor: '#17634F',
+                      border: '1px solid #238A6F',
+                      color: '#FFFFFF',
+                      fontSize: '0.875rem',
+                      fontWeight: '700',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '0.5rem',
+                      cursor: 'pointer'
+                    }}
                   >
-                    ✓ Completar
+                    <CheckCircle2 size={16} /> Completar
                   </button>
                 )
               )}

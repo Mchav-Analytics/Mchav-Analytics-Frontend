@@ -100,7 +100,7 @@ export default function DashboardView({
   };
 
   return (
-    <div className="w-full flex flex-col gap-y-9 text-slate-800 dark:text-slate-100 pb-12">
+    <div className="w-full px-6 py-4 flex flex-col gap-y-6 text-slate-800 dark:text-slate-100 pb-12">
       
       {/* Alertas de Sincronización */}
       {metricsError && (
@@ -126,7 +126,7 @@ export default function DashboardView({
       ) : (
         <>
           {/* BARRA SUPERIOR CON TÍTULO DINÁMICO E INTERACTIVO (DISEÑO LINEAR) */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-slate-200 dark:border-white/5 pt-1">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-white/5 pt-1">
             
             <div className="flex items-center gap-3.5">
               {/* Monograma de Marca M */}
@@ -180,22 +180,24 @@ export default function DashboardView({
           </div>
 
           {/* 1. REJILLA DE KPIs CONSOLIDADOS Sopesados por Rol (RBAC) */}
-          {userProfile?.rol === 'Administrador' ? (
-            <AdminKPIGrid />
-          ) : userProfile?.rol === 'Desarrollador' ? (
-            <DevKPIGrid 
-              issues={issues}
-              userProfile={userProfile}
-              activeKpi={activeKpi}
-              prevKpi={prevKpi}
-            />
-          ) : (
-            <KPIGrid 
-              activeKpi={activeKpi}
-              prevKpi={prevKpi}
-              issues={issues}
-            />
-          )}
+          <div>
+            {userProfile?.rol === 'Administrador' ? (
+              <AdminKPIGrid />
+            ) : userProfile?.rol === 'Desarrollador' ? (
+              <DevKPIGrid 
+                issues={issues}
+                userProfile={userProfile}
+                activeKpi={activeKpi}
+                prevKpi={prevKpi}
+              />
+            ) : (
+              <KPIGrid 
+                activeKpi={activeKpi}
+                prevKpi={prevKpi}
+                issues={issues}
+              />
+            )}
+          </div>
 
           {/* Banner de alerta roja (Solo para Administrador) */}
           {userProfile?.rol === 'Administrador' && (

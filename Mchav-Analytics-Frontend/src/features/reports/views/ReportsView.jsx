@@ -274,7 +274,7 @@ export default function ReportsView({ projects = [], isDarkMode }) {
     'text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider';
 
   return (
-    <div className="w-full flex flex-col gap-10 animate-in fade-in duration-300 pb-12">
+    <div className="w-full p-6 sm:p-8 space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-300 pb-12">
         {successMsg && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-800 dark:text-teal-300 shadow-sm animate-in slide-in-from-top-2">
             <CheckCircle2 size={18} className="shrink-0" />
