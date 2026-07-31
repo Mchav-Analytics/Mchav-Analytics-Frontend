@@ -10,14 +10,15 @@ import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
-import UserManagementTab from './features/users/views/UserManagementTab';
+import AdminUsuariosView from './features/users/views/AdminUsuariosView';
+import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import LoginView from './features/auth/views/LoginView';
 import { useAuth, AuthProvider } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
 
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
-  const [activeTab, setActiveTab] = useState('dashboard');          // Pestaña activa actual
+  const [activeTab, setActiveTab] = useState('usuarios');           // Pestaña activa actual (por defecto Usuarios y Roles para Admin)
   const [isDarkMode, setIsDarkMode] = useState(true);              // Estado de tema claro / oscuro
 
   // Filtro de rango de fechas activo
@@ -44,7 +45,9 @@ function MainAppContent() {
   useEffect(() => {
     if (user?.rol === 'DEVELOPER') {
       setActiveTab('developer');
-    } else if ((user?.rol === 'ADMIN' || user?.rol === 'MANAGER') && activeTab === 'developer') {
+    } else if (user?.rol === 'ADMIN') {
+      setActiveTab('usuarios');
+    } else if (user?.rol === 'MANAGER' && activeTab === 'developer') {
       setActiveTab('dashboard');
     }
   }, [user]);
@@ -193,35 +196,40 @@ function MainAppContent() {
   // Configurar títulos y subtítulos legibles en el Topbar por pestaña activa
   const getTabHeaderDetails = () => {
     switch (activeTab) {
+      case 'proyectos':
+        return {
+          title: "Dashboard de Proyectos ",
+          subtitle: "Estructura de equipos, líderes técnicos y desarrolladores asignados."
+        };
       case 'developer':
         return {
-          title: "Espacio de Trabajo del Desarrollador 👨‍💻",
+          title: "Espacio de Trabajo del Desarrollador ",
           subtitle: "Consola de consultas JQL y métricas de tu trabajo personal."
         };
       case 'tasks':
         return {
-          title: "Gestión de Tareas y Burndown 📝",
+          title: "Gestión de Tareas y Burndown ",
           subtitle: "Seguimiento al esfuerzo restante, historiales de usuario y tipos de incidencias."
         };
       case 'history':
         return {
-          title: "Histórico General de Rendimiento 🕒",
+          title: "Histórico General de Rendimiento ",
           subtitle: "Análisis acumulado de velocidad por sprint y tendencias de entrega."
         };
       case 'usuarios':
         return {
-          title: "Seguridad y RBAC 🔐",
+          title: "Seguridad y RBAC ",
           subtitle: "Control de accesos y administración de roles del equipo."
         };
       case 'sincronizacion':
         return {
-          title: "Auditoría de ETL 🔄",
+          title: "Auditoría de ETL ",
           subtitle: "Historial de sincronización y estado de los datos."
         };
       case 'dashboard':
       default:
         return {
-          title: "Resumen 👋",
+          title: "Resumen",
           subtitle: "Aquí tienes un panorama general de tus proyectos."
         };
     }
@@ -272,8 +280,12 @@ function MainAppContent() {
         <SystemSyncTab />
       )}
 
+      {activeTab === 'proyectos' && (
+        <ProyectosDashboardView />
+      )}
+
       {activeTab === 'usuarios' && (
-        <UserManagementTab />
+        <AdminUsuariosView />
       )}
     </MainLayout>
   );

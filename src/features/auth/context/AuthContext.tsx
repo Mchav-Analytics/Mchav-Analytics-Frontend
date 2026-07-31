@@ -154,7 +154,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Cierre de sesión real: Si sale el Desarrollador, reinicia aprobaciones para permitir enviar la notificación de nuevo
   const logout = async () => {
-    setLoading(true);
     try {
       await authService.logoutMock();
     } catch (err) {
@@ -168,9 +167,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
 
       localStorage.removeItem('mock_user_session');   // Eliminar datos de la sesión activa
-      setUser(null);                                  // Limpiar estado de usuario en React
-      setLoading(false);
-      window.location.href = '/';                     // Redirección limpia a la pantalla de Login
+      setUser(null);                                  // Limpiar estado de usuario en React (cambio de vista SPA inmediato sin pantallazo)
     }
   };
 

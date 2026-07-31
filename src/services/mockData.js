@@ -115,8 +115,8 @@ export const mockSyncLogs = [
   }
 ];
 
-// Helper asíncrono para emular el retraso natural de la red en milisegundos (250 ms)
-const delay = (ms = 250) => new Promise(resolve => setTimeout(resolve, ms));
+// Helper asíncrono para emular el retraso natural de la red en milisegundos (0 ms para ejecucion instantanea)
+const delay = () => Promise.resolve();
 
 // ============================================================================
 // SERVICIOS MOCK (Simulan las llamadas HTTP a la API REST)

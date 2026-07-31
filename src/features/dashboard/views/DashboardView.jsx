@@ -4,7 +4,7 @@
 // Vista con 4 KPIs superiores, Velocidad por Sprint, Burndown,
 // Salud del Sprint (75% Estable) y Gráfica de Dona interactiva. Adaptada a temas y espaciados limpios.
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Zap, 
   CheckCircle2, 
@@ -17,8 +17,11 @@ import {
   AlertTriangle,
   Bug,
   User,
-  FileText
+  FileText,
+  Shield,
+  X
 } from 'lucide-react';
+import { useAuth } from '../../auth/context/AuthContext';
 import { 
   ResponsiveContainer, 
   ComposedChart, 
@@ -72,7 +75,19 @@ const InfoTooltip = ({ text }) => (
 );
 
 function DashboardView({ subTab = 'dashboard' }) {
+  const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false); // Estado de animación del botón de refresco
+  const [showActiveToast, setShowActiveToast] = useState(true);
+
+  const isPending = user?.status === 'PENDING' && user?.rol === 'MANAGER';
+
+  useEffect(() => {
+    if (user?.rol === 'MANAGER' && !isPending) {
+      setShowActiveToast(true);
+      const timer = setTimeout(() => setShowActiveToast(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isPending, user?.rol]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -91,6 +106,48 @@ function DashboardView({ subTab = 'dashboard' }) {
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200">
+      
+      {/* CUADRO DE NOTIFICACIÓN DE ESTADO PENDIENTE PARA MANAGER */}
+      {isPending && (
+        <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 dark:border-amber-500/40 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl shrink-0 mt-0.5">
+              <Clock size={24} className="animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-base font-extrabold text-slate-900 dark:text-amber-200">
+                  ⏳ Estado: Pendiente de Asignación de Rol de Líder Técnico
+                </h3>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                Tu solicitud ha sido enviada al Administrador. Una vez aprobada, tendrás acceso completo a la gestión de proyectos y tableros consolidados.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOAST FLOTANTE TEMPORAL DE ROL ACTIVADO (MÁNAGER) */}
+      {!isPending && user?.rol === 'MANAGER' && showActiveToast && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 shadow-md flex items-center justify-between gap-3 text-emerald-900 dark:text-emerald-300 animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold shrink-0">
+              <Shield size={18} />
+            </div>
+            <div>
+              <h4 className="text-xs font-extrabold">🎉 ¡Rol Activado: Líder Técnico (MANAGER)!</h4>
+              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">El Administrador te ha asignado el acceso a los tableros consolidados y métricas del equipo.</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => setShowActiveToast(false)}
+            className="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
       
       {/* 1. CABECERA: HISTÓRICO GENERAL Y BOTÓN DE REFRESCO */}
       <div className="flex items-center justify-between pt-1">
