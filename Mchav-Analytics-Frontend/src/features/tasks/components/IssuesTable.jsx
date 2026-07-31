@@ -227,34 +227,36 @@ export default function IssuesTable({
           </button>
         </div>
 
-        {/* BUSCADOR CON ESPACIADO PROPIO */}
-        <div style={{ padding: '0 2rem', marginBottom: '1.5rem' }}>
-          <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-            <Search size={18} className="text-slate-400 shrink-0" />
-            <input
-              type="text"
-              placeholder="Buscar por clave (ej. PA-101), título, responsable o estado..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm font-medium"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent shrink-0"
-              >
-                <X size={16} />
-              </button>
-            )}
+        {/* BUSCADOR A LA IZQUIERDA Y PÍLDORAS DE FILTRO A LA DERECHA */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5" style={{ padding: '0 2rem', marginBottom: '2rem' }}>
+          
+          {/* Buscador a la izquierda */}
+          <div className="flex-1 min-w-[280px]">
+            <div className="flex items-center gap-3 px-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+              <Search size={18} className="text-slate-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Buscar por clave (ej. PA-101), título, responsable o estado..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full bg-transparent border-none outline-none text-slate-800 dark:text-slate-100 placeholder-slate-400 text-sm font-medium"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer border-none bg-transparent shrink-0"
+                >
+                  <X size={16} />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
 
-        {/* PÍLDORAS DE FILTRO CON ESPACIADO PROPIO */}
-        <div style={{ padding: '0 2rem', marginBottom: '2rem' }}>
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-2 flex items-center gap-1.5">
-              <Filter size={14} /> Filtrar por:
+          {/* Píldoras de Filtro a la derecha ("al otro lado") */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 justify-start lg:justify-end">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-400 mr-1 flex items-center gap-1.5">
+              <Filter size={14} /> FILTRAR POR:
             </span>
 
             <button
@@ -317,9 +319,10 @@ export default function IssuesTable({
               <AlertTriangle size={14} className="text-rose-500" /> Alertas ({stats.critical})
             </button>
           </div>
+
         </div>
 
-        {/* TABLA LIMPIA Y DESAHOGADA (SIN BARRAS GRISES BRUSCAS) */}
+        {/* TABLA LIMPIA Y DESAHOGADA */}
         {issuesLoading ? (
           <div className="py-24 text-center text-slate-400 animate-pulse text-xs font-bold">
             Cargando listado de tareas del sprint...
@@ -335,7 +338,7 @@ export default function IssuesTable({
             <table className="w-full text-left border-collapse min-w-[960px]">
               <thead>
                 <tr className="text-[11px] font-extrabold uppercase tracking-wider text-slate-400 border-b border-slate-100 dark:border-slate-800 bg-slate-50/40 dark:bg-slate-950/20">
-                  <th onClick={() => requestSort('key')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none w-32">
+                  <th onClick={() => requestSort('key')} className="pl-10 pr-6 py-5 cursor-pointer hover:text-indigo-500 select-none w-36">
                     Clave {sortConfig.key === 'key' ? (sortConfig.direction === 'asc' ? '▲' : '▼') : ''}
                   </th>
                   <th onClick={() => requestSort('summary')} className="px-6 py-5 cursor-pointer hover:text-indigo-500 select-none">
@@ -364,8 +367,8 @@ export default function IssuesTable({
                       onClick={() => setSelectedIssue(iss)}
                       className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
                     >
-                      {/* Clave */}
-                      <td className="px-6 py-5 font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm">
+                      {/* Clave desplaza a la derecha con pl-10 */}
+                      <td className="pl-10 pr-6 py-5 font-mono font-black text-indigo-600 dark:text-indigo-400 text-sm">
                         {iss.key}
                       </td>
 
