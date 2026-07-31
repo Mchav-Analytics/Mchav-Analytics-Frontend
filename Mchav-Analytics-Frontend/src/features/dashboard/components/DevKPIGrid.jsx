@@ -46,17 +46,6 @@ export default function DevKPIGrid({ issues = [], userProfile, activeKpi, prevKp
 
   return (
     <section className="w-full space-y-4">
-      {/* Banner identificador de vista individual */}
-      <div className="flex items-center justify-between p-3.5 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-700 dark:text-indigo-300">
-        <div className="flex items-center gap-2 text-xs font-bold">
-          <UserCheck size={16} className="text-indigo-500" />
-          <span>Vista de Desarrollador • Mostrando métricas personales de <strong>{userName}</strong></span>
-        </div>
-        <span className="text-[10px] uppercase font-mono font-bold bg-indigo-500/20 px-2.5 py-0.5 rounded-full text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
-          Modo Solo Lectura
-        </span>
-      </div>
-
       {/* Rejilla de 4 KPIs Individuales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
         

@@ -454,7 +454,10 @@ export default function ReportsView({ projects = [], isDarkMode }) {
               </div>
             </div>
 
-            <div className="rounded-xl border border-teal-200 dark:border-teal-500/20 bg-teal-50/70 dark:bg-teal-500/10 px-5 py-4 text-xs font-semibold text-teal-800 dark:text-teal-300 flex flex-wrap items-center gap-2">
+            <div 
+              className="rounded-xl border border-teal-200 dark:border-teal-500/20 bg-teal-50/70 dark:bg-teal-500/10 px-5 py-4 text-xs font-semibold text-teal-800 dark:text-teal-300 flex flex-wrap items-center gap-2"
+              style={{ marginTop: '1.5rem' }}
+            >
               <FolderKanban size={14} className="shrink-0" />
               El PDF se generará para <strong>{selectedMeta?.code}</strong>
               <span className="text-teal-700/80 dark:text-teal-400/80 font-medium">

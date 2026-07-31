@@ -270,30 +270,32 @@ export default function ActivityTimeline({ recentActivity = [], onSelectIssueKey
 
         </div>
 
-        {/* LISTADO CRONOLÓGICO DE EVENTOS CON SEPARACIÓN AMPLIA */}
+        {/* LISTADO CRONOLÓGICO DE EVENTOS SIN LÍNEA VERTICAL CON TARJETAS INDEPENDIENTES */}
         <div style={{ padding: '0 2rem 2.5rem 2rem' }}>
           {filteredActivity.length === 0 ? (
             <div className="py-20 text-center text-slate-400 text-xs font-semibold">
               No se encontraron eventos con los criterios de búsqueda aplicados.
             </div>
           ) : (
-            <div className="relative pl-6 sm:pl-8 py-2">
-              {/* Línea vertical conectora */}
-              <div className="absolute left-[28px] sm:left-[36px] top-6 bottom-8 w-0.5 bg-slate-200 dark:bg-slate-800" />
+            <div className="flex flex-col gap-4">
+              {filteredActivity.map((act, index) => {
+                const cfg = activityConfig[act.type] || activityConfig.created;
 
-              <div className="space-y-6">
-                {filteredActivity.map((act, index) => {
-                  const cfg = activityConfig[act.type] || activityConfig.created;
-
-                  return (
-                    <div key={index} className="relative flex items-start gap-4 sm:gap-6 group">
+                return (
+                  <div 
+                    key={index} 
+                    className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl bg-white dark:bg-[#070D1B] border border-slate-200/90 dark:border-slate-800 shadow-sm shadow-slate-200/50 transition-all hover:border-indigo-400/50 dark:hover:border-slate-700 hover:shadow-md"
+                  >
+                    
+                    {/* LADO IZQUIERDO: AVATAR + DETALLES DEL EVENTO */}
+                    <div className="flex items-center gap-4 min-w-0">
                       
                       {/* Avatar del Usuario */}
-                      <div className="relative shrink-0 z-10">
+                      <div className="relative shrink-0">
                         <div className={`
                           w-11 h-11 rounded-2xl flex items-center justify-center
                           ${getUserGradient(act.user)}
-                          font-mono font-black text-xs tracking-wider shadow-sm
+                          font-mono font-black text-xs tracking-wider shadow-md
                         `}>
                           {getInitials(act.user)}
                         </div>
@@ -301,50 +303,46 @@ export default function ActivityTimeline({ recentActivity = [], onSelectIssueKey
                         <div className={`
                           absolute -bottom-1 -right-1 w-5 h-5 rounded-full 
                           bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800
-                          flex items-center justify-center ${cfg.color} shadow-sm z-20
+                          flex items-center justify-center ${cfg.color} shadow-sm z-10
                         `}>
                           {cfg.icon}
                         </div>
                       </div>
 
-                      {/* Tarjeta del Evento Desahogada */}
-                      <div className="flex-1 min-w-0 p-5 rounded-2xl bg-slate-50/60 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800 transition-all group-hover:border-slate-300 dark:group-hover:border-slate-700">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2.5 flex-wrap">
-                              <strong className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                                {act.user}
-                              </strong>
-                              <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
-                                {cfg.title}
-                              </span>
-                            </div>
-                            <p className="text-xs text-slate-600 dark:text-slate-300 font-medium">
-                              {act.desc}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-[11px] text-slate-400 font-medium font-mono">
-                              {act.time}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => onSelectIssueKey && onSelectIssueKey(act.key)}
-                              className="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 text-xs font-mono font-black tracking-wider text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 shadow-sm cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all"
-                            >
-                              {act.key}
-                            </button>
-                          </div>
-
+                      {/* Información de Usuario y Acción */}
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex items-center gap-2.5 flex-wrap">
+                          <strong className="text-sm font-bold text-slate-800 dark:text-slate-100">
+                            {act.user}
+                          </strong>
+                          <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-md border ${cfg.bg} ${cfg.color} ${cfg.border}`}>
+                            {cfg.title}
+                          </span>
                         </div>
+                        <p className="text-xs text-slate-600 dark:text-slate-300 font-medium truncate">
+                          {act.desc}
+                        </p>
                       </div>
 
                     </div>
-                  );
-                })}
-              </div>
+
+                    {/* LADO DERECHO: HORA Y CHIP INTERACTIVO DE CLAVE DE TAREA */}
+                    <div className="flex items-center gap-3 shrink-0 self-end sm:self-center">
+                      <span className="text-[11px] text-slate-400 font-medium font-mono">
+                        {act.time}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => onSelectIssueKey && onSelectIssueKey(act.key)}
+                        className="rounded-lg bg-indigo-50 dark:bg-indigo-500/10 px-3.5 py-1.5 text-xs font-mono font-black tracking-wider text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 shadow-sm cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-all"
+                      >
+                        {act.key}
+                      </button>
+                    </div>
+
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

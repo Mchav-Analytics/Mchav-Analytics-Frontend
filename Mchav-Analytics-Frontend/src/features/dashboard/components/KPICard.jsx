@@ -53,19 +53,19 @@ export default function KPICard({
   };
 
   // Determinar colores de borde y fondos degradados según el colorClass en Modo Claro y Oscuro
-  let cardBorder = "border-indigo-100 dark:border-white/5 hover:border-indigo-300";
-  let hoverBg = "hover:bg-slate-50 dark:hover:bg-[#17223F]";
-  let borderColor = "border-b-indigo-500/40 group-hover:border-b-indigo-500";
+  let cardBorder = "border-slate-200 dark:border-white/5 hover:border-indigo-400";
+  let hoverBg = "hover:bg-indigo-50/30 dark:hover:bg-[#17223F]";
+  let borderColor = "border-b-indigo-500 group-hover:border-b-indigo-600";
 
   if (colorClass.includes("emerald")) {
-    cardBorder = "border-emerald-100 dark:border-white/5 hover:border-emerald-300";
-    borderColor = "border-b-emerald-500/40 group-hover:border-b-emerald-500";
+    cardBorder = "border-slate-200 dark:border-white/5 hover:border-emerald-400";
+    borderColor = "border-b-emerald-500 group-hover:border-b-emerald-600";
   } else if (colorClass.includes("amber")) {
-    cardBorder = "border-amber-100 dark:border-white/5 hover:border-amber-300";
-    borderColor = "border-b-amber-500/40 group-hover:border-b-amber-500";
+    cardBorder = "border-slate-200 dark:border-white/5 hover:border-amber-400";
+    borderColor = "border-b-amber-500 group-hover:border-b-amber-600";
   } else if (colorClass.includes("sky")) {
-    cardBorder = "border-sky-100 dark:border-white/5 hover:border-sky-300";
-    borderColor = "border-b-sky-500/40 group-hover:border-b-sky-500";
+    cardBorder = "border-slate-200 dark:border-white/5 hover:border-sky-400";
+    borderColor = "border-b-sky-500 group-hover:border-b-sky-600";
   }
 
   return (
@@ -79,7 +79,7 @@ export default function KPICard({
           <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${colorClass} shadow-inner`}>
             {Icon && <Icon size={14} />}
           </div>
-          <span className="text-[10px] font-extrabold text-slate-550 dark:text-slate-350 uppercase tracking-widest truncate">
+          <span className="text-[10px] font-extrabold text-slate-700 dark:text-slate-300 uppercase tracking-widest truncate">
             {title}
           </span>
         </div>

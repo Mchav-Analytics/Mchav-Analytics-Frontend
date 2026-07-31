@@ -217,13 +217,28 @@ export default function IssuesTable({
             </div>
           </div>
 
-          {/* BOTÓN ESTILO REPORTES (VERDE ESMERALDA TIPO "DESCARGAR PDF") */}
+          {/* BOTÓN ESTILO REPORTES (VERDE ESMERALDA CON ESPACIADO HOLGADO) */}
           <button
             onClick={exportToCSV}
             disabled={issues.length === 0}
-            className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 bg-[#00A884] hover:bg-[#009172] text-white text-xs font-black rounded-xl transition-all shadow-md shadow-[#00A884]/20 cursor-pointer border-none disabled:opacity-50 shrink-0 hover:scale-[1.02]"
+            className="transition-all shadow-md shadow-[#00A884]/20 cursor-pointer hover:scale-[1.02] disabled:opacity-50 shrink-0"
+            style={{
+              padding: '0.75rem 1.5rem',
+              borderRadius: '0.75rem',
+              backgroundColor: '#00A884',
+              border: 'none',
+              color: '#FFFFFF',
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.625rem',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer'
+            }}
           >
-            <Download size={16} /> Exportar CSV
+            <Download size={16} className="text-white shrink-0" /> Exportar CSV
           </button>
         </div>
 

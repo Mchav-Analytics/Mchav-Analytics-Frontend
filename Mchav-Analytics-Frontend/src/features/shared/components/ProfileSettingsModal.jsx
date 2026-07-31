@@ -76,27 +76,30 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-[#030712]/80 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-200">
       <div 
         ref={modalRef}
-        className="w-full max-w-2xl bg-[#0B1120] border border-[#1E293B] rounded-[28px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-left flex flex-col max-h-[90vh]"
+        className="w-full max-w-2xl bg-[#0B132B] border border-slate-800 rounded-[28px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-left flex flex-col max-h-[90vh]"
       >
         
-        {/* CABECERA DEL MODAL */}
-        <div className="px-6 sm:px-7 py-5 border-b border-[#1E293B] bg-[#0B1120] flex items-center justify-between shrink-0">
+        {/* CABECERA CON PADDING EXPLÍCITO */}
+        <div 
+          className="border-b border-slate-800 bg-[#0B132B] flex items-center justify-between shrink-0"
+          style={{ padding: '1.5rem 2rem' }}
+        >
           <div className="flex items-center gap-4">
-            <div className="w-[54px] h-[54px] rounded-2xl bg-gradient-to-br from-[#00A3FF] to-[#0057FF] text-white flex items-center justify-center font-bold text-lg shadow-md shadow-blue-500/20 shrink-0 font-sans">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-white flex items-center justify-center font-black text-xl shadow-lg shadow-cyan-500/20 shrink-0 font-mono">
               {getUserInitials()}
             </div>
-            <div className="space-y-0.5">
-              <h2 className="text-[18px] font-bold text-white leading-tight font-sans">
+            <div className="space-y-1">
+              <h2 className="text-xl font-bold text-white leading-tight font-sans">
                 {userProfile?.nombre || 'Usuario'}
               </h2>
-              <div className="flex items-center gap-2">
-                <span className="text-[13px] text-slate-400 font-normal">
+              <div className="flex items-center gap-2.5">
+                <span className="text-sm text-slate-400 font-normal">
                   {userProfile?.email || 'No registrado'}
                 </span>
-                <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-[#1E2738] text-[#93C5FD] border border-[#2D394E] inline-block">
+                <span className="px-3 py-0.5 rounded-lg text-xs font-semibold bg-[#1E2738] text-[#93C5FD] border border-[#2D394E] inline-block">
                   {userProfile?.rol || 'Administrador'}
                 </span>
               </div>
@@ -104,56 +107,68 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-[#1E293B] transition-colors cursor-pointer border-none bg-transparent"
+            className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800/60 transition-colors cursor-pointer border-none bg-transparent"
           >
             <X size={20} />
           </button>
         </div>
 
-        {/* CONTENIDO SCROLLABLE DEL MODAL (CON min-h-0 PARA PREVENIR REBOSAMIENTO DE FLEXBOX) */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-5 sm:p-6 space-y-5">
+        {/* CONTENIDO PRINCIPAL CON MÁRGENES HOLGADOS */}
+        <div 
+          className="flex-1 min-h-0 overflow-y-auto"
+          style={{ padding: '1.75rem 2rem' }}
+        >
           
           {/* PASO 1: INFORMACIÓN DE LA CUENTA */}
-          <div className="space-y-3.5">
-            <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-full bg-[#00B894] text-[#0B1120] font-bold text-xs flex items-center justify-center shrink-0 font-mono">
+          <div style={{ marginBottom: '2rem' }}>
+            <div className="flex items-center gap-3" style={{ marginBottom: '1rem' }}>
+              <div className="w-6 h-6 rounded-full bg-[#00B894] text-slate-950 font-black text-xs flex items-center justify-center shrink-0 font-mono">
                 1
               </div>
-              <h3 className="text-sm font-bold text-white">
+              <h3 className="text-sm font-bold text-white tracking-wide">
                 Información de la cuenta
               </h3>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {/* Tarjeta Nombre */}
-              <div className="bg-[#0D1424] border border-[#1E293B] rounded-2xl p-4 flex flex-col justify-between h-[104px]">
-                <div className="w-9 h-9 rounded-xl bg-[#6366F1]/10 text-[#818CF8] border border-[#6366F1]/20 flex items-center justify-center">
+              <div 
+                className="bg-[#070D1B] border border-slate-800 rounded-2xl flex flex-col justify-between"
+                style={{ padding: '1.25rem', height: '120px' }}
+              >
+                <div className="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center">
                   <User size={18} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">NOMBRE</p>
+                  <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">NOMBRE</p>
                   <p className="text-sm font-bold text-white truncate mt-0.5">{userProfile?.nombre || 'Usuario'}</p>
                 </div>
               </div>
 
               {/* Tarjeta Correo */}
-              <div className="bg-[#0D1424] border border-[#1E293B] rounded-2xl p-4 flex flex-col justify-between h-[104px]">
-                <div className="w-9 h-9 rounded-xl bg-[#00B894]/10 text-[#00B894] border border-[#00B894]/20 flex items-center justify-center">
+              <div 
+                className="bg-[#070D1B] border border-slate-800 rounded-2xl flex flex-col justify-between"
+                style={{ padding: '1.25rem', height: '120px' }}
+              >
+                <div className="w-9 h-9 rounded-xl bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center justify-center">
                   <Mail size={18} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">CORREO</p>
+                  <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">CORREO</p>
                   <p className="text-sm font-bold text-white truncate mt-0.5">{userProfile?.email || 'No registrado'}</p>
                 </div>
               </div>
 
               {/* Tarjeta Rol */}
-              <div className="bg-[#0D1424] border border-[#1E293B] rounded-2xl p-4 flex flex-col justify-between h-[104px]">
-                <div className="w-9 h-9 rounded-xl bg-[#F59E0B]/10 text-[#F59E0B] border border-[#F59E0B]/20 flex items-center justify-center">
+              <div 
+                className="bg-[#070D1B] border border-slate-800 rounded-2xl flex flex-col justify-between"
+                style={{ padding: '1.25rem', height: '120px' }}
+              >
+                <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
                   <Shield size={18} />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">ROL</p>
+                  <p className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">ROL</p>
                   <p className="text-sm font-bold text-white truncate mt-0.5">{userProfile?.rol || 'Administrador'}</p>
                 </div>
               </div>
@@ -161,37 +176,40 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
           </div>
 
           {/* PASO 2: INTEGRACIÓN CON JIRA */}
-          <div className="space-y-3.5 pt-1">
-            <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-full bg-[#6366F1] text-white font-bold text-xs flex items-center justify-center shrink-0 font-mono">
+          <div>
+            <div className="flex items-center justify-between gap-3 flex-wrap" style={{ marginBottom: '1rem' }}>
+              <div className="flex items-center gap-3">
+                <div className="w-6 h-6 rounded-full bg-[#6366F1] text-white font-black text-xs flex items-center justify-center shrink-0 font-mono">
                   2
                 </div>
-                <h3 className="text-sm font-bold text-white">
+                <h3 className="text-sm font-bold text-white tracking-wide">
                   Integración con Jira
                 </h3>
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider bg-[#1E293B] text-slate-400 border border-[#334155] rounded-lg">
+                <span className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider bg-slate-800 text-slate-400 border border-slate-700 rounded-lg">
                   OPCIONAL
                 </span>
                 {isLinkedToken ? (
-                  <span className="px-3 py-1 text-xs font-semibold bg-emerald-500/10 text-[#00B894] border border-[#00B894]/30 rounded-lg flex items-center gap-1.5">
+                  <span className="px-3.5 py-1 text-xs font-semibold bg-emerald-500/10 text-[#00B894] border border-[#00B894]/30 rounded-lg flex items-center gap-1.5">
                     <CheckCircle2 size={13} /> Vinculado
                   </span>
                 ) : (
-                  <span className="px-3 py-1 text-xs font-semibold bg-amber-500/10 text-[#F59E0B] border border-[#F59E0B]/30 rounded-lg flex items-center gap-1.5">
+                  <span className="px-3.5 py-1 text-xs font-semibold bg-amber-500/10 text-[#F59E0B] border border-[#F59E0B]/30 rounded-lg flex items-center gap-1.5">
                     <AlertCircle size={13} /> Pendiente
                   </span>
                 )}
               </div>
             </div>
 
-            {/* CONTENEDOR VINCULACIÓN API TOKEN */}
-            <div className="bg-[#0D1424] border border-[#1E293B] rounded-2xl p-5 space-y-5">
-              <div className="flex items-start gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-[#00B894]/10 text-[#00B894] border border-[#00B894]/20 flex items-center justify-center shrink-0">
+            {/* CAJA DE INTEGRACIÓN CON PADDING GENEROSO */}
+            <div 
+              className="bg-[#070D1B] border border-slate-800 rounded-2xl"
+              style={{ padding: '1.5rem' }}
+            >
+              <div className="flex items-start gap-4" style={{ marginBottom: '1.5rem' }}>
+                <div className="w-11 h-11 rounded-xl bg-[#00B894]/10 text-[#00B894] border border-[#00B894]/20 flex items-center justify-center shrink-0">
                   <Link2 size={20} />
                 </div>
                 <div>
@@ -203,21 +221,21 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
               </div>
 
               {credentialsSuccessMsg && (
-                <div className="p-3.5 rounded-xl bg-emerald-500/15 text-emerald-300 text-xs font-medium border border-emerald-500/30">
+                <div className="p-3.5 rounded-xl bg-emerald-500/15 text-emerald-300 text-xs font-medium border border-emerald-500/30" style={{ marginBottom: '1rem' }}>
                   {credentialsSuccessMsg}
                 </div>
               )}
               {credentialsErrorMsg && (
-                <div className="p-3.5 rounded-xl bg-rose-500/15 text-rose-300 text-xs font-medium border border-rose-500/30 break-words">
+                <div className="p-3.5 rounded-xl bg-rose-500/15 text-rose-300 text-xs font-medium border border-rose-500/30 break-words" style={{ marginBottom: '1rem' }}>
                   {credentialsErrorMsg}
                 </div>
               )}
 
-              {/* FORMULARIO */}
-              <form id="jira-credentials-form" onSubmit={handleSaveJiraCredentials} className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* FORMULARIO CON ESPACIADO ENTRE CAMPOS */}
+              <form id="jira-credentials-form" onSubmit={handleSaveJiraCredentials}>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ marginBottom: '1.25rem' }}>
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5 mb-1.5">
+                    <label className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5" style={{ marginBottom: '0.5rem' }}>
                       <Globe size={13} className="text-slate-400" /> DOMINIO DE JIRA
                     </label>
                     <input
@@ -225,12 +243,13 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
                       placeholder="https://tuempresa.atlassian.net"
                       value={jiraDomainInput}
                       onChange={(e) => setJiraDomainInput(e.target.value)}
-                      className="w-full bg-[#080D1A] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-[#00B894] transition-all font-mono"
+                      className="w-full bg-[#040812] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-[#00B894] transition-all font-mono"
+                      style={{ padding: '0.85rem 1rem' }}
                     />
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5 mb-1.5">
+                    <label className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5" style={{ marginBottom: '0.5rem' }}>
                       <Mail size={13} className="text-slate-400" /> CORREO DE JIRA
                     </label>
                     <input
@@ -238,13 +257,14 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
                       placeholder="usuario@empresa.com"
                       value={jiraEmailInput}
                       onChange={(e) => setJiraEmailInput(e.target.value)}
-                      className="w-full bg-[#080D1A] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-[#00B894] transition-all"
+                      className="w-full bg-[#040812] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-[#00B894] transition-all"
+                      style={{ padding: '0.85rem 1rem' }}
                     />
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between items-center mb-1.5">
+                  <div className="flex justify-between items-center" style={{ marginBottom: '0.5rem' }}>
                     <label className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider flex items-center gap-1.5">
                       <Key size={13} className="text-slate-400" /> API TOKEN
                     </label>
@@ -262,7 +282,8 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
                     placeholder="ATATT3xFfGF0..."
                     value={jiraTokenInput}
                     onChange={(e) => setJiraTokenInput(e.target.value)}
-                    className="w-full bg-[#080D1A] border border-[#1E293B] rounded-xl px-4 py-3 text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-[#00B894] transition-all font-mono"
+                    className="w-full bg-[#040812] border border-slate-800 rounded-xl text-xs text-slate-200 placeholder:text-slate-600 outline-none focus:border-[#00B894] transition-all font-mono"
+                    style={{ padding: '0.85rem 1rem' }}
                   />
                 </div>
               </form>
@@ -272,12 +293,28 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
 
         </div>
 
-        {/* PIE DE PÁGINA FIJO CON ACCIONES */}
-        <div className="px-6 sm:px-7 py-4 border-t border-[#1E293B] bg-[#0B1120] flex items-center justify-between shrink-0">
+        {/* PIE DE PÁGINA CON BOTONES PERFECTAMENTE ESTILIZADOS CON INLINE STYLES */}
+        <div 
+          className="border-t border-slate-800 bg-[#0B132B] flex items-center justify-between shrink-0"
+          style={{ padding: '1.25rem 2rem' }}
+        >
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2.5 rounded-xl border border-[#334155] bg-[#1E293B] hover:bg-[#334155] text-slate-200 text-xs font-bold transition-all cursor-pointer"
+            className="transition-all cursor-pointer hover:bg-slate-700"
+            style={{
+              padding: '0.75rem 1.75rem',
+              borderRadius: '0.75rem',
+              backgroundColor: '#1E293B',
+              border: '1px solid #334155',
+              color: '#F8FAFC',
+              fontSize: '0.875rem',
+              fontWeight: '700',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer'
+            }}
           >
             Cerrar
           </button>
@@ -286,15 +323,30 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
             type="submit"
             form="jira-credentials-form"
             disabled={isTestingCredentials}
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-[#00B894] to-[#6366F1] hover:opacity-90 text-white text-xs font-black transition-all shadow-lg shadow-[#00B894]/20 cursor-pointer border-none disabled:opacity-50"
+            className="transition-all cursor-pointer hover:opacity-90 disabled:opacity-50"
+            style={{
+              padding: '0.75rem 1.75rem',
+              borderRadius: '0.75rem',
+              background: 'linear-gradient(90deg, #00B894 0%, #5D5FEF 100%)',
+              border: 'none',
+              color: '#FFFFFF',
+              fontSize: '0.875rem',
+              fontWeight: '800',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.625rem',
+              boxShadow: '0 10px 25px -5px rgba(0, 184, 148, 0.25)',
+              cursor: 'pointer'
+            }}
           >
             {isTestingCredentials ? (
               <>
-                <RefreshCcw size={15} className="animate-spin" /> Verificando...
+                <RefreshCcw size={16} className="animate-spin text-white" /> Verificando...
               </>
             ) : (
               <>
-                <Lock size={15} /> Verificar y Guardar Credenciales
+                <Lock size={16} className="text-white shrink-0" /> Verificar y Guardar Credenciales
               </>
             )}
           </button>
@@ -304,4 +356,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
     </div>
   );
 }
+
+
+
 
