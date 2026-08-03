@@ -4,9 +4,10 @@
 // Incluye las pestañas de Resumen, Tareas (NUEVA), Historial (NUEVA), Sincronización y Usuarios y Roles.
 
 import React from 'react';
-import { 
-  LayoutDashboard, 
-  ClipboardList, 
+import {
+  FolderKanban,
+  LayoutDashboard,
+  ClipboardList,
   Users,
   Code,
   ChevronLeft,
@@ -18,13 +19,13 @@ import {
 import Logo from './Logo';
 import { useAuth } from '../../features/auth/context/AuthContext';
 
-function Sidebar({ 
-  activeTab, 
-  setActiveTab, 
-  isDarkMode, 
-  setIsDarkMode, 
-  isCollapsed, 
-  setIsCollapsed 
+function Sidebar({
+  activeTab,
+  setActiveTab,
+  isDarkMode,
+  setIsDarkMode,
+  isCollapsed,
+  setIsCollapsed
 }) {
   const { logout, user } = useAuth(); // Hook de autenticación global para obtener el usuario activo y su rol
 
@@ -45,27 +46,29 @@ function Sidebar({
       ];
     }
 
-    // Si el usuario es Líder Técnico (MANAGER), ve Resumen y Sincronización
+    // Si el usuario es Líder Técnico (MANAGER), ve Proyectos, Resumen y Sincronización
     if (userRole === 'MANAGER') {
       return [
+        { id: 'proyectos', label: 'Proyectos', icon: FolderKanban },
         { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
         { id: 'sincronizacion', label: 'Sincronización', icon: ClipboardList },
       ];
     }
 
-    // Si el usuario es Administrador (ADMIN), ve todas las pestañas
+    // Si el usuario es Administrador (ADMIN), ve Usuarios y Roles de primero y Proyectos debajo
     return [
+      { id: 'usuarios', label: 'Usuarios y Roles', icon: Users },
+      { id: 'proyectos', label: 'Proyectos', icon: FolderKanban },
       { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
       { id: 'sincronizacion', label: 'Sincronización', icon: ClipboardList },
-      { id: 'usuarios', label: 'Usuarios y Roles', icon: Users },
     ];
   }, [userRole]);
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
       {/* Botón flotante para abrir/cerrar panel */}
-      <button 
-        onClick={() => setIsCollapsed(!isCollapsed)} 
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
         className="sidebar-toggle-btn"
         aria-label={isCollapsed ? "Expandir panel" : "Colapsar panel"}
       >
@@ -73,22 +76,22 @@ function Sidebar({
       </button>
 
       {/* Cabecera con Logo Oficial */}
-      <div 
-        className="sidebar-header" 
-        style={{ 
-          borderBottom: 'none', 
-          marginBottom: '1.5rem', 
+      <div
+        className="sidebar-header"
+        style={{
+          borderBottom: 'none',
+          marginBottom: '1.5rem',
           paddingBottom: '0',
           justifyContent: isCollapsed ? 'center' : 'flex-start'
         }}
       >
-        <div 
-          className="sidebar-logo" 
-          style={{ 
-            background: 'none', 
-            width: 'auto', 
-            height: 'auto', 
-            display: 'flex', 
+        <div
+          className="sidebar-logo"
+          style={{
+            background: 'none',
+            width: 'auto',
+            height: 'auto',
+            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
           }}
@@ -102,7 +105,7 @@ function Sidebar({
           </span>
         )}
       </div>
-      
+
       {/* Menú de Navegación Principal Conservado e Incrementado con Tareas e Historial */}
       <nav className="sidebar-nav">
         {navItems.map((item) => {
