@@ -16,6 +16,9 @@ import {
   Clock,
   UserPlus,
   Edit3,
+  Trash2,
+  AlertTriangle,
+  RotateCcw,
   Check,
   TrendingUp,
   Bug,
@@ -338,15 +341,48 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     setShowConfirmModal(true);
   };
 
+  const [lastDeletedProject, setLastDeletedProject] = useState(null);
+
   const handleConfirmAssignment = () => {
     showToast(`Asignación de '${pendingAssignment?.project.name}' confirmada.`);
     setShowConfirmModal(false);
   };
 
-  const filteredProjects = projects.filter(p =>
-    p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.key.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [statusTab, setStatusTab] = useState('ACTIVE'); // 'ACTIVE' | 'INACTIVE' | 'ALL'
+  const [projectToDeactivate, setProjectToDeactivate] = useState(null);
+
+  const handleOpenDeactivateModal = (project) => {
+    setProjectToDeactivate(project);
+  };
+
+  const handleConfirmDeactivate = () => {
+    if (!projectToDeactivate) return;
+    setProjects(prev => prev.map(p =>
+      p.id === projectToDeactivate.id ? { ...p, status: 'INACTIVE', statusLabel: 'Desactivado' } : p
+    ));
+    if (expandedProjectId === projectToDeactivate.id) {
+      setExpandedProjectId(null);
+    }
+    showToast(`🔒 Proyecto '${projectToDeactivate.name}' desactivado.`);
+    setProjectToDeactivate(null);
+  };
+
+  const handleReactivateProject = (project) => {
+    setProjects(prev => prev.map(p =>
+      p.id === project.id ? { ...p, status: 'ACTIVE', statusLabel: 'Sprint 1 Activo' } : p
+    ));
+    showToast(`⚡ Proyecto '${project.name}' reactivado con éxito.`);
+  };
+
+  const filteredProjects = projects.filter(p => {
+    const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          p.key.toLowerCase().includes(searchTerm.toLowerCase());
+    if (!matchesSearch) return false;
+
+    if (statusTab === 'ACTIVE') return p.status !== 'INACTIVE';
+    if (statusTab === 'INACTIVE') return p.status === 'INACTIVE';
+    return true; // 'ALL'
+  });
 
   const activeProject = projects.find(p => p.id === expandedProjectId);
   const activeMetrics = activeProject ? getProjectMetrics(activeProject.id) : null;
@@ -357,6 +393,15 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         <div className="fixed top-6 right-6 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <Sparkles className="w-5 h-5 text-emerald-500" />
           <span className="text-xs font-black tracking-wide">{toastMessage}</span>
+          {lastDeletedProject && (
+            <button
+              type="button"
+              onClick={handleRestoreDeletedProject}
+              className="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black cursor-pointer ml-2 shadow-xs transition-all"
+            >
+              Deshacer
+            </button>
+          )}
           <button type="button" onClick={() => setToastMessage(null)} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 ml-3">
             <X size={15} />
           </button>
@@ -699,6 +744,54 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
+      {/* MODAL CENTRADO DE CONFIRMACIÓN PARA DESACTIVAR PROYECTO */}
+      {projectToDeactivate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-rose-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-center text-slate-900 dark:text-slate-100 animate-in zoom-in-95 duration-150">
+            <button
+              type="button"
+              onClick={() => setProjectToDeactivate(null)}
+              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Ícono de Advertencia */}
+            <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner border border-rose-200 dark:border-rose-500/30">
+              <AlertTriangle size={28} />
+            </div>
+
+            {/* Contenido / Pregunta */}
+            <div className="space-y-2">
+              <h3 className="text-xl font-black text-slate-900 dark:text-slate-50">
+                ¿Desea desactivar el proyecto?
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
+                El proyecto <strong className="text-slate-900 dark:text-slate-100">{projectToDeactivate.name}</strong> ({projectToDeactivate.key}) cambiará su estado a <span className="text-rose-600 dark:text-rose-400 font-bold">Desactivado</span>. Podrás reactivarlo en cualquier momento desde la pestaña de Desactivados.
+              </p>
+            </div>
+
+            {/* Botones Solicitados: Cancelar y Desactivar */}
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setProjectToDeactivate(null)}
+                className="w-1/2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDeactivate}
+                className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-lg shadow-rose-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
+              >
+                Desactivar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showConfirmModal && pendingAssignment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
@@ -714,23 +807,18 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      <section className="bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl px-7 py-7 sm:px-10 sm:py-9 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 min-h-[72px]">
-          <div className="space-y-1.5 pr-2">
-            <h2 className="text-2xl sm:text-3xl font-black flex items-center gap-3 text-slate-900 dark:text-slate-50">
-              <FolderKanban size={28} /> Proyectos y Equipos
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium">Asignaciones de Líderes Técnicos, Desarrolladores a cargo y métricas ejecutivas.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 shrink-0 lg:pl-4">
+      <section className="bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 sm:px-7 sm:py-4 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          {/* Botón Asignar + Buscador al lado (Izquierda) */}
+          <div className="flex flex-wrap items-center gap-3">
             {isAdmin && (
               <button
                 type="button"
                 onClick={handleOpenCreateModal}
                 className="group relative shrink-0 h-[38px] rounded-xl text-[11px] font-black text-white overflow-hidden inline-flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/30 active:scale-[0.98]"
                 style={{
-                  paddingLeft: 14,
-                  paddingRight: 14,
+                  paddingLeft: 16,
+                  paddingRight: 16,
                   background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)',
                   backgroundSize: '200% 200%',
                 }}
@@ -745,13 +833,51 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 <span className="relative z-10">+ Asignar Nuevo Proyecto</span>
               </button>
             )}
+
             <input
               type="text"
               placeholder="Buscar proyecto..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="h-[38px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-950 text-xs w-full sm:w-64 text-slate-800 dark:text-slate-100"
+              className="h-[38px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-950 text-xs w-full sm:w-64 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30"
             />
+          </div>
+
+          {/* Pestañas de Filtro (Derecha) */}
+          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0">
+            <button
+              type="button"
+              onClick={() => setStatusTab('ACTIVE')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                statusTab === 'ACTIVE' 
+                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Activos ({projects.filter(p => p.status !== 'INACTIVE').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusTab('INACTIVE')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                statusTab === 'INACTIVE' 
+                  ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Desactivados ({projects.filter(p => p.status === 'INACTIVE').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatusTab('ALL')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                statusTab === 'ALL' 
+                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs' 
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Todos ({projects.length})
+            </button>
           </div>
         </div>
       </section>
@@ -822,19 +948,46 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   </div>
                 </div>
 
-                <div className="flex flex-col items-center shrink-0" style={{ gap: 14 }}>
+                <div className="flex flex-col items-center shrink-0" style={{ gap: 12 }}>
                   {isAdmin ? (
-                    <button
-                      type="button"
-                      title="Editar asignación"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleOpenEditModal(proj);
-                      }}
-                      className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors cursor-pointer"
-                    >
-                      <Edit3 size={14} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        title="Editar asignación"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenEditModal(proj);
+                        }}
+                        className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors cursor-pointer"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                      {proj.status === 'INACTIVE' ? (
+                        <button
+                          type="button"
+                          title="Reactivar proyecto"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleReactivateProject(proj);
+                          }}
+                          className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-colors cursor-pointer"
+                        >
+                          <RotateCcw size={14} />
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          title="Desactivar proyecto"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenDeactivateModal(proj);
+                          }}
+                          className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 transition-colors cursor-pointer"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
+                    </div>
                   ) : (
                     <button
                       type="button"

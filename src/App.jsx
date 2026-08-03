@@ -198,7 +198,7 @@ function MainAppContent() {
     switch (activeTab) {
       case 'proyectos':
         return {
-          title: "Dashboard de Proyectos ",
+          title: "Proyectos y Equipos",
           subtitle: "Estructura de equipos, líderes técnicos y desarrolladores asignados."
         };
       case 'developer':
@@ -218,7 +218,7 @@ function MainAppContent() {
         };
       case 'usuarios':
         return {
-          title: "Seguridad y RBAC ",
+          title: "Gestión de Usuarios y Roles (RBAC) ",
           subtitle: "Control de accesos y administración de roles del equipo."
         };
       case 'sincronizacion':

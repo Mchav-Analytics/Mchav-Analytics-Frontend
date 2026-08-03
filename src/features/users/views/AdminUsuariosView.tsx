@@ -227,39 +227,11 @@ export default function AdminUsuariosView({
       )}
 
       {/* CONTENEDOR 1 — Resumen RBAC y roles */}
-      <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-8 sm:p-10 lg:p-12 shadow-sm dark:shadow-2xl space-y-7 sm:space-y-8">
+      <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 lg:p-8 shadow-sm dark:shadow-2xl space-y-4">
         <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-purple-400/20 dark:bg-purple-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
 
-        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-          <div className="space-y-1.5">
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center gap-3">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-purple-500/15 to-indigo-500/20 dark:from-purple-500/25 dark:to-indigo-500/20 border border-purple-300/60 dark:border-purple-500/40 flex items-center justify-center text-purple-600 dark:text-purple-300 shadow-sm">
-                <ShieldCheck size={24} />
-              </div>
-              Gestión de Usuarios y Roles (RBAC)
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
-              Resumen por rol y acciones administrativas.
-            </p>
-          </div>
 
-          <div className="relative flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setShowConfigModal(true)}
-              className="bg-slate-50 hover:bg-purple-50 dark:bg-slate-950 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs py-3 px-5 rounded-2xl transition-all shadow-sm hover:border-purple-300 dark:hover:border-purple-500/50 flex items-center gap-2 cursor-pointer"
-            >
-              <Sliders size={16} className="text-purple-600 dark:text-purple-400" /> Matriz & Configuración
-            </button>
-
-            <button
-              onClick={() => setIsInviteOpen(true)}
-              className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 hover:from-indigo-500 hover:to-purple-500 text-white font-black text-xs py-3 px-6 rounded-2xl transition-all shadow-lg hover:shadow-indigo-500/30 flex items-center gap-2 cursor-pointer transform hover:scale-[1.03] active:scale-[0.98]"
-            >
-              <UserPlus size={17} /> + Invitar Usuario
-            </button>
-          </div>
-        </div>
 
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 px-1 sm:px-2 pt-1">
           {/* TARJETA 1: ADMINISTRADOR */}
