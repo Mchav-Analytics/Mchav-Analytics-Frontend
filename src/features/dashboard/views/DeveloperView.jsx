@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'; // Librería de iconos vectoriales Lucide React
 
 import { useAuth } from '../../../features/auth/context/AuthContext';
+import { jqlService } from '../../../services/api';
 
 // Incidencias de Jira simuladas para cuando el desarrollador ya ha sido asignado a un proyecto
 const MOCK_JIRA_ISSUES = [
@@ -92,7 +93,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId }) {
     return myCompletedTickets.reduce((sum, item) => sum + item.points, 0);
   }, [isPending]);
 
-  // Manejar la ejecución de consultas JQL con bloqueo si está PENDING
+  // Manejar la ejecución de consultas JQL con validación de backend (HU-009)
   const handleExecuteJql = (e) => {
     e.preventDefault();
     if (isPending) {
@@ -104,15 +105,18 @@ export default function DeveloperView({ kpis = [], selectedProjectId }) {
     setJqlSuccess('');
     setIsExecutingJql(true);
 
-    setTimeout(() => {
-      setIsExecutingJql(false);
-      if (!jqlQuery.toLowerCase().includes('project') && !jqlQuery.toLowerCase().includes('assignee')) {
-        setJqlError('Error de sintaxis JQL: La consulta debe incluir al menos una condición por "project" o "assignee".');
-        return;
-      }
-      setJqlSuccess(`Consulta JQL ejecutada correctamente. ${MOCK_JIRA_ISSUES.length} incidencias encontradas.`);
-      setTimeout(() => setJqlSuccess(''), 4000);
-    }, 600);
+    jqlService.executeJql(jqlQuery)
+      .then(res => {
+        setIsExecutingJql(false);
+        const count = res.total !== undefined ? res.total : (res.issues ? res.issues.length : 0);
+        setJqlSuccess(`Consulta JQL ejecutada correctamente. ${count} incidencias encontradas.`);
+        setTimeout(() => setJqlSuccess(''), 4000);
+      })
+      .catch(err => {
+        setIsExecutingJql(false);
+        const detail = err?.response?.data?.detail || err?.message || 'Error de sintaxis o consulta JQL.';
+        setJqlError(detail);
+      });
   };
 
   // Cargar una consulta predefinida JQL

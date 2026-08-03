@@ -19,9 +19,12 @@ import {
   User,
   FileText,
   Shield,
-  X
+  X,
+  Search
 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
+import KpiDetailModal from '../components/KpiDetailModal';
+import { reportService } from '../../../services/api';
 import { 
   ResponsiveContainer, 
   ComposedChart, 
@@ -74,10 +77,21 @@ const InfoTooltip = ({ text }) => (
   </div>
 );
 
-function DashboardView({ subTab = 'dashboard' }) {
+function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis }) {
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false); // Estado de animación del botón de refresco
   const [showActiveToast, setShowActiveToast] = useState(true);
+
+  // Estado para el Modal de Drill-down (HU-015)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMetricType, setModalMetricType] = useState('all');
+
+  const openDrillDown = (title, metricType) => {
+    setModalTitle(title);
+    setModalMetricType(metricType);
+    setIsModalOpen(true);
+  };
 
   const isPending = user?.status === 'PENDING' && user?.rol === 'MANAGER';
 
@@ -163,81 +177,106 @@ function DashboardView({ subTab = 'dashboard' }) {
           </div>
         </div>
 
-        {/* Botón de Refrescar Datos */}
-        <button
-          onClick={handleRefresh}
-          className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm"
-          title="Actualizar datos del sprint"
-        >
-          <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
-        </button>
+        {/* Acciones del Header: Refrescar y Descargar PDF (HU-016) */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => reportService.downloadPdfReport(selectedProjectId)}
+            className="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition-all shadow-md flex items-center gap-1.5 cursor-pointer"
+            title="Descargar reporte ejecutivo en PDF (HU-016)"
+          >
+            <FileText size={15} /> Descargar Reporte PDF
+          </button>
+
+          <button
+            onClick={handleRefresh}
+            className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm"
+            title="Actualizar datos del sprint"
+          >
+            <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
+          </button>
+        </div>
       </div>
 
-      {/* 2. FILA DE 4 TARJETAS KPI SUPERIORES (ESPACIADO COMPACTO Y PROPORCIONADO) */}
+      {/* 2. FILA DE 4 TARJETAS KPI SUPERIORES (ESPACIADO COMPACTO Y PROPORCIONADO CON DRILL-DOWN HU-015) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* KPI 1: Puntos Entregados (SP) */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        <div 
+          onClick={() => openDrillDown('Puntos Entregados (Velocity)', 'velocity')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-indigo-500/50 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group cursor-pointer transition-all"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <Zap size={14} className="text-purple-500 dark:text-purple-400 shrink-0" />
               <span>Puntos Entregados</span>
             </div>
-            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint." />
+            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint. Haz clic para ver el desglose por ticket." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">30</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].velocity_total_sp : 30}
+              </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">SP</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={11} /> -48%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Story Points entregados en el sprint.
+            Haz clic para explorar los tickets considerados.
           </p>
         </div>
 
-        {/* KPI 2: Tareas Completadas */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        {/* KPI 2: Tareas Completadas (Throughput) */}
+        <div 
+          onClick={() => openDrillDown('Tareas Completadas (Throughput)', 'throughput')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-teal-500/50 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group cursor-pointer transition-all"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <CheckCircle2 size={14} className="text-teal-500 dark:text-teal-400 shrink-0" />
               <span>Tareas Completadas</span>
             </div>
-            <InfoTooltip text="Cantidad de tareas completadas en relación al total planificado." />
+            <InfoTooltip text="Cantidad de tareas completadas (Throughput). Haz clic para ver la lista de tickets." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">10</span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">de 14</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].throughput_issues : 10}
+              </span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">tickets</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={11} /> -38%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Tareas resueltas del backlog planificado.
+            Tareas resueltas del backlog.
           </p>
         </div>
 
         {/* KPI 3: Tiempo de Ciclo */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        <div 
+          onClick={() => openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-amber-500/50 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group cursor-pointer transition-all"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <Clock size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
               <span>Tiempo de Ciclo</span>
             </div>
-            <InfoTooltip text="Días promedio que tarda una tarea en completarse desde que inicia desarrollo." />
+            <InfoTooltip text="Días promedio desde inicio de desarrollo hasta resolución. Haz clic para ver detalle." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">4.2</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].cycle_time_promedio_dias : 4.2}
+              </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={11} /> -20%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
@@ -245,25 +284,31 @@ function DashboardView({ subTab = 'dashboard' }) {
           </p>
         </div>
 
-        {/* KPI 4: Tasa de Retrabajo */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        {/* KPI 4: Lead Time / Bugs */}
+        <div 
+          onClick={() => openDrillDown('Lead Time Promedio', 'lead_time')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-cyan-500/50 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group cursor-pointer transition-all"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-              <RotateCcw size={14} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
-              <span>Tasa de Retrabajo</span>
+              <Clock size={14} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
+              <span>Lead Time Promedio</span>
             </div>
-            <InfoTooltip text="Porcentaje de bugs reportados sobre el total de tareas en el sprint." />
+            <InfoTooltip text="Días promedio desde creación hasta resolución. Haz clic para ver detalle." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">21%</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].lead_time_promedio_dias : 6.8}
+              </span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingUp size={11} /> +8.2%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Bugs reportados sobre total de tareas.
+            Tiempo total desde apertura a cierre.
           </p>
         </div>
 
@@ -440,6 +485,15 @@ function DashboardView({ subTab = 'dashboard' }) {
         </div>
 
       </div>
+
+      {/* Modal de Drill-down de métricas por ticket (HU-015) */}
+      <KpiDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        projectId={selectedProjectId}
+        metricTitle={modalTitle}
+        metricType={modalMetricType}
+      />
 
     </div>
   );
