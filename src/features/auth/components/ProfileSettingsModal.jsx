@@ -33,7 +33,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
         })
         .catch(err => console.error("Error fetching Jira credentials in profile menu:", err));
     }
-  }, [isOpen, userProfile]);
+  }, [isOpen, userProfile?.email]);
 
   if (!isOpen) return null;
 
