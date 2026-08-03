@@ -1,7 +1,13 @@
 import axios from 'axios';
+import { mockAuthService, mockJiraService, mockProjectService } from './mockData';
 
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;
+
+// INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
+// true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
+// false = Modo Real (Conectado a FastAPI en http://localhost:8000)
+export const USE_MOCK_DATA = true;
 
 export const BACKEND_URL = 'http://localhost:8000';
 
@@ -12,53 +18,74 @@ const api = axios.create({
 
 export const authService = {
   getLoginUrl() {
-    return `${BACKEND_URL}/api/v1/auth/login`;
+    if (USE_MOCK_DATA) return mockAuthService.getLoginUrl();
+    return `${BACKEND_URL}/api/auth/login`;
   },
   getCurrentUser() {
-    return api.get('/auth/me').then(res => res.data);
+    if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
+    return api.get('/api/auth/me').then(res => res.data);
+  },
+  loginMock(credentials) {
+    if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
+    return api.post('/api/auth/login', credentials).then(res => res.data);
+  },
+  logoutMock() {
+    if (USE_MOCK_DATA) return mockAuthService.logoutMock();
+    return api.post('/api/auth/logout').then(res => res.data);
   },
   getJiraCredentials() {
-    return api.get('/auth/jira-credentials').then(res => res.data);
+    if (USE_MOCK_DATA) return mockAuthService.getJiraCredentials();
+    return api.get('/api/auth/jira-credentials').then(res => res.data);
   },
   saveJiraCredentials(payload) {
-    return api.post('/auth/jira-credentials', payload).then(res => res.data);
+    if (USE_MOCK_DATA) return mockAuthService.saveJiraCredentials(payload);
+    return api.post('/api/auth/jira-credentials', payload).then(res => res.data);
   }
 };
 
 export const jiraService = {
   getMetrics() {
-    return api.get('/jira/metrics').then(res => res.data);
+    if (USE_MOCK_DATA) return mockJiraService.getMetrics();
+    return api.get('/api/jira/metrics').then(res => res.data);
   },
   triggerSync() {
-    return api.post('/jira/sync').then(res => res.data);
+    if (USE_MOCK_DATA) return mockJiraService.triggerSync();
+    return api.post('/api/jira/sync').then(res => res.data);
   },
   getSyncLogs() {
-    return api.get('/jira/sync/logs').then(res => res.data);
+    if (USE_MOCK_DATA) return mockJiraService.getSyncLogs();
+    return api.get('/api/jira/sync/logs').then(res => res.data);
   }
 };
 
 export const projectService = {
   getProjects() {
-    return api.get('/projects').then(res => res.data);
+    if (USE_MOCK_DATA) return mockProjectService.getProjects();
+    return api.get('/api/projects').then(res => res.data);
   },
   getSprints(projectId) {
-    return api.get(`/projects/${projectId}/sprints`).then(res => res.data);
+    if (USE_MOCK_DATA) return mockProjectService.getSprints(projectId);
+    return api.get(`/api/projects/${projectId}/sprints`).then(res => res.data);
   },
   getKpis(projectId, sprintId = null) {
-    let url = `/projects/${projectId}/kpis`;
+    if (USE_MOCK_DATA) return mockProjectService.getKpis(projectId, sprintId);
+    let url = `/api/projects/${projectId}/kpis`;
     if (sprintId) {
       url += `?sprint_id=${sprintId}`;
     }
     return api.get(url).then(res => res.data);
   },
   getStatuses(projectId) {
-    return api.get(`/projects/${projectId}/statuses`).then(res => res.data);
+    if (USE_MOCK_DATA) return mockProjectService.getStatuses(projectId);
+    return api.get(`/api/projects/${projectId}/statuses`).then(res => res.data);
   },
   getMappings(projectId) {
-    return api.get(`/projects/${projectId}/mappings`).then(res => res.data);
+    if (USE_MOCK_DATA) return mockProjectService.getMappings(projectId);
+    return api.get(`/api/projects/${projectId}/mappings`).then(res => res.data);
   },
   saveMappings(projectId, mappingsData) {
-    return api.post(`/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
+    if (USE_MOCK_DATA) return mockProjectService.saveMappings(projectId, mappingsData);
+    return api.post(`/api/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
   }
 };
 
