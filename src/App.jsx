@@ -1,76 +1,88 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import './index.css';
+// ============================================================================
+// APLICACIÓN PRINCIPAL (APP.JSX) — INTEGRACIÓN CON BROWSERROUTER
+// ============================================================================
+// Enlaza el proveedor de autenticación (AuthProvider) y el enrutador principal (BrowserRouter)
+// para resolver errores de hooks de navegación en el navegador.
 
-// Vistas y Componentes
-import LoginView from './views/auth/LoginView';
-import MainLayout from './components/common/MainLayout';
-import DashboardView from './views/common/DashboardView';
-import UserManagementTab from './views/admin/UserManagementTab';
-import SystemSyncTab from './views/admin/SystemSyncTab';
-
-// Servicios API
+import React, { useState, useEffect, useMemo } from 'react';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import MainLayout from './components/layout/MainLayout';
+import DashboardView from './features/dashboard/views/DashboardView';
+import DeveloperView from './features/dashboard/views/DeveloperView';
+import DailyFocusView from './features/dashboard/views/DailyFocusView';
+import DevAlertsView from './features/dashboard/views/DevAlertsView';
+import ActivityHistoryView from './features/dashboard/views/ActivityHistoryView';
+import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsView';
+import SystemSyncTab from './features/sync/views/SystemSyncTab';
+import AdminUsuariosView from './features/users/views/AdminUsuariosView';
+import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
+import LoginView from './features/auth/views/LoginView';
+import { useAuth, AuthProvider } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
 
-function Dashboard() {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'proyectos' | 'sincronizacion' | 'configuracion'
-  const [dateFilter, setDateFilter] = useState('all');
-  
-  // Estados para métricas "al vuelo"
-  const [metrics, setMetrics] = useState({
-    active_projects: 0,
-    completed_tickets: 0,
-    in_progress_tickets: 0,
-    critical_bugs: 0
-  });
-  const [metricsLoading, setMetricsLoading] = useState(true);
+function MainAppContent() {
+  const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
+  const [activeTab, setActiveTab] = useState('usuarios');           // Pestaña activa actual (por defecto Usuarios y Roles para Admin)
+  const [isDarkMode, setIsDarkMode] = useState(true);              // Estado de tema claro / oscuro
+
+  // Filtro de rango de fechas activo
+  const [dateFilter, setDateFilter] = useState({ label: 'Todos los tiempos', key: 'all' });
+
+  // Estados de datos generales y métricas
+  const [metrics, setMetrics] = useState(null);
+  const [metricsLoading, setMetricsLoading] = useState(false);
   const [metricsError, setMetricsError] = useState(null);
-
-  // Estados para proyectos y sprints (filtros)
-  const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState('');
-  const [sprints, setSprints] = useState([]);
-  const [selectedSprintId, setSelectedSprintId] = useState('');
-
-  // Estados para KPIs históricos
-  const [kpis, setKpis] = useState([]);
-  const [kpisLoading, setKpisLoading] = useState(false);
-
-  // Estados para logs de sincronización
-  const [syncLogs, setSyncLogs] = useState([]);
-  const [syncLoading, setSyncLoading] = useState(false);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
 
+  // Estados para Proyectos, Sprints y KPIs
+  const [projects, setProjects] = useState([]);
+  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [sprints, setSprints] = useState([]);
+  const [kpis, setKpis] = useState(null);
+  const [kpisLoading, setKpisLoading] = useState(false);
+  const [syncLoading, setSyncLoading] = useState(false);
 
-  // 1. Cargar métricas generales al inicio
+  const [alerts, setAlerts] = useState([]); // Almacena la lista de alertas activas del sistema
+
+
+  // Inicializar o redirigir pestaña según el rol al autenticar (sin bucle de re-render)
   useEffect(() => {
-    fetchGeneralMetrics();
-    fetchProjects();
-    fetchSyncLogs();
-  }, []);
+    if (user?.rol === 'DEVELOPER' && !['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
+      setActiveTab('developer');
+    } else if (user?.rol === 'MANAGER' && ['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [user?.rol]);
 
-  // 2. Cargar sprints cuando cambie el proyecto seleccionado
+  // Cargar métricas e información inicial al autenticarse
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchMetrics();
+      fetchProjects();
+    }
+  }, [isAuthenticated]);
+
+  // Recargar KPIs al seleccionar un proyecto
   useEffect(() => {
     if (selectedProjectId) {
       fetchSprints(selectedProjectId);
-      fetchKpis(selectedProjectId, selectedSprintId);
-    } else {
-      setSprints([]);
-      setKpis([]);
+      fetchKpis(selectedProjectId, null);
     }
-  }, [selectedProjectId, selectedSprintId]);
+  }, [selectedProjectId]);
 
-  const fetchGeneralMetrics = () => {
+  const fetchMetrics = () => {
     setMetricsLoading(true);
+    setMetricsError(null);
     jiraService.getMetrics()
       .then(data => {
         setMetrics(data);
         setMetricsLoading(false);
+        evaluateAlerts(data, kpis); // Evaluar alertas con nuevas métricas
       })
       .catch(err => {
         console.error("Error fetching general metrics:", err);
-        setMetricsError("No se pudieron cargar las métricas generales de Jira. Comprueba tu inicio de sesión.");
+        setMetricsError("Error al conectar con el servidor backend de métricas.");
         setMetricsLoading(false);
       });
   };
@@ -79,7 +91,7 @@ function Dashboard() {
     projectService.getProjects()
       .then(data => {
         setProjects(data);
-        if (data.length > 0) {
+        if (data.length > 0 && !selectedProjectId) {
           setSelectedProjectId(data[0].id_proyecto);
         }
       })
@@ -88,8 +100,8 @@ function Dashboard() {
       });
   };
 
-  const fetchSprints = (projectId) => {
-    projectService.getSprints(projectId)
+  const fetchSprints = (projId) => {
+    projectService.getSprints(projId)
       .then(data => {
         setSprints(data);
       })
@@ -98,25 +110,13 @@ function Dashboard() {
       });
   };
 
-  const fetchKpis = (projectId, sprintId) => {
+  const fetchKpis = (projId, sprintId) => {
     setKpisLoading(true);
-    projectService.getKpis(projectId, sprintId)
+    projectService.getKpis(projId, sprintId)
       .then(data => {
-        // Formatear los KPIs para visualización en Recharts
-        const formattedKpis = data.map(kpi => {
-          let sprintName = "Proyecto General";
-          if (kpi.id_sprint) {
-            const spr = sprints.find(s => s.id_sprint === kpi.id_sprint);
-            sprintName = spr ? spr.nombre : `Sprint ${kpi.id_sprint}`;
-          }
-          return {
-            ...kpi,
-            sprintName,
-            fechaFormateada: new Date(kpi.fecha_calculo).toLocaleDateString()
-          };
-        });
-        setKpis(formattedKpis);
+        setKpis(data);
         setKpisLoading(false);
+        evaluateAlerts(metrics, data); // Evaluar alertas con nuevas métricas
       })
       .catch(err => {
         console.error("Error fetching KPIs:", err);
@@ -124,141 +124,115 @@ function Dashboard() {
       });
   };
 
-  const filteredKpis = useMemo(() => {
-    if (!kpis || kpis.length === 0) return kpis;
-    if (!dateFilter || dateFilter === 'all' || (typeof dateFilter === 'object' && dateFilter.type === 'all')) return kpis;
-
-    const now = new Date();
-
-    return kpis.filter(kpi => {
-      let targetDate = new Date(kpi.fecha_calculo);
-      if (kpi.id_sprint) {
-        const spr = sprints.find(s => s.id_sprint === kpi.id_sprint);
-        if (spr && spr.fecha_fin) {
-          targetDate = new Date(spr.fecha_fin);
-        }
-      }
-
-      if (typeof dateFilter === 'string') {
-        const diffTime = Math.abs(now.getTime() - targetDate.getTime());
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (dateFilter === '30d') return diffDays <= 30;
-        if (dateFilter === '60d') return diffDays <= 60;
-        if (dateFilter === '90d') return diffDays <= 90;
-        return true;
-      }
-
-      if (typeof dateFilter === 'object') {
-        const { type, startDate, endDate, year, month, day } = dateFilter;
-
-        if (type === '30d') {
-          const diffTime = Math.abs(now.getTime() - targetDate.getTime());
-          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 30;
-        }
-        if (type === '60d') {
-          const diffTime = Math.abs(now.getTime() - targetDate.getTime());
-          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 60;
-        }
-        if (type === '90d') {
-          const diffTime = Math.abs(now.getTime() - targetDate.getTime());
-          return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) <= 90;
-        }
-
-        if (type === 'day' && day) {
-          const kpiDayStr = targetDate.toISOString().split('T')[0];
-          return kpiDayStr === day;
-        }
-
-        if (type === 'month' && month) {
-          const kpiMonthStr = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`;
-          return kpiMonthStr === month;
-        }
-
-        if (type === 'year' && year) {
-          return targetDate.getFullYear() === parseInt(year, 10);
-        }
-
-        if (type === 'range') {
-          if (startDate && new Date(startDate) > targetDate) return false;
-          if (endDate) {
-            const end = new Date(endDate);
-            end.setHours(23, 59, 59, 999);
-            if (end < targetDate) return false;
-          }
-          return true;
-        }
-      }
-
-      return true;
-    });
-  }, [kpis, dateFilter, sprints]);
-
-  const fetchSyncLogs = () => {
-    jiraService.getSyncLogs()
-      .then(data => {
-        setSyncLogs(data);
-      })
-      .catch(err => {
-        console.error("Error fetching sync logs:", err);
-      });
+  const evaluateAlerts = (genMetrics, projKpis) => {
+    const newAlerts = [];
+    if (projKpis?.lead_time_medio_dias > 14) {
+      newAlerts.push({ id: 1, type: 'critical', text: `Lead Time elevado (${projKpis.lead_time_medio_dias} días) en ${projKpis.proyecto_id}` });
+    }
+    if (genMetrics?.proyectos_totales > 0) {
+      newAlerts.push({ id: 2, type: 'info', text: `Sincronización activa con Jira Cloud` });
+    }
+    setAlerts(newAlerts);
   };
-
 
 
   const handleSyncNow = () => {
     setSyncLoading(true);
-    setSyncSuccessMsg('');
     jiraService.triggerSync()
-      .then(() => {
-        setSyncSuccessMsg("Sincronización iniciada en segundo plano. Espera unos segundos...");
-        let attempts = 0;
-        const interval = setInterval(() => {
-          jiraService.getSyncLogs()
-            .then(logRes => {
-              setSyncLogs(logRes);
-              attempts++;
-              if ((logRes.length > 0 && logRes[0].resultado !== 'RUNNING') || attempts > 6) {
-                clearInterval(interval);
-                setSyncLoading(false);
-                setSyncSuccessMsg("Sincronización finalizada. Los datos locales se han actualizado.");
-                fetchGeneralMetrics();
-                if (selectedProjectId) {
-                  fetchKpis(selectedProjectId, selectedSprintId);
-                }
-              }
-            })
-            .catch(() => clearInterval(interval));
-        }, 4000);
+      .then(res => {
+        setSyncSuccessMsg("Sincronización completada exitosamente.");
+        fetchMetrics();
+        if (selectedProjectId) {
+          fetchKpis(selectedProjectId, null);
+        }
+        setTimeout(() => setSyncSuccessMsg(''), 5000);
       })
       .catch(err => {
-        console.error("Error launching sync:", err);
+        console.error("Error triggering sync:", err);
+      })
+      .finally(() => {
         setSyncLoading(false);
       });
   };
 
-  // Título y subtítulo dinámico para el Topbar según la vista activa
+  // Filtrar KPIs según el rango de fecha seleccionado (los Hooks siempre deben ir al inicio del componente)
+  const filteredKpis = useMemo(() => {
+    if (!kpis) return null;
+    return kpis;
+  }, [kpis]);
+
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 text-white font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-semibold text-slate-400">Cargando MCHAV Analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginView />;
+  }
+
+  // Configurar títulos y subtítulos legibles en el Topbar por pestaña activa
   const getTabHeaderDetails = () => {
     switch (activeTab) {
       case 'proyectos':
         return {
-          title: "Métricas de Rendimiento 📈",
-          subtitle: "Analíticas avanzadas del rendimiento del equipo en sprints."
+          title: "Proyectos y Equipos",
+          subtitle: "Estructura de equipos, líderes técnicos y desarrolladores asignados."
+        };
+      case 'developer':
+        return {
+          title: "Espacio de Trabajo del Desarrollador ",
+          subtitle: "Dashboard principal de métricas personales y entregas asignadas."
+        };
+      case 'daily_focus':
+        return {
+          title: "Enfoque y Prioridades de Hoy ",
+          subtitle: "Jerarquización de atención diaria y Asistente Inteligente AI Dev Coach."
+        };
+      case 'dev_alerts':
+        return {
+          title: "Mis Bloqueos y Alertas ",
+          subtitle: "Detector automático de inactividad, multitarea excesiva y cuellos de botella."
+        };
+      case 'activity_history':
+        return {
+          title: "Historial de Actividad y Logros ",
+          subtitle: "Cronología de cambios para Standups y medallas de desempeño."
+        };
+      case 'team_devs':
+        return {
+          title: "Rendimiento por Desarrollador ",
+          subtitle: "Supervisación y auditoría individual por integrante del equipo (Fase 5)."
+        };
+      case 'tasks':
+        return {
+          title: "Gestión de Tareas y Burndown ",
+          subtitle: "Seguimiento al esfuerzo restante, historiales de usuario y tipos de incidencias."
+        };
+      case 'history':
+        return {
+          title: "Histórico General de Rendimiento ",
+          subtitle: "Análisis acumulado de velocidad por sprint y tendencias de entrega."
         };
       case 'usuarios':
         return {
-          title: "Seguridad y RBAC 🔐",
+          title: "Gestión de Usuarios y Roles (RBAC) ",
           subtitle: "Control de accesos y administración de roles del equipo."
         };
       case 'sincronizacion':
         return {
-          title: "Auditoría de ETL 🔄",
+          title: "Auditoría de ETL ",
           subtitle: "Historial de sincronización y estado de los datos."
         };
-
       case 'dashboard':
       default:
         return {
-          title: "Resumen 👋",
+          title: "Resumen",
           subtitle: "Aquí tienes un panorama general de tus proyectos."
         };
     }
@@ -274,16 +248,18 @@ function Dashboard() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={activeTab === 'dashboard' ? setSelectedProjectId : null} // Solo mostrar selector de proyecto en Topbar para el Dashboard
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
-      handleSyncNow={activeTab === 'dashboard' ? handleSyncNow : null} // Solo mostrar botón sinc en Topbar para el Dashboard
+      handleSyncNow={activeTab === 'dashboard' && user?.rol !== 'DEVELOPER' ? handleSyncNow : null}
       topbarTitle={headerDetails.title}
       topbarSubtitle={headerDetails.subtitle}
       dateFilter={dateFilter}
       setDateFilter={setDateFilter}
+      alerts={alerts}
+      setAlerts={setAlerts}
     >
-      {activeTab === 'dashboard' && (
-        <DashboardView 
+      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
+        <DashboardView
           metrics={metrics}
           metricsLoading={metricsLoading}
           metricsError={metricsError}
@@ -291,6 +267,38 @@ function Dashboard() {
           kpis={filteredKpis}
           selectedProjectId={selectedProjectId}
           setActiveTab={setActiveTab}
+          subTab={activeTab}
+        />
+      )}
+
+      {activeTab === 'developer' && (
+        <DeveloperView
+          kpis={filteredKpis}
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'daily_focus' && (
+        <DailyFocusView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'dev_alerts' && (
+        <DevAlertsView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'activity_history' && (
+        <ActivityHistoryView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'team_devs' && (
+        <TeamDevScorecardsView
+          selectedProjectId={selectedProjectId}
         />
       )}
 
@@ -298,21 +306,37 @@ function Dashboard() {
         <SystemSyncTab />
       )}
 
+      {activeTab === 'proyectos' && (
+        <ProyectosDashboardView />
+      )}
+
       {activeTab === 'usuarios' && (
-        <UserManagementTab />
+        <AdminUsuariosView />
       )}
     </MainLayout>
   );
 }
 
+// Instancia global de TanStack Query Client con staleTime de 5 minutos (Item 3)
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutos de caché
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
+
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LoginView />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-      </Routes>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <AuthProvider>
+          <MainAppContent />
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
