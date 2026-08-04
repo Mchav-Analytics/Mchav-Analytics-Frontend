@@ -205,7 +205,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const isAdmin = isAdminRole(userProfile?.rol);
 
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
-  const [expandedProjectId, setExpandedProjectId] = useState('proj-1');
+  const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -376,7 +376,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
   const filteredProjects = projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          p.key.toLowerCase().includes(searchTerm.toLowerCase());
+      p.key.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
 
     if (statusTab === 'ACTIVE') return p.status !== 'INACTIVE';
@@ -384,11 +384,11 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     return true; // 'ALL'
   });
 
-  const activeProject = projects.find(p => p.id === expandedProjectId);
+  const activeProject = filteredProjects.find(p => p.id === expandedProjectId);
   const activeMetrics = activeProject ? getProjectMetrics(activeProject.id) : null;
 
   return (
-    <div className="w-full flex flex-col gap-6 sm:gap-8 px-4 sm:px-8 py-6 text-left animate-in fade-in duration-300">
+    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col justify-start gap-6 sm:gap-8 px-4 sm:px-8 pt-6 pb-12 text-left animate-in fade-in duration-300 no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <Sparkles className="w-5 h-5 text-emerald-500" />
@@ -409,8 +409,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       )}
 
       {showAssignModal && isAdmin && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/70 dark:bg-slate-950/85 backdrop-blur-md overflow-y-auto no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/40 rounded-3xl shadow-2xl my-4 overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 dark:bg-slate-950/90 backdrop-blur-md">
+          <div className="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/40 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[88vh]">
             {/* Header */}
             <div className="shrink-0 flex items-start justify-between gap-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/40" style={{ padding: '1.25rem 1.5rem' }}>
               <div className="flex items-center gap-3 min-w-0">
@@ -495,8 +495,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                     type="button"
                     onClick={() => { setLeaderOpen(o => !o); setDevsOpen(false); }}
                     className={`w-full min-h-[42px] px-4 flex items-center justify-between gap-3 rounded-xl border text-left transition-all ${leaderOpen
-                        ? 'border-violet-500 bg-white dark:bg-slate-900 ring-2 ring-violet-500/25'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-violet-400'
+                      ? 'border-violet-500 bg-white dark:bg-slate-900 ring-2 ring-violet-500/25'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-violet-400'
                       }`}
                   >
                     <p className={`text-sm font-semibold truncate ${formLeaderId ? 'text-slate-900 dark:text-slate-50' : 'text-slate-600 dark:text-slate-300'}`}>
@@ -534,8 +534,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                                 setAssignmentReady(false);
                               }}
                               className={`w-full min-h-[42px] px-4 flex items-center justify-between gap-2 text-left border-b border-slate-50 dark:border-slate-800 last:border-0 transition-colors ${active
-                                  ? 'bg-violet-50 dark:bg-violet-500/15'
-                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                ? 'bg-violet-50 dark:bg-violet-500/15'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
                                 }`}
                             >
                               <div className="min-w-0">
@@ -567,8 +567,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                     type="button"
                     onClick={() => { setDevsOpen(o => !o); setLeaderOpen(false); }}
                     className={`w-full min-h-[42px] pl-6 pr-4 flex items-center justify-between gap-3 rounded-xl border text-left transition-all ${devsOpen
-                        ? 'border-sky-500 bg-white dark:bg-slate-900 ring-2 ring-sky-500/25'
-                        : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-sky-400'
+                      ? 'border-sky-500 bg-white dark:bg-slate-900 ring-2 ring-sky-500/25'
+                      : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 hover:border-sky-400'
                       }`}
                   >
                     <p className={`text-sm font-semibold truncate ${selectedDevs.length ? 'text-slate-900 dark:text-slate-50' : 'text-slate-600 dark:text-slate-300'}`}>
@@ -603,8 +603,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                               type="button"
                               onClick={() => handleToggleDeveloper(dev.id)}
                               className={`w-full min-h-[42px] px-4 flex items-center justify-between gap-2 text-left border-b border-slate-50 dark:border-slate-800 last:border-0 transition-colors ${isSelected
-                                  ? 'bg-sky-50 dark:bg-sky-500/10'
-                                  : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                                ? 'bg-sky-50 dark:bg-sky-500/10'
+                                : 'hover:bg-slate-50 dark:hover:bg-slate-800/60'
                                 }`}
                             >
                               <div className="min-w-0">
@@ -612,8 +612,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                                 <p className="text-xs text-slate-500 truncate">{dev.email}</p>
                               </div>
                               <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 ${isSelected
-                                  ? 'bg-sky-600 border-sky-600 text-white'
-                                  : 'border-slate-300 dark:border-slate-600'
+                                ? 'bg-sky-600 border-sky-600 text-white'
+                                : 'border-slate-300 dark:border-slate-600'
                                 }`}>
                                 {isSelected && <Check size={11} />}
                               </div>
@@ -701,8 +701,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 </div>
 
                 <div className={`rounded-2xl border text-[11px] leading-relaxed flex items-start gap-2 ${assignmentReady
-                    ? 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'
-                    : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200'
+                  ? 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200'
+                  : 'border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-800 dark:text-amber-200'
                   }`} style={{ padding: '0.75rem' }}>
                   <Info size={14} className="shrink-0 mt-0.5" />
                   <span>
@@ -744,46 +744,43 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      {/* MODAL CENTRADO DE CONFIRMACIÓN PARA DESACTIVAR PROYECTO */}
+      {/* MODAL CENTRADO MATEMÁTICO ABSOLUTO — EN EL CENTRO EXACTO DE LA PANTALLA */}
       {projectToDeactivate && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-rose-500/30 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-center text-slate-900 dark:text-slate-100 animate-in zoom-in-95 duration-150">
-            <button
-              type="button"
-              onClick={() => setProjectToDeactivate(null)}
-              className="absolute top-4 right-4 p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 transition-colors cursor-pointer"
-            >
-              <X size={18} />
-            </button>
-
-            {/* Ícono de Advertencia */}
-            <div className="w-14 h-14 rounded-2xl bg-rose-100 dark:bg-rose-500/15 text-rose-600 dark:text-rose-400 flex items-center justify-center mx-auto shadow-inner border border-rose-200 dark:border-rose-500/30">
-              <AlertTriangle size={28} />
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 dark:bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="relative w-full max-w-[520px] sm:max-w-[560px] bg-white dark:bg-[#0c0f1d] border border-slate-200 dark:border-slate-800 rounded-[32px] px-6 py-8 sm:px-10 sm:py-12 text-center flex flex-col items-center space-y-5 sm:space-y-6 shadow-2xl shadow-purple-500/10 dark:shadow-purple-950/60 animate-in zoom-in-95 duration-150">
+            {/* Ícono de Bote de Basura dentro de Círculo Violeta */}
+            <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-purple-50 dark:bg-[#1d1738] border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-lg shadow-purple-200/50 dark:shadow-purple-900/30 shrink-0">
+              <Trash2 size={28} className="text-purple-600 dark:text-purple-400" />
             </div>
 
-            {/* Contenido / Pregunta */}
-            <div className="space-y-2">
-              <h3 className="text-xl font-black text-slate-900 dark:text-slate-50">
-                ¿Desea desactivar el proyecto?
+            {/* Título y Mensaje Explicativo Centrados */}
+            <div className="space-y-3 w-full max-w-[440px] mx-auto text-center">
+              <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                ¿Deseas desactivar el proyecto?
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                El proyecto <strong className="text-slate-900 dark:text-slate-100">{projectToDeactivate.name}</strong> ({projectToDeactivate.key}) cambiará su estado a <span className="text-rose-600 dark:text-rose-400 font-bold">Desactivado</span>. Podrás reactivarlo en cualquier momento desde la pestaña de Desactivados.
-              </p>
+              <div className="text-sm sm:text-base text-slate-600 dark:text-slate-300 leading-relaxed space-y-1 font-normal text-center">
+                <p>Aquí <span className="text-purple-600 dark:text-purple-400 font-bold">{projectToDeactivate.name}</span></p>
+                <p>podrás reactivarlo en cualquier momento desde la</p>
+                <p>pestaña de <span className="text-purple-600 dark:text-purple-400 font-bold">Desactivados</span></p>
+              </div>
             </div>
 
-            {/* Botones Solicitados: Cancelar y Desactivar */}
-            <div className="flex items-center justify-center gap-3 pt-2">
+            {/* Línea divisora sutil */}
+            <div className="w-full max-w-[420px] mx-auto h-px bg-slate-200 dark:bg-slate-800/80 my-1" />
+
+            {/* Botones Despegados y Proporcionados */}
+            <div className="relative w-full max-w-[400px] mx-auto flex items-center justify-center gap-3 sm:gap-4">
               <button
                 type="button"
                 onClick={() => setProjectToDeactivate(null)}
-                className="w-1/2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                className="flex-1 h-12 sm:h-13 rounded-xl border border-slate-300 dark:border-slate-800 bg-slate-100 hover:bg-slate-200 dark:bg-[#121829] dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm transition-all cursor-pointer shadow-sm"
               >
                 Cancelar
               </button>
               <button
                 type="button"
                 onClick={handleConfirmDeactivate}
-                className="w-1/2 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-black shadow-lg shadow-rose-500/25 transition-all cursor-pointer transform hover:-translate-y-0.5"
+                className="flex-1 h-12 sm:h-13 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-purple-700 hover:from-indigo-500 hover:to-purple-600 text-white font-bold text-sm shadow-lg shadow-purple-600/30 transition-all cursor-pointer transform hover:scale-[1.01] active:scale-[0.99]"
               >
                 Desactivar
               </button>
@@ -834,48 +831,74 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </button>
             )}
 
-            <input
-              type="text"
-              placeholder="Buscar proyecto..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="h-[38px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-950 text-xs w-full sm:w-64 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30"
-            />
+            {/* Barra de Búsqueda Dinámica y Expansible Adaptada a Modo Claro y Modo Oscuro (por jubayer-10) */}
+            <div
+              className={`h-[38px] p-2 overflow-hidden transition-all duration-300 rounded-full flex group items-center shadow-md border 
+              bg-white border-slate-200 hover:border-indigo-400 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 
+              dark:bg-gradient-to-r dark:from-[#0b132b] dark:via-[#0f233a] dark:to-[#0a2e38] dark:border-[#38bdf8]/35 dark:hover:border-[#38bdf8]/60 dark:focus-within:border-[#38bdf8] dark:focus-within:ring-[#38bdf8]/25 ${
+                searchTerm ? 'w-64 sm:w-72 border-indigo-400 dark:border-[#38bdf8]/55' : 'w-[38px] hover:w-64 sm:hover:w-72 focus-within:w-64 sm:focus-within:w-72'
+              }`}
+            >
+              <div className="flex items-center justify-center shrink-0 w-6 h-6">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  id="Isolation_Mode"
+                  data-name="Isolation Mode"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  className="fill-slate-500 group-hover:fill-indigo-600 dark:fill-[#38bdf8] dark:group-hover:fill-[#38bdf8] transition-all duration-300 group-hover:scale-110"
+                >
+                  <path
+                    d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"
+                  ></path>
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar proyecto..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="outline-none text-xs bg-transparent w-full text-slate-800 placeholder-slate-400 dark:text-[#38bdf8] dark:placeholder-[#38bdf8]/55 font-bold px-2.5"
+              />
+            </div>
           </div>
 
-          {/* Pestañas de Filtro (Derecha) */}
-          <div className="flex items-center p-1 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0">
+          {/* Pestañas de Filtro en Contenedores Separados e Independientes */}
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap">
             <button
               type="button"
               onClick={() => setStatusTab('ACTIVE')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                statusTab === 'ACTIVE' 
-                  ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
+              className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'ACTIVE'
+                  ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
               Activos ({projects.filter(p => p.status !== 'INACTIVE').length})
             </button>
+
             <button
               type="button"
               onClick={() => setStatusTab('INACTIVE')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                statusTab === 'INACTIVE' 
-                  ? 'bg-white dark:bg-slate-800 text-rose-600 dark:text-rose-400 shadow-xs' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
+              className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'INACTIVE'
+                  ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm'
+                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
               Desactivados ({projects.filter(p => p.status === 'INACTIVE').length})
             </button>
+
             <button
               type="button"
               onClick={() => setStatusTab('ALL')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                statusTab === 'ALL' 
-                  ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-xs' 
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-              }`}
+              className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'ALL'
+                  ? 'bg-purple-50 dark:bg-purple-500/15 border-purple-200 dark:border-purple-500/40 text-purple-600 dark:text-purple-400 shadow-sm'
+                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                }`}
             >
+              <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
               Todos ({projects.length})
             </button>
           </div>
@@ -1016,49 +1039,48 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </div>
 
               {isExpanded && (
-                <div className="mt-7 pt-5 border-t border-slate-200 dark:border-slate-800 space-y-4 animate-in slide-in-from-top-2 duration-200">
-                  <div className="rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800" style={{ padding: '0.7rem 0.85rem' }}>
-                    <span
-                      className="block text-[9px] font-black text-purple-600 dark:text-purple-400 uppercase tracking-wider"
-                      style={{ marginBottom: 8 }}
-                    >
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 animate-in slide-in-from-top-2 duration-200 text-left">
+                  {/* Columna Izquierda: Líder Técnico */}
+                  <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between">
+                    <span className="block text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2.5">
                       Líder Técnico
                     </span>
 
                     {proj.leader ? (
-                      <div className="flex items-center gap-2">
-                        <div className="w-7 h-7 rounded-md bg-purple-600 text-white font-black text-[10px] flex items-center justify-center shadow-sm shrink-0">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0">
                           {proj.leader.avatar}
                         </div>
-                        <div className="min-w-0" style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          <h4 className="text-[11px] font-black text-slate-900 dark:text-slate-100 truncate">
+                        <div className="min-w-0 flex flex-col gap-0.5">
+                          <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
                             {proj.leader.name}
                           </h4>
-                          <p className="text-[9px] text-slate-500 dark:text-slate-400 truncate">
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
                             {proj.leader.email}
                           </p>
                         </div>
                       </div>
                     ) : (
-                      <p className="text-[11px] italic text-slate-400">Sin Líder Asignado</p>
+                      <p className="text-xs italic text-slate-400">Sin Líder Asignado</p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">
+                  {/* Columna Derecha: Desarrolladores */}
+                  <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between space-y-2">
+                    <span className="block text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
                       Desarrolladores ({proj.developers?.length || 0})
                     </span>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1.5 max-h-[95px] overflow-y-auto no-scrollbar pr-0.5">
                       {proj.developers?.map(dev => (
-                        <div key={dev.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5">
-                            <div className="w-6 h-6 rounded-md bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
+                        <div key={dev.id} className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-md bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
                               {dev.avatar}
                             </div>
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{dev.name}</span>
+                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{dev.name}</span>
                           </div>
-                          <span className="text-[10px] text-slate-400 font-medium">{dev.tasksCount || 3} tareas</span>
+                          <span className="text-[10px] text-slate-400 font-medium shrink-0">{dev.tasksCount || 3} tareas</span>
                         </div>
                       ))}
                     </div>
