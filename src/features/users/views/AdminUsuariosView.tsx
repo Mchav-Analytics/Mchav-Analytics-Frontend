@@ -96,6 +96,14 @@ export default function AdminUsuariosView({
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
+  // Estado de Paginación de Usuarios
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter]);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -213,6 +221,12 @@ export default function AdminUsuariosView({
     const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
     <div className="w-full flex flex-col gap-6 sm:gap-8 px-2 sm:px-4 py-4 text-left animate-in fade-in duration-300">
@@ -448,7 +462,7 @@ export default function AdminUsuariosView({
           <span className="text-center">Auditoría</span>
         </div>
 
-        {filteredUsers.map(u => {
+        {paginatedUsers.map(u => {
           const isExpanded = expandedUserId === u.id;
           return (
             <div
@@ -568,6 +582,49 @@ export default function AdminUsuariosView({
         {filteredUsers.length === 0 && (
           <div className="rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/40 px-5 py-10 text-center text-sm text-slate-500 dark:text-slate-400">
             No hay usuarios con esos filtros.
+          </div>
+        )}
+
+        {/* Controles de Paginación */}
+        {filteredUsers.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Mostrando del {((currentPage - 1) * itemsPerPage) + 1} al {Math.min(currentPage * itemsPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Anterior
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                  <button
+                    key={pg}
+                    onClick={() => setCurrentPage(pg)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      currentPage === pg
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Siguiente
+              </button>
+            </div>
           </div>
         )}
       </section>

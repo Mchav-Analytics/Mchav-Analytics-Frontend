@@ -238,14 +238,25 @@ export default function SystemSyncTab() {
   const filteredLogs = logs.filter(log => {
     if (timeFilter === 'all') return true;
     const logDate = new Date(log.timestamp.replace(/-/g, '/'));
+    if (isNaN(logDate.getTime())) return true;
     const now = new Date();
-    const diffTime = Math.abs(now.getTime() - logDate.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diffDays = (now.getTime() - logDate.getTime()) / (1000 * 3600 * 24);
+
     if (timeFilter === '30d') return diffDays <= 30;
     if (timeFilter === '60d') return diffDays <= 60;
     if (timeFilter === '90d') return diffDays <= 90;
     return true;
   });
+
+  const [logPage, setLogPage] = useState(1);
+  const logsPerPage = 5;
+
+  useEffect(() => {
+    setLogPage(1);
+  }, [timeFilter]);
+
+  const totalLogPages = Math.ceil(filteredLogs.length / logsPerPage) || 1;
+  const paginatedLogs = filteredLogs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage);
 
   return (
     <main className="main-content pt-4">
@@ -455,7 +466,7 @@ export default function SystemSyncTab() {
                         </td>
                       </tr>
                     ) : (
-                      filteredLogs.map((log) => (
+                      paginatedLogs.map((log) => (
                         <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
                           <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-slate-400">
                             {log.id.replace('log-', '')}
@@ -536,6 +547,34 @@ export default function SystemSyncTab() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Barra de Paginación para Tabla de Logs */}
+              {filteredLogs.length > 0 && (
+                <div className="flex items-center justify-between px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">
+                    Mostrando del {((logPage - 1) * logsPerPage) + 1} al {Math.min(logPage * logsPerPage, filteredLogs.length)} de {filteredLogs.length} registros
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setLogPage(p => Math.max(p - 1, 1))}
+                      disabled={logPage === 1}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Anterior
+                    </button>
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 px-2">
+                      Página {logPage} de {totalLogPages}
+                    </span>
+                    <button
+                      onClick={() => setLogPage(p => Math.min(p + 1, totalLogPages))}
+                      disabled={logPage === totalLogPages}
+                      className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* SECCIÓN CONSOLA JQL REAL CON VALIDADOR SINTÁCTICO DE BACKEND (HU-009) */}
