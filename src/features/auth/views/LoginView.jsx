@@ -122,7 +122,7 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* TARJETA COMPACTA SAAS EMPRESARIAL (380px) */
+        /* TARJETA COMPACTA SAAS EMPRESARIAL CON BORDE DINÁMICO E INTUITIVO */
         .auth-card-saas {
           width: 100%;
           max-width: 380px;
@@ -130,17 +130,78 @@ function LoginView() {
           background: rgba(11, 18, 32, 0.88);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
-          border: 1px solid rgba(6, 182, 212, 0.22);
+          border: 1.5px solid rgba(6, 182, 212, 0.35);
           border-radius: 20px;
           padding: 75px 32px;
           box-shadow:
             0 20px 50px rgba(0, 0, 0, 0.65),
             inset 0 1px 1px rgba(255, 255, 255, 0.15),
-            0 0 25px rgba(6, 182, 212, 0.08);
+            0 0 25px rgba(6, 182, 212, 0.12);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.5deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 1.5deg));
-          transition: transform 0.2s ease-out;
+          transition: transform 0.2s ease-out, border-color 0.4s ease, box-shadow 0.4s ease;
+          animation: cardBorderGlow 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes cardBorderGlow {
+          0% {
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 0 20px rgba(6, 182, 212, 0.15);
+          }
+          50% {
+            border-color: rgba(168, 85, 247, 0.45);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 0 32px rgba(168, 85, 247, 0.25);
+          }
+          100% {
+            border-color: rgba(56, 189, 248, 0.38);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 0 25px rgba(56, 189, 248, 0.2);
+          }
+        }
+
+        /* Botón 1: Desarrollador (Cian Sobrio / Degradé Elegante) */
+        .btn-dev-teal {
+          background: linear-gradient(135deg, #093b44 0%, #0e5b6a 50%, #15798c 100%);
+          border: 1px solid rgba(45, 212, 191, 0.35);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-dev-teal:hover {
+          transform: translateY(-2px) scale(1.015);
+          background: linear-gradient(135deg, #0d4a55 0%, #136f82 50%, #1a95ad 100%);
+          border-color: rgba(45, 212, 191, 0.7);
+          box-shadow: 0 8px 24px rgba(6, 182, 212, 0.25);
+          filter: brightness(1.1);
+        }
+
+        /* Botón 2: Líder Técnico (Púrpura Sobrio / Degradé Elegante) */
+        .btn-manager-purple {
+          background: linear-gradient(135deg, #24143a 0%, #3a1d5c 50%, #522780 100%);
+          border: 1px solid rgba(167, 139, 250, 0.35);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-manager-purple:hover {
+          transform: translateY(-2px) scale(1.015);
+          background: linear-gradient(135deg, #2e1a4a 0%, #482473 50%, #66319e 100%);
+          border-color: rgba(167, 139, 250, 0.7);
+          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.25);
+          filter: brightness(1.1);
+        }
+
+        /* Botón 3: Administrador (Azul Sobrio / Degradé Elegante) */
+        .btn-admin-blue {
+          background: linear-gradient(135deg, #0e2246 0%, #18386c 50%, #225199 100%);
+          border: 1px solid rgba(96, 165, 250, 0.35);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-admin-blue:hover {
+          transform: translateY(-2px) scale(1.015);
+          background: linear-gradient(135deg, #132d5c 0%, #20488a 50%, #2c68c2 100%);
+          border-color: rgba(96, 165, 250, 0.7);
+          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
+          filter: brightness(1.1);
         }
 
         /* Moneda 3D Rotatoria para Badge de Tarjeta */
