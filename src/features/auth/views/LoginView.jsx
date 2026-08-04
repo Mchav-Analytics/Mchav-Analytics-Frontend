@@ -125,20 +125,20 @@ function LoginView() {
           padding: 1.5rem 2rem;
         }
 
-        /* TARJETA DERECHA DE AUTENTICACIÓN */
+        /* TARJETA DERECHA DE AUTENTICACIÓN (EFECTO VIDRIO TRASLÚCIDO) */
         .auth-card-right-screen {
           width: 100%;
-          max-width: 430px;
-          background: rgba(10, 16, 32, 0.82);
-          backdrop-filter: blur(32px);
-          -webkit-backdrop-filter: blur(32px);
-          border: 1px solid rgba(255, 255, 255, 0.14);
+          max-width: 410px;
+          background: rgba(15, 23, 42, 0.38);
+          backdrop-filter: blur(24px) saturate(180%);
+          -webkit-backdrop-filter: blur(24px) saturate(180%);
+          border: 1.5px solid rgba(255, 255, 255, 0.22);
           border-radius: 32px;
-          padding: 2.75rem 2.25rem;
+          padding: 3.5rem 1.5rem;
           box-shadow:
-            0 30px 90px rgba(0, 0, 0, 0.9),
-            inset 0 1px 1px rgba(255, 255, 255, 0.2),
-            0 0 45px rgba(6, 182, 212, 0.1);
+            0 30px 90px rgba(0, 0, 0, 0.6),
+            inset 0 1px 1px rgba(255, 255, 255, 0.35),
+            0 0 45px rgba(6, 182, 212, 0.15);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.8deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 1.8deg));
