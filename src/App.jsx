@@ -45,12 +45,12 @@ function MainAppContent() {
   useEffect(() => {
     if (user?.rol === 'DEVELOPER') {
       setActiveTab('developer');
-    } else if (user?.rol === 'ADMIN') {
+    } else if (user?.rol === 'ADMIN' && activeTab === 'developer') {
       setActiveTab('usuarios');
-    } else if (user?.rol === 'MANAGER' && activeTab === 'developer') {
+    } else if (user?.rol === 'MANAGER' && (activeTab === 'developer' || activeTab === 'usuarios')) {
       setActiveTab('dashboard');
     }
-  }, [user]);
+  }, [user, activeTab]);
 
   // Cargar métricas e información inicial al autenticarse
   useEffect(() => {

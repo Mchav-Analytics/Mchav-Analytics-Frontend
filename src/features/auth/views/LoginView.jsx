@@ -85,45 +85,97 @@ function LoginView() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #080b13;
+          background: radial-gradient(ellipse at bottom, #1b2735 0%, #090a0f 100%);
           font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
           color: #ffffff;
         }
 
-        .neon-blob {
+        .stars-bg-container {
           position: absolute;
-          border-radius: 50%;
-          filter: blur(100px);
-          pointer-events: none;
+          inset: 0;
+          overflow: hidden;
+          z-index: 0;
+        }
+
+        #stars, #stars2, #stars3 {
+          position: absolute;
+          background: transparent;
+        }
+
+        .card-blob-wrapper {
+          position: relative;
+          width: 100%;
+          max-width: 440px;
+          margin: 0 auto;
+          box-sizing: border-box;
+          border-radius: 36px;
+          z-index: 10;
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7);
+          transform: perspective(1000px) 
+                     rotateX(calc(var(--mouse-norm-y, 0) * -5deg)) 
+                     rotateY(calc(var(--mouse-norm-x, 0) * 5deg));
+          transition: transform 0.15s ease-out, box-shadow 0.3s ease;
+        }
+
+        .card-blob-wrapper:hover {
+          transform: perspective(1000px) 
+                     rotateX(calc(var(--mouse-norm-y, 0) * -7deg)) 
+                     rotateY(calc(var(--mouse-norm-x, 0) * 7deg))
+                     translateY(-4px);
+          box-shadow: 0 40px 80px -15px rgba(0, 0, 0, 0.85);
+        }
+
+        /* Gota animada en degradado cian/violeta que emerge activamente al hacer hover sobre la tarjeta (Uiverse.io por dylanharriscameron) */
+        .blob {
+          position: absolute;
           z-index: 1;
-          will-change: transform;
+          top: 50%;
+          left: 50%;
+          width: 260px;
+          height: 260px;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #00f2fe 0%, #38bdf8 35%, #8b5cf6 70%, #d946ef 100%);
+          opacity: 0;
+          filter: blur(30px);
+          transition: opacity 0.35s ease-in-out;
+          animation: blob-bounce 6s infinite ease-in-out;
+          pointer-events: none;
         }
 
-        .neon-cyan {
-          top: 35%;
-          left: 12%;
-          width: 420px;
-          height: 420px;
-          background: radial-gradient(circle, rgba(0, 162, 255, 0.6) 0%, rgba(0, 80, 200, 0.1) 70%);
-          transform: translate(calc(var(--mouse-norm-x, 0) * -35px), calc(var(--mouse-norm-y, 0) * -35px));
-          transition: transform 0.2s ease-out;
+        .card-blob-wrapper:hover .blob {
+          opacity: 0.95;
         }
 
-        .neon-purple {
-          top: 30%;
-          right: 12%;
-          width: 480px;
-          height: 480px;
-          background: radial-gradient(circle, rgba(147, 51, 234, 0.6) 0%, rgba(79, 70, 229, 0.1) 70%);
-          transform: translate(calc(var(--mouse-norm-x, 0) * 35px), calc(var(--mouse-norm-y, 0) * 35px));
-          transition: transform 0.2s ease-out;
+        @keyframes blob-bounce {
+          0% {
+            transform: translate(-100%, -100%) translate3d(0, 0, 0);
+          }
+          25% {
+            transform: translate(-100%, -100%) translate3d(120%, 0, 0);
+          }
+          50% {
+            transform: translate(-100%, -100%) translate3d(120%, 120%, 0);
+          }
+          75% {
+            transform: translate(-100%, -100%) translate3d(0, 120%, 0);
+          }
+          100% {
+            transform: translate(-100%, -100%) translate3d(0, 0, 0);
+          }
         }
 
         .exact-glass-card {
           position: relative;
-          z-index: 10;
+          z-index: 2;
           width: 100%;
           max-width: 440px;
+          box-sizing: border-box;
           padding: 3.25rem 2.5rem 2.75rem;
           border-radius: 36px;
           background: rgba(255, 255, 255, 0.06);
@@ -135,10 +187,6 @@ function LoginView() {
           flex-direction: column;
           align-items: center;
           text-align: center;
-          transform: perspective(1000px) 
-                     rotateX(calc(var(--mouse-norm-y, 0) * -5deg)) 
-                     rotateY(calc(var(--mouse-norm-x, 0) * 5deg));
-          transition: transform 0.15s ease-out, box-shadow 0.3s ease;
         }
 
         .exact-glass-card::before {
@@ -262,6 +310,13 @@ function LoginView() {
           border-color: rgba(167, 139, 250, 0.6);
         }
       `}</style>
+
+      {/* Fondo Animado Espacial con Estrellas (Uiverse.io por jaykdoe) */}
+      <div className="stars-bg-container">
+        <div id="stars"></div>
+        <div id="stars2"></div>
+        <div id="stars3"></div>
+      </div>
 
       {/* Luces Neón de Fondo (Cian y Violeta) */}
       <div className="neon-blob neon-cyan" />

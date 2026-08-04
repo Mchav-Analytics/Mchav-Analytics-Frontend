@@ -4,7 +4,7 @@
 // Vista con 4 KPIs superiores, Velocidad por Sprint, Burndown,
 // Salud del Sprint (75% Estable) y Gráfica de Dona interactiva. Adaptada a temas y espaciados limpios.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Zap, 
   CheckCircle2, 
@@ -19,7 +19,12 @@ import {
   User,
   FileText,
   Shield,
-  X
+  X,
+  FileDown,
+  Printer,
+  Search,
+  ExternalLink,
+  Layers
 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import { 
@@ -74,10 +79,69 @@ const InfoTooltip = ({ text }) => (
   </div>
 );
 
+// Datos de Drill-down de incidencias por KPI (HU-015)
+const mockKpiDrilldownData = {
+  points: {
+    title: 'Puntos Entregados (Velocity - HU-011)',
+    kpiValue: '30 Story Points',
+    description: 'Historias de usuario y tareas completadas en el sprint actual (Sprint SP_4).',
+    issues: [
+      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-105', title: 'Servicio REST para cálculo de Velocity', type: 'Historia', status: 'Done', sp: 5, assignee: 'Andrés Alcalá', date: '2026-08-03' },
+      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, assignee: 'Valentina Hoyos', date: '2026-08-04' },
+      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, assignee: 'Michael Salamanca', date: '2026-08-04' }
+    ]
+  },
+  completed: {
+    title: 'Tareas Completadas (Throughput)',
+    kpiValue: '10 de 14 Incidencias (71%)',
+    description: 'Incidencias resueltas exitosamente durante el ciclo del sprint.',
+    issues: [
+      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-102', title: 'Integración API v3 de Jira Cloud', type: 'Historia', status: 'Done', sp: 5, assignee: 'Andrés Alcalá', date: '2026-08-02' },
+      { key: 'MCHAV-103', title: 'Diseño de la base de datos PostgreSQL', type: 'Tarea', status: 'Done', sp: 3, assignee: 'Valentina Hoyos', date: '2026-08-02' },
+      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-105', title: 'Servicio REST para cálculo de Velocity', type: 'Historia', status: 'Done', sp: 5, assignee: 'Andrés Alcalá', date: '2026-08-03' },
+      { key: 'MCHAV-106', title: 'Implementar sanitización de consultas JQL', type: 'Tarea', status: 'Done', sp: 3, assignee: 'Michael Salamanca', date: '2026-08-03' },
+      { key: 'MCHAV-107', title: 'Maquetación de la Consola JQL', type: 'Historia', status: 'Done', sp: 3, assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, assignee: 'Valentina Hoyos', date: '2026-08-04' },
+      { key: 'MCHAV-109', title: 'Pruebas unitarias en Backend con Pytest', type: 'Tarea', status: 'Done', sp: 3, assignee: 'Michael Salamanca', date: '2026-08-04' },
+      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, assignee: 'Michael Salamanca', date: '2026-08-04' }
+    ]
+  },
+  cycle: {
+    title: 'Tiempo de Ciclo Promedio (Cycle Time - HU-012)',
+    kpiValue: '4.2 Días Promedio',
+    description: 'Tiempo transcurrido desde que la tarea entra en desarrollo ("In Progress") hasta su resolución.',
+    issues: [
+      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', cycleTime: '3.5d', assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', cycleTime: '4.8d', assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-105', title: 'Servicio REST para cálculo de Velocity', type: 'Historia', status: 'Done', cycleTime: '4.0d', assignee: 'Andrés Alcalá', date: '2026-08-03' },
+      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', cycleTime: '5.2d', assignee: 'Valentina Hoyos', date: '2026-08-04' },
+      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', cycleTime: '3.5d', assignee: 'Michael Salamanca', date: '2026-08-04' }
+    ]
+  },
+  retrabajo: {
+    title: 'Tasa de Retrabajo / Defectos (Bugs)',
+    kpiValue: '21% (3 Bugs en Sprint)',
+    description: 'Relación de incidencias de tipo Bug reportadas frente al volumen del sprint.',
+    issues: [
+      { key: 'MCHAV-112', title: 'Error de desbordamiento en tooltip de Recharts', type: 'Bug', status: 'In Progress', severity: 'Alta', assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-114', title: 'Fallo de timeout en token OAuth de Jira', type: 'Bug', status: 'Done', severity: 'Crítica', assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-115', title: 'Reintentos infinitos en worker ETL en segundo plano', type: 'Bug', status: 'To Do', severity: 'Media', assignee: 'Valentina Hoyos', date: '2026-08-04' }
+    ]
+  }
+};
+
 function DashboardView({ subTab = 'dashboard' }) {
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false); // Estado de animación del botón de refresco
   const [showActiveToast, setShowActiveToast] = useState(true);
+  
+  // Estado para el modal de drill-down de KPI (HU-015)
+  const [drilldownKey, setDrilldownKey] = useState(null);
+  const [drilldownSearch, setDrilldownSearch] = useState('');
 
   const isPending = user?.status === 'PENDING' && user?.rol === 'MANAGER';
 
@@ -94,6 +158,11 @@ function DashboardView({ subTab = 'dashboard' }) {
     setTimeout(() => setIsRefreshing(false), 800);
   };
 
+  // Función para exportar reporte en PDF (HU-016)
+  const handleExportPDF = () => {
+    window.print();
+  };
+
   // Estilo dinámico de Recharts Tooltip con variables CSS de tema
   const tooltipStyle = {
     backgroundColor: 'var(--bg-card)',
@@ -103,6 +172,20 @@ function DashboardView({ subTab = 'dashboard' }) {
     fontSize: '12px',
     boxShadow: 'var(--shadow-card)'
   };
+
+  const activeDrilldown = drilldownKey ? mockKpiDrilldownData[drilldownKey] : null;
+
+  const filteredDrilldownIssues = useMemo(() => {
+    if (!activeDrilldown) return [];
+    const q = drilldownSearch.trim().toLowerCase();
+    if (!q) return activeDrilldown.issues;
+    return activeDrilldown.issues.filter(
+      iss => iss.key.toLowerCase().includes(q) ||
+             iss.title.toLowerCase().includes(q) ||
+             iss.assignee.toLowerCase().includes(q) ||
+             iss.type.toLowerCase().includes(q)
+    );
+  }, [activeDrilldown, drilldownSearch]);
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200">
@@ -149,8 +232,8 @@ function DashboardView({ subTab = 'dashboard' }) {
         </div>
       )}
       
-      {/* 1. CABECERA: HISTÓRICO GENERAL Y BOTÓN DE REFRESCO */}
-      <div className="flex items-center justify-between pt-1">
+      {/* 1. CABECERA: HISTÓRICO GENERAL, BOTÓN DE REFRESCO Y EXPORTACIÓN A PDF (HU-016) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-500 dark:text-indigo-400 font-extrabold flex items-center justify-center text-base border border-indigo-500/30 shadow-sm">
             M
@@ -163,27 +246,42 @@ function DashboardView({ subTab = 'dashboard' }) {
           </div>
         </div>
 
-        {/* Botón de Refrescar Datos */}
-        <button
-          onClick={handleRefresh}
-          className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm"
-          title="Actualizar datos del sprint"
-        >
-          <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Botón Exportar PDF (HU-016) */}
+          <button
+            onClick={handleExportPDF}
+            className="h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-purple-600/20"
+            title="Exportar reporte consolidado en PDF (HU-016)"
+          >
+            <FileDown size={16} />
+            <span>Exportar PDF</span>
+          </button>
+
+          {/* Botón de Refrescar Datos */}
+          <button
+            onClick={handleRefresh}
+            className="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+            title="Actualizar datos del sprint"
+          >
+            <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
+          </button>
+        </div>
       </div>
 
-      {/* 2. FILA DE 4 TARJETAS KPI SUPERIORES (ESPACIADO COMPACTO Y PROPORCIONADO) */}
+      {/* 2. FILA DE 4 TARJETAS KPI SUPERIORES (INTERACTIVAS CON DRILL-DOWN HU-015) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         
         {/* KPI 1: Puntos Entregados (SP) */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        <div 
+          onClick={() => setDrilldownKey('points')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-purple-500/60 dark:hover:border-purple-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <Zap size={14} className="text-purple-500 dark:text-purple-400 shrink-0" />
               <span>Puntos Entregados</span>
             </div>
-            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint." />
+            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint. Haz clic para ver el desglose JQL (HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
@@ -194,19 +292,23 @@ function DashboardView({ subTab = 'dashboard' }) {
               <TrendingDown size={11} /> -48%
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Story Points entregados en el sprint.
-          </p>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-purple-600 dark:text-purple-400 font-extrabold">
+            <span>Ver desglose de tickets Jira</span>
+            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
         </div>
 
         {/* KPI 2: Tareas Completadas */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        <div 
+          onClick={() => setDrilldownKey('completed')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-teal-500/60 dark:hover:border-teal-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <CheckCircle2 size={14} className="text-teal-500 dark:text-teal-400 shrink-0" />
               <span>Tareas Completadas</span>
             </div>
-            <InfoTooltip text="Cantidad de tareas completadas en relación al total planificado." />
+            <InfoTooltip text="Cantidad de tareas completadas en relación al total planificado. Haz clic para ver el desglose JQL (HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
@@ -217,19 +319,23 @@ function DashboardView({ subTab = 'dashboard' }) {
               <TrendingDown size={11} /> -38%
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Tareas resueltas del backlog planificado.
-          </p>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-teal-600 dark:text-teal-400 font-extrabold">
+            <span>Ver desglose de tickets Jira</span>
+            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
         </div>
 
         {/* KPI 3: Tiempo de Ciclo */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        <div 
+          onClick={() => setDrilldownKey('cycle')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <Clock size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
               <span>Tiempo de Ciclo</span>
             </div>
-            <InfoTooltip text="Días promedio que tarda una tarea en completarse desde que inicia desarrollo." />
+            <InfoTooltip text="Días promedio que tarda una tarea en completarse desde que inicia desarrollo. Haz clic para ver los tiempos trazables (HU-012/HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
@@ -240,19 +346,23 @@ function DashboardView({ subTab = 'dashboard' }) {
               <TrendingDown size={11} /> -20%
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Tiempo de resolución en desarrollo.
-          </p>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-amber-600 dark:text-amber-400 font-extrabold">
+            <span>Ver desglose de tickets Jira</span>
+            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
         </div>
 
         {/* KPI 4: Tasa de Retrabajo */}
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-lg flex flex-col relative overflow-hidden group">
+        <div 
+          onClick={() => setDrilldownKey('retrabajo')}
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
               <RotateCcw size={14} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
               <span>Tasa de Retrabajo</span>
             </div>
-            <InfoTooltip text="Porcentaje de bugs reportados sobre el total de tareas en el sprint." />
+            <InfoTooltip text="Porcentaje de bugs reportados sobre el total de tareas en el sprint. Haz clic para ver los defectos (HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
@@ -262,9 +372,10 @@ function DashboardView({ subTab = 'dashboard' }) {
               <TrendingUp size={11} /> +8.2%
             </span>
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2 leading-relaxed">
-            Bugs reportados sobre total de tareas.
-          </p>
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-cyan-600 dark:text-cyan-400 font-extrabold">
+            <span>Ver desglose de tickets Jira</span>
+            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
+          </div>
         </div>
 
       </div>
@@ -440,6 +551,147 @@ function DashboardView({ subTab = 'dashboard' }) {
         </div>
 
       </div>
+
+      {/* 5. MODAL DE DRILL-DOWN DE INCIDENCIAS (HU-015) */}
+      {drilldownKey && activeDrilldown && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left max-h-[85vh] flex flex-col">
+            
+            {/* Cabecera del Modal */}
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0">
+                  <Layers size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                    {activeDrilldown.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    {activeDrilldown.description}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => { setDrilldownKey(null); setDrilldownSearch(''); }}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Fila de Estadísticas y Buscador */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs font-black">
+                  Valor KPI: {activeDrilldown.kpiValue}
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                  {filteredDrilldownIssues.length} incidencias listadas
+                </span>
+              </div>
+
+              {/* Buscador interno */}
+              <div className="relative min-w-[220px]">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Buscar por ticket, título o desarrollador..."
+                  value={drilldownSearch}
+                  onChange={(e) => setDrilldownSearch(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                />
+              </div>
+            </div>
+
+            {/* Tabla de Incidencias Trazables */}
+            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden overflow-y-auto flex-1 shadow-inner">
+              <table className="w-full text-xs text-left border-collapse">
+                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+                  <tr>
+                    <th className="py-3 px-4">Clave Ticket</th>
+                    <th className="py-3 px-4">Título / Historia</th>
+                    <th className="py-3 px-4">Tipo</th>
+                    <th className="py-3 px-4">Estado</th>
+                    {drilldownKey === 'points' && <th className="py-3 px-4 text-center">SP</th>}
+                    {drilldownKey === 'cycle' && <th className="py-3 px-4 text-center">Tiempo Ciclo</th>}
+                    <th className="py-3 px-4">Asignado</th>
+                    <th className="py-3 px-4">Fecha</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-200 font-medium">
+                  {filteredDrilldownIssues.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                        No se encontraron tickets con el filtro de búsqueda.
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredDrilldownIssues.map((iss) => (
+                      <tr key={iss.key} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                        <td className="py-3 px-4 font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                          <span>{iss.key}</span>
+                          <ExternalLink size={11} className="opacity-60" />
+                        </td>
+                        <td className="py-3 px-4 max-w-[280px] truncate font-bold text-slate-900 dark:text-slate-100">
+                          {iss.title}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            iss.type === 'Bug' 
+                              ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30'
+                              : 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-500/30'
+                          }`}>
+                            {iss.type}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                            iss.status === 'Done'
+                              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                              : iss.status === 'In Progress'
+                              ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                          }`}>
+                            {iss.status}
+                          </span>
+                        </td>
+                        {drilldownKey === 'points' && (
+                          <td className="py-3 px-4 text-center font-extrabold text-purple-600 dark:text-purple-400">
+                            {iss.sp} SP
+                          </td>
+                        )}
+                        {drilldownKey === 'cycle' && (
+                          <td className="py-3 px-4 text-center font-extrabold text-amber-600 dark:text-amber-400">
+                            {iss.cycleTime}
+                          </td>
+                        )}
+                        <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
+                          {iss.assignee}
+                        </td>
+                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
+                          {iss.date}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Pie del Modal */}
+            <div className="flex justify-end pt-1 shrink-0">
+              <button
+                onClick={() => { setDrilldownKey(null); setDrilldownSearch(''); }}
+                className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition-all cursor-pointer"
+              >
+                Cerrar Desglose
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -831,13 +831,37 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </button>
             )}
 
-            <input
-              type="text"
-              placeholder="Buscar proyecto..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="h-[38px] px-4 rounded-xl border border-slate-200 dark:border-slate-700 dark:bg-slate-950 text-xs w-full sm:w-64 text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30"
-            />
+            {/* Barra de Búsqueda Dinámica y Expansible Adaptada a Modo Claro y Modo Oscuro (por jubayer-10) */}
+            <div
+              className={`h-[38px] p-2 overflow-hidden transition-all duration-300 rounded-full flex group items-center shadow-md border 
+              bg-white border-slate-200 hover:border-indigo-400 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 
+              dark:bg-gradient-to-r dark:from-[#0b132b] dark:via-[#0f233a] dark:to-[#0a2e38] dark:border-[#38bdf8]/35 dark:hover:border-[#38bdf8]/60 dark:focus-within:border-[#38bdf8] dark:focus-within:ring-[#38bdf8]/25 ${
+                searchTerm ? 'w-64 sm:w-72 border-indigo-400 dark:border-[#38bdf8]/55' : 'w-[38px] hover:w-64 sm:hover:w-72 focus-within:w-64 sm:focus-within:w-72'
+              }`}
+            >
+              <div className="flex items-center justify-center shrink-0 w-6 h-6">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  id="Isolation_Mode"
+                  data-name="Isolation Mode"
+                  viewBox="0 0 24 24"
+                  width="16"
+                  height="16"
+                  className="fill-slate-500 group-hover:fill-indigo-600 dark:fill-[#38bdf8] dark:group-hover:fill-[#38bdf8] transition-all duration-300 group-hover:scale-110"
+                >
+                  <path
+                    d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"
+                  ></path>
+                </svg>
+              </div>
+              <input
+                type="text"
+                placeholder="Buscar proyecto..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="outline-none text-xs bg-transparent w-full text-slate-800 placeholder-slate-400 dark:text-[#38bdf8] dark:placeholder-[#38bdf8]/55 font-bold px-2.5"
+              />
+            </div>
           </div>
 
           {/* Pestañas de Filtro en Contenedores Separados e Independientes */}

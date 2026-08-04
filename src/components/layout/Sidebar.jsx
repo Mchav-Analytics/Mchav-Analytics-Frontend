@@ -46,12 +46,12 @@ function Sidebar({
       ];
     }
 
-    // Si el usuario es Líder Técnico (MANAGER), ve Proyectos, Resumen y Sincronización
+    // Si el usuario es Líder Técnico (MANAGER), ve Resumen (Dashboard), Proyectos y Sincronización
     if (userRole === 'MANAGER') {
       return [
-        { id: 'proyectos', label: 'Proyectos', icon: FolderKanban },
-        { id: 'dashboard', label: 'Resumen', icon: LayoutDashboard },
-        { id: 'sincronizacion', label: 'Sincronización', icon: ClipboardList },
+        { id: 'dashboard', label: 'Resumen Executive', icon: LayoutDashboard },
+        { id: 'proyectos', label: 'Proyectos y Equipos', icon: FolderKanban },
+        { id: 'sincronizacion', label: 'Sincronización Jira', icon: ClipboardList },
       ];
     }
 
@@ -66,11 +66,12 @@ function Sidebar({
 
   return (
     <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''}`}>
-      {/* Botón flotante para abrir/cerrar panel */}
+      {/* Botón flotante para abrir/cerrar panel en su posición exacta original en el borde */}
       <button
         onClick={() => setIsCollapsed(!isCollapsed)}
         className="sidebar-toggle-btn"
         aria-label={isCollapsed ? "Expandir panel" : "Colapsar panel"}
+        title={isCollapsed ? "Expandir panel" : "Colapsar panel"}
       >
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
@@ -106,62 +107,90 @@ function Sidebar({
         )}
       </div>
 
-      {/* Menú de Navegación Principal Conservado e Incrementado con Tareas e Historial */}
-      <nav className="sidebar-nav">
+      {/* Menú de Navegación Principal con Proyección Isométrica sólo en Colapsado */}
+      <nav className="sidebar-nav [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = activeTab === item.id;
           return (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`sidebar-link ${isActive ? 'active' : ''}`}
-              title={isCollapsed ? item.label : undefined}
-            >
-              <Icon className="sidebar-icon" size={18} />
-              {!isCollapsed && <span className="sidebar-label">{item.label}</span>}
-            </button>
+            <div key={item.id} className="iso-pro relative w-full flex items-center justify-start">
+              {/* Los aros 3D sólo se muestran cuando el sidebar está colapsado para evitar superponerse al texto */}
+              {isCollapsed && (
+                <>
+                  <span className="iso-ring"></span>
+                  <span className="iso-ring"></span>
+                  <span className="iso-ring"></span>
+                </>
+              )}
+              <button
+                onClick={() => setActiveTab(item.id)}
+                className={`sidebar-link ${isActive ? 'active' : ''}`}
+              >
+                <Icon className={`sidebar-icon ${isCollapsed ? 'iso-svg' : ''}`} size={18} />
+                {!isCollapsed && <span className="sidebar-label">{item.label}</span>}
+              </button>
+              {/* Etiqueta isométrica visible únicamente al pasar el cursor en modo colapsado */}
+              {isCollapsed && (
+                <span className="text iso-text font-sans">
+                  {item.label}
+                </span>
+              )}
+            </div>
           );
         })}
       </nav>
 
       {/* Footer del Sidebar con Selector de Tema Claro/Oscuro y Salida */}
       <div className="sidebar-footer">
-        {/* Selector de Tema con Switch Visual Exacto */}
-        <button
-          type="button"
-          onClick={() => setIsDarkMode(!isDarkMode)}
-          className="w-full flex items-center justify-between px-3 py-2 rounded-full border border-slate-300 dark:border-slate-700/80 bg-slate-100 dark:bg-slate-900/80 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer mb-2"
-          title={isCollapsed ? (isDarkMode ? "Modo Oscuro" : "Modo Claro") : undefined}
-        >
-          <div className="flex items-center gap-2">
-            {isDarkMode ? (
-              <Moon size={16} className="text-indigo-400 shrink-0" />
-            ) : (
-              <Sun size={16} className="text-amber-500 shrink-0" />
-            )}
-            {!isCollapsed && (
-              <span className="text-xs font-bold text-slate-800 dark:text-slate-100 whitespace-nowrap">
-                {isDarkMode ? "Modo Oscuro" : "Modo Claro"}
+        {/* Selector de Tema: Únicamente Interruptor Animado Alineado a la Izquierda (Uiverse.io) */}
+        <div className="flex items-center justify-start pl-2 py-2 mb-2">
+          <label className="theme text-[8px] sm:text-[9px] cursor-pointer" title={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}>
+            <span className="theme__toggle-wrap">
+              <input
+                type="checkbox"
+                className="theme__toggle"
+                role="switch"
+                name="theme"
+                value="dark"
+                checked={isDarkMode}
+                onChange={(e) => setIsDarkMode(e.target.checked)}
+              />
+              <span className="theme__icon">
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
+                <span className="theme__icon-part"></span>
               </span>
-            )}
-          </div>
+            </span>
+          </label>
+        </div>
 
-          {!isCollapsed && (
-            <div className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 flex items-center ${isDarkMode ? 'bg-indigo-600 justify-end' : 'bg-slate-300 dark:bg-slate-700 justify-start'}`}>
-              <div className="w-4 h-4 rounded-full bg-white shadow-sm" />
-            </div>
+        <div className="iso-pro relative w-full flex items-center justify-start">
+          {isCollapsed && (
+            <>
+              <span className="iso-ring"></span>
+              <span className="iso-ring"></span>
+              <span className="iso-ring"></span>
+            </>
           )}
-        </button>
-
-        <button
-          onClick={handleLogout}
-          className="sidebar-link logout-btn"
-          title={isCollapsed ? "Cerrar Sesión" : undefined}
-        >
-          <LogOut className="sidebar-icon" size={18} />
-          {!isCollapsed && <span className="sidebar-label">Cerrar Sesión</span>}
-        </button>
+          <button
+            onClick={handleLogout}
+            className="sidebar-link logout-btn"
+          >
+            <LogOut className={`sidebar-icon ${isCollapsed ? 'iso-svg' : ''}`} size={18} />
+            {!isCollapsed && <span className="sidebar-label">Cerrar Sesión</span>}
+          </button>
+          {isCollapsed && (
+            <span className="text iso-text font-sans">
+              Cerrar Sesión
+            </span>
+          )}
+        </div>
       </div>
     </aside>
   );
