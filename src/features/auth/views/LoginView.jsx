@@ -217,8 +217,8 @@ function LoginView() {
         /* Moneda 3D Rotatoria Grande (Zona Izquierda) */
         .mchav-coin-large {
           position: relative;
-          width: 90px;
-          height: 90px;
+          width: 150px;
+          height: 150px;
           display: block;
           transform-style: preserve-3d;
         }
@@ -233,8 +233,8 @@ function LoginView() {
 
         .coin-face-large {
           position: absolute;
-          width: 90px;
-          height: 90px;
+          width: 150px;
+          height: 150px;
           top: 0;
           left: 0;
           border-radius: 50%;
@@ -249,7 +249,7 @@ function LoginView() {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.7));
+          filter: drop-shadow(0 0 16px rgba(6, 182, 212, 0.7));
         }
 
         .coin-front-large { transform: translateZ(1.5px); }
@@ -319,8 +319,9 @@ function LoginView() {
             =================================================================== */}
         <div className="hidden lg:flex flex-1 flex-col justify-between h-full pr-12 text-left py-4 z-10">
           
-          {/* Header Marca: Logo Moneda 3D Grande + MCHAV + Subtítulo Analytics */}
-          <div className="flex items-center gap-5">
+          {/* Logo 3D Agrandado (150px) y Frase Alineada Debajo */}
+          <div className="flex flex-col items-start gap-4">
+            {/* Moneda 3D Rotatoria Grande (150px) */}
             <div className="mchav-coin-large">
               <div className="mchav-coin-wrapper-large">
                 <div className="coin-face-large coin-front-large">
@@ -331,29 +332,21 @@ function LoginView() {
                 </div>
               </div>
             </div>
-            <div>
-              <h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 leading-none drop-shadow-lg">
-                MCHAV
-              </h1>
-              <p className="text-sm font-semibold tracking-widest text-slate-400 uppercase mt-1">
-                Analytics
+
+            {/* Texto y Eslogan Debajo del Logo */}
+            <div className="space-y-3 text-left">
+              <h2 className="text-3xl lg:text-4xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
+                Convierte datos <br />
+                en <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
+              </h2>
+              
+              {/* Barra Decorativa Neón Cian -> Púrpura */}
+              <div className="w-16 h-1 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
+
+              <p className="text-xs font-normal text-slate-300/80 tracking-wide pt-0.5">
+                Analítica ágil para equipos Jira.
               </p>
             </div>
-          </div>
-
-          {/* Eslogan Principal y Subtítulo Jira */}
-          <div className="my-auto space-y-4">
-            <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
-              Convierte datos <br />
-              en <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
-            </h2>
-            
-            {/* Barra Decorativa Neón Cian -> Púrpura */}
-            <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]" />
-
-            <p className="text-sm font-normal text-slate-300/80 tracking-wide pt-1">
-              Analítica ágil para equipos Jira.
-            </p>
           </div>
 
           {/* Gráfico 3D Holográfico en Perspectiva Isométrica */}
