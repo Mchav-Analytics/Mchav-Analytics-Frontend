@@ -132,7 +132,7 @@ function LoginView() {
           -webkit-backdrop-filter: blur(24px);
           border: 1px solid rgba(6, 182, 212, 0.22);
           border-radius: 20px;
-          padding: 22px 32px;
+          padding: 75px 32px;
           box-shadow:
             0 20px 50px rgba(0, 0, 0, 0.65),
             inset 0 1px 1px rgba(255, 255, 255, 0.15),
