@@ -96,27 +96,8 @@ function Topbar({
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px', margin: '0' }}>{subtitle}</p>
       </div>
 
-      {/* Controles de Filtros, Notificaciones y Perfil */}
+      {/* Controles de Notificaciones y Perfil */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-
-        {/* Selector de Rango de Fecha (Deshabilitado con Candado en Estado PENDING) */}
-        {setDateFilter && (
-          <DatePickerDropdown
-            dateFilter={dateFilter}
-            setDateFilter={setDateFilter}
-            disabled={isPendingUser}
-          />
-        )}
-
-        {/* Selector de Proyecto Activo (Deshabilitado con Candado en Estado PENDING) */}
-        {setSelectedProjectId && (
-          <ProjectPickerDropdown
-            projects={projects}
-            selectedProjectId={selectedProjectId}
-            setSelectedProjectId={setSelectedProjectId}
-            disabled={isPendingUser}
-          />
-        )}
 
         {/* Campanita de Notificaciones para el Administrador */}
         {(activeUser?.rol === 'ADMIN' || activeUser?.rol === 'MANAGER') && (

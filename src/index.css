@@ -47,12 +47,16 @@ html {
 }
 
 /* Ocultar barra de desplazamiento en cualquier navegador manteniendo la funcionalidad */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
+html, body, #root, .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+#root::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 body {
@@ -60,9 +64,6 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   min-height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
   background-image: 
     radial-gradient(circle at 15% 50%, rgba(0, 82, 204, 0.15) 0%, transparent 50%),
     radial-gradient(circle at 85% 30%, rgba(139, 92, 246, 0.15) 0%, transparent 50%);
@@ -379,6 +380,12 @@ body {
   flex-direction: column;
   overflow-y: auto;
   position: relative;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.main-content::-webkit-scrollbar {
+  display: none;
 }
 
 .topbar {

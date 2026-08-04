@@ -53,7 +53,7 @@ function MainLayout({
       />
 
       {/* Contenido Principal de la Aplicación */}
-      <main className="main-content">
+      <main className="main-content no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <Topbar
           title={topbarTitle}
           subtitle={topbarSubtitle}
