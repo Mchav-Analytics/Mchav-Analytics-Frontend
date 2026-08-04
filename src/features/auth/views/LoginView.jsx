@@ -109,72 +109,66 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA DE LA CAPTURA SOLICITADA) */
+        /* TARJETA DERECHA DE AUTENTICACIÓN (TRANSPARENTE GLASSMORPHIC) */
         .auth-card-right-screen {
           width: 100%;
           max-width: 430px;
-          background: rgba(13, 19, 35, 0.84);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
-          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          background: rgba(10, 16, 32, 0.32);
+          backdrop-filter: blur(24px) saturate(160%);
+          -webkit-backdrop-filter: blur(24px) saturate(160%);
+          border: 1.5px solid rgba(255, 255, 255, 0.18);
           border-radius: 32px;
           padding: 2.75rem 2.25rem;
           box-shadow:
-            0 30px 90px rgba(0, 0, 0, 0.88),
-            0 0 40px rgba(6, 182, 212, 0.08);
+            0 20px 60px rgba(0, 0, 0, 0.5),
+            inset 0 1px 1px rgba(255, 255, 255, 0.25);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -2deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 2deg));
           transition: transform 0.2s ease-out;
         }
 
-        /* Pedestal 3D Holográfico */
-        .pedestal-plate {
-          transform: perspective(900px) rotateX(20deg) rotateY(-8deg);
-          transform-style: preserve-3d;
-          box-shadow: 0 35px 80px rgba(0, 0, 0, 0.95);
-        }
-
-        /* Botón 1: Desarrollador (Cian / Esmeralda) */
+        /* Botones sin sombras brillantes ni efecto neón */
         .btn-dev-teal {
-          background: linear-gradient(135deg, #0d9488 0%, #06b6d4 50%, #0284c7 100%);
-          border: 1px solid rgba(45, 212, 191, 0.4);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 20px rgba(13, 148, 136, 0.3);
+          background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: none;
+          transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .btn-dev-teal:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(6, 182, 212, 0.45);
-          filter: brightness(1.08);
+          opacity: 0.9;
+          transform: translateY(-1px);
+          box-shadow: none;
+          filter: none;
         }
 
-        /* Botón 2: Líder Técnico (Púrpura / Violeta) */
         .btn-manager-purple {
-          background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 50%, #4c1d95 100%);
-          border: 1px solid rgba(167, 139, 250, 0.4);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 20px rgba(109, 40, 217, 0.3);
+          background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: none;
+          transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .btn-manager-purple:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(124, 58, 237, 0.45);
-          filter: brightness(1.08);
+          opacity: 0.9;
+          transform: translateY(-1px);
+          box-shadow: none;
+          filter: none;
         }
 
-        /* Botón 3: Administrador (Azul Marino / Atlassian) */
         .btn-admin-blue {
-          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #0f172a 100%);
-          border: 1px solid rgba(96, 165, 250, 0.4);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 20px rgba(29, 78, 216, 0.3);
+          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          box-shadow: none;
+          transition: opacity 0.2s ease, transform 0.2s ease;
         }
 
         .btn-admin-blue:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
-          filter: brightness(1.08);
+          opacity: 0.9;
+          transform: translateY(-1px);
+          box-shadow: none;
+          filter: none;
         }
         /* ===================================================================
            ANIMACIÓN 3D DEL LOGO MCHAV — MONEDA PLANA GIRATORIA (270px)
