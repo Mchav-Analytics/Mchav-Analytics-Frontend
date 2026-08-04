@@ -1,11 +1,12 @@
 // ============================================================================
-// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON DISEÑO COMPLETO MCHAV ANALYTICS
+// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON TARJETA DE ESQUINAS DIAGONALES (CHAMFERED)
 // ============================================================================
-// Réplica exacta de la composición de 2 zonas sobre el fondo real de oficina:
-// - Zona Izquierda: Header de Marca, Eslogan con degradado, 3 pilares (Visualiza, Analiza, Decide),
-//   Gráfico de Rendimiento Mensual (12 meses con barras duales neón) y Badges de seguridad al pie.
-// - Zona Derecha: Tarjeta Glassmorphic con la insignia circular del logo 3D, encabezado "Bienvenido",
-//   línea acento neón y los 3 botones de acceso por rol.
+// - Fondo General: Imagen de oficina nocturna existente (login_bg.jpg).
+// - Zona Izquierda: Logo 3D Moneda Giratoria MCHAV, título MCHAV Analytics, eslogan
+//   "Convierte datos en decisiones.", subtítulo "Analítica ágil para equipos Jira."
+//   y gráfico holográfico 3D de barras en perspectiva isométrica.
+// - Zona Derecha: Tarjeta con esquinas cortadas en diagonal (chamfered), borde neón cian-púrpura,
+//   insignia hexagonal superior, título "Iniciar sesión", acento decorativo y los 3 botones por rol.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -49,7 +50,7 @@ function LoginView() {
     }
   };
 
-  // Iniciar sesión con un rol específico
+  // Iniciar sesión con un rol específico (Admin, Líder Técnico o Desarrollador)
   const handleRoleLogin = async (targetEmail, targetRole) => {
     setIsSubmitting(true);
     setErrorMessage('');
@@ -61,22 +62,6 @@ function LoginView() {
       setIsSubmitting(false);
     }
   };
-
-  // Datos para las barras del gráfico de rendimiento mensual (12 meses)
-  const monthlyData = [
-    { month: 'Ene', ventas: 45, objetivo: 60 },
-    { month: 'Feb', ventas: 52, objetivo: 68 },
-    { month: 'Mar', ventas: 60, objetivo: 75 },
-    { month: 'Abr', ventas: 70, objetivo: 82 },
-    { month: 'May', ventas: 72, objetivo: 88 },
-    { month: 'Jun', ventas: 80, objetivo: 96 },
-    { month: 'Jul', ventas: 85, objetivo: 100 },
-    { month: 'Ago', ventas: 90, objetivo: 108 },
-    { month: 'Sep', ventas: 95, objetivo: 115 },
-    { month: 'Oct', ventas: 98, objetivo: 120 },
-    { month: 'Nov', ventas: 102, objetivo: 125 },
-    { month: 'Dic', ventas: 110, objetivo: 130 },
-  ];
 
   return (
     <div 
@@ -125,31 +110,69 @@ function LoginView() {
           padding: 1.5rem 2rem;
         }
 
-        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA 1:1) */
-        .auth-card-right-screen {
+        /* ===================================================================
+           TARJETA CON ESQUINAS DIAGONALES (CHAMFERED) Y BORDE NEÓN GRADIENTE
+           =================================================================== */
+        .auth-card-chamfer-wrapper {
+          position: relative;
           width: 100%;
-          max-width: 460px;
-          background: rgba(8, 13, 26, 0.92);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1.5px solid rgba(255, 255, 255, 0.12);
-          border-radius: 36px;
-          padding: 3.25rem 2.25rem;
-          box-shadow:
-            0 35px 100px rgba(0, 0, 0, 0.95),
-            inset 0 1px 1px rgba(255, 255, 255, 0.15),
-            0 0 50px rgba(6, 182, 212, 0.15);
+          max-width: 450px;
+          padding: 1.5px;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.9) 0%, rgba(168, 85, 247, 0.85) 100%);
+          clip-path: polygon(28px 0, 100% 0, 100% calc(100% - 28px), calc(100% - 28px) 100%, 0 100%, 0 28px);
+          filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.9)) drop-shadow(0 0 25px rgba(6, 182, 212, 0.25));
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.8deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 1.8deg));
           transition: transform 0.2s ease-out;
         }
 
-        /* Moneda 3D Rotatoria Pequeña (Para Header y Badge) */
+        .auth-card-chamfer-inner {
+          width: 100%;
+          background: rgba(9, 14, 28, 0.92);
+          backdrop-filter: blur(32px);
+          -webkit-backdrop-filter: blur(32px);
+          clip-path: polygon(27px 0, 100% 0, 100% calc(100% - 27px), calc(100% - 27px) 100%, 0 100%, 0 27px);
+          padding: 3.25rem 2.25rem;
+          text-align: center;
+        }
+
+        /* Insignia Hexagonal Superior de la Tarjeta */
+        .hex-badge-container {
+          width: 64px;
+          height: 64px;
+          margin: 0 auto 16px auto;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        .hex-badge-outer {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(6, 182, 212, 0.8), rgba(168, 85, 247, 0.6));
+          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+          padding: 1.5px;
+        }
+
+        .hex-badge-inner {
+          width: 100%;
+          height: 100%;
+          background: #090e1a;
+          clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #06b6d4;
+          box-shadow: inset 0 0 15px rgba(6, 182, 212, 0.3);
+        }
+
+        /* Moneda 3D Rotatoria Pequeña */
         .mchav-coin-small {
           position: relative;
-          width: 52px;
-          height: 52px;
+          width: 54px;
+          height: 54px;
           display: block;
           transform-style: preserve-3d;
         }
@@ -169,8 +192,8 @@ function LoginView() {
 
         .coin-face-small {
           position: absolute;
-          width: 52px;
-          height: 52px;
+          width: 54px;
+          height: 54px;
           top: 0;
           left: 0;
           border-radius: 50%;
@@ -190,6 +213,47 @@ function LoginView() {
 
         .coin-front-small { transform: translateZ(1px); }
         .coin-back-small  { transform: rotateY(180deg) translateZ(1px); }
+
+        /* Moneda 3D Rotatoria Grande (Zona Izquierda) */
+        .mchav-coin-large {
+          position: relative;
+          width: 90px;
+          height: 90px;
+          display: block;
+          transform-style: preserve-3d;
+        }
+
+        .mchav-coin-wrapper-large {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          animation: coinSpin 4s linear infinite;
+        }
+
+        .coin-face-large {
+          position: absolute;
+          width: 90px;
+          height: 90px;
+          top: 0;
+          left: 0;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          backface-visibility: hidden;
+        }
+
+        .coin-face-large img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 0 12px rgba(6, 182, 212, 0.7));
+        }
+
+        .coin-front-large { transform: translateZ(1.5px); }
+        .coin-back-large  { transform: rotateY(180deg) translateZ(1.5px); }
 
         /* Botón 1: Desarrollador (Cian / Esmeralda) */
         .btn-dev-teal {
@@ -232,6 +296,16 @@ function LoginView() {
           box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
           filter: brightness(1.08);
         }
+
+        /* Gráfico de Barras Isométrico 3D (Piso Izquierdo) */
+        .iso-chart-container {
+          perspective: 800px;
+        }
+
+        .iso-grid {
+          transform: rotateX(55deg) rotateZ(-30deg);
+          transform-style: preserve-3d;
+        }
       `}</style>
 
       {/* Capa de Sombra sobre la Imagen de Fondo */}
@@ -241,169 +315,153 @@ function LoginView() {
       <div className="login-main-frame">
         
         {/* ===================================================================
-            ZONA IZQUIERDA: BRANDING, ESLOGAN, PILARES Y GRÁFICO DE RENDIMIENTO
+            ZONA IZQUIERDA: LOGO 3D MCHAV, BRANDING, ESLOGAN Y GRÁFICO ISOMÉTRICO
             =================================================================== */}
-        <div className="hidden lg:flex flex-1 flex-col justify-center gap-10 h-full pr-10 text-left z-10">
+        <div className="hidden lg:flex flex-1 flex-col justify-between h-full pr-12 text-left py-4 z-10">
           
-          {/* Header Marca: Logo Oficial + MCHAV + Subtítulo ANALYTICS */}
-          <div className="flex items-center gap-4">
-            <div className="mchav-coin-small">
-              <div className="mchav-coin-wrapper-small">
-                <div className="coin-face-small coin-front-small">
-                  <img src={logoOfficialImg} alt="MCHAV Logo" />
+          {/* Header Marca: Logo Moneda 3D Grande + MCHAV + Subtítulo Analytics */}
+          <div className="flex items-center gap-5">
+            <div className="mchav-coin-large">
+              <div className="mchav-coin-wrapper-large">
+                <div className="coin-face-large coin-front-large">
+                  <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
                 </div>
-                <div className="coin-face-small coin-back-small">
-                  <img src={logoOfficialImg} alt="MCHAV Logo" />
+                <div className="coin-face-large coin-back-large">
+                  <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
                 </div>
               </div>
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight text-white leading-none drop-shadow-md">
+              <h1 className="text-4xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 leading-none drop-shadow-lg">
                 MCHAV
               </h1>
-              <p className="text-xs font-black tracking-[0.25em] text-cyan-400 uppercase mt-0.5">
-                ANALYTICS
+              <p className="text-sm font-semibold tracking-widest text-slate-400 uppercase mt-1">
+                Analytics
               </p>
             </div>
           </div>
 
-          {/* Eslogan Principal */}
-          <div className="mt-4">
+          {/* Eslogan Principal y Subtítulo Jira */}
+          <div className="my-auto space-y-4">
             <h2 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
-              Datos que <br />
-              impulsan <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
+              Convierte datos <br />
+              en <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
             </h2>
             
             {/* Barra Decorativa Neón Cian -> Púrpura */}
-            <div className="w-24 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mt-3 shadow-[0_0_12px_rgba(6,182,212,0.6)]" />
+            <div className="w-20 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 shadow-[0_0_12px_rgba(6,182,212,0.6)]" />
+
+            <p className="text-sm font-normal text-slate-300/80 tracking-wide pt-1">
+              Analítica ágil para equipos Jira.
+            </p>
           </div>
 
-          {/* 3 Pilares con Separadores Verticales: Visualiza, Analiza, Decide */}
-          <div className="flex items-center gap-8 py-2">
-            
-            {/* Pillar 1: Visualiza */}
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border border-cyan-500/50 bg-slate-950/80 backdrop-blur-md text-cyan-400 flex items-center justify-center shadow-[0_0_15px_rgba(6,182,212,0.3)] shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/>
-                  <path d="M22 12A10 10 0 0 0 12 2v10z"/>
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-slate-100 drop-shadow">Visualiza</span>
+          {/* Gráfico 3D Holográfico en Perspectiva Isométrica */}
+          <div className="relative w-full max-w-sm h-36 pt-2">
+            <div className="relative w-full h-full flex items-end justify-start gap-4 pl-4 pb-2">
+              
+              {/* Línea de Onda Luminosa Cyan a Púrpura */}
+              <svg className="absolute inset-0 w-full h-full opacity-70 pointer-events-none" viewBox="0 0 300 120">
+                <path d="M 10,100 Q 80,40 160,75 T 290,20" fill="none" stroke="url(#cyanPurpGrad)" strokeWidth="3" />
+                <defs>
+                  <linearGradient id="cyanPurpGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#06b6d4" />
+                    <stop offset="100%" stopColor="#a855f7" />
+                  </linearGradient>
+                </defs>
+              </svg>
+
+              {/* 5 Prismas de Barras 3D en perspectiva */}
+              <div className="relative z-10 w-7 bg-gradient-to-t from-cyan-900 via-cyan-600 to-cyan-400 rounded-t-md h-[30%] shadow-[0_0_15px_rgba(6,182,212,0.5)] border-t border-cyan-300" />
+              <div className="relative z-10 w-7 bg-gradient-to-t from-cyan-900 via-cyan-600 to-cyan-400 rounded-t-md h-[45%] shadow-[0_0_15px_rgba(6,182,212,0.5)] border-t border-cyan-300" />
+              <div className="relative z-10 w-7 bg-gradient-to-t from-cyan-900 via-cyan-600 to-cyan-400 rounded-t-md h-[65%] shadow-[0_0_18px_rgba(6,182,212,0.6)] border-t border-cyan-300" />
+              <div className="relative z-10 w-7 bg-gradient-to-t from-sky-900 via-sky-600 to-sky-300 rounded-t-md h-[80%] shadow-[0_0_20px_rgba(56,189,248,0.6)] border-t border-sky-200" />
+              <div className="relative z-10 w-7 bg-gradient-to-t from-purple-900 via-purple-600 to-purple-400 rounded-t-md h-[100%] shadow-[0_0_25px_rgba(168,85,247,0.7)] border-t border-purple-300" />
             </div>
-
-            <div className="h-8 w-px bg-slate-700/80" />
-
-            {/* Pillar 2: Analiza */}
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border border-purple-500/50 bg-slate-950/80 backdrop-blur-md text-purple-400 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.3)] shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-slate-100 drop-shadow">Analiza</span>
-            </div>
-
-            <div className="h-8 w-px bg-slate-700/80" />
-
-            {/* Pillar 3: Decide */}
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full border border-teal-500/50 bg-slate-950/80 backdrop-blur-md text-teal-400 flex items-center justify-center shadow-[0_0_15px_rgba(20,184,166,0.3)] shrink-0">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="m10 15 5-3-5-3v6z"/>
-                </svg>
-              </div>
-              <span className="text-sm font-bold text-slate-100 drop-shadow">Decide</span>
-            </div>
-
           </div>
 
         </div>
 
         {/* ===================================================================
-            ZONA DERECHA: TARJETA DE AUTENTICACIÓN SOBRE EL VENTANAL NOCTURNO
+            ZONA DERECHA: TARJETA CON ESQUINAS DIAGONALES (CHAMFERED) Y BORDE NEÓN
             =================================================================== */}
-        <div ref={cardRef} className="auth-card-right-screen shrink-0 my-auto text-center z-10">
-          
-          {/* Badge Circular con el Logo 3D Rotatorio */}
-          <div className="w-18 h-18 rounded-full bg-slate-950/90 border border-cyan-400/70 p-2 shadow-[0_0_25px_rgba(6,182,212,0.5)] flex items-center justify-center mx-auto mb-4">
-            <div className="mchav-coin-small">
-              <div className="mchav-coin-wrapper-small">
-                <div className="coin-face-small coin-front-small">
-                  <img src={logoOfficialImg} alt="MCHAV Logo" />
-                </div>
-                <div className="coin-face-small coin-back-small">
-                  <img src={logoOfficialImg} alt="MCHAV Logo" />
+        <div ref={cardRef} className="auth-card-chamfer-wrapper shrink-0 my-auto z-10">
+          <div className="auth-card-chamfer-inner">
+            
+            {/* Insignia Hexagonal Superior */}
+            <div className="hex-badge-container">
+              <div className="hex-badge-outer">
+                <div className="hex-badge-inner">
+                  {/* Ícono de Usuario Profil / Conexión */}
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Título "Bienvenido" */}
-          <h2 className="text-3xl font-black text-white tracking-tight mb-2">
-            Bienvenido
-          </h2>
+            {/* Título "Iniciar sesión" */}
+            <h2 className="text-2xl font-black text-white tracking-tight mb-2">
+              Iniciar sesión
+            </h2>
 
-          {/* Línea Decorativa Acento - • - */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-5 h-0.5 rounded-full bg-cyan-400/90" />
-            <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.9)]" />
-            <div className="w-5 h-0.5 rounded-full bg-purple-400/90" />
-          </div>
+            {/* Línea Decorativa Acento Cyan-Púrpura */}
+            <div className="w-10 h-1 mx-auto rounded-full bg-gradient-to-r from-cyan-400 to-purple-500 mb-8 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
 
-          {/* Mensaje de Error si Ocurre */}
-          {(errorMessage || authError) && (
-            <div className="w-full p-3 mb-5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
-              ⚠️ {errorMessage || authError}
+            {/* Mensaje de Error si Ocurre */}
+            {(errorMessage || authError) && (
+              <div className="w-full p-3 mb-5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
+                ⚠️ {errorMessage || authError}
+              </div>
+            )}
+
+            {/* LOS 3 BOTONES DE ACCESO DIRECTO POR ROL */}
+            <div className="space-y-4">
+              
+              {/* Botón 1: Ingresar como Desarrollador */}
+              <button 
+                type="button"
+                onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
+                disabled={isSubmitting || authLoading}
+                className="btn-dev-teal w-full h-14 px-6 rounded-2xl text-white font-extrabold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
+                  <polyline points="16 18 22 12 16 6"/>
+                  <polyline points="8 6 2 12 8 18"/>
+                </svg>
+                <span>Ingresar como Desarrollador</span>
+              </button>
+
+              {/* Botón 2: Ingresar como Líder Técnico */}
+              <button 
+                type="button"
+                onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
+                disabled={isSubmitting || authLoading}
+                className="btn-manager-purple w-full h-14 px-6 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span>Ingresar como Líder Técnico</span>
+              </button>
+
+              {/* Botón 3: Ingresar como Administrador */}
+              <button 
+                type="button"
+                onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
+                disabled={isSubmitting || authLoading}
+                className="btn-admin-blue w-full h-14 px-6 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
+                  <polygon points="12 2 2 12 12 22 22 12"/>
+                </svg>
+                <span>Ingresar como Administrador</span>
+              </button>
+
             </div>
-          )}
-
-          {/* LOS 3 BOTONES DE ACCESO POR ROL */}
-          <div className="space-y-4">
-            
-            {/* Botón 1: Ingresar como Desarrollador */}
-            <button 
-              type="button"
-              onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
-              disabled={isSubmitting || authLoading}
-              className="btn-dev-teal w-full h-14 px-6 rounded-2xl text-white font-extrabold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
-                <polyline points="16 18 22 12 16 6"/>
-                <polyline points="8 6 2 12 8 18"/>
-              </svg>
-              <span>Ingresar como Desarrollador</span>
-            </button>
-
-            {/* Botón 2: Ingresar como Líder Técnico */}
-            <button 
-              type="button"
-              onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
-              disabled={isSubmitting || authLoading}
-              className="btn-manager-purple w-full h-14 px-6 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-              <span>Ingresar como Líder Técnico</span>
-            </button>
-
-            {/* Botón 3: Ingresar como Administrador */}
-            <button 
-              type="button"
-              onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
-              disabled={isSubmitting || authLoading}
-              className="btn-admin-blue w-full h-14 px-6 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
-                <polygon points="12 2 2 12 12 22 22 12"/>
-              </svg>
-              <span>Ingresar como Administrador</span>
-            </button>
 
           </div>
-
         </div>
 
       </div>
