@@ -396,93 +396,50 @@ function LoginView() {
               </div>
             )}
 
-            {/* FORMULARIO DE AUTENTICACIÓN */}
-            <form onSubmit={handleFormSubmit} className="space-y-3.5 text-left">
+            {/* LOS 3 BOTONES DE ROL BIEN ORGANIZADOS */}
+            <div className="space-y-3.5 my-2">
               
-              {/* Campo: Correo Electrónico */}
-              <div>
-                <label className="block text-[11px] font-medium text-slate-300 mb-1.5">
-                  Correo electrónico
-                </label>
-                <div className="relative flex items-center">
-                  <div className="absolute left-3.5 text-slate-400 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect width="20" height="16" x="2" y="4" rx="2"/>
-                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
-                    </svg>
-                  </div>
-                  <input 
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="tu@empresa.com"
-                    className="w-full h-11 pl-10 pr-3.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all"
-                  />
-                </div>
-              </div>
-
-              {/* Campo: Contraseña */}
-              <div>
-                <label className="block text-[11px] font-medium text-slate-300 mb-1.5">
-                  Contraseña
-                </label>
-                <div className="relative flex items-center">
-                  <div className="absolute left-3.5 text-slate-400 pointer-events-none">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                    </svg>
-                  </div>
-                  <input 
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full h-11 pl-10 pr-10 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 text-slate-400 hover:text-slate-200 transition-colors"
-                  >
-                    {showPassword ? (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
-                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
-                        <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
-                        <line x1="2" x2="22" y1="2" y2="22"/>
-                      </svg>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* ¿Olvidaste tu contraseña? */}
-              <div className="text-right">
-                <a href="#forgot" onClick={(e) => e.preventDefault()} className="text-[11px] font-medium text-cyan-400/90 hover:text-cyan-300 transition-colors">
-                  ¿Olvidaste tu contraseña?
-                </a>
-              </div>
-
-              {/* BOTÓN PRINCIPAL INICIAR SESIÓN (48px) */}
+              {/* Botón 1: Ingresar como Desarrollador */}
               <button 
-                type="submit"
+                type="button"
+                onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
                 disabled={isSubmitting || authLoading}
-                className="btn-primary-gradient w-full h-12 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md mt-1"
+                className="btn-dev-teal w-full h-12 px-5 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
               >
-                <span>Iniciar sesión</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M5 12h14"/>
-                  <path d="m12 5 7 7-7 7"/>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
+                  <polyline points="16 18 22 12 16 6"/>
+                  <polyline points="8 6 2 12 8 18"/>
                 </svg>
+                <span>Ingresar como Desarrollador</span>
               </button>
 
-            </form>
+              {/* Botón 2: Ingresar como Líder Técnico */}
+              <button 
+                type="button"
+                onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
+                disabled={isSubmitting || authLoading}
+                className="btn-manager-purple w-full h-12 px-5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                <span>Ingresar como Líder Técnico</span>
+              </button>
+
+              {/* Botón 3: Ingresar como Administrador */}
+              <button 
+                type="button"
+                onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
+                disabled={isSubmitting || authLoading}
+                className="btn-admin-blue w-full h-12 px-5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
+                  <polygon points="12 2 2 12 12 22 22 12"/>
+                </svg>
+                <span>Ingresar como Administrador</span>
+              </button>
+
+            </div>
 
             {/* SEPARADOR "O CONTINÚA CON" */}
             <div className="relative flex items-center justify-center my-4">
@@ -499,48 +456,13 @@ function LoginView() {
               type="button"
               onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
               disabled={isSubmitting || authLoading}
-              className="w-full h-11 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer mb-4"
+              className="w-full h-11 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
                 <polygon points="12 2 2 12 12 22 22 12"/>
               </svg>
               <span>Continuar con Atlassian</span>
             </button>
-          </div>
-
-          {/* ACCESOS RÁPIDOS POR ROL (MANTENIENDO LOS 3 BOTONES DE ROL) */}
-          <div className="pt-2 border-t border-slate-800/80">
-            <p className="text-[10px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">
-              Acceso rápido por rol
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
-                disabled={isSubmitting || authLoading}
-                className="btn-role-dev h-9 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <span>Dev</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
-                disabled={isSubmitting || authLoading}
-                className="btn-role-manager h-9 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <span>Líder</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
-                disabled={isSubmitting || authLoading}
-                className="btn-role-admin h-9 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
-              >
-                <span>Admin</span>
-              </button>
-            </div>
           </div>
 
         </div>
