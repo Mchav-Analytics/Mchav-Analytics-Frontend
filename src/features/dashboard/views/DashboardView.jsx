@@ -27,6 +27,8 @@ import {
   Layers
 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
+import KpiDetailModal from '../components/KpiDetailModal';
+import { reportService } from '../../../services/api';
 import { 
   ResponsiveContainer, 
   ComposedChart, 
@@ -143,6 +145,17 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
   const [drilldownKey, setDrilldownKey] = useState(null);
   const [drilldownSearch, setDrilldownSearch] = useState('');
 
+  // Estado para el Modal de Drill-down por API (HU-015)
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalTitle, setModalTitle] = useState('');
+  const [modalMetricType, setModalMetricType] = useState('all');
+
+  const openDrillDown = (title, metricType) => {
+    setModalTitle(title);
+    setModalMetricType(metricType);
+    setIsModalOpen(true);
+  };
+
   const isPending = user?.status === 'PENDING' && user?.rol === 'MANAGER';
 
   useEffect(() => {
@@ -160,7 +173,11 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
 
   // Función para exportar reporte en PDF (HU-016)
   const handleExportPDF = () => {
-    window.print();
+    if (selectedProjectId && reportService?.downloadPdfReport) {
+      reportService.downloadPdfReport(selectedProjectId);
+    } else {
+      window.print();
+    }
   };
 
   // Estilo dinámico de Recharts Tooltip con variables CSS de tema
@@ -250,7 +267,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
           {/* Botón Exportar PDF (HU-016) */}
           <button
             onClick={handleExportPDF}
-            className="h-10 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-purple-600/20"
+            className="h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20"
             title="Exportar reporte consolidado en PDF (HU-016)"
           >
             <FileDown size={16} />
@@ -273,7 +290,10 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
         
         {/* KPI 1: Puntos Entregados (SP) */}
         <div 
-          onClick={() => setDrilldownKey('points')}
+          onClick={() => {
+            setDrilldownKey('points');
+            openDrillDown('Puntos Entregados (Velocity)', 'velocity');
+          }}
           className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-purple-500/60 dark:hover:border-purple-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
@@ -281,15 +301,17 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
               <Zap size={14} className="text-purple-500 dark:text-purple-400 shrink-0" />
               <span>Puntos Entregados</span>
             </div>
-            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint. Haz clic para ver el desglose JQL (HU-015)." />
+            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint. Haz clic para ver el desglose por ticket (HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">30</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].velocity_total_sp : 30}
+              </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">SP</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={11} /> -48%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-purple-600 dark:text-purple-400 font-extrabold">
@@ -300,7 +322,10 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
 
         {/* KPI 2: Tareas Completadas */}
         <div 
-          onClick={() => setDrilldownKey('completed')}
+          onClick={() => {
+            setDrilldownKey('completed');
+            openDrillDown('Tareas Completadas (Throughput)', 'throughput');
+          }}
           className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-teal-500/60 dark:hover:border-teal-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
@@ -308,15 +333,17 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
               <CheckCircle2 size={14} className="text-teal-500 dark:text-teal-400 shrink-0" />
               <span>Tareas Completadas</span>
             </div>
-            <InfoTooltip text="Cantidad de tareas completadas en relación al total planificado. Haz clic para ver el desglose JQL (HU-015)." />
+            <InfoTooltip text="Cantidad de tareas completadas en relación al total planificado. Haz clic para ver la lista de tickets (HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">10</span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">de 14</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].throughput_issues : 10}
+              </span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">tickets</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={11} /> -38%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-teal-600 dark:text-teal-400 font-extrabold">
@@ -327,7 +354,10 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
 
         {/* KPI 3: Tiempo de Ciclo */}
         <div 
-          onClick={() => setDrilldownKey('cycle')}
+          onClick={() => {
+            setDrilldownKey('cycle');
+            openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time');
+          }}
           className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
@@ -335,15 +365,17 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
               <Clock size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
               <span>Tiempo de Ciclo</span>
             </div>
-            <InfoTooltip text="Días promedio que tarda una tarea en completarse desde que inicia desarrollo. Haz clic para ver los tiempos trazables (HU-012/HU-015)." />
+            <InfoTooltip text="Días promedio que tarda una tarea en completarse desde que inicia desarrollo (HU-012/HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">4.2</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].cycle_time_promedio_dias : 4.2}
+              </span>
               <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingDown size={11} /> -20%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-amber-600 dark:text-amber-400 font-extrabold">
@@ -352,24 +384,30 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
           </div>
         </div>
 
-        {/* KPI 4: Tasa de Retrabajo */}
+        {/* KPI 4: Lead Time Promedio */}
         <div 
-          onClick={() => setDrilldownKey('retrabajo')}
+          onClick={() => {
+            setDrilldownKey('retrabajo');
+            openDrillDown('Lead Time Promedio', 'lead_time');
+          }}
           className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-              <RotateCcw size={14} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
-              <span>Tasa de Retrabajo</span>
+              <Clock size={14} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
+              <span>Lead Time Promedio</span>
             </div>
-            <InfoTooltip text="Porcentaje de bugs reportados sobre el total de tareas en el sprint. Haz clic para ver los defectos (HU-015)." />
+            <InfoTooltip text="Días promedio desde la creación de la incidencia hasta su resolución final (HU-012/HU-015)." />
           </div>
           <div className="flex items-baseline justify-between mt-2.5">
             <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">21%</span>
+              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
+                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].lead_time_promedio_dias : 6.8}
+              </span>
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
             </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 flex items-center gap-1">
-              <TrendingUp size={11} /> +8.2%
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1">
+              🔍 Ver detalle
             </span>
           </div>
           <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-cyan-600 dark:text-cyan-400 font-extrabold">
@@ -692,6 +730,15 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
           </div>
         </div>
       )}
+
+      {/* Modal de Drill-down de métricas por ticket (HU-015) */}
+      <KpiDetailModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        projectId={selectedProjectId}
+        metricTitle={modalTitle}
+        metricType={modalMetricType}
+      />
 
     </div>
   );

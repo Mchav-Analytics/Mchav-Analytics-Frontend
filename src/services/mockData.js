@@ -220,5 +220,77 @@ export const mockProjectService = {
   async saveMappings(projectId, mappingsData) {
     await delay(300);
     return { success: true };
+  },
+  // Simula el detalle de tickets para el modal de Drill-down (HU-015)
+  async getKpiIssuesDetail(projectId, params = {}) {
+    await delay(200);
+    const mockIssues = [
+      {
+        id_jira: "101",
+        key_issue: "MCHAV-101",
+        summary: "Configuración de autenticación OAuth 2.0 y JWT",
+        status_actual: "Done",
+        story_points: 5.0,
+        created_at: "2026-07-10T09:00:00Z",
+        resolved_at: "2026-07-14T17:30:00Z",
+        lead_time_days: 4.35,
+        cycle_time_days: 2.15,
+        sprint_nombre: "Sprint 2 (Actual)"
+      },
+      {
+        id_jira: "102",
+        key_issue: "MCHAV-102",
+        summary: "Integración de API Rest v3 de Jira para extracción de tableros",
+        status_actual: "Done",
+        story_points: 8.0,
+        created_at: "2026-07-12T11:00:00Z",
+        resolved_at: "2026-07-18T16:00:00Z",
+        lead_time_days: 6.21,
+        cycle_time_days: 3.80,
+        sprint_nombre: "Sprint 2 (Actual)"
+      },
+      {
+        id_jira: "103",
+        key_issue: "MCHAV-103",
+        summary: "Desarrollo del motor analítico de cálculo de Lead Time y Cycle Time",
+        status_actual: "In Progress",
+        story_points: 5.0,
+        created_at: "2026-07-15T14:20:00Z",
+        resolved_at: null,
+        lead_time_days: 0.0,
+        cycle_time_days: 0.0,
+        sprint_nombre: "Sprint 2 (Actual)"
+      },
+      {
+        id_jira: "104",
+        key_issue: "MCHAV-104",
+        summary: "Creación de la interfaz gráfica interactiva del Dashboard en React",
+        status_actual: "Done",
+        story_points: 3.0,
+        created_at: "2026-07-16T10:00:00Z",
+        resolved_at: "2026-07-19T11:00:00Z",
+        lead_time_days: 3.04,
+        cycle_time_days: 1.50,
+        sprint_nombre: "Sprint 2 (Actual)"
+      },
+      {
+        id_jira: "105",
+        key_issue: "MCHAV-105",
+        summary: "Corrección de bug en cálculo de promedios históricos de velocidad",
+        status_actual: "Done",
+        story_points: 2.0,
+        created_at: "2026-07-18T08:30:00Z",
+        resolved_at: "2026-07-20T12:00:00Z",
+        lead_time_days: 2.14,
+        cycle_time_days: 1.10,
+        sprint_nombre: "Sprint 2 (Actual)"
+      }
+    ];
+
+    return {
+      proyecto_id: projectId || "PROJ-01",
+      total_issues: mockIssues.length,
+      issues: mockIssues
+    };
   }
 };
