@@ -109,67 +109,108 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* TARJETA DERECHA DE AUTENTICACIÓN (VIDRIO CRISTAL CLARO TRASLÚCIDO) */
+        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA DE LA CAPTURA) */
         .auth-card-right-screen {
           width: 100%;
-          max-width: 430px;
-          background: rgba(255, 255, 255, 0.12);
-          backdrop-filter: blur(24px) saturate(180%);
-          -webkit-backdrop-filter: blur(24px) saturate(180%);
-          border: 1.5px solid rgba(255, 255, 255, 0.3);
+          max-width: 420px;
+          background: rgba(13, 19, 35, 0.86);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border: 1.5px solid rgba(255, 255, 255, 0.13);
           border-radius: 32px;
           padding: 2.75rem 2.25rem;
           box-shadow:
-            0 20px 50px rgba(0, 0, 0, 0.35),
-            inset 0 1px 2px rgba(255, 255, 255, 0.4);
+            0 30px 90px rgba(0, 0, 0, 0.88),
+            inset 0 1px 1px rgba(255, 255, 255, 0.2),
+            0 0 35px rgba(6, 182, 212, 0.1);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -2deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 2deg));
           transition: transform 0.2s ease-out;
         }
 
-        /* Botones sin sombras brillantes ni efecto neón */
+        /* Botón 1: Desarrollador (Gradiente Cian -> Azul) */
         .btn-dev-teal {
-          background: linear-gradient(135deg, #0d9488 0%, #06b6d4 100%);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          box-shadow: none;
-          transition: opacity 0.2s ease, transform 0.2s ease;
+          background: linear-gradient(135deg, #06b6d4 0%, #0284c7 50%, #2563eb 100%);
+          border: 1px solid rgba(56, 189, 248, 0.4);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 8px 20px rgba(6, 182, 212, 0.25);
         }
 
         .btn-dev-teal:hover {
-          opacity: 0.9;
-          transform: translateY(-1px);
-          box-shadow: none;
-          filter: none;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 28px rgba(6, 182, 212, 0.4);
+          filter: brightness(1.08);
         }
 
+        /* Botón 2: Líder Técnico (Gradiente Púrpura -> Violeta) */
         .btn-manager-purple {
-          background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 100%);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          box-shadow: none;
-          transition: opacity 0.2s ease, transform 0.2s ease;
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #4c1d95 100%);
+          border: 1px solid rgba(167, 139, 250, 0.4);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
         }
 
         .btn-manager-purple:hover {
-          opacity: 0.9;
-          transform: translateY(-1px);
-          box-shadow: none;
-          filter: none;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 28px rgba(124, 58, 237, 0.4);
+          filter: brightness(1.08);
         }
 
+        /* Botón 3: Administrador (Gradiente Azul Marino -> Atlassian) */
         .btn-admin-blue {
-          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
-          border: 1px solid rgba(255, 255, 255, 0.15);
-          box-shadow: none;
-          transition: opacity 0.2s ease, transform 0.2s ease;
+          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #0f172a 100%);
+          border: 1px solid rgba(96, 165, 250, 0.4);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 8px 20px rgba(29, 78, 216, 0.25);
         }
 
         .btn-admin-blue:hover {
-          opacity: 0.9;
-          transform: translateY(-1px);
-          box-shadow: none;
-          filter: none;
+          transform: translateY(-2px);
+          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.4);
+          filter: brightness(1.08);
         }
+
+        /* Moneda 3D Rotatoria Pequeña para Badge de Tarjeta */
+        .mchav-coin-small {
+          position: relative;
+          width: 52px;
+          height: 52px;
+          display: block;
+          transform-style: preserve-3d;
+        }
+
+        .mchav-coin-wrapper-small {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          animation: coinSpin 3.5s linear infinite;
+        }
+
+        .coin-face-small {
+          position: absolute;
+          width: 52px;
+          height: 52px;
+          top: 0;
+          left: 0;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          backface-visibility: hidden;
+        }
+
+        .coin-face-small img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+        }
+
+        .coin-front-small { transform: translateZ(1px); }
+        .coin-back-small  { transform: rotateY(180deg) translateZ(1px); }
         /* ===================================================================
            ANIMACIÓN 3D DEL LOGO MCHAV — MONEDA PLANA GIRATORIA (270px)
            =================================================================== */
@@ -309,20 +350,27 @@ function LoginView() {
             =================================================================== */}
         <div ref={cardRef} className="auth-card-right-screen shrink-0 my-auto text-center">
 
-          {/* Badge Cuadrado Oscuro del Logo Superior */}
-          <div className="w-18 h-18 rounded-2xl bg-slate-950/90 border border-slate-700/80 p-2 shadow-xl flex items-center justify-center mx-auto mb-4">
-            <img src={logoOfficialImg} alt="MCHAV Official Logo" className="w-full h-full object-contain" />
+          {/* Badge Circular con el Logo 3D Rotatorio */}
+          <div className="w-16 h-16 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.4)] flex items-center justify-center mx-auto mb-3">
+            <div className="mchav-coin-small">
+              <div className="mchav-coin-wrapper-small">
+                <div className="coin-face-small coin-front-small">
+                  <img src={logoOfficialImg} alt="MCHAV Logo" />
+                </div>
+                <div className="coin-face-small coin-back-small">
+                  <img src={logoOfficialImg} alt="MCHAV Logo" />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Título Principal MCHAV Analytics */}
-          <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
-            MCHAV Analytics
-          </h1>
+          {/* Título "Bienvenido" */}
+          <h2 className="text-2xl font-extrabold text-white tracking-tight mb-1">
+            Bienvenido
+          </h2>
 
-          {/* Subtítulo Descriptivo */}
-          <p className="text-xs text-slate-300/80 leading-relaxed max-w-xs mx-auto mb-7 font-normal">
-            Conecta tu espacio de trabajo para visualizar métricas avanzadas y tomar decisiones basadas en datos.
-          </p>
+          {/* Guión Cian Decorativo */}
+          <div className="w-6 h-0.5 rounded-full bg-cyan-400 mx-auto mt-1 mb-6 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
 
           {/* Mensaje de Error si Ocurre */}
           {(errorMessage || authError) && (
