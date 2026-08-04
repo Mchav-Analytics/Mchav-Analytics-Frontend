@@ -176,6 +176,74 @@ function LoginView() {
           box-shadow: 0 12px 28px rgba(37, 99, 235, 0.45);
           filter: brightness(1.08);
         }
+        /* ===================================================================
+           ANIMACIÓN 3D DEL LOGO MCHAV — MONEDA PLANA GIRATORIA (140px)
+           =================================================================== */
+        .mchav-coin-loader {
+          position: relative;
+          width: 140px;
+          height: 140px;
+          display: block;
+          transform-style: preserve-3d;
+          margin: 0 0 16px 0;
+        }
+
+        .mchav-coin-wrapper {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transform-style: preserve-3d;
+          animation: coinSpin 3s linear infinite;
+        }
+
+        @keyframes coinSpin {
+          0%   { transform: rotateY(0deg); }
+          100% { transform: rotateY(360deg); }
+        }
+
+        .coin-face {
+          position: absolute;
+          width: 140px;
+          height: 140px;
+          top: 0;
+          left: 0;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: transparent;
+          border: none;
+          box-shadow: none;
+          backface-visibility: hidden;
+        }
+
+        .coin-face img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          filter: drop-shadow(0 0 14px rgba(6, 182, 212, 0.6));
+        }
+
+        .coin-front { transform: translateZ(1px); }
+        .coin-back  { transform: rotateY(180deg) translateZ(1px); }
+
+        .coin-shadow {
+          width: 90px;
+          height: 12px;
+          background: radial-gradient(ellipse, rgba(6, 182, 212, 0.4) 0%, rgba(112, 0, 255, 0.2) 40%, transparent 70%);
+          position: absolute;
+          bottom: -10px;
+          left: 50%;
+          margin-left: -45px;
+          border-radius: 50%;
+          filter: blur(6px);
+          animation: coinShadowPulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes coinShadowPulse {
+          0%   { opacity: 0.3; transform: scaleX(0.8); }
+          100% { opacity: 0.65; transform: scaleX(1.2); }
+        }
       `}</style>
 
       {/* Capa de Sombra sobre la Imagen de Fondo */}
@@ -189,15 +257,17 @@ function LoginView() {
             =================================================================== */}
         <div className="hidden lg:flex flex-1 flex-col justify-between h-full pl-12 lg:pl-28 pr-12 text-left py-2">
 
-          {/* Header Marca: Logo Oficial + MCHAV + Píldora ANALYTICS */}
-          <div className="flex items-center gap-3.5 z-10">
-            <div className="w-12 h-12 rounded-full bg-slate-900/90 border border-cyan-400/60 p-1 shadow-[0_0_20px_rgba(6,182,212,0.5)] flex items-center justify-center overflow-hidden shrink-0">
-              <img src={logoOfficialImg} alt="MCHAV Logo" className="w-full h-full object-contain p-0.5" />
+          {/* Logo Moneda 3D Rotatoria — Alineado a la izquierda (140px) */}
+          <div className="mchav-coin-loader z-10">
+            <div className="mchav-coin-wrapper">
+              <div className="coin-face coin-front">
+                <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
+              </div>
+              <div className="coin-face coin-back">
+                <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
+              </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <span className="text-2xl font-extrabold tracking-tight text-white drop-shadow-md">MCHAV</span>
-              <span className="text-[10px] font-black px-2.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-400/40 backdrop-blur-md uppercase tracking-widest">ANALYTICS</span>
-            </div>
+            <span className="coin-shadow"></span>
           </div>
 
           {/* Eslogan Principal e Íconos Circulares */}
