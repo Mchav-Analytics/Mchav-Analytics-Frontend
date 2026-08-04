@@ -125,20 +125,20 @@ function LoginView() {
           padding: 1.5rem 2rem;
         }
 
-        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA DE COLOR Y TAMAÑO) */
+        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA 1:1) */
         .auth-card-right-screen {
           width: 100%;
-          max-width: 440px;
-          background: rgba(10, 16, 32, 0.76);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
-          border: 1.5px solid rgba(255, 255, 255, 0.13);
-          border-radius: 32px;
-          padding: 2.75rem 2.25rem;
+          max-width: 460px;
+          background: rgba(8, 13, 26, 0.92);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          border-radius: 36px;
+          padding: 3.25rem 2.25rem;
           box-shadow:
-            0 30px 90px rgba(0, 0, 0, 0.85),
-            inset 0 1px 1px rgba(255, 255, 255, 0.18),
-            0 0 45px rgba(6, 182, 212, 0.12);
+            0 35px 100px rgba(0, 0, 0, 0.95),
+            inset 0 1px 1px rgba(255, 255, 255, 0.15),
+            0 0 50px rgba(6, 182, 212, 0.15);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.8deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 1.8deg));
@@ -400,7 +400,7 @@ function LoginView() {
         <div ref={cardRef} className="auth-card-right-screen shrink-0 my-auto text-center z-10">
           
           {/* Badge Circular con el Logo 3D Rotatorio */}
-          <div className="w-16 h-16 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.4)] flex items-center justify-center mx-auto mb-3">
+          <div className="w-18 h-18 rounded-full bg-slate-950/90 border border-cyan-400/70 p-2 shadow-[0_0_25px_rgba(6,182,212,0.5)] flex items-center justify-center mx-auto mb-4">
             <div className="mchav-coin-small">
               <div className="mchav-coin-wrapper-small">
                 <div className="coin-face-small coin-front-small">
@@ -414,15 +414,15 @@ function LoginView() {
           </div>
 
           {/* Título "Bienvenido" */}
-          <h2 className="text-2xl font-extrabold text-white tracking-tight mb-1">
+          <h2 className="text-3xl font-black text-white tracking-tight mb-2">
             Bienvenido
           </h2>
 
           {/* Línea Decorativa Acento - • - */}
-          <div className="flex items-center justify-center gap-1.5 mb-6">
-            <div className="w-4 h-0.5 rounded-full bg-cyan-400/80" />
-            <div className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
-            <div className="w-4 h-0.5 rounded-full bg-purple-400/80" />
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="w-5 h-0.5 rounded-full bg-cyan-400/90" />
+            <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(168,85,247,0.9)]" />
+            <div className="w-5 h-0.5 rounded-full bg-purple-400/90" />
           </div>
 
           {/* Mensaje de Error si Ocurre */}
@@ -433,16 +433,16 @@ function LoginView() {
           )}
 
           {/* LOS 3 BOTONES DE ACCESO POR ROL */}
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             
             {/* Botón 1: Ingresar como Desarrollador */}
             <button 
               type="button"
               onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
               disabled={isSubmitting || authLoading}
-              className="btn-dev-teal w-full h-13 px-5 rounded-2xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+              className="btn-dev-teal w-full h-14 px-6 rounded-2xl text-white font-extrabold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
                 <polyline points="16 18 22 12 16 6"/>
                 <polyline points="8 6 2 12 8 18"/>
               </svg>
@@ -454,9 +454,9 @@ function LoginView() {
               type="button"
               onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
               disabled={isSubmitting || authLoading}
-              className="btn-manager-purple w-full h-13 px-5 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+              className="btn-manager-purple w-full h-14 px-6 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
               </svg>
               <span>Ingresar como Líder Técnico</span>
@@ -467,9 +467,9 @@ function LoginView() {
               type="button"
               onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
               disabled={isSubmitting || authLoading}
-              className="btn-admin-blue w-full h-13 px-5 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+              className="btn-admin-blue w-full h-14 px-6 rounded-2xl text-white font-bold text-sm flex items-center justify-center gap-3.5 cursor-pointer group"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
                 <polygon points="12 2 2 12 12 22 22 12"/>
               </svg>
               <span>Ingresar como Administrador</span>
