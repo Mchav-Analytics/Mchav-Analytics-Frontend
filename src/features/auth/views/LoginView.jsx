@@ -243,7 +243,7 @@ function LoginView() {
         {/* ===================================================================
             ZONA IZQUIERDA: BRANDING, ESLOGAN, PILARES Y GRÁFICO DE RENDIMIENTO
             =================================================================== */}
-        <div className="hidden lg:flex flex-1 flex-col justify-between h-full pr-10 text-left py-2 z-10">
+        <div className="hidden lg:flex flex-1 flex-col justify-center gap-10 h-full pr-10 text-left z-10">
           
           {/* Header Marca: Logo Oficial + MCHAV + Subtítulo ANALYTICS */}
           <div className="flex items-center gap-4">
@@ -317,79 +317,6 @@ function LoginView() {
               <span className="text-sm font-bold text-slate-100 drop-shadow">Decide</span>
             </div>
 
-          </div>
-
-          {/* Tarjeta de Gráfico: Rendimiento Mensual (12 Meses con Barras Duales) */}
-          <div className="w-full max-w-lg bg-slate-950/80 backdrop-blur-xl border border-slate-800/90 rounded-2xl p-4 shadow-2xl">
-            
-            {/* Header del Gráfico */}
-            <div className="flex items-center justify-between mb-1">
-              <div>
-                <h3 className="text-sm font-bold text-white tracking-wide">Rendimiento mensual</h3>
-                <p className="text-[10px] text-slate-400">Miles (USD)</p>
-              </div>
-              {/* Leyenda */}
-              <div className="flex items-center gap-4 text-[11px] font-semibold">
-                <div className="flex items-center gap-1.5 text-cyan-400">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-cyan-400 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
-                  Ventas
-                </div>
-                <div className="flex items-center gap-1.5 text-purple-400">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
-                  Objetivo
-                </div>
-              </div>
-            </div>
-
-            {/* Cuerpo del Gráfico de Barras */}
-            <div className="relative h-36 w-full pt-4 pb-5 flex items-end justify-between border-b border-slate-800">
-              
-              {/* Guías Y de fondo */}
-              <div className="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-20 text-[9px] text-slate-400">
-                <div className="border-b border-slate-600 w-full text-right pr-1">120</div>
-                <div className="border-b border-slate-600 w-full text-right pr-1">80</div>
-                <div className="border-b border-slate-600 w-full text-right pr-1">40</div>
-                <div className="border-b border-slate-600 w-full text-right pr-1">0</div>
-              </div>
-
-              {/* Las 12 columnas de meses */}
-              {monthlyData.map((d, i) => (
-                <div key={i} className="relative z-10 flex flex-col items-center flex-1 h-full justify-end group">
-                  <div className="flex items-end gap-1 h-full w-full justify-center px-0.5">
-                    {/* Barra Ventas (Cian) */}
-                    <div 
-                      style={{ height: `${(d.ventas / 130) * 100}%` }}
-                      className="w-1.5 lg:w-2 bg-gradient-to-t from-cyan-600 to-cyan-300 rounded-t-sm shadow-[0_0_8px_rgba(6,182,212,0.5)] transition-all group-hover:brightness-125" 
-                    />
-                    {/* Barra Objetivo (Púrpura) */}
-                    <div 
-                      style={{ height: `${(d.objetivo / 130) * 100}%` }}
-                      className="w-1.5 lg:w-2 bg-gradient-to-t from-purple-700 to-purple-400 rounded-t-sm shadow-[0_0_8px_rgba(168,85,247,0.5)] transition-all group-hover:brightness-125" 
-                    />
-                  </div>
-                  {/* Etiqueta del Mes */}
-                  <span className="absolute -bottom-5 text-[9px] font-semibold text-slate-400">
-                    {d.month}
-                  </span>
-                </div>
-              ))}
-
-            </div>
-          </div>
-
-          {/* Insignias de Seguridad al Pie Izquierdo */}
-          <div className="flex items-center gap-7 text-xs text-slate-300 font-semibold pt-2">
-            <div className="flex items-center gap-2">
-              <span className="text-cyan-400">🛡️</span> Seguro
-            </div>
-            <div className="h-3.5 w-px bg-slate-700/80" />
-            <div className="flex items-center gap-2">
-              <span className="text-purple-400">🔒</span> Confiable
-            </div>
-            <div className="h-3.5 w-px bg-slate-700/80" />
-            <div className="flex items-center gap-2">
-              <span className="text-sky-400">☁️</span> En tiempo real
-            </div>
           </div>
 
         </div>
