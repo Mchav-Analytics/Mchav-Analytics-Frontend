@@ -1,11 +1,9 @@
 // ============================================================================
-// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON IMAGEN DE FONDO DE OFICINA NOCTURNA
+// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON RÉPLICA EXACTA DE LA TARJETA
 // ============================================================================
-// - Fondo General: Imagen real de oficina empresarial con ventanal nocturno (login_bg.jpg).
-// - Tarjeta de Autenticación (Lado Derecho): Selección directa con los 3 botones de rol
-//   (Desarrollador, Líder Técnico, Administrador) como se tenía originalmente.
-// - Zona Izquierda: Logo MCHAV, eslogan "Datos que impulsan decisiones.", los 3 íconos
-//   (Visualiza, Analiza, Decide), pedestal holográfico 3D sobre el piso y badges al pie.
+// - Fondo General: Imagen de oficina empresarial nocturna (login_bg.jpg).
+// - Tarjeta de Autenticación (Derecha): Réplica 1:1 de la tarjeta con borde sutil
+//   bicolor, logo circular MCHAV, "Bienvenido", la barra cian y los 3 botones de rol.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -109,16 +107,19 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* Tarjeta Derecha de Autenticación (Estilo Inicial Vidrio Oscuro) */
+        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA DE LA IMAGEN DE REFERENCIA) */
         .auth-card-right {
           width: 100%;
-          max-width: 440px;
-          background: rgba(10, 15, 29, 0.88);
-          backdrop-filter: blur(24px);
-          border: 1.5px solid rgba(255, 255, 255, 0.12);
-          border-radius: 28px;
-          padding: 2.5rem 2rem;
-          box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 40px rgba(6, 182, 212, 0.08);
+          max-width: 420px;
+          background: rgba(11, 17, 32, 0.82);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
+          border: 1.5px solid rgba(56, 189, 248, 0.25);
+          border-radius: 32px;
+          padding: 3rem 2.25rem;
+          box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9), 
+                      0 0 35px rgba(168, 85, 247, 0.15),
+                      inset 0 1px 1px rgba(255, 255, 255, 0.15);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -2deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 2deg));
@@ -271,30 +272,22 @@ function LoginView() {
         </div>
 
         {/* ===================================================================
-            ZONA DERECHA: TARJETA DE AUTENTICACIÓN (LOS 3 BOTONES DE ROL)
+            ZONA DERECHA: TARJETA DE AUTENTICACIÓN (RECREACIÓN 1:1 CON LOS 3 BOTONES)
             =================================================================== */}
         <div ref={cardRef} className="auth-card-right shrink-0 my-auto text-center">
           
-          <div className="space-y-7">
+          <div className="space-y-6">
             
-            {/* Insignia Circular con Anillo Neón Cian */}
-            <div className="flex flex-col items-center gap-3">
-              <div className="w-20 h-20 rounded-full bg-slate-950 p-1 border-2 border-cyan-500/60 shadow-[0_0_30px_rgba(6,182,212,0.45)] flex items-center justify-center relative">
-                <img src={logoImg} alt="MCHAV Logo" className="w-full h-full object-cover rounded-full" />
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-white tracking-tight">Bienvenido</h2>
-                <div className="flex items-center justify-center gap-1.5 mt-2">
-                  <span className="w-7 h-1 rounded-full bg-cyan-400" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-purple-400" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-indigo-400" />
-                </div>
-              </div>
+            {/* Isotipo Circular Flotante MCHAV con Anillo Neón Cian */}
+            <div className="w-20 h-20 rounded-full bg-slate-950/90 p-1 border-2 border-cyan-400/80 shadow-[0_0_25px_rgba(6,182,212,0.5)] flex items-center justify-center relative mx-auto">
+              <img src={logoImg} alt="MCHAV Logo" className="w-full h-full object-cover rounded-full" />
             </div>
 
-            <p className="text-xs text-slate-300 font-medium leading-relaxed">
-              Selecciona tu rol asignado para ingresar a la plataforma de analítica.
-            </p>
+            {/* Título Bienvenido y Barra Cian */}
+            <div>
+              <h2 className="text-2xl font-bold text-white tracking-tight">Bienvenido</h2>
+              <div className="w-8 h-1 rounded-full bg-cyan-400 mx-auto mt-2" />
+            </div>
 
             {/* Mensaje de Error */}
             {(errorMessage || authError) && (
@@ -303,8 +296,8 @@ function LoginView() {
               </div>
             )}
 
-            {/* BOTONES DE INGRESO DIRECTO POR ROL (COMO SE TENÍA AL INICIO) */}
-            <div className="space-y-3.5 pt-1">
+            {/* BOTONES DE INGRESO DIRECTO POR ROL (RÉPLICA EXACTA DE LA TARJETA) */}
+            <div className="space-y-3.5 pt-2">
               
               {/* Botón 1: Desarrollador */}
               <button 
