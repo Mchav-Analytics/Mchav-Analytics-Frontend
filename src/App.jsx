@@ -41,16 +41,16 @@ function MainAppContent() {
   const [alerts, setAlerts] = useState([]); // Almacena la lista de alertas activas del sistema
 
 
-  // Inicializar o redirigir pestaña según el rol al autenticar
+  // Inicializar o redirigir pestaña según el rol al autenticar (sin bucle de re-render)
   useEffect(() => {
-    if (user?.rol === 'DEVELOPER') {
+    if (user?.rol === 'DEVELOPER' && activeTab !== 'developer') {
       setActiveTab('developer');
     } else if (user?.rol === 'ADMIN' && activeTab === 'developer') {
       setActiveTab('usuarios');
     } else if (user?.rol === 'MANAGER' && (activeTab === 'developer' || activeTab === 'usuarios')) {
       setActiveTab('dashboard');
     }
-  }, [user, activeTab]);
+  }, [user?.rol]);
 
   // Cargar métricas e información inicial al autenticarse
   useEffect(() => {

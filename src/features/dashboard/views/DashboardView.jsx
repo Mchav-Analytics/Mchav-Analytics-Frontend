@@ -134,7 +134,7 @@ const mockKpiDrilldownData = {
   }
 };
 
-function DashboardView({ subTab = 'dashboard' }) {
+function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis }) {
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false); // Estado de animación del botón de refresco
   const [showActiveToast, setShowActiveToast] = useState(true);
