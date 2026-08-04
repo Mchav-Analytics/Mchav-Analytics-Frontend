@@ -187,7 +187,7 @@ function LoginView() {
         {/* ===================================================================
             ZONA IZQUIERDA: BRANDING, ESLOGAN Y METRICAS SOBRE EL FONDO REAL
             =================================================================== */}
-        <div className="hidden lg:flex flex-1 flex-col justify-between h-full pr-12 text-left py-2">
+        <div className="hidden lg:flex flex-1 flex-col justify-between h-full pl-12 lg:pl-28 pr-12 text-left py-2">
 
           {/* Header Marca: Logo Oficial + MCHAV + Píldora ANALYTICS */}
           <div className="flex items-center gap-3.5 z-10">
