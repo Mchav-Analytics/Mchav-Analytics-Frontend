@@ -1,11 +1,11 @@
 // ============================================================================
-// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON FONDO DE OFICINA Y TARJETA DERECHA
+// FEATURE AUTH — VISTA DE INICIO DE SESIÓN EMPRESARIAL SAAS (TARJETA COMPACTA 380PX)
 // ============================================================================
-// - Fondo General: Imagen real de oficina empresarial con ventanal nocturno (login_bg.jpg).
-// - Zona Izquierda: Logo MCHAV, eslogan "Datos que impulsan decisiones.", los 3 íconos
-//   (Visualiza, Analiza, Decide), pedestal holográfico 3D sobre el piso y badges al pie.
-// - Zona Derecha (Tarjeta Flotante): Réplica exacta de la tarjeta central con el logo
-//   cuadrado, título "MCHAV Analytics", subtítulo descriptivo y los 3 botones de rol.
+// Réplica visual exacta de la tarjeta empresarial SaaS sobre el fondo existente:
+// - Dimensión: Width 380px, min-height 600px, padding 32px, border-radius 20px.
+// - Fondo: #0B1220 con ligera transparencia y glassmorphism discreto.
+// - Jerarquía: Logo 3D -> Bienvenido -> Separador Cian/Azul/Morado -> Campos Email/Pass ->
+//   Botón Iniciar Sesión -> Separador -> Botón Atlassian -> Botones de Acceso por Rol.
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +16,10 @@ import loginBgImg from '../../../assets/login_bg.jpg';
 function LoginView() {
   const navigate = useNavigate();
   const { login, isAuthenticated, loading: authLoading, error: authError } = useAuth();
-
+  
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -30,14 +33,12 @@ function LoginView() {
     }
   }, [isAuthenticated, navigate]);
 
-  // Manejar el movimiento del cursor para paralaje sutil 3D en la tarjeta
+  // Paralaje 3D discreto
   const handleMouseMove = (e) => {
     if (!containerRef.current) return;
     const { innerWidth, innerHeight } = window;
-
     const normX = ((e.clientX / innerWidth) - 0.5) * 2;
     const normY = ((e.clientY / innerHeight) - 0.5) * 2;
-
     containerRef.current.style.setProperty('--mouse-norm-x', normX);
     containerRef.current.style.setProperty('--mouse-norm-y', normY);
   };
@@ -49,7 +50,21 @@ function LoginView() {
     }
   };
 
-  // Iniciar sesión con un rol específico (Admin, Líder Técnico o Desarrollador)
+  // Iniciar sesión con credenciales directas
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrorMessage('');
+    try {
+      await login({ email: email || 'dev@mchav.com', role: 'DEVELOPER' });
+      navigate('/dashboard');
+    } catch (err) {
+      setErrorMessage("No se pudo iniciar sesión. Verifica tus credenciales.");
+      setIsSubmitting(false);
+    }
+  };
+
+  // Iniciar sesión rápida con un rol específico
   const handleRoleLogin = async (targetEmail, targetRole) => {
     setIsSubmitting(true);
     setErrorMessage('');
@@ -63,7 +78,7 @@ function LoginView() {
   };
 
   return (
-    <div
+    <div 
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -82,11 +97,10 @@ function LoginView() {
           background-size: cover;
           background-position: center;
           background-repeat: no-repeat;
-          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
           color: #ffffff;
         }
 
-        /* Capa de oscurecimiento suave para alto contraste */
         .bg-overlay-tint {
           position: absolute;
           inset: 0;
@@ -95,87 +109,45 @@ function LoginView() {
           z-index: 1;
         }
 
-        /* Marco Principal de 2 Zonas */
         .login-main-frame {
           position: relative;
           z-index: 10;
           width: 100%;
           max-width: 1280px;
           height: calc(100vh - 4rem);
-          max-height: 720px;
+          max-height: 750px;
           display: flex;
           align-items: center;
           justify-content: space-between;
           padding: 1rem;
         }
 
-        /* TARJETA DERECHA DE AUTENTICACIÓN (RÉPLICA EXACTA DE LA CAPTURA) */
-        .auth-card-right-screen {
+        /* TARJETA COMPACTA SAAS EMPRESARIAL (380px) */
+        .auth-card-saas {
           width: 100%;
-          max-width: 420px;
-          background: rgba(13, 19, 35, 0.86);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
-          border: 1.5px solid rgba(255, 255, 255, 0.13);
-          border-radius: 32px;
-          padding: 2.75rem 2.25rem;
+          max-width: 380px;
+          min-height: 600px;
+          background: rgba(11, 18, 32, 0.88);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          border: 1px solid rgba(6, 182, 212, 0.22);
+          border-radius: 20px;
+          padding: 32px;
           box-shadow:
-            0 30px 90px rgba(0, 0, 0, 0.88),
-            inset 0 1px 1px rgba(255, 255, 255, 0.2),
-            0 0 35px rgba(6, 182, 212, 0.1);
+            0 20px 50px rgba(0, 0, 0, 0.65),
+            inset 0 1px 1px rgba(255, 255, 255, 0.15),
+            0 0 25px rgba(6, 182, 212, 0.08);
           transform: perspective(1000px) 
-                     rotateX(calc(var(--mouse-norm-y, 0) * -2deg)) 
-                     rotateY(calc(var(--mouse-norm-x, 0) * 2deg));
+                     rotateX(calc(var(--mouse-norm-y, 0) * -1.5deg)) 
+                     rotateY(calc(var(--mouse-norm-x, 0) * 1.5deg));
           transition: transform 0.2s ease-out;
         }
 
-        /* Botón 1: Desarrollador (Gradiente Cian -> Azul) */
-        .btn-dev-teal {
-          background: linear-gradient(135deg, #06b6d4 0%, #0284c7 50%, #2563eb 100%);
-          border: 1px solid rgba(56, 189, 248, 0.4);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 20px rgba(6, 182, 212, 0.25);
-        }
-
-        .btn-dev-teal:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(6, 182, 212, 0.4);
-          filter: brightness(1.08);
-        }
-
-        /* Botón 2: Líder Técnico (Gradiente Púrpura -> Violeta) */
-        .btn-manager-purple {
-          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 50%, #4c1d95 100%);
-          border: 1px solid rgba(167, 139, 250, 0.4);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 20px rgba(124, 58, 237, 0.25);
-        }
-
-        .btn-manager-purple:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(124, 58, 237, 0.4);
-          filter: brightness(1.08);
-        }
-
-        /* Botón 3: Administrador (Gradiente Azul Marino -> Atlassian) */
-        .btn-admin-blue {
-          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 50%, #0f172a 100%);
-          border: 1px solid rgba(96, 165, 250, 0.4);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-          box-shadow: 0 8px 20px rgba(29, 78, 216, 0.25);
-        }
-
-        .btn-admin-blue:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.4);
-          filter: brightness(1.08);
-        }
-
-        /* Moneda 3D Rotatoria Pequeña para Badge de Tarjeta */
+        /* Moneda 3D Rotatoria para Badge de Tarjeta */
         .mchav-coin-small {
           position: relative;
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
           display: block;
           transform-style: preserve-3d;
         }
@@ -188,10 +160,15 @@ function LoginView() {
           animation: coinSpin 3.5s linear infinite;
         }
 
+        @keyframes coinSpin {
+          0%   { transform: rotateY(0deg); }
+          100% { transform: rotateY(360deg); }
+        }
+
         .coin-face-small {
           position: absolute;
-          width: 52px;
-          height: 52px;
+          width: 48px;
+          height: 48px;
           top: 0;
           left: 0;
           border-radius: 50%;
@@ -211,9 +188,8 @@ function LoginView() {
 
         .coin-front-small { transform: translateZ(1px); }
         .coin-back-small  { transform: rotateY(180deg) translateZ(1px); }
-        /* ===================================================================
-           ANIMACIÓN 3D DEL LOGO MCHAV — MONEDA PLANA GIRATORIA (270px)
-           =================================================================== */
+
+        /* Moneda 3D Grande (Zona Izquierda) */
         .mchav-coin-loader {
           position: relative;
           width: 270px;
@@ -229,11 +205,6 @@ function LoginView() {
           height: 100%;
           transform-style: preserve-3d;
           animation: coinSpin 3s linear infinite;
-        }
-
-        @keyframes coinSpin {
-          0%   { transform: rotateY(0deg); }
-          100% { transform: rotateY(360deg); }
         }
 
         .coin-face {
@@ -279,6 +250,51 @@ function LoginView() {
           0%   { opacity: 0.3; transform: scaleX(0.8); }
           100% { opacity: 0.65; transform: scaleX(1.2); }
         }
+
+        /* Botón Principal Gradiente Cian -> Azul -> Púrpura */
+        .btn-primary-gradient {
+          background: linear-gradient(90deg, #06b6d4 0%, #3b82f6 50%, #8b5cf6 100%);
+          transition: all 0.2s ease;
+        }
+
+        .btn-primary-gradient:hover {
+          filter: brightness(1.1);
+          box-shadow: 0 4px 20px rgba(6, 182, 212, 0.35);
+        }
+
+        /* Botones de Rol Compactos */
+        .btn-role-dev {
+          background: rgba(13, 148, 136, 0.2);
+          border: 1px solid rgba(45, 212, 191, 0.35);
+          color: #2dd4bf;
+          transition: all 0.2s ease;
+        }
+        .btn-role-dev:hover {
+          background: rgba(13, 148, 136, 0.35);
+          border-color: rgba(45, 212, 191, 0.6);
+        }
+
+        .btn-role-manager {
+          background: rgba(124, 58, 237, 0.2);
+          border: 1px solid rgba(167, 139, 250, 0.35);
+          color: #c084fc;
+          transition: all 0.2s ease;
+        }
+        .btn-role-manager:hover {
+          background: rgba(124, 58, 237, 0.35);
+          border-color: rgba(167, 139, 250, 0.6);
+        }
+
+        .btn-role-admin {
+          background: rgba(29, 78, 216, 0.2);
+          border: 1px solid rgba(96, 165, 250, 0.35);
+          color: #60a5fa;
+          transition: all 0.2s ease;
+        }
+        .btn-role-admin:hover {
+          background: rgba(29, 78, 216, 0.35);
+          border-color: rgba(96, 165, 250, 0.6);
+        }
       `}</style>
 
       {/* Capa de Sombra sobre la Imagen de Fondo */}
@@ -288,11 +304,11 @@ function LoginView() {
       <div className="login-main-frame">
 
         {/* ===================================================================
-            ZONA IZQUIERDA: BRANDING, ESLOGAN Y METRICAS SOBRE EL FONDO REAL
+            ZONA IZQUIERDA: LOGO 3D Y ESLOGAN
             =================================================================== */}
         <div className="hidden lg:flex flex-1 flex-col justify-between h-full pl-12 lg:pl-28 pr-12 text-left py-2">
 
-          {/* Logo Moneda 3D Rotatoria — Agrandado (270px) sin mover el texto */}
+          {/* Logo Moneda 3D Rotatoria */}
           <div className="mchav-coin-loader z-10 mt-10 lg:mt-14">
             <div className="mchav-coin-wrapper">
               <div className="coin-face coin-front">
@@ -346,82 +362,185 @@ function LoginView() {
         </div>
 
         {/* ===================================================================
-            ZONA DERECHA: TARJETA SOLICITADA EN EL LADO DERECHO SOBRE EL FONDO
+            ZONA DERECHA: TARJETA DE LOGIN COMPACTA SAAS (380PX)
             =================================================================== */}
-        <div ref={cardRef} className="auth-card-right-screen shrink-0 my-auto text-center">
-
-          {/* Badge Circular con el Logo 3D Rotatorio */}
-          <div className="w-16 h-16 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1.5 shadow-[0_0_25px_rgba(6,182,212,0.4)] flex items-center justify-center mx-auto mb-3">
-            <div className="mchav-coin-small">
-              <div className="mchav-coin-wrapper-small">
-                <div className="coin-face-small coin-front-small">
-                  <img src={logoOfficialImg} alt="MCHAV Logo" />
-                </div>
-                <div className="coin-face-small coin-back-small">
-                  <img src={logoOfficialImg} alt="MCHAV Logo" />
+        <div ref={cardRef} className="auth-card-saas shrink-0 my-auto text-center z-10 flex flex-col justify-between">
+          
+          <div>
+            {/* 1. LOGO ARRIBA (Insignia Circular con Moneda 3D) */}
+            <div className="w-15 h-15 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center mx-auto mb-2.5">
+              <div className="mchav-coin-small">
+                <div className="mchav-coin-wrapper-small">
+                  <div className="coin-face-small coin-front-small">
+                    <img src={logoOfficialImg} alt="MCHAV Logo" />
+                  </div>
+                  <div className="coin-face-small coin-back-small">
+                    <img src={logoOfficialImg} alt="MCHAV Logo" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {/* Título "Bienvenido" */}
-          <h2 className="text-2xl font-extrabold text-white tracking-tight mb-1">
-            Bienvenido
-          </h2>
+            {/* 2. TÍTULO "Bienvenido" */}
+            <h2 className="text-xl font-bold text-white tracking-tight">
+              Bienvenido
+            </h2>
 
-          {/* Guión Cian Decorativo */}
-          <div className="w-6 h-0.5 rounded-full bg-cyan-400 mx-auto mt-1 mb-6 shadow-[0_0_8px_rgba(6,182,212,0.8)]" />
+            {/* 3. PEQUEÑO SEPARADOR DECORATIVO CON DEGRADADO CIAN -> AZUL -> MORADO */}
+            <div className="w-8 h-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-1.5 mb-5 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
 
-          {/* Mensaje de Error si Ocurre */}
-          {(errorMessage || authError) && (
-            <div className="w-full p-3 mb-5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
-              ⚠️ {errorMessage || authError}
+            {/* Mensaje de Error si Ocurre */}
+            {(errorMessage || authError) && (
+              <div className="w-full p-2.5 mb-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
+                ⚠️ {errorMessage || authError}
+              </div>
+            )}
+
+            {/* FORMULARIO DE AUTENTICACIÓN */}
+            <form onSubmit={handleFormSubmit} className="space-y-3.5 text-left">
+              
+              {/* Campo: Correo Electrónico */}
+              <div>
+                <label className="block text-[11px] font-medium text-slate-300 mb-1.5">
+                  Correo electrónico
+                </label>
+                <div className="relative flex items-center">
+                  <div className="absolute left-3.5 text-slate-400 pointer-events-none">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect width="20" height="16" x="2" y="4" rx="2"/>
+                      <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                    </svg>
+                  </div>
+                  <input 
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="tu@empresa.com"
+                    className="w-full h-11 pl-10 pr-3.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Campo: Contraseña */}
+              <div>
+                <label className="block text-[11px] font-medium text-slate-300 mb-1.5">
+                  Contraseña
+                </label>
+                <div className="relative flex items-center">
+                  <div className="absolute left-3.5 text-slate-400 pointer-events-none">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    </svg>
+                  </div>
+                  <input 
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full h-11 pl-10 pr-10 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 text-slate-400 hover:text-slate-200 transition-colors"
+                  >
+                    {showPassword ? (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    ) : (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/>
+                        <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/>
+                        <path d="M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/>
+                        <line x1="2" x2="22" y1="2" y2="22"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* ¿Olvidaste tu contraseña? */}
+              <div className="text-right">
+                <a href="#forgot" onClick={(e) => e.preventDefault()} className="text-[11px] font-medium text-cyan-400/90 hover:text-cyan-300 transition-colors">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
+
+              {/* BOTÓN PRINCIPAL INICIAR SESIÓN (48px) */}
+              <button 
+                type="submit"
+                disabled={isSubmitting || authLoading}
+                className="btn-primary-gradient w-full h-12 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-md mt-1"
+              >
+                <span>Iniciar sesión</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M5 12h14"/>
+                  <path d="m12 5 7 7-7 7"/>
+                </svg>
+              </button>
+
+            </form>
+
+            {/* SEPARADOR "O CONTINÚA CON" */}
+            <div className="relative flex items-center justify-center my-4">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-800" />
+              </div>
+              <span className="relative px-3 bg-[#0B1220] text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                o continúa con
+              </span>
             </div>
-          )}
 
-          {/* LOS 3 BOTONES DE ROL */}
-          <div className="space-y-3.5">
-
-            {/* Botón 1: Ingresar como Desarrollador */}
-            <button
-              type="button"
-              onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
-              disabled={isSubmitting || authLoading}
-              className="btn-dev-teal w-full h-13 px-5 rounded-2xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
-                <polyline points="16 18 22 12 16 6" />
-                <polyline points="8 6 2 12 8 18" />
-              </svg>
-              <span>Ingresar como Desarrollador</span>
-            </button>
-
-            {/* Botón 2: Ingresar como Líder Técnico */}
-            <button
+            {/* BOTÓN CONTINUAR CON ATLASSIAN (44px) */}
+            <button 
               type="button"
               onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
               disabled={isSubmitting || authLoading}
-              className="btn-manager-purple w-full h-13 px-5 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+              className="w-full h-11 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer mb-4"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
+                <polygon points="12 2 2 12 12 22 22 12"/>
               </svg>
-              <span>Ingresar como Líder Técnico</span>
+              <span>Continuar con Atlassian</span>
             </button>
+          </div>
 
-            {/* Botón 3: Ingresar como Administrador */}
-            <button
-              type="button"
-              onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
-              disabled={isSubmitting || authLoading}
-              className="btn-admin-blue w-full h-13 px-5 rounded-2xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
-                <polygon points="12 2 2 12 12 22 22 12" />
-              </svg>
-              <span>Ingresar como Administrador</span>
-            </button>
+          {/* ACCESOS RÁPIDOS POR ROL (MANTENIENDO LOS 3 BOTONES DE ROL) */}
+          <div className="pt-2 border-t border-slate-800/80">
+            <p className="text-[10px] font-semibold text-slate-400 mb-2 uppercase tracking-wider">
+              Acceso rápido por rol
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
+                disabled={isSubmitting || authLoading}
+                className="btn-role-dev h-9 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <span>Dev</span>
+              </button>
 
+              <button
+                type="button"
+                onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
+                disabled={isSubmitting || authLoading}
+                className="btn-role-manager h-9 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <span>Líder</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
+                disabled={isSubmitting || authLoading}
+                className="btn-role-admin h-9 rounded-lg text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer"
+              >
+                <span>Admin</span>
+              </button>
+            </div>
           </div>
 
         </div>
