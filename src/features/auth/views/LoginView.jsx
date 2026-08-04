@@ -126,13 +126,13 @@ function LoginView() {
         .auth-card-saas {
           width: 100%;
           max-width: 380px;
-          min-height: 600px;
+          min-height: auto;
           background: rgba(11, 18, 32, 0.88);
           backdrop-filter: blur(24px);
           -webkit-backdrop-filter: blur(24px);
           border: 1px solid rgba(6, 182, 212, 0.22);
           border-radius: 20px;
-          padding: 32px;
+          padding: 22px 32px;
           box-shadow:
             0 20px 50px rgba(0, 0, 0, 0.65),
             inset 0 1px 1px rgba(255, 255, 255, 0.15),
@@ -387,24 +387,24 @@ function LoginView() {
             </h2>
 
             {/* 3. PEQUEÑO SEPARADOR DECORATIVO CON DEGRADADO CIAN -> AZUL -> MORADO */}
-            <div className="w-8 h-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-1.5 mb-5 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+            <div className="w-8 h-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-1 mb-3 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
 
             {/* Mensaje de Error si Ocurre */}
             {(errorMessage || authError) && (
-              <div className="w-full p-2.5 mb-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
+              <div className="w-full p-2 mb-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
                 ⚠️ {errorMessage || authError}
               </div>
             )}
 
             {/* LOS 3 BOTONES DE ROL BIEN ORGANIZADOS */}
-            <div className="space-y-3.5 my-2">
+            <div className="space-y-2.5 my-1">
               
               {/* Botón 1: Ingresar como Desarrollador */}
               <button 
                 type="button"
                 onClick={() => handleRoleLogin('dev@mchav.com', 'DEVELOPER')}
                 disabled={isSubmitting || authLoading}
-                className="btn-dev-teal w-full h-12 px-5 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+                className="btn-dev-teal w-full h-11 px-5 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
                   <polyline points="16 18 22 12 16 6"/>
@@ -418,7 +418,7 @@ function LoginView() {
                 type="button"
                 onClick={() => handleRoleLogin('aftorres@mchav.com', 'MANAGER')}
                 disabled={isSubmitting || authLoading}
-                className="btn-manager-purple w-full h-12 px-5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+                className="btn-manager-purple w-full h-11 px-5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -431,7 +431,7 @@ function LoginView() {
                 type="button"
                 onClick={() => handleRoleLogin('vhoyos@mchav.com', 'ADMIN')}
                 disabled={isSubmitting || authLoading}
-                className="btn-admin-blue w-full h-12 px-5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+                className="btn-admin-blue w-full h-11 px-5 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
                   <polygon points="12 2 2 12 12 22 22 12"/>
@@ -442,7 +442,7 @@ function LoginView() {
             </div>
 
             {/* SEPARADOR "O CONTINÚA CON" */}
-            <div className="relative flex items-center justify-center my-4">
+            <div className="relative flex items-center justify-center my-2.5">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-slate-800" />
               </div>
