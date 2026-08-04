@@ -177,15 +177,15 @@ function LoginView() {
           filter: brightness(1.08);
         }
         /* ===================================================================
-           ANIMACIÓN 3D DEL LOGO MCHAV — MONEDA PLANA GIRATORIA (200px)
+           ANIMACIÓN 3D DEL LOGO MCHAV — MONEDA PLANA GIRATORIA (270px)
            =================================================================== */
         .mchav-coin-loader {
           position: relative;
-          width: 200px;
-          height: 200px;
+          width: 270px;
+          height: 270px;
           display: block;
           transform-style: preserve-3d;
-          margin: 0 0 20px 0;
+          margin: 0 0 -50px -25px;
         }
 
         .mchav-coin-wrapper {
@@ -203,8 +203,8 @@ function LoginView() {
 
         .coin-face {
           position: absolute;
-          width: 200px;
-          height: 200px;
+          width: 270px;
+          height: 270px;
           top: 0;
           left: 0;
           border-radius: 50%;
@@ -221,22 +221,22 @@ function LoginView() {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          filter: drop-shadow(0 0 18px rgba(6, 182, 212, 0.75));
+          filter: drop-shadow(0 0 22px rgba(6, 182, 212, 0.75));
         }
 
         .coin-front { transform: translateZ(1px); }
         .coin-back  { transform: rotateY(180deg) translateZ(1px); }
 
         .coin-shadow {
-          width: 130px;
-          height: 14px;
+          width: 170px;
+          height: 16px;
           background: radial-gradient(ellipse, rgba(6, 182, 212, 0.45) 0%, rgba(112, 0, 255, 0.2) 40%, transparent 70%);
           position: absolute;
-          bottom: -12px;
+          bottom: -10px;
           left: 50%;
-          margin-left: -65px;
+          margin-left: -85px;
           border-radius: 50%;
-          filter: blur(8px);
+          filter: blur(9px);
           animation: coinShadowPulse 2s ease-in-out infinite alternate;
         }
 
@@ -257,7 +257,7 @@ function LoginView() {
             =================================================================== */}
         <div className="hidden lg:flex flex-1 flex-col justify-between h-full pl-12 lg:pl-28 pr-12 text-left py-2">
 
-          {/* Logo Moneda 3D Rotatoria — Mas grande (200px) y posicionado mas abajo */}
+          {/* Logo Moneda 3D Rotatoria — Agrandado (270px) sin mover el texto */}
           <div className="mchav-coin-loader z-10 mt-10 lg:mt-14">
             <div className="mchav-coin-wrapper">
               <div className="coin-face coin-front">
