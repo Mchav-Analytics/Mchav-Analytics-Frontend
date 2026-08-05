@@ -133,7 +133,7 @@ function LoginView() {
           border-radius: 20px;
         }
 
-        .flip-card-container:hover .flip-card-inner,
+        /* Giro manual por clic (para permitir contemplar a Snoopy en la cara frontal) */
         .flip-card-container.is-flipped .flip-card-inner {
           transform: rotateY(180deg);
         }
@@ -154,11 +154,9 @@ function LoginView() {
           text-align: center;
         }
 
-        /* CARA FRONTAL (FRONT): LOGO 3D MCHAV Y ESLOGAN */
+        /* CARA FRONTAL (FRONT): SNOOPY ATLASSIAN WELCOME */
         .flip-card-front {
-          background-color: rgba(3, 7, 18, 0.58);
-          backdrop-filter: blur(28px) saturate(140%);
-          -webkit-backdrop-filter: blur(28px) saturate(140%);
+          background-color: #060b17;
           border: 1.5px solid rgba(6, 182, 212, 0.4);
           box-shadow: inset 0 0 25px rgba(6, 182, 212, 0.15);
           transform: rotateY(0deg);
