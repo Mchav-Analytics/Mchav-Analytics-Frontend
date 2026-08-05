@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logoOfficialImg from '../../../assets/mchav_official_logo.png';
 import loginBgImg from '../../../assets/login_bg.jpg';
+import snoopyWelcomeImg from '../../../assets/snoopy_welcome.png';
 
 function LoginView() {
   const navigate = useNavigate();
@@ -353,35 +354,18 @@ function LoginView() {
           <div className="flip-card-inner">
 
             {/* ===============================================================
-                CARA FRONTAL (FRONT): LOGO 3D MCHAV Y ESLOGAN PRINCIPAL
+                CARA FRONTAL (FRONT): SNOOPY ATLASSIAN WELCOME
                 =============================================================== */}
-            <div className="flip-card-front">
+            <div className="flip-card-front !p-0 overflow-hidden relative group">
               
-              {/* Logo Moneda 3D Giratorio */}
-              <div className="mchav-coin-loader-card">
-                <div className="mchav-coin-wrapper-card">
-                  <div className="coin-face-card coin-front-card">
-                    <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
-                  </div>
-                  <div className="coin-face-card coin-back-card">
-                    <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
-                  </div>
-                </div>
-              </div>
+              <img 
+                src={snoopyWelcomeImg} 
+                alt="Snoopy Atlassian Welcome" 
+                className="w-full h-full object-cover rounded-2xl"
+              />
 
-              {/* Título de Marca y Eslogan */}
-              <div className="space-y-2">
-                <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-md">
-                  MCHAV <span className="text-cyan-400">Analytics</span>
-                </h1>
-                <p className="text-sm font-semibold text-slate-300">
-                  Datos que impulsan <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
-                </p>
-                <div className="w-12 h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-2" />
-              </div>
-
-              {/* Píldora interactiva de indicación de giro */}
-              <div className="px-4 py-2 rounded-full bg-slate-900/80 border border-cyan-500/40 text-cyan-300 text-xs font-bold backdrop-blur-md mx-auto flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)] animate-pulse">
+              {/* Píldora interactiva de indicación de giro en la parte inferior */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-slate-950/85 border border-cyan-500/50 text-cyan-300 text-xs font-bold backdrop-blur-md flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-pulse shrink-0">
                 <span>Girar para iniciar sesión</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
