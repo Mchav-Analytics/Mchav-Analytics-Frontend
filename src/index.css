@@ -40,15 +40,8 @@ html {
   background-color: #080b13;
 }
 
-<<<<<<< HEAD
-@layer base {
-  * {
-    box-sizing: border-box;
-  }
-=======
 * {
   box-sizing: border-box;
->>>>>>> origin/Prueba_Desarrollo
 }
 
 /* Ocultar barra de desplazamiento en cualquier navegador manteniendo la funcionalidad */

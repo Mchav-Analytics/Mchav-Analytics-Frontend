@@ -259,18 +259,18 @@ export default function SystemSyncTab() {
   const paginatedLogs = filteredLogs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage);
 
   return (
-    <main className="main-content pt-4">
+    <div className="w-full space-y-6">
 
       {/* Alertas */}
       {showSuccessAlert && (
-        <div className="mb-6 animate-in slide-in-from-top-2 fade-in duration-300 flex items-center gap-3 p-4 rounded-xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-800 dark:text-teal-400">
+        <div className="animate-in slide-in-from-top-2 fade-in duration-300 flex items-center gap-3 p-4 rounded-xl bg-teal-50 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/20 text-teal-800 dark:text-teal-400">
           <CheckCircle2 size={18} />
           <p className="text-sm font-semibold">Sincronización manual completada con éxito. Base de datos actualizada.</p>
         </div>
       )}
 
       {syncErrorMsg && (
-        <div className="mb-6 animate-in slide-in-from-top-2 fade-in duration-300 flex items-center justify-between gap-3 p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-800 dark:text-rose-400">
+        <div className="animate-in slide-in-from-top-2 fade-in duration-300 flex items-center justify-between gap-3 p-4 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-800 dark:text-rose-400">
           <div className="flex items-center gap-3">
             <XCircle size={18} />
             <p className="text-sm font-semibold text-left break-all">{syncErrorMsg}</p>
@@ -284,8 +284,7 @@ export default function SystemSyncTab() {
         </div>
       )}
 
-      <div className="dashboard-inner">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* COLUMNA IZQUIERDA: CONTROL Y CRON (1/3) */}
           <div className="lg:col-span-1 space-y-6">
@@ -664,7 +663,6 @@ export default function SystemSyncTab() {
           </div>
 
         </div>
-      </div>
-    </main>
+    </div>
   );
 }
