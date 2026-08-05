@@ -15,7 +15,7 @@ import snoopyWelcomeImg from '../../../assets/snoopy_welcome.png';
 function LoginView() {
   const navigate = useNavigate();
   const { login, isAuthenticated, loading: authLoading, error: authError } = useAuth();
-  
+
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -61,7 +61,7 @@ function LoginView() {
   };
 
   return (
-    <div 
+    <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
@@ -133,7 +133,7 @@ function LoginView() {
           border-radius: 20px;
         }
 
-        /* Giro manual por clic (para permitir contemplar a Snoopy en la cara frontal) */
+        .flip-card-container:hover .flip-card-inner,
         .flip-card-container.is-flipped .flip-card-inner {
           transform: rotateY(180deg);
         }
@@ -154,9 +154,11 @@ function LoginView() {
           text-align: center;
         }
 
-        /* CARA FRONTAL (FRONT): SNOOPY ATLASSIAN WELCOME */
+        /* CARA FRONTAL (FRONT): LOGO 3D MCHAV Y ESLOGAN */
         .flip-card-front {
-          background-color: #060b17;
+          background-color: rgba(3, 7, 18, 0.58);
+          backdrop-filter: blur(28px) saturate(140%);
+          -webkit-backdrop-filter: blur(28px) saturate(140%);
           border: 1.5px solid rgba(6, 182, 212, 0.4);
           box-shadow: inset 0 0 25px rgba(6, 182, 212, 0.15);
           transform: rotateY(0deg);
@@ -344,29 +346,43 @@ function LoginView() {
       <div className="login-main-frame">
 
         {/* TARJETA 3D FLIP UIVERSE */}
-        <div 
-          ref={cardRef} 
+        <div
+          ref={cardRef}
           onClick={() => setIsFlipped(!isFlipped)}
           className={`flip-card-container z-10 ${isFlipped ? 'is-flipped' : ''}`}
         >
           <div className="flip-card-inner">
 
             {/* ===============================================================
-                CARA FRONTAL (FRONT): SNOOPY ATLASSIAN WELCOME
+                CARA FRONTAL (FRONT): LOGO SNOOPY ATLASSIAN Y MARCA MCHAV
                 =============================================================== */}
-            <div className="flip-card-front !p-0 overflow-hidden relative group">
+            <div className="flip-card-front">
               
-              <img 
-                src={snoopyWelcomeImg} 
-                alt="Snoopy Atlassian Welcome" 
-                className="w-full h-full object-cover rounded-2xl"
-              />
+              {/* Logo Snoopy Atlassian Reemplazando el Logo Anterior */}
+              <div className="w-36 h-36 rounded-full bg-slate-950/80 border-2 border-cyan-400/60 p-1 shadow-[0_0_25px_rgba(6,182,212,0.45)] flex items-center justify-center mx-auto my-2 overflow-hidden shrink-0">
+                <img 
+                  src={snoopyWelcomeImg} 
+                  alt="Snoopy Atlassian Logo" 
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
 
-              {/* Píldora interactiva de indicación de giro en la parte inferior */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-slate-950/85 border border-cyan-500/50 text-cyan-300 text-xs font-bold backdrop-blur-md flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-pulse shrink-0">
+              {/* Título de Marca y Eslogan */}
+              <div className="space-y-1.5 my-auto">
+                <h1 className="text-2xl font-black text-white tracking-tight drop-shadow-md">
+                  MCHAV <span className="text-cyan-400">Analytics</span>
+                </h1>
+                <p className="text-xs font-semibold text-slate-300">
+                  Datos que impulsan <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
+                </p>
+                <div className="w-12 h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-2" />
+              </div>
+
+              {/* Píldora interactiva de indicación de giro */}
+              <div className="px-4 py-2 rounded-full bg-slate-900/90 border border-cyan-500/50 text-cyan-300 text-xs font-bold backdrop-blur-md mx-auto flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.35)] animate-pulse shrink-0">
                 <span>Girar para iniciar sesión</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                  <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
               </div>
 
@@ -377,20 +393,11 @@ function LoginView() {
                 =============================================================== */}
             <div className="flip-card-back">
               <div className="flip-card-back-content">
-                
+
                 <div>
-                  {/* Badge con Moneda Pequeña 3D */}
-                  <div className="w-13 h-13 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center mx-auto mb-2">
-                    <div className="mchav-coin-small">
-                      <div className="mchav-coin-wrapper-small">
-                        <div className="coin-face-small coin-front-small">
-                          <img src={logoOfficialImg} alt="MCHAV Logo" />
-                        </div>
-                        <div className="coin-face-small coin-back-small">
-                          <img src={logoOfficialImg} alt="MCHAV Logo" />
-                        </div>
-                      </div>
-                    </div>
+                  {/* Badge con Logo de Snoopy Atlassian */}
+                  <div className="w-14 h-14 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center mx-auto mb-2 overflow-hidden">
+                    <img src={snoopyWelcomeImg} alt="Snoopy Atlassian" className="w-full h-full object-cover rounded-full" />
                   </div>
 
                   {/* Título "Bienvenido" */}
@@ -408,40 +415,40 @@ function LoginView() {
 
                   {/* LOS 3 BOTONES DE ROL */}
                   <div className="space-y-2.5 my-2">
-                    
-                    <button 
+
+                    <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleRoleLogin('dev@mchav.com', 'DEVELOPER'); }}
                       disabled={isSubmitting || authLoading}
                       className="btn-dev-teal w-full h-11 px-4 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
-                        <polyline points="16 18 22 12 16 6"/>
-                        <polyline points="8 6 2 12 8 18"/>
+                        <polyline points="16 18 22 12 16 6" />
+                        <polyline points="8 6 2 12 8 18" />
                       </svg>
                       <span>Ingresar como Desarrollador</span>
                     </button>
 
-                    <button 
+                    <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleRoleLogin('aftorres@mchav.com', 'MANAGER'); }}
                       disabled={isSubmitting || authLoading}
                       className="btn-manager-purple w-full h-11 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                       </svg>
                       <span>Ingresar como Líder Técnico</span>
                     </button>
 
-                    <button 
+                    <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleRoleLogin('vhoyos@mchav.com', 'ADMIN'); }}
                       disabled={isSubmitting || authLoading}
                       className="btn-admin-blue w-full h-11 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
                     >
                       <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
-                        <polygon points="12 2 2 12 12 22 22 12"/>
+                        <polygon points="12 2 2 12 12 22 22 12" />
                       </svg>
                       <span>Ingresar como Administrador</span>
                     </button>
@@ -459,14 +466,14 @@ function LoginView() {
                   </div>
 
                   {/* BOTÓN CONTINUAR CON ATLASSIAN */}
-                  <button 
+                  <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleRoleLogin('aftorres@mchav.com', 'MANAGER'); }}
                     disabled={isSubmitting || authLoading}
                     className="w-full h-10 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
-                      <polygon points="12 2 2 12 12 22 22 12"/>
+                      <polygon points="12 2 2 12 12 22 22 12" />
                     </svg>
                     <span>Continuar con Atlassian</span>
                   </button>
