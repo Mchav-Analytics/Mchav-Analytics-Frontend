@@ -91,12 +91,12 @@ function LoginView() {
           pointer-events: none;
         }
 
-        /* MARCO PRINCIPAL ADAPTATIVO UNIVERSAL (RESPONSIVE PARA TODAS LAS PANTALLAS) */
+        /* MARCO PRINCIPAL ADAPTATIVO UNIVERSAL (DESDE MÓVILES HASTA MONITORES 4K) */
         .login-main-frame {
           position: relative;
           z-index: 10;
           width: 100%;
-          max-width: 1280px;
+          max-width: 1800px;
           min-height: 100vh;
           display: flex;
           align-items: center;
@@ -104,22 +104,50 @@ function LoginView() {
           padding: 1.5rem 1rem;
         }
 
-        @media (min-width: 1280px) {
-          .login-main-frame {
-            justify-content: flex-start;
-            padding-left: 8rem;
-          }
-        }
-
         /* ===================================================================
-           ESTRUCTURA TARJETA 3D FLIP ADAPTATIVA (UIVERSE)
+           ESTRUCTURA TARJETA 3D FLIP ADAPTATIVA MULTI-PANTALLA
            =================================================================== */
         .flip-card-container {
           width: 100%;
           max-width: 380px;
-          height: clamp(480px, 82vh, 530px);
+          height: clamp(480px, 80vh, 520px);
           perspective: 1000px;
           cursor: pointer;
+          transition: max-width 0.3s ease, height 0.3s ease;
+        }
+
+        /* Level 1: Laptops y Pantallas Escritorio Estándar (1280px+) */
+        @media (min-width: 1280px) {
+          .login-main-frame {
+            justify-content: flex-start;
+            padding-left: 7vw;
+          }
+          .flip-card-container {
+            max-width: 420px;
+            height: clamp(520px, 75vh, 570px);
+          }
+        }
+
+        /* Level 2: Monitores Full HD / 2K (1536px+) */
+        @media (min-width: 1536px) and (min-height: 800px) {
+          .login-main-frame {
+            padding-left: 9vw;
+          }
+          .flip-card-container {
+            max-width: 460px;
+            height: clamp(570px, 72vh, 620px);
+          }
+        }
+
+        /* Level 3: Monitores Ultra-Anchos y 4K (1920px+) */
+        @media (min-width: 1920px) and (min-height: 950px) {
+          .login-main-frame {
+            padding-left: 11vw;
+          }
+          .flip-card-container {
+            max-width: 500px;
+            height: clamp(620px, 70vh, 670px);
+          }
         }
 
         .flip-card-inner {
