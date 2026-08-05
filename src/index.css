@@ -40,10 +40,15 @@ html {
   background-color: #080b13;
 }
 
+<<<<<<< HEAD
 @layer base {
   * {
     box-sizing: border-box;
   }
+=======
+* {
+  box-sizing: border-box;
+>>>>>>> origin/Prueba_Desarrollo
 }
 
 /* Ocultar barra de desplazamiento en cualquier navegador manteniendo la funcionalidad */
@@ -187,198 +192,22 @@ body {
   background-color: var(--bg-dark);
 }
 
-/* Sidebar */
-.sidebar {
-  width: 280px;
-  min-width: 280px;
-  height: 100vh;
-  background: var(--sidebar-bg);
-  border-right: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  padding: 1.5rem 1rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 30;
-  box-sizing: border-box;
-}
-
-.sidebar.collapsed {
-  width: 78px;
-  min-width: 78px;
-  padding: 1.5rem 0.5rem;
-}
-
-/* Floating toggle button on the border line */
-.sidebar-toggle-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: -12px;
-  background: var(--sidebar-bg);
-  border: 1px solid var(--border-color);
-  color: var(--text-muted);
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-  transition: all 0.2s ease;
-  z-index: 20;
-}
-
-.sidebar-toggle-btn:hover {
-  background: var(--primary-color);
-  color: white;
-  border-color: var(--primary-color);
-  box-shadow: 0 4px 8px rgba(0, 82, 204, 0.2);
-}
-
-.sidebar-toggle-btn:focus {
-  outline: none;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 2rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.sidebar-logo {
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #0052CC 0%, #8B5CF6 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.sidebar-logo svg {
-  color: white;
-  width: 20px;
-  height: 20px;
-}
-
-.sidebar-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.sidebar-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  flex: 1;
-  overflow-y: auto;
-}
-
-.sidebar-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  font-size: 0.925rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  white-space: nowrap;
-  text-align: left;
-}
-
-.sidebar.collapsed .sidebar-link {
-  justify-content: center;
-  padding: 0.75rem 0;
-}
-
-.sidebar-link:hover {
-  background: linear-gradient(135deg, rgba(241, 245, 249, 0.95) 0%, rgba(238, 242, 255, 0.95) 100%);
-  color: #4338ca;
-  border-color: rgba(199, 210, 254, 0.8);
-  transform: translateX(3px);
-}
-
-.dark-theme .sidebar-link:hover,
-.dark .sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--text-main);
-  border-color: rgba(255, 255, 255, 0.1);
-  transform: none;
-}
-
-.sidebar-link.active {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%);
-  color: #ffffff !important;
-  border: 1px solid rgba(199, 210, 254, 0.6);
-  font-weight: 700;
-  box-shadow: 0 8px 20px -3px rgba(99, 102, 241, 0.4);
-}
-
-.sidebar-link.active .sidebar-icon {
-  color: #ffffff !important;
-}
-
-.dark-theme .sidebar-link.active,
-.dark .sidebar-link.active {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.4) 0%, rgba(13, 148, 136, 0.3) 100%);
-  color: #60a5fa !important;
-  border: 1px solid rgba(96, 165, 250, 0.3);
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-.dark-theme .sidebar-link.active .sidebar-icon,
-.dark .sidebar-link.active .sidebar-icon {
-  color: #60a5fa !important;
-}
-
-.sidebar-icon {
+/* Sidebar — El <aside> usa Tailwind; esta regla garantiza que no se encoja */
+.dashboard-layout > aside {
   flex-shrink: 0;
 }
 
-.sidebar-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+/* Sidebar — Ahora manejado 100% por Tailwind CSS en Sidebar.jsx */
 
-.sidebar-footer {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.logout-btn {
-  color: var(--accent-red) !important;
-}
-
-.logout-btn:hover {
-  background: rgba(239, 68, 68, 0.15) !important;
-  color: #f87171 !important;
-  border-color: rgba(239, 68, 68, 0.3) !important;
-}
 
 /* Main Content */
 .main-content {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -431,6 +260,10 @@ body {
 
 .dashboard-inner {
   padding: 2rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .page-header {

@@ -1,0 +1,451 @@
+// ============================================================================
+// FASE 5: VISTA ADMINISTRADOR/LÍDER TÉCNICO — RENDIMIENTO POR DESARROLLADOR
+// ============================================================================
+// Permite al Administrador / Líder Técnico seleccionar cualquier desarrollador del equipo
+// y visualizar sus métricas individuales (Cycle Time, WIP, Throughput, SP, Incidencias Asignadas).
+
+import React, { useState, useEffect } from 'react';
+import { 
+  Users, 
+  UserCheck, 
+  Clock, 
+  ClipboardList, 
+  CheckCircle, 
+  Zap, 
+  Info, 
+  Search, 
+  Filter,
+  Download,
+  ShieldAlert,
+  ArrowRight
+} from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { developerService } from '../../../services/api';
+
+const MetricInfoTooltip = ({ text, align = "auto" }) => {
+  const alignClass = 
+    align === "left" ? "left-0" :
+    align === "right" ? "right-0" :
+    "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
+
+  return (
+    <div className="group/tooltip relative inline-flex items-center cursor-help ml-2 z-50" title={text}>
+      <Info size={15} className="text-slate-400 hover:text-indigo-400 transition-colors inline shrink-0" />
+      <div className={`opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 absolute bottom-full ${alignClass} mb-2.5 w-64 sm:w-72 p-3.5 bg-slate-950 text-slate-100 text-xs rounded-xl shadow-2xl border border-indigo-500/50 pointer-events-none leading-relaxed text-left z-[99999]`}>
+        {text}
+      </div>
+    </div>
+  );
+};
+
+const SparklineMini = ({ color = "#10b981" }) => {
+  const data = [{ v: 4.2 }, { v: 3.8 }, { v: 4.5 }, { v: 3.1 }, { v: 2.8 }, { v: 3.2 }];
+  return (
+    <div className="w-20 h-7 inline-block">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+          <defs>
+            <linearGradient id={`grad_${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.5}/>
+              <stop offset="100%" stopColor={color} stopOpacity={0.0}/>
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#grad_${color.replace('#', '')})`} isAnimationActive={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01' }) {
+  const [developers, setDevelopers] = useState([]);
+  const [selectedDev, setSelectedDev] = useState(null);
+  const [scorecard, setScorecard] = useState(null);
+  const [loadingDevs, setLoadingDevs] = useState(true);
+  const [loadingCard, setLoadingCard] = useState(false);
+  const [searchFilter, setSearchFilter] = useState('');
+
+  // 1. Cargar la lista de desarrolladores del proyecto activo
+  useEffect(() => {
+    setLoadingDevs(true);
+    developerService.getDevelopers(selectedProjectId)
+      .then(devs => {
+        setDevelopers(devs || []);
+        if (devs && devs.length > 0) {
+          setSelectedDev(devs[0]);
+        }
+        setLoadingDevs(false);
+      })
+      .catch(err => {
+        console.warn("Error al listar desarrolladores:", err);
+        setLoadingDevs(false);
+      });
+  }, [selectedProjectId]);
+
+  // 2. Cargar el Scorecard individual cuando cambia el desarrollador seleccionado
+  useEffect(() => {
+    if (!selectedDev) return;
+    setLoadingCard(true);
+    developerService.getDeveloperScorecard(selectedDev.assignee_id || selectedDev.email, selectedProjectId)
+      .then(card => {
+        setScorecard(card);
+        setLoadingCard(false);
+      })
+      .catch(err => {
+        console.warn("Error al cargar scorecard del desarrollador:", err);
+        setLoadingCard(false);
+      });
+  }, [selectedDev, selectedProjectId]);
+
+  const filteredDevs = developers.filter(d => 
+    (d.nombre || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
+    (d.email || '').toLowerCase().includes(searchFilter.toLowerCase())
+  );
+
+  const sparklineCycleTime = [
+    { v: 4.5 }, { v: 4.1 }, { v: 3.8 }, { v: 4.2 }, { v: 3.5 }, { v: 3.9 }, { v: 3.2 }
+  ];
+
+  const donutWipData = [
+    { name: 'En Progreso', value: scorecard?.wip_tickets || 7, color: '#8b5cf6' },
+    { name: 'Capacidad Restante', value: Math.max(0, (scorecard?.wip_max || 10) - (scorecard?.wip_tickets || 7)), color: '#1e293b' }
+  ];
+
+  const throughputDaily = [
+    { day: 'L', v: 2 }, { day: 'M', v: 3 }, { day: 'M', v: 1 }, { day: 'J', v: 4 }, { day: 'V', v: 4 }
+  ];
+
+  const assignedIssuesList = scorecard?.assigned_issues || [];
+  const workDist = scorecard?.work_distribution || { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 };
+
+  return (
+    <div className="w-full max-w-full overflow-x-hidden space-y-10 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
+      
+      {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
+      <div className="relative group rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-teal-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-teal-500 text-white font-extrabold shadow-xl shadow-indigo-500/25">
+              <UserCheck size={28} />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                Rendimiento Individual por Desarrollador
+                <span className="flex items-center gap-2 rounded-full bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-400 border border-indigo-500/20">
+                  <span className="h-2 w-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                  Fase 5 Administrator View
+                </span>
+              </h1>
+              <p className="text-sm text-slate-400">
+                Supervisación y auditoría de velocidad, capacidad WIP y entregas por integrante del equipo.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-xs font-bold text-slate-200 border border-slate-700 transition-all hover:bg-slate-800 cursor-pointer">
+              <Download size={15} /> Exportar Reporte Dev
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* SELECTOR DE DESARROLLADORES (CARDS INTERACTIVAS) */}
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-xs font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <Users size={16} className="text-indigo-400" /> Desarrolladores del Proyecto ({developers.length})
+          </h2>
+          
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
+            <input 
+              type="text" 
+              placeholder="Buscar desarrollador..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-900 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {filteredDevs.map((dev) => {
+            const isSelected = selectedDev?.assignee_id === dev.assignee_id;
+            const initials = (dev.nombre || 'Dev').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+            return (
+              <button
+                key={dev.assignee_id || dev.email}
+                onClick={() => setSelectedDev(dev)}
+                className={`relative flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
+                  isSelected 
+                    ? 'bg-indigo-950/40 border-indigo-500/80 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/50' 
+                    : 'bg-slate-950 border-slate-800 hover:border-slate-700 hover:bg-slate-900/60'
+                }`}
+              >
+                <div className={`flex h-11 w-11 items-center justify-center rounded-xl font-bold text-sm text-white shrink-0 ${
+                  isSelected 
+                    ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md' 
+                    : 'bg-slate-800 text-slate-300'
+                }`}>
+                  {initials}
+                </div>
+                <div className="space-y-0.5 overflow-hidden">
+                  <h3 className={`text-sm font-bold truncate ${isSelected ? 'text-white' : 'text-slate-200'}`}>
+                    {dev.nombre}
+                  </h3>
+                  <p className="text-xs text-slate-400 truncate">{dev.email || 'dev@mchav.com'}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* DASHBOARD INDIVIDUAL DEL DESARROLLADOR SELECCIONADO */}
+      {selectedDev && (
+        <div className="space-y-8 pt-4 border-t border-slate-800/80">
+          
+          {/* BANNER DEL DESARROLLADOR SELECCIONADO */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-slate-900/80 border border-slate-800 rounded-2xl">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-extrabold text-lg">
+                {(selectedDev.nombre || 'Dev').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-white">Scorecard de {selectedDev.nombre}</h2>
+                <p className="text-xs text-slate-400">ID Assignee: <span className="font-mono text-indigo-400">{selectedDev.assignee_id}</span> | Email: {selectedDev.email}</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full">
+                Rendimiento: Alto (81% SP)
+              </span>
+            </div>
+          </div>
+
+          {/* TARJETAS KPI DEL DESARROLLADOR SELECCIONADO */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+            {/* TARJETA 1: Cycle Time Personal */}
+            <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-emerald-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+              <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md">
+                      <Clock className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Cycle Time Dev</h3>
+                  </div>
+                  <MetricInfoTooltip align="left" text="Cycle Time del Desarrollador: Tiempo promedio en días dedicado por este integrante para resolver tickets." />
+                </div>
+
+                <div>
+                  <span className="text-3xl font-extrabold text-emerald-400 tracking-tight">
+                    {scorecard?.cycle_time_personal || 3.2} <span className="text-lg font-bold text-emerald-500">días</span>
+                  </span>
+                  <div className="w-full h-12 mt-3">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={sparklineCycleTime}>
+                        <defs>
+                          <linearGradient id="ctGradDev" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#10b981" stopOpacity={0.5}/>
+                            <stop offset="100%" stopColor="#10b981" stopOpacity={0.0}/>
+                          </linearGradient>
+                        </defs>
+                        <Area type="monotone" dataKey="v" stroke="#10b981" strokeWidth={2} fill="url(#ctGradDev)" isAnimationActive={false} />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400">Promedio Equipo</span>
+                  <span className="font-semibold text-emerald-400">3.8d</span>
+                </div>
+              </div>
+            </div>
+
+            {/* TARJETA 2: Tickets WIP */}
+            <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-400 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+              <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md">
+                      <ClipboardList className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Tickets WIP</h3>
+                  </div>
+                  <MetricInfoTooltip align="left" text="Work In Progress del Desarrollador: Número de tareas en progreso asignadas a este desarrollador." />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-3xl font-extrabold text-purple-400 tracking-tight">
+                      {scorecard?.wip_tickets || 7}
+                    </span>
+                    <p className="text-xs text-slate-400 mt-1">Tickets activos</p>
+                  </div>
+                  <div className="w-16 h-16 relative flex items-center justify-center">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={donutWipData} innerRadius={18} outerRadius={28} dataKey="value" stroke="none">
+                          {donutWipData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                    <span className="absolute text-[9px] font-bold text-purple-300">WIP</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400">Capacidad Máx</span>
+                  <span className="font-semibold text-purple-400">{scorecard?.wip_max || 10} Tickets</span>
+                </div>
+              </div>
+            </div>
+
+            {/* TARJETA 3: Throughput */}
+            <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-teal-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-teal-500 via-sky-500 to-teal-400 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+              <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-sky-600 shadow-md">
+                      <CheckCircle className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Throughput Dev</h3>
+                  </div>
+                  <MetricInfoTooltip align="right" text="Throughput del Desarrollador: Entregables completados por este desarrollador en el sprint." />
+                </div>
+
+                <div>
+                  <span className="text-3xl font-extrabold text-teal-400 tracking-tight">
+                    {scorecard?.throughput_tickets || 14} <span className="text-xs font-bold text-teal-500">Tickets</span>
+                  </span>
+                  <div className="w-full h-11 mt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={throughputDaily}>
+                        <Bar dataKey="v" fill="#14b8a6" radius={[3, 3, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400">Promedio Diario</span>
+                  <span className="font-semibold text-teal-400">{scorecard?.throughput_avg_daily || 2.3}/día</span>
+                </div>
+              </div>
+            </div>
+
+            {/* TARJETA 4: Story Points */}
+            <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-indigo-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+              <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-md">
+                      <Zap className="h-5 w-5 text-white" />
+                    </div>
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Story Points Dev</h3>
+                  </div>
+                  <MetricInfoTooltip align="right" text="Puntos de Historia del Desarrollador: Puntos de esfuerzo completados por este desarrollador." />
+                </div>
+
+                <div>
+                  <span className="text-3xl font-extrabold text-indigo-400 tracking-tight">
+                    {scorecard?.story_points_burned || 65} <span className="text-sm font-bold text-indigo-500">SP</span>
+                  </span>
+                  <div className="w-full bg-slate-900 h-3 rounded-full mt-4 overflow-hidden p-0.5 border border-slate-800">
+                    <div 
+                      className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${scorecard?.story_points_achieved_pct || 81}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+                  <span className="text-slate-400">Meta Sprint</span>
+                  <span className="font-semibold text-indigo-400">{scorecard?.story_points_target || 80} SP</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* TABLA DE INCIDENCIAS DEL DESARROLLADOR SELECCIONADO */}
+          <div className="group relative rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300 space-y-6 hover:z-40">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 blur-sm opacity-20 pointer-events-none"></div>
+            <div className="relative z-10 space-y-5">
+              <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                    Incidencias Asignadas a {selectedDev.nombre}
+                  </h2>
+                  <MetricInfoTooltip text="Incidencias asignadas activas e históricas a este desarrollador." />
+                </div>
+                <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full">
+                  {assignedIssuesList.length} Tareas Totales
+                </span>
+              </div>
+
+              <div className="w-full max-w-full overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                    <tr>
+                      <th className="px-5 py-4">CLAVE</th>
+                      <th className="px-5 py-4">RESUMEN</th>
+                      <th className="px-5 py-4 text-center">ESTADO ACTUAL</th>
+                      <th className="px-5 py-4 text-right">Story Points</th>
+                      <th className="px-5 py-4 text-right">Cycle Time</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800/80 text-slate-300">
+                    {assignedIssuesList.map((issue, idx) => (
+                      <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
+                        <td className="px-5 py-4 font-mono font-bold text-indigo-400 text-sm">
+                          {issue.key_issue}
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-slate-200 hover:text-indigo-300 transition-colors cursor-pointer max-w-md truncate">
+                          {issue.summary}
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
+                            issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : issue.status_actual?.toUpperCase().includes('REVISI')
+                              ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}>
+                            {issue.status_actual}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right font-bold text-slate-200 text-sm">
+                          {issue.story_points}
+                        </td>
+                        <td className="px-5 py-4 text-right font-semibold text-teal-400 flex items-center justify-end gap-3">
+                          <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
+                          <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      )}
+
+    </div>
+  );
+}

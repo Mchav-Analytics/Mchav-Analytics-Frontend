@@ -4,12 +4,16 @@
 // Enlaza el proveedor de autenticación (AuthProvider) y el enrutador principal (BrowserRouter)
 // para resolver errores de hooks de navegación en el navegador.
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
+import DailyFocusView from './features/dashboard/views/DailyFocusView';
+import DevAlertsView from './features/dashboard/views/DevAlertsView';
+import ActivityHistoryView from './features/dashboard/views/ActivityHistoryView';
+import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
@@ -44,11 +48,9 @@ function MainAppContent() {
 
   // Inicializar o redirigir pestaña según el rol al autenticar (sin bucle de re-render)
   useEffect(() => {
-    if (user?.rol === 'DEVELOPER' && activeTab !== 'developer') {
+    if (user?.rol === 'DEVELOPER' && !['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
       setActiveTab('developer');
-    } else if (user?.rol === 'ADMIN' && activeTab === 'developer') {
-      setActiveTab('usuarios');
-    } else if (user?.rol === 'MANAGER' && (activeTab === 'developer' || activeTab === 'usuarios')) {
+    } else if (user?.rol === 'MANAGER' && ['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
       setActiveTab('dashboard');
     }
   }, [user?.rol]);
@@ -80,7 +82,7 @@ function MainAppContent() {
       })
       .catch(err => {
         console.error("Error fetching general metrics:", err);
-        setMetricsError("No se pudieron cargar las métricas generales de Jira. Comprueba tu inicio de sesión.");
+        setMetricsError("Error al conectar con el servidor backend de métricas.");
         setMetricsLoading(false);
       });
   };
@@ -89,7 +91,7 @@ function MainAppContent() {
     projectService.getProjects()
       .then(data => {
         setProjects(data);
-        if (data.length > 0) {
+        if (data.length > 0 && !selectedProjectId) {
           setSelectedProjectId(data[0].id_proyecto);
         }
       })
@@ -98,8 +100,8 @@ function MainAppContent() {
       });
   };
 
-  const fetchSprints = (projectId) => {
-    projectService.getSprints(projectId)
+  const fetchSprints = (projId) => {
+    projectService.getSprints(projId)
       .then(data => {
         setSprints(data);
       })
@@ -108,9 +110,9 @@ function MainAppContent() {
       });
   };
 
-  const fetchKpis = (projectId, sprintId) => {
+  const fetchKpis = (projId, sprintId) => {
     setKpisLoading(true);
-    projectService.getKpis(projectId, sprintId)
+    projectService.getKpis(projId, sprintId)
       .then(data => {
         setKpis(data);
         setKpisLoading(false);
@@ -122,47 +124,28 @@ function MainAppContent() {
       });
   };
 
-  const evaluateAlerts = (metricsData, kpiData) => {
+  const evaluateAlerts = (genMetrics, projKpis) => {
     const newAlerts = [];
-
-    // 1. Evaluar Bugs Críticos desde Métricas Generales
-    if (metricsData && metricsData.critical_bugs > 1) {
-      newAlerts.push({
-        id: 'alert-bugs',
-        tipo: 'danger',
-        titulo: 'Bugs Críticos Pendientes 🚨',
-        descripcion: `Hay ${metricsData.critical_bugs} bugs críticos pendientes que requieren atención inmediata.`
-      });
+    if (projKpis?.lead_time_medio_dias > 14) {
+      newAlerts.push({ id: 1, type: 'critical', text: `Lead Time elevado (${projKpis.lead_time_medio_dias} días) en ${projKpis.proyecto_id}` });
     }
-
-    // 2. Evaluar Tiempo de Ciclo desde KPIs del Proyecto
-    if (kpiData && kpiData.length > 0) {
-      const latestKpi = kpiData[kpiData.length - 1]; // Obtiene la métrica más reciente
-      if (latestKpi.cycle_time_promedio_dias > 3.0) {
-        newAlerts.push({
-          id: 'alert-cycle-time',
-          tipo: 'warning',
-          titulo: 'Tiempo de Ciclo Elevado ⚠️',
-          descripcion: `El tiempo de ciclo promedio actual es de ${latestKpi.cycle_time_promedio_dias} días (límite objetivo: 3 días).`
-        });
-      }
+    if (genMetrics?.proyectos_totales > 0) {
+      newAlerts.push({ id: 2, type: 'info', text: `Sincronización activa con Jira Cloud` });
     }
-
     setAlerts(newAlerts);
   };
 
 
   const handleSyncNow = () => {
     setSyncLoading(true);
-    setSyncSuccessMsg('');
     jiraService.triggerSync()
       .then(res => {
-        setSyncSuccessMsg(res.message || "Sincronización simulada exitosa.");
+        setSyncSuccessMsg("Sincronización completada exitosamente.");
         fetchMetrics();
         if (selectedProjectId) {
           fetchKpis(selectedProjectId, null);
         }
-        setTimeout(() => setSyncSuccessMsg(''), 4000);
+        setTimeout(() => setSyncSuccessMsg(''), 5000);
       })
       .catch(err => {
         console.error("Error triggering sync:", err);
@@ -173,11 +156,10 @@ function MainAppContent() {
   };
 
   // Filtrar KPIs según el rango de fecha seleccionado (los Hooks siempre deben ir al inicio del componente)
-  const filteredKpis = React.useMemo(() => {
+  const filteredKpis = useMemo(() => {
     if (!kpis) return null;
-    if (dateFilter.key === 'all') return kpis;
     return kpis;
-  }, [kpis, dateFilter]);
+  }, [kpis]);
 
   if (authLoading) {
     return (
@@ -205,7 +187,27 @@ function MainAppContent() {
       case 'developer':
         return {
           title: "Espacio de Trabajo del Desarrollador ",
-          subtitle: "Consola de consultas JQL y métricas de tu trabajo personal."
+          subtitle: "Dashboard principal de métricas personales y entregas asignadas."
+        };
+      case 'daily_focus':
+        return {
+          title: "Enfoque y Prioridades de Hoy ",
+          subtitle: "Jerarquización de atención diaria y Asistente Inteligente AI Dev Coach."
+        };
+      case 'dev_alerts':
+        return {
+          title: "Mis Bloqueos y Alertas ",
+          subtitle: "Detector automático de inactividad, multitarea excesiva y cuellos de botella."
+        };
+      case 'activity_history':
+        return {
+          title: "Historial de Actividad y Logros ",
+          subtitle: "Cronología de cambios para Standups y medallas de desempeño."
+        };
+      case 'team_devs':
+        return {
+          title: "Rendimiento por Desarrollador ",
+          subtitle: "Supervisación y auditoría individual por integrante del equipo (Fase 5)."
         };
       case 'tasks':
         return {
@@ -246,7 +248,7 @@ function MainAppContent() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history' || activeTab === 'developer' ? setSelectedProjectId : null}
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
       handleSyncNow={activeTab === 'dashboard' && user?.rol !== 'DEVELOPER' ? handleSyncNow : null}
       topbarTitle={headerDetails.title}
@@ -255,7 +257,6 @@ function MainAppContent() {
       setDateFilter={setDateFilter}
       alerts={alerts}
       setAlerts={setAlerts}
-
     >
       {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
         <DashboardView
@@ -273,6 +274,30 @@ function MainAppContent() {
       {activeTab === 'developer' && (
         <DeveloperView
           kpis={filteredKpis}
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'daily_focus' && (
+        <DailyFocusView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'dev_alerts' && (
+        <DevAlertsView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'activity_history' && (
+        <ActivityHistoryView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'team_devs' && (
+        <TeamDevScorecardsView
           selectedProjectId={selectedProjectId}
         />
       )}
