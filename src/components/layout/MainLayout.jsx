@@ -1,11 +1,9 @@
 // ============================================================================
 // COMPONENTE DE PLANTILLA PRINCIPAL (MAIN LAYOUT)
 // ============================================================================
-// Envuelve la aplicación integrando la barra lateral (Sidebar) y la barra superior (Topbar).
 
 import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
-import Topbar from './Topbar';
 import { authService } from '../../services/api';
 
 function MainLayout({
@@ -19,17 +17,12 @@ function MainLayout({
   setSelectedProjectId,
   syncLoading,
   handleSyncNow,
-  topbarTitle,
-  topbarSubtitle,
   dateFilter,
-  setDateFilter,
-  alerts,
-  setAlerts
+  setDateFilter
 }) {
   const [userProfile, setUserProfile] = useState(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Cargar perfil de usuario en el layout si es necesario
   useEffect(() => {
     authService.getCurrentUser()
       .then(profile => {
@@ -41,38 +34,23 @@ function MainLayout({
   }, []);
 
   return (
-    <div className={`dashboard-layout ${isDarkMode ? 'dark-theme dark' : ''} ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      {/* Barra Lateral de Navegación */}
+    <div className={`dashboard-layout ${isDarkMode ? 'dark-theme dark' : ''}`}>
+      {/* Barra Lateral — Réplica Meraki UI con colapso */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
-        isCollapsed={isSidebarCollapsed}
-        setIsCollapsed={setIsSidebarCollapsed}
+        isCollapsed={isCollapsed}
+        setIsCollapsed={setIsCollapsed}
+        projects={projects}
+        selectedProjectId={selectedProjectId}
+        setSelectedProjectId={setSelectedProjectId}
       />
 
-      {/* Contenido Principal de la Aplicación */}
+      {/* Contenido Principal */}
       <main className="main-content">
-        <Topbar
-          title={topbarTitle}
-          subtitle={topbarSubtitle}
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-          setSelectedProjectId={setSelectedProjectId}
-          syncLoading={syncLoading}
-          handleSyncNow={handleSyncNow}
-          userProfile={userProfile}
-          dateFilter={dateFilter}
-          setDateFilter={setDateFilter}
-          isDarkMode={isDarkMode}
-          setIsDarkMode={setIsDarkMode}
-          setActiveTab={setActiveTab}
-          alerts={alerts}
-          setAlerts={setAlerts}
-        />
-
-        <div className="dashboard-inner">
+        <div className="dashboard-inner pt-6">
           {children}
         </div>
       </main>

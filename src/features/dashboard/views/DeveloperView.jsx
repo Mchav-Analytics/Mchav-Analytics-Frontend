@@ -1,465 +1,393 @@
 // ============================================================================
-// FEATURE DASHBOARD — VISTA DEL DESARROLLADOR (CON NOTIFICACIÓN TEMPORAL)
+// VISTA DEL DESARROLLADOR — MI TRABAJO (FIX HOVER TOOLTIPS & OVERFLOW NO SCROLL)
 // ============================================================================
-// Incluye notificación flotante temporal (auto-desaparece en 5 segundos) al activarse
-// el rol de Desarrollador Autorizado por el Administrador.
 
-import React, { useState, useMemo, useEffect } from 'react'; // Hooks useState, useMemo y useEffect para ciclo de vida y notificaciones
+import React, { useState, useEffect } from 'react';
 import { 
-  Clock,           // Icono de reloj para métrica de Cycle Time e indicador de carga
-  CheckCircle,     // Icono de verificado para Throughput personal
-  ClipboardList,   // Icono de lista para tareas activas (WIP)
-  Zap,             // Icono de rayo para Puntos de Historia (SP)
-  Play,            // Icono de ejecución para consultas JQL
-  Code,            // Icono de código para encabezado de desarrollador
-  AlertTriangle,   // Icono de advertencia para errores y estado pendiente
-  CheckCircle2,    // Icono de confirmación para ejecuciones exitosas
-  Terminal,        // Icono de consola para el módulo JQL
-  Lock,            // Icono de candado para consola bloqueada en estado pendiente
-  UserCheck,       // Icono para botón de simulación de estado
-  X                // Icono X para cerrar notificación temporal manualmente
-} from 'lucide-react'; // Librería de iconos vectoriales Lucide React
-
+  Clock, 
+  CheckCircle, 
+  ClipboardList, 
+  Zap, 
+  Info, 
+  UserCheck
+} from 'lucide-react';
+import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { useAuth } from '../../../features/auth/context/AuthContext';
+import { developerService } from '../../../services/api';
 
-// Incidencias de Jira simuladas para cuando el desarrollador ya ha sido asignado a un proyecto
-const MOCK_JIRA_ISSUES = [
-  { id: 'MCHAV-101', summary: 'Implementar autenticación JWT con OAuth 2.0 Jira', type: 'Story', status: 'Done', points: 5, cycleTimeDays: 2.5, assignee: 'Clara Gomez' },
-  { id: 'MCHAV-102', summary: 'Optimizar pipeline ETL para extracción incremental', type: 'Task', status: 'In Progress', points: 3, cycleTimeDays: 1.8, assignee: 'Clara Gomez' },
-  { id: 'MCHAV-103', summary: 'Corregir desfasamiento de zona horaria en calculador de Lead Time', type: 'Bug', status: 'In Progress', points: 2, cycleTimeDays: 0.9, assignee: 'Clara Gomez' },
-  { id: 'MCHAV-104', summary: 'Diseñar interfaz responsiva para tabla de logs auditoría', type: 'Story', status: 'Done', points: 3, cycleTimeDays: 1.2, assignee: 'Clara Gomez' },
-  { id: 'MCHAV-105', summary: 'Configurar contenedor Docker con PostgreSQL y volúmenes', type: 'Task', status: 'Done', points: 5, cycleTimeDays: 3.1, assignee: 'Clara Gomez' },
-  { id: 'MCHAV-106', summary: 'Añadir exportación de reportes consolidados en formato PDF', type: 'Story', status: 'To Do', points: 8, cycleTimeDays: 0, assignee: 'Clara Gomez' }
-];
-
-export default function DeveloperView({ kpis = [], selectedProjectId }) {
-  const { user, approveUserPermission } = useAuth(); // Obtener el usuario conectado y la función de aprobación en tiempo real
-
-  // Estado para controlar la visibilidad del cuadrito de notificación temporal de activación
-  const [showActiveToast, setShowActiveToast] = useState(true);
-
-  // Estado para almacenar la consulta JQL escrita por el desarrollador (HU-008)
-  const [jqlQuery, setJqlQuery] = useState('project = "MCHAV" AND assignee = currentUser() AND status = "In Progress"');
-  
-  // Estado para capturar errores de sintaxis JQL (HU-008 CA-04)
-  const [jqlError, setJqlError] = useState('');
-  
-  // Estado para mensajes de confirmación de consulta exitosa
-  const [jqlSuccess, setJqlSuccess] = useState('');
-  
-  // Indicador de carga durante la ejecución de la consulta
-  const [isExecutingJql, setIsExecutingJql] = useState(false);
-  
-  // Estado del botón de plantilla predefinida activo
-  const [activePreset, setActivePreset] = useState('in_progress');
-
-  // Evaluar si las métricas deben cargarse o mostrarse en cero según el estado de la cuenta en sesión
-  const isPending = user?.status === 'PENDING';
-
-  // Temporizador para ocultar la notificación del rol activo automáticamente tras 5 segundos
-  useEffect(() => {
-    if (!isPending) {
-      setShowActiveToast(true);
-      const timer = setTimeout(() => {
-        setShowActiveToast(false); // Ocultar el cuadrito de notificación automáticamente
-      }, 5000);
-      return () => clearTimeout(timer); // Limpiar temporizador al desmontar
-    }
-  }, [isPending]);
-
-  // Filtrar incidencias activas en progreso (0 si está PENDING)
-  const myActiveTickets = useMemo(() => {
-    if (isPending) return [];
-    return MOCK_JIRA_ISSUES.filter(i => i.status === 'In Progress');
-  }, [isPending]);
-  
-  // Filtrar incidencias completadas (0 si está PENDING)
-  const myCompletedTickets = useMemo(() => {
-    if (isPending) return [];
-    return MOCK_JIRA_ISSUES.filter(i => i.status === 'Done');
-  }, [isPending]);
-  
-  // Promedio de Cycle Time Personal (0 si está PENDING)
-  const avgPersonalCycleTime = useMemo(() => {
-    if (isPending || myCompletedTickets.length === 0) return '0.0';
-    const totalDays = myCompletedTickets.reduce((sum, item) => sum + item.cycleTimeDays, 0);
-    return (totalDays / myCompletedTickets.length).toFixed(1);
-  }, [isPending, myCompletedTickets]);
-
-  // Suma total de Puntos de Historia (0 SP si está PENDING)
-  const totalPointsBurned = useMemo(() => {
-    if (isPending) return 0;
-    return myCompletedTickets.reduce((sum, item) => sum + item.points, 0);
-  }, [isPending]);
-
-  // Manejar la ejecución de consultas JQL con bloqueo si está PENDING
-  const handleExecuteJql = (e) => {
-    e.preventDefault();
-    if (isPending) {
-      setJqlError('Consola Bloqueada: Tu cuenta está en estado pendiente. Un Administrador debe asignarte proyectos primero.');
-      return;
-    }
-
-    setJqlError('');
-    setJqlSuccess('');
-    setIsExecutingJql(true);
-
-    setTimeout(() => {
-      setIsExecutingJql(false);
-      if (!jqlQuery.toLowerCase().includes('project') && !jqlQuery.toLowerCase().includes('assignee')) {
-        setJqlError('Error de sintaxis JQL: La consulta debe incluir al menos una condición por "project" o "assignee".');
-        return;
-      }
-      setJqlSuccess(`Consulta JQL ejecutada correctamente. ${MOCK_JIRA_ISSUES.length} incidencias encontradas.`);
-      setTimeout(() => setJqlSuccess(''), 4000);
-    }, 600);
-  };
-
-  // Cargar una consulta predefinida JQL
-  const handleApplyPreset = (presetKey, queryText) => {
-    if (isPending) return;
-    setActivePreset(presetKey);
-    setJqlQuery(queryText);
-    setJqlError('');
-  };
+const MetricInfoTooltip = ({ text, align = "auto" }) => {
+  const alignClass = 
+    align === "left" ? "left-0" :
+    align === "right" ? "right-0" :
+    "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
 
   return (
-    <div className="w-full space-y-8 text-left">
-      
-      {/* CUADRO DE NOTIFICACIÓN DE ESTADO PENDIENTE (SI ESTÁ EN ESPERA DE ASIGNACIÓN) */}
-      {isPending && (
-        <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 dark:border-amber-500/40 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl shrink-0 mt-0.5">
-              <Clock size={24} className="animate-pulse" />
+    <div className="group/tooltip relative inline-flex items-center cursor-help ml-2 z-50" title={text}>
+      <Info size={15} className="text-slate-400 hover:text-indigo-400 transition-colors inline shrink-0" />
+      <div className={`opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 absolute bottom-full ${alignClass} mb-2.5 w-64 sm:w-72 p-3.5 bg-slate-950 text-slate-100 text-xs rounded-xl shadow-2xl border border-indigo-500/50 pointer-events-none leading-relaxed text-left z-[99999]`}>
+        {text}
+      </div>
+    </div>
+  );
+};
+
+const SparklineMini = ({ color = "#10b981" }) => {
+  const data = [{ v: 4.2 }, { v: 3.8 }, { v: 4.5 }, { v: 3.1 }, { v: 2.8 }, { v: 3.2 }];
+  return (
+    <div className="w-20 h-7 inline-block">
+      <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+          <defs>
+            <linearGradient id={`grad_${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.5}/>
+              <stop offset="100%" stopColor={color} stopOpacity={0.0}/>
+            </linearGradient>
+          </defs>
+          <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#grad_${color.replace('#', '')})`} isAnimationActive={false} />
+        </AreaChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
+
+export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01' }) {
+  const { user, approveUserPermission } = useAuth();
+  const [scorecard, setScorecard] = useState(null);
+
+  const isPending = user?.status === 'PENDING';
+
+  useEffect(() => {
+    developerService.getMyScorecard(selectedProjectId)
+      .then(data => setScorecard(data))
+      .catch(err => console.warn("Error cargando scorecard:", err));
+  }, [selectedProjectId, user?.email]);
+
+  const sparklineCycleTime = [
+    { v: 4.5 }, { v: 4.1 }, { v: 3.8 }, { v: 4.2 }, { v: 3.5 }, { v: 3.9 }, { v: 3.2 }
+  ];
+
+  const donutWipData = [
+    { name: 'En Progreso', value: scorecard?.wip_tickets || 7, color: '#8b5cf6' },
+    { name: 'Capacidad Restante', value: Math.max(0, (scorecard?.wip_max || 10) - (scorecard?.wip_tickets || 7)), color: '#1e293b' }
+  ];
+
+  const throughputDaily = [
+    { day: 'L', v: 2 }, { day: 'M', v: 3 }, { day: 'M', v: 1 }, { day: 'J', v: 4 }, { day: 'V', v: 4 }
+  ];
+
+  const assignedIssuesList = scorecard?.assigned_issues || [];
+  const workDist = scorecard?.work_distribution || { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 };
+
+  return (
+    <div className="w-full max-w-full overflow-x-hidden space-y-10 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
+
+      {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA */}
+      <div className="relative group rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 text-white font-extrabold text-xl shadow-xl shadow-indigo-500/25">
+              {user?.nombre ? user.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'CG'}
             </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-amber-200">
-                  ⏳ Estado: Pendiente de Asignación de Rol y Proyectos
-                </h3>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-600 dark:text-amber-300 border border-amber-500/40 uppercase">
-                  En Espera
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                Developer Performance: {user?.nombre || 'Clara Gomez'}
+                <span className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3.5 py-1 text-xs font-semibold text-emerald-400 border border-emerald-500/20">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  {user?.rol || 'DEVELOPER'}
                 </span>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed max-w-2xl">
-                Hola <strong>{user?.nombre || 'Desarrollador'}</strong> ({user?.email}). Tu cuenta se ha autenticado correctamente. Un <strong>Administrador</strong> debe aprobar tu acceso desde la pestaña de Usuarios y Roles para habilitar tus datos.
+              </h1>
+              <p className="text-sm text-slate-400">
+                Consola interactiva de rendimiento individual y métricas de carga de trabajo.
               </p>
             </div>
           </div>
-
-          {/* Botón de Simulación de Aprobación por el Admin */}
-          <button
-            type="button"
-            onClick={() => approveUserPermission(user?.email || 'cgomez@mchav.com', 'DEVELOPER')}
-            className="px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all shadow-md flex items-center gap-2 shrink-0 cursor-pointer"
-            title="Simular aprobación del Administrador"
-          >
-            <UserCheck size={16} /> Simular Aprobación por Admin
-          </button>
-        </div>
-      )}
-
-      {/* NOTIFICACIÓN FLOTANTE TEMPORAL DE ROL ACTIVADO (AUTO-DESAPARECE EN 5 SEGUNDOS) */}
-      {!isPending && showActiveToast && (
-        <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-between shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-top-3">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-xl shrink-0">
-              <CheckCircle2 size={18} />
-            </div>
-            <div>
-              <span className="font-extrabold text-emerald-300">
-                ✅ Rol Activado: Desarrollador Autorizado ({user?.nombre || 'Clara Gomez'})
-              </span>
-              <p className="text-[11px] text-emerald-400/80 mt-0.5">
-                Proyectos vinculados y permisos de consulta JQL activos por el Administrador.
-              </p>
-            </div>
-          </div>
-
-          {/* Botón de cerrar manualmente el cuadrito */}
-          <button 
-            onClick={() => setShowActiveToast(false)}
-            className="p-1.5 rounded-lg hover:bg-emerald-500/20 text-emerald-400/80 hover:text-emerald-300 transition-colors cursor-pointer"
-            title="Cerrar notificación"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* SECCIÓN 1: PANEL DE MÉTRICAS PERSONALES (EN CEROS SI ESTÁ PENDING) */}
-      <div className="space-y-4">
-        <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-          <Code size={16} className="text-teal-500" /> Mi Rendimiento y Carga de Trabajo Personal
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          
-          {/* Tarjeta 1: Cycle Time Personal Promedio */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center mb-2">
-              <div className="p-2.5 bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 rounded-xl mr-3">
-                <Clock size={20} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cycle Time Personal</h3>
-                <p className="text-[11px] text-slate-400">In Progress ➔ Done</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {avgPersonalCycleTime}d
-              </p>
-              <p className="text-xs text-slate-400 font-semibold mt-1">
-                {isPending ? "⏳ Sin proyectos asignados" : "⚡ Promedio de desarrollo activo"}
-              </p>
-            </div>
-          </div>
-
-          {/* Tarjeta 2: Mis Tickets Activos en Progreso */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center mb-2">
-              <div className="p-2.5 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-xl mr-3">
-                <ClipboardList size={20} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tickets en Progreso</h3>
-                <p className="text-[11px] text-slate-400">Trabajo en curso (WIP)</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {myActiveTickets.length}
-              </p>
-              <p className="text-xs text-slate-400 font-semibold mt-1">
-                {isPending ? "⏳ 0 Tareas activas" : "📌 Tareas activas asignadas"}
-              </p>
-            </div>
-          </div>
-
-          {/* Tarjeta 3: Mi Throughput Personal */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center mb-2">
-              <div className="p-2.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-xl mr-3">
-                <CheckCircle size={20} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Mi Throughput</h3>
-                <p className="text-[11px] text-slate-400">Incidencias resueltas</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {myCompletedTickets.length}
-              </p>
-              <p className="text-xs text-slate-400 font-semibold mt-1">
-                {isPending ? "⏳ 0 Entregables" : "✅ Entregables finalizados"}
-              </p>
-            </div>
-          </div>
-
-          {/* Tarjeta 4: Puntos de Historia Quemados */}
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm flex flex-col justify-between">
-            <div className="flex items-center mb-2">
-              <div className="p-2.5 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 rounded-xl mr-3">
-                <Zap size={20} />
-              </div>
-              <div>
-                <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Puntos Quemados</h3>
-                <p className="text-[11px] text-slate-400">Esfuerzo personal SP</p>
-              </div>
-            </div>
-            <div className="mt-3">
-              <p className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {totalPointsBurned} SP
-              </p>
-              <p className="text-xs text-slate-400 font-semibold mt-1">
-                {isPending ? "⏳ 0 Puntos" : "🔥 Puntos de historia en sprint"}
-              </p>
-            </div>
-          </div>
-
         </div>
       </div>
 
-      {/* SECCIÓN 2: CONSOLA DE CONSULTAS JQL (HU-008) */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm space-y-6">
-        
-        {/* Cabecera de la Consola de Consultas JQL */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-              <Terminal size={18} className="text-indigo-500" />
-              Buscador y Ejecutor de Consultas JQL (Jira Query Language)
-            </h2>
-            <p className="text-xs text-slate-400 mt-1">
-              Filtra y consulta incidencias de los proyectos autorizados para análisis de datos (HU-008).
-            </p>
-          </div>
-
-          {/* Botones de Plantillas Predefinidas JQL */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() => handleApplyPreset('in_progress', 'project = "MCHAV" AND assignee = currentUser() AND status = "In Progress"')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                isPending ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800' :
-                activePreset === 'in_progress'
-                  ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              📌 Mis Tickets Activos
-            </button>
-            <button
-              type="button"
-              disabled={isPending}
-              onClick={() => handleApplyPreset('bugs', 'project = "MCHAV" AND issuetype = Bug AND status != Done')}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                isPending ? 'opacity-40 cursor-not-allowed bg-slate-100 dark:bg-slate-800' :
-                activePreset === 'bugs'
-                  ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30'
-                  : 'bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-              }`}
-            >
-              🐛 Bugs del Proyecto
-            </button>
-          </div>
-        </div>
-
-        {/* Formulario de Entrada JQL con Campo de Texto y Validación */}
-        <form onSubmit={handleExecuteJql} className="space-y-4">
-          <div className="relative">
-            <textarea
-              rows={2}
-              disabled={isPending}
-              value={jqlQuery}
-              onChange={(e) => setJqlQuery(e.target.value)}
-              placeholder={isPending ? "Consola bloqueada hasta que el Administrador active tu usuario..." : "Escribe tu consulta JQL aquí... ej: project = MCHAV AND assignee = currentUser()"}
-              className={`w-full border rounded-2xl p-4 font-mono text-xs outline-none transition-all resize-none ${
-                isPending 
-                  ? 'bg-slate-100 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-400 cursor-not-allowed'
-                  : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
-              }`}
-            />
-          </div>
-
-          {/* Alerta de Error o Consola Bloqueada */}
-          {jqlError && (
-            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-medium flex items-center gap-2">
-              <AlertTriangle size={16} />
-              <span>{jqlError}</span>
-            </div>
-          )}
-
-          {/* Mensaje de Confirmación de Ejecución JQL Exitosa */}
-          {jqlSuccess && (
-            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-medium flex items-center gap-2">
-              <CheckCircle2 size={16} />
-              <span>{jqlSuccess}</span>
-            </div>
-          )}
-
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              disabled={isExecutingJql || isPending}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 px-6 rounded-xl text-xs transition-colors flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isPending ? (
-                <>
-                  <Lock size={15} /> Consola Bloqueada (Pendiente)
-                </>
-              ) : isExecutingJql ? (
-                <>
-                  <Clock size={15} className="animate-spin" /> Ejecutando Query JQL...
-                </>
-              ) : (
-                <>
-                  <Play size={15} fill="currentColor" /> Ejecutar Consulta JQL
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-
-        {/* Tabla Estructurada con Resultados (Vacía en Estado Pending) */}
-        <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden">
-          <div className="p-4 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              Resultados de la Consulta ({isPending ? 0 : MOCK_JIRA_ISSUES.length} Incidencias)
-            </span>
-            <span className="text-xs font-semibold text-amber-500 dark:text-amber-400">
-              {isPending ? "⏳ Sin Proyecto Asignado" : "Proyecto Activo: MCHAV Analytics"}
-            </span>
-          </div>
-
-          <div className="overflow-x-auto">
-            {isPending ? (
-              <div className="p-12 text-center text-slate-400 space-y-2">
-                <Lock size={32} className="mx-auto text-amber-500/60 mb-2" />
-                <p className="text-sm font-semibold text-slate-300">No hay datos de incidencias cargados</p>
-                <p className="text-xs text-slate-500">Un Administrador debe autorizar la vinculación de proyectos a tu perfil.</p>
+      {/* NOTIFICACIÓN PENDIENTE ESPACIOSA */}
+      {isPending && (
+        <div className="group relative rounded-2xl bg-slate-950 p-6 shadow-2xl border border-amber-500/30">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 blur-sm opacity-40"></div>
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="flex items-start gap-4">
+              <div className="p-3.5 bg-amber-500/10 text-amber-400 rounded-xl shrink-0 border border-amber-500/20">
+                <Clock size={24} className="animate-pulse" />
               </div>
-            ) : (
-              <table className="w-full text-xs text-left">
-                <thead className="bg-slate-100/70 dark:bg-slate-900/80 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold uppercase tracking-wider">
-                  <tr>
-                    <th className="px-4 py-3">Clave Issue</th>
-                    <th className="px-4 py-3">Resumen / Título</th>
-                    <th className="px-4 py-3">Tipo</th>
-                    <th className="px-4 py-3 text-center">Estado</th>
-                    <th className="px-4 py-3 text-right">Story Points</th>
-                    <th className="px-4 py-3 text-right">Cycle Time</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">
-                  {MOCK_JIRA_ISSUES.map((issue) => (
-                    <tr key={issue.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/30 transition-colors">
-                      <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                        {issue.id}
-                      </td>
-                      <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-100 max-w-xs truncate">
-                        {issue.summary}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
-                          issue.type === 'Bug' 
-                            ? 'bg-rose-50 text-rose-600 border-rose-200 dark:bg-rose-500/10 dark:border-rose-500/20' 
-                            : issue.type === 'Story'
-                            ? 'bg-blue-50 text-blue-600 border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20'
-                            : 'bg-purple-50 text-purple-600 border-purple-200 dark:bg-purple-500/10 dark:border-purple-500/20'
-                        }`}>
-                          {issue.type}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`px-2.5 py-1 rounded-md text-[11px] font-semibold border ${
-                          issue.status === 'Done'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20'
-                            : issue.status === 'In Progress'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:border-amber-500/20'
-                            : 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:border-slate-700'
-                        }`}>
-                          {issue.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-bold">
-                        {issue.points} SP
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-purple-600 dark:text-purple-400">
-                        {issue.cycleTimeDays > 0 ? `${issue.cycleTimeDays}d` : '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+              <div className="space-y-1">
+                <h3 className="text-base font-bold text-amber-200 flex items-center gap-2">
+                  ⏳ Estado: Pendiente de Asignación de Rol
+                </h3>
+                <p className="text-xs text-slate-300">
+                  Hola <strong>{user?.nombre || 'Clara Gomez'}</strong> ({user?.email}). Tu cuenta se ha autenticado. Un Administrador debe aprobar tu rol.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={() => approveUserPermission(user?.email || 'cgomez@mchav.com', 'DEVELOPER')}
+              className="rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2.5 text-xs font-bold text-slate-950 transition-all hover:from-amber-600 hover:to-orange-600 flex items-center gap-2 cursor-pointer shadow-md"
+            >
+              <UserCheck size={16} /> Simular Aprobación Admin
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* TARJETAS KPI EN GRID CON HOVER Z-50 (FLOTADO LIMPIO DE TOOLTIPS SOBRE OTRAS CARDS) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+
+        {/* TARJETA 1: Cycle Time Personal */}
+        <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-emerald-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-400 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 shadow-md">
+                  <Clock className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Cycle Time</h3>
+              </div>
+              <MetricInfoTooltip align="left" text="Cycle Time Personal: Mide el tiempo promedio transcurrido en días desde que mueves una incidencia a 'In Progress' hasta que queda 'Done'." />
+            </div>
+
+            <div>
+              <span className="text-3xl font-extrabold text-emerald-400 tracking-tight">
+                {scorecard?.cycle_time_personal || 3.2} <span className="text-lg font-bold text-emerald-500">días</span>
+              </span>
+              <div className="w-full h-12 mt-3">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sparklineCycleTime}>
+                    <defs>
+                      <linearGradient id="ctGrad" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#10b981" stopOpacity={0.5}/>
+                        <stop offset="100%" stopColor="#10b981" stopOpacity={0.0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area type="monotone" dataKey="v" stroke="#10b981" strokeWidth={2} fill="url(#ctGrad)" isAnimationActive={false} />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+              <span className="text-slate-400">Avg Sprint Previo</span>
+              <span className="font-semibold text-emerald-400">{scorecard?.cycle_time_prev || 3.5}d</span>
+            </div>
           </div>
         </div>
 
+        {/* TARJETA 2: Tickets WIP */}
+        <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500 via-indigo-500 to-purple-400 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 shadow-md">
+                  <ClipboardList className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Tickets WIP</h3>
+              </div>
+              <MetricInfoTooltip align="left" text="Work In Progress (WIP): Número de tareas abiertas activas en 'In Progress'. Mantener el WIP ≤ 3 evita la multitarea." />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-3xl font-extrabold text-purple-400 tracking-tight">
+                  {scorecard?.wip_tickets || 7}
+                </span>
+                <p className="text-xs text-slate-400 mt-1">Tickets activos</p>
+              </div>
+              <div className="w-16 h-16 relative flex items-center justify-center">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={donutWipData} innerRadius={18} outerRadius={28} dataKey="value" stroke="none">
+                      {donutWipData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <span className="absolute text-[9px] font-bold text-purple-300">WIP</span>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+              <span className="text-slate-400">Capacidad Máx: {scorecard?.wip_max || 10}</span>
+              <span className="font-semibold text-purple-400">Avg {scorecard?.wip_avg || 5.5}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* TARJETA 3: Throughput */}
+        <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-teal-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-teal-500 via-sky-500 to-teal-400 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-teal-500 to-sky-600 shadow-md">
+                  <CheckCircle className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Throughput</h3>
+              </div>
+              <MetricInfoTooltip align="right" text="Mi Throughput: Cantidad total de incidencias y entregables completados por ti en el sprint." />
+            </div>
+
+            <div>
+              <span className="text-3xl font-extrabold text-teal-400 tracking-tight">
+                {scorecard?.throughput_tickets || 14} <span className="text-xs font-bold text-teal-500">Tickets</span>
+              </span>
+              <div className="w-full h-11 mt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={throughputDaily}>
+                    <Bar dataKey="v" fill="#14b8a6" radius={[3, 3, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+              <span className="text-slate-400">Promedio Diario</span>
+              <span className="font-semibold text-teal-400">{scorecard?.throughput_avg_daily || 2.3}/día</span>
+            </div>
+          </div>
+        </div>
+
+        {/* TARJETA 4: Story Points */}
+        <div className="group relative flex flex-col rounded-2xl bg-slate-950 p-7 shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-indigo-500/20 border border-slate-800/80 min-h-[220px] justify-between hover:z-50">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
+          <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-md">
+                  <Zap className="h-5 w-5 text-white" />
+                </div>
+                <h3 className="text-xs font-bold text-white uppercase tracking-wider">Story Points</h3>
+              </div>
+              <MetricInfoTooltip align="right" text="Puntos Quemados (Story Points): Suma del esfuerzo estimado completado en tus entregas dentro del sprint activo." />
+            </div>
+
+            <div>
+              <span className="text-3xl font-extrabold text-indigo-400 tracking-tight">
+                {scorecard?.story_points_burned || 65} <span className="text-sm font-bold text-indigo-500">SP</span>
+              </span>
+              <div className="w-full bg-slate-900 h-3 rounded-full mt-4 overflow-hidden p-0.5 border border-slate-800">
+                <div 
+                  className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${scorecard?.story_points_achieved_pct || 81}%` }}
+                ></div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+              <span className="text-slate-400">Meta: {scorecard?.story_points_target || 80} SP</span>
+              <span className="font-semibold text-indigo-400">{scorecard?.story_points_achieved_pct || 81}% Completado</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* SECCIÓN DISTRIBUCIÓN DEL TRABAJO CON HOVER Z-40 */}
+      <div className="group relative rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300 space-y-6 hover:z-40">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-sky-500/10 via-rose-500/10 to-emerald-500/10 blur-sm opacity-20 pointer-events-none"></div>
+        <div className="relative z-10 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                Distribución del Trabajo
+              </h2>
+              <MetricInfoTooltip text="Distribución del Trabajo: Proporción del esfuerzo dedicado a desarrollo de Historias, Bugs y Tareas de Deuda Técnica." />
+            </div>
+            <div className="flex items-center gap-6 text-xs font-semibold">
+              <span className="flex items-center gap-2 text-sky-400"><span className="w-3 h-3 rounded-full bg-sky-400"></span> Historias ({workDist.pct_historias}%)</span>
+              <span className="flex items-center gap-2 text-rose-400"><span className="w-3 h-3 rounded-full bg-rose-500"></span> Bugs ({workDist.pct_bugs}%)</span>
+              <span className="flex items-center gap-2 text-emerald-400"><span className="w-3 h-3 rounded-full bg-emerald-400"></span> Tareas ({workDist.pct_tareas}%)</span>
+            </div>
+          </div>
+
+          <div className="w-full bg-slate-900 h-10 rounded-xl overflow-hidden flex border border-slate-800 p-1">
+            <div 
+              style={{ width: `${workDist.pct_historias}%` }} 
+              className="bg-sky-400 text-slate-950 font-bold text-xs flex items-center justify-center rounded-l-lg transition-all"
+            >
+              {workDist.pct_historias}% Historias
+            </div>
+            <div 
+              style={{ width: `${workDist.pct_bugs}%` }} 
+              className="bg-rose-500 text-white font-bold text-xs flex items-center justify-center transition-all"
+            >
+              {workDist.pct_bugs}% Bugs
+            </div>
+            <div 
+              style={{ width: `${workDist.pct_tareas}%` }} 
+              className="bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center rounded-r-lg transition-all"
+            >
+              {workDist.pct_tareas}% Tareas
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* SECCIÓN TABLA DE INCIDENCIAS ASIGNADAS SIN DESBORDAMIENTO HORIZONTAL */}
+      <div className="group relative rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300 space-y-6 hover:z-40">
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 blur-sm opacity-20 pointer-events-none"></div>
+        <div className="relative z-10 space-y-5">
+          <div className="flex items-center justify-between pb-4 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <h2 className="text-base font-bold text-white uppercase tracking-wider">
+                Incidencias Asignadas
+              </h2>
+              <MetricInfoTooltip text="Listado de Incidencias Asignadas: Muestra las tareas asignadas directamente a ti con sus claves, resúmenes y Cycle Time." />
+            </div>
+            <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-1.5 rounded-full">
+              {assignedIssuesList.length} Tareas Asignadas
+            </span>
+          </div>
+
+          <div className="w-full max-w-full overflow-x-auto">
+            <table className="w-full text-xs text-left">
+              <thead className="bg-slate-900/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-800">
+                <tr>
+                  <th className="px-5 py-4">CLAVE</th>
+                  <th className="px-5 py-4">RESUMEN</th>
+                  <th className="px-5 py-4 text-center">ESTADO ACTUAL</th>
+                  <th className="px-5 py-4 text-right">Story Points</th>
+                  <th className="px-5 py-4 text-right">Cycle Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800/80 text-slate-300">
+                {assignedIssuesList.map((issue, idx) => (
+                  <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
+                    <td className="px-5 py-4 font-mono font-bold text-indigo-400 text-sm">
+                      {issue.key_issue}
+                    </td>
+                    <td className="px-5 py-4 font-semibold text-slate-200 hover:text-indigo-300 transition-colors cursor-pointer max-w-md truncate">
+                      {issue.summary}
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
+                        issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
+                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                          : issue.status_actual?.toUpperCase().includes('REVISI')
+                          ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      }`}>
+                        {issue.status_actual}
+                      </span>
+                    </td>
+                    <td className="px-5 py-4 text-right font-bold text-slate-200 text-sm">
+                      {issue.story_points}
+                    </td>
+                    <td className="px-5 py-4 text-right font-semibold text-teal-400 flex items-center justify-end gap-3">
+                      <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
+                      <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
     </div>

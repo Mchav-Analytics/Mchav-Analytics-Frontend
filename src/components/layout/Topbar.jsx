@@ -11,20 +11,22 @@ import ProfileSettingsModal from '../../features/auth/components/ProfileSettings
 import { Settings, Bell, CheckCircle2, UserCheck, X, Shield, Code, Briefcase, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../features/auth/context/AuthContext';
 
-function Topbar({ 
-  title = "Resumen 👋", 
+function Topbar({
+  title = "Resumen 👋",
   subtitle = "Aquí tienes un panorama general de tus proyectos.",
-  projects = [], 
-  selectedProjectId, 
-  setSelectedProjectId, 
-  syncLoading, 
+  projects = [],
+  selectedProjectId,
+  setSelectedProjectId,
+  syncLoading,
   handleSyncNow,
   userProfile: propUserProfile,
   dateFilter,
   setDateFilter,
   isDarkMode,
   setIsDarkMode,
-  setActiveTab
+  setActiveTab,
+  alerts,
+  setAlerts
 }) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -40,9 +42,25 @@ function Topbar({
   // Evaluar si el usuario está en estado pendiente de aprobación para deshabilitar selectores
   const isPendingUser = activeUser?.status === 'PENDING';
 
-  // Verificar si hay alguna solicitud de desarrollador pendiente por aprobar (ej. Clara Gómez)
-  const isClaraApproved = approvedUsers.includes('cgomez@mchav.com');
-  const pendingRequestsCount = (!isClaraApproved && activeUser?.rol !== 'DEVELOPER') ? 1 : 0;
+  // Evaluar dinámicamente cuál usuario tiene solicitud de rol pendiente (Andrés Felipe Torres para Manager o Clara Gómez para Dev)
+  const pendingUser = React.useMemo(() => {
+    if (activeUser?.rol !== 'ADMIN') return null;
+    if (!approvedUsers.includes('aftorres@mchav.com')) {
+      return { name: 'Andrés Felipe Torres', email: 'aftorres@mchav.com', initials: 'AF', defaultRole: 'MANAGER' };
+    }
+    if (!approvedUsers.includes('cgomez@mchav.com')) {
+      return { name: 'Clara Gómez', email: 'cgomez@mchav.com', initials: 'CG', defaultRole: 'DEVELOPER' };
+    }
+    return null;
+  }, [approvedUsers, activeUser?.rol]);
+
+  const pendingRequestsCount = pendingUser ? 1 : 0;
+
+  // --- NUEVO: Conteo de alertas de sistema y total acumulado ---
+  const systemAlertsCount = alerts?.length || 0;
+  const totalNotificationCount = activeUser?.rol === 'ADMIN'
+    ? pendingRequestsCount + systemAlertsCount
+    : systemAlertsCount;
 
   // Obtener iniciales del usuario para mostrar en el avatar circular
   const getUserInitials = () => {
@@ -64,7 +82,8 @@ function Topbar({
 
   // Confirmar y aplicar la aprobación del rol guardando el estado sin redirigir al Admin
   const handleConfirmRoleApproval = () => {
-    approveUserPermission('cgomez@mchav.com', selectedRoleForUser);
+    const emailToApprove = pendingUser ? pendingUser.email : 'aftorres@mchav.com';
+    approveUserPermission(emailToApprove, selectedRoleForUser);
     setIsRoleModalOpen(false);
     setIsNotificationsOpen(false);
   };
@@ -76,36 +95,17 @@ function Topbar({
         <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--text-main)', margin: '0' }}>{title}</h1>
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px', margin: '0' }}>{subtitle}</p>
       </div>
-      
-      {/* Controles de Filtros, Notificaciones y Perfil */}
+
+      {/* Controles de Notificaciones y Perfil */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
 
-        {/* Selector de Rango de Fecha (Deshabilitado con Candado en Estado PENDING) */}
-        {setDateFilter && (
-          <DatePickerDropdown 
-            dateFilter={dateFilter} 
-            setDateFilter={setDateFilter} 
-            disabled={isPendingUser}
-          />
-        )}
-
-        {/* Selector de Proyecto Activo (Deshabilitado con Candado en Estado PENDING) */}
-        {setSelectedProjectId && (
-          <ProjectPickerDropdown
-            projects={projects}
-            selectedProjectId={selectedProjectId}
-            setSelectedProjectId={setSelectedProjectId}
-            disabled={isPendingUser}
-          />
-        )}
-
         {/* Campanita de Notificaciones para el Administrador */}
-        {activeUser?.rol === 'ADMIN' && (
+        {(activeUser?.rol === 'ADMIN' || activeUser?.rol === 'MANAGER') && (
           <div className="relative">
             <button
               type="button"
               onClick={() => {
-                if (pendingRequestsCount > 0) {
+                if (activeUser?.rol === 'ADMIN' && pendingRequestsCount > 0) {
                   setIsRoleModalOpen(true); // Abrir modal centrado directamente al hacer clic en notificaciones
                 } else {
                   setIsNotificationsOpen(!isNotificationsOpen);
@@ -115,11 +115,11 @@ function Topbar({
               title="Bandeja de notificaciones y solicitudes de acceso"
             >
               <Bell size={18} />
-              
+
               {/* Globo rojo con conteo de solicitudes pendientes */}
-              {pendingRequestsCount > 0 && (
+              {totalNotificationCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white rounded-full text-[10px] font-extrabold flex items-center justify-center animate-bounce shadow-md">
-                  {pendingRequestsCount}
+                  {totalNotificationCount}
                 </span>
               )}
             </button>
@@ -131,10 +131,10 @@ function Topbar({
                   <div className="flex items-center gap-2">
                     <Bell size={16} className="text-indigo-500" />
                     <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                      Notificaciones ({pendingRequestsCount})
+                      Notificaciones ({totalNotificationCount})
                     </h3>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setIsNotificationsOpen(false)}
                     className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                   >
@@ -142,30 +142,61 @@ function Topbar({
                   </button>
                 </div>
 
-                {pendingRequestsCount > 0 ? (
-                  <div className="space-y-3">
-                    <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
-                        <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
-                          Solicitud de Acceso Pendiente
-                        </span>
+                {totalNotificationCount > 0 ? (
+                  <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                    {/* Solicitud de Rol (Exclusivo para el Administrador) */}
+                    {activeUser?.rol === 'ADMIN' && pendingRequestsCount > 0 && (
+                      <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-2xl space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                          <span className="text-xs font-bold text-amber-800 dark:text-amber-300">
+                            Solicitud de Acceso Pendiente
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
+                          <strong>{pendingUser ? pendingUser.name : 'Andrés Felipe Torres'}</strong> (<code className="text-[10px]">{pendingUser ? pendingUser.email : 'aftorres@mchav.com'}</code>) solicita asignación de rol.
+                        </p>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsNotificationsOpen(false);
+                            setIsRoleModalOpen(true); // Abrir modal centrado
+                          }}
+                          className="w-full mt-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                        >
+                          <Shield size={14} /> Seleccionar y Asignar Rol
+                        </button>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
-                        <strong>Clara Gómez</strong> (<code className="text-[10px]">cgomez@mchav.com</code>) solicita asignación de rol.
-                      </p>
-                      
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsNotificationsOpen(false);
-                          setIsRoleModalOpen(true); // Abrir modal centrado
-                        }}
-                        className="w-full mt-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2 px-3 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                    )}
+
+                    {/* Alertas del Sistema Evaluadas */}
+                    {alerts && alerts.map((alert) => (
+                      <div
+                        key={alert.id}
+                        className={`p-3 border rounded-2xl space-y-1 relative group/alert ${alert.tipo === 'danger'
+                            ? 'bg-rose-50 dark:bg-rose-500/10 border-rose-200 dark:border-rose-500/20 text-rose-900 dark:text-rose-300'
+                            : 'bg-amber-50 dark:bg-amber-500/10 border-amber-200 dark:border-amber-500/20 text-amber-900 dark:text-amber-300'
+                          }`}
                       >
-                        <Shield size={14} /> Seleccionar y Asignar Rol
-                      </button>
-                    </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold flex items-center gap-1">
+                            {alert.titulo}
+                          </span>
+                          {/* Botón para descartar/cerrar la alerta */}
+                          <button
+                            onClick={() => setAlerts(prev => prev.filter(a => a.id !== alert.id))}
+                            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer p-0.5 rounded-full hover:bg-slate-200/50 dark:hover:bg-slate-800/50"
+                            title="Descartar alerta"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                        <p className="text-[10px] leading-relaxed text-slate-600 dark:text-slate-300">
+                          {alert.descripcion}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="py-6 text-center text-slate-400 space-y-1">
@@ -196,7 +227,7 @@ function Topbar({
               </span>
             </div>
 
-            <div 
+            <div
               style={{ width: '38px', height: '38px', borderRadius: '50%', background: activeUser?.rol === 'DEVELOPER' ? 'linear-gradient(135deg, #0d9488 0%, #0284c7 100%)' : 'linear-gradient(135deg, #1e3a8a 0%, #0d9488 100%)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '600', fontSize: '0.85rem' }}
             >
               {getUserInitials()}
@@ -221,7 +252,7 @@ function Topbar({
       {isRoleModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-5 text-left animate-in zoom-in-95 duration-150">
-            
+
             {/* Cabecera del Modal Centrado */}
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3.5">
               <div className="flex items-center gap-2.5">
@@ -238,7 +269,7 @@ function Topbar({
                 </div>
               </div>
 
-              <button 
+              <button
                 onClick={() => setIsRoleModalOpen(false)}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg"
               >
@@ -249,12 +280,16 @@ function Topbar({
             {/* Tarjeta del Usuario Solicitante */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-teal-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
-                  CG
+                <div className="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center shadow-sm">
+                  {pendingUser ? pendingUser.initials : 'AF'}
                 </div>
                 <div>
-                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">Clara Gómez</h4>
-                  <p className="text-[11px] text-slate-400 font-mono">cgomez@mchav.com</p>
+                  <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                    {pendingUser ? pendingUser.name : 'Andrés Felipe Torres'}
+                  </h4>
+                  <p className="text-[11px] text-slate-400 font-mono">
+                    {pendingUser ? pendingUser.email : 'aftorres@mchav.com'}
+                  </p>
                 </div>
               </div>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-500 border border-amber-500/20 uppercase">
@@ -269,18 +304,17 @@ function Topbar({
               </label>
 
               {/* Opción 1: Desarrollador */}
-              <div 
+              <div
                 onClick={() => setSelectedRoleForUser('DEVELOPER')}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                  selectedRoleForUser === 'DEVELOPER'
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${selectedRoleForUser === 'DEVELOPER'
                     ? 'bg-indigo-50/70 dark:bg-indigo-500/10 border-indigo-500 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-500/30'
                     : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300'
-                }`}
+                  }`}
               >
-                <input 
-                  type="radio" 
-                  name="roleSelect" 
-                  checked={selectedRoleForUser === 'DEVELOPER'} 
+                <input
+                  type="radio"
+                  name="roleSelect"
+                  checked={selectedRoleForUser === 'DEVELOPER'}
                   onChange={() => setSelectedRoleForUser('DEVELOPER')}
                   className="mt-1 accent-indigo-600"
                 />
@@ -296,18 +330,17 @@ function Topbar({
               </div>
 
               {/* Opción 2: Líder Técnico / Manager */}
-              <div 
+              <div
                 onClick={() => setSelectedRoleForUser('MANAGER')}
-                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${
-                  selectedRoleForUser === 'MANAGER'
+                className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${selectedRoleForUser === 'MANAGER'
                     ? 'bg-purple-50/70 dark:bg-purple-500/10 border-purple-500 text-purple-900 dark:text-purple-200 ring-2 ring-purple-500/30'
                     : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300'
-                }`}
+                  }`}
               >
-                <input 
-                  type="radio" 
-                  name="roleSelect" 
-                  checked={selectedRoleForUser === 'MANAGER'} 
+                <input
+                  type="radio"
+                  name="roleSelect"
+                  checked={selectedRoleForUser === 'MANAGER'}
                   onChange={() => setSelectedRoleForUser('MANAGER')}
                   className="mt-1 accent-purple-600"
                 />
