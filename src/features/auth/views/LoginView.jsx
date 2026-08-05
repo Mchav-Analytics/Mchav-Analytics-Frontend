@@ -91,7 +91,7 @@ function LoginView() {
           pointer-events: none;
         }
 
-        /* MARCO PRINCIPAL ALINEADO A LA IZQUIERDA */
+        /* MARCO PRINCIPAL ALINEADO EQUILIBRADAMENTE */
         .login-main-frame {
           position: relative;
           z-index: 10;
@@ -102,7 +102,7 @@ function LoginView() {
           display: flex;
           align-items: center;
           justify-content: flex-start;
-          padding-left: 5rem;
+          padding-left: 10rem;
         }
 
         @media (max-width: 1024px) {
