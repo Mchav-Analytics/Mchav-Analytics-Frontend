@@ -122,7 +122,7 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* TARJETA CON DISEÑO UIVERSE (RADIAL GRADIENT & ANIMATED ROTATING BORDER BEAM) */
+        /* TARJETA CON DISEÑO UIVERSE (CRISTAL OSCURO TRASLÚCIDO CON HAZ CIAN OFICIAL DEL LOGO) */
         .auth-card-saas {
           position: relative;
           width: 100%;
@@ -130,16 +130,18 @@ function LoginView() {
           min-height: auto;
           padding: 75px 32px;
           border-radius: 20px;
-          background-color: hsla(240, 15%, 9%, 0.92);
+          background-color: rgba(6, 11, 23, 0.74);
+          backdrop-filter: blur(28px);
+          -webkit-backdrop-filter: blur(28px);
           background-image: 
-            radial-gradient(at 88% 40%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
-            radial-gradient(at 49% 30%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
-            radial-gradient(at 14% 26%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
-            radial-gradient(at 0% 64%, hsl(189, 99%, 26%) 0px, transparent 85%),
-            radial-gradient(at 41% 94%, hsl(189, 97%, 36%) 0px, transparent 85%),
-            radial-gradient(at 100% 99%, hsl(188, 94%, 13%) 0px, transparent 85%);
+            radial-gradient(at 88% 40%, rgba(6, 11, 23, 0.8) 0px, transparent 85%),
+            radial-gradient(at 49% 30%, rgba(6, 11, 23, 0.8) 0px, transparent 85%),
+            radial-gradient(at 14% 26%, rgba(6, 11, 23, 0.8) 0px, transparent 85%),
+            radial-gradient(at 0% 64%, rgba(6, 182, 212, 0.3) 0px, transparent 85%),
+            radial-gradient(at 41% 94%, rgba(14, 165, 233, 0.25) 0px, transparent 85%),
+            radial-gradient(at 100% 99%, rgba(2, 132, 199, 0.2) 0px, transparent 85%);
           box-shadow: 
-            0px -16px 24px 0px rgba(255, 255, 255, 0.18) inset,
+            0px -16px 24px 0px rgba(255, 255, 255, 0.12) inset,
             0 20px 60px rgba(0, 0, 0, 0.85);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.5deg)) 
@@ -159,8 +161,8 @@ function LoginView() {
           height: calc(100% + 2px);
           background-image: linear-gradient(
             0deg,
-            hsl(0, 0%, 100%) -50%,
-            hsl(0, 0%, 40%) 100%
+            rgba(6, 182, 212, 0.6) -50%,
+            rgba(255, 255, 255, 0.2) 100%
           );
           border-radius: 20px;
         }
@@ -178,11 +180,12 @@ function LoginView() {
           height: 12rem;
           background-image: linear-gradient(
             0deg,
-            hsla(0, 0%, 100%, 0) 0%,
-            hsl(189, 100%, 50%) 40%,
-            hsl(189, 100%, 50%) 60%,
-            hsla(0, 0%, 40%, 0) 100%
+            rgba(6, 182, 212, 0) 0%,
+            #06b6d4 40%,
+            #38bdf8 60%,
+            rgba(6, 182, 212, 0) 100%
           );
+          filter: drop-shadow(0 0 10px rgba(6, 182, 212, 0.85));
           animation: uiverseRotate 8s linear infinite;
         }
 
