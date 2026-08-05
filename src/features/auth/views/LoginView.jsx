@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logoOfficialImg from '../../../assets/mchav_official_logo.png';
 import loginBgImg from '../../../assets/login_bg.jpg';
-import snoopyWelcomeImg from '../../../assets/snoopy_welcome.jpg';
+import owlMascotImg from '../../../assets/owl_mascot.png';
 
 function LoginView() {
   const navigate = useNavigate();
@@ -380,18 +380,18 @@ function LoginView() {
           <div className="flip-card-inner">
 
             {/* ===============================================================
-                CARA FRONTAL (FRONT): ILUSTRACIÓN COMPLETA DE SNOOPY ATLASSIAN
+                CARA FRONTAL (FRONT): MASCOTA BÚHO MCHAV ANALYTICS
                 =============================================================== */}
-            <div className="flip-card-front !p-0 overflow-hidden relative group">
+            <div className="flip-card-front !p-4 overflow-hidden relative group flex flex-col items-center justify-between bg-slate-950/80 backdrop-blur-xl">
               
               <img 
-                src={snoopyWelcomeImg} 
-                alt="Snoopy Atlassian Welcome" 
-                className="w-full h-full object-cover rounded-2xl"
+                src={owlMascotImg} 
+                alt="Mascota Búho MCHAV Analytics" 
+                className="w-full h-[85%] object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-transform duration-300 group-hover:scale-105"
               />
 
               {/* Píldora interactiva de indicación de giro en la parte inferior */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-slate-950/85 border border-cyan-500/50 text-cyan-300 text-xs font-bold backdrop-blur-md flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.4)] animate-pulse shrink-0">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 text-xs font-bold backdrop-blur-md flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.45)] animate-pulse shrink-0">
                 <span>Girar para iniciar sesión</span>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
