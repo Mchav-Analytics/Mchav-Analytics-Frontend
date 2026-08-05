@@ -122,7 +122,7 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* TARJETA CON DISEÑO UIVERSE (CRISTAL OSCURO TRASLÚCIDO CON HAZ CIAN OFICIAL DEL LOGO) */
+        /* TARJETA CON MISMO TONO DEL FONDO Y EFECTO TRASLÚCIDO GLASSMORPHIC */
         .auth-card-saas {
           position: relative;
           width: 100%;
@@ -130,19 +130,19 @@ function LoginView() {
           min-height: auto;
           padding: 75px 32px;
           border-radius: 20px;
-          background-color: rgba(6, 11, 23, 0.74);
-          backdrop-filter: blur(28px);
-          -webkit-backdrop-filter: blur(28px);
+          background-color: rgba(3, 7, 18, 0.42);
+          backdrop-filter: blur(24px) saturate(140%);
+          -webkit-backdrop-filter: blur(24px) saturate(140%);
           background-image: 
-            radial-gradient(at 88% 40%, rgba(6, 11, 23, 0.8) 0px, transparent 85%),
-            radial-gradient(at 49% 30%, rgba(6, 11, 23, 0.8) 0px, transparent 85%),
-            radial-gradient(at 14% 26%, rgba(6, 11, 23, 0.8) 0px, transparent 85%),
-            radial-gradient(at 0% 64%, rgba(6, 182, 212, 0.3) 0px, transparent 85%),
-            radial-gradient(at 41% 94%, rgba(14, 165, 233, 0.25) 0px, transparent 85%),
-            radial-gradient(at 100% 99%, rgba(2, 132, 199, 0.2) 0px, transparent 85%);
+            radial-gradient(at 88% 40%, rgba(3, 7, 18, 0.4) 0px, transparent 85%),
+            radial-gradient(at 49% 30%, rgba(3, 7, 18, 0.4) 0px, transparent 85%),
+            radial-gradient(at 14% 26%, rgba(3, 7, 18, 0.4) 0px, transparent 85%),
+            radial-gradient(at 0% 64%, rgba(6, 182, 212, 0.2) 0px, transparent 85%),
+            radial-gradient(at 41% 94%, rgba(14, 165, 233, 0.16) 0px, transparent 85%),
+            radial-gradient(at 100% 99%, rgba(2, 132, 199, 0.12) 0px, transparent 85%);
           box-shadow: 
             0px -16px 24px 0px rgba(255, 255, 255, 0.12) inset,
-            0 20px 60px rgba(0, 0, 0, 0.85);
+            0 20px 60px rgba(0, 0, 0, 0.65);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.5deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 1.5deg));
