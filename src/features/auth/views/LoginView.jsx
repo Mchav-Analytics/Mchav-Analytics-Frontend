@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import logoOfficialImg from '../../../assets/mchav_official_logo.png';
 import loginBgImg from '../../../assets/login_bg.jpg';
-import snoopyWelcomeImg from '../../../assets/snoopy_welcome.png';
+import snoopyWelcomeImg from '../../../assets/snoopy_welcome.jpg';
 
 function LoginView() {
   const navigate = useNavigate();
