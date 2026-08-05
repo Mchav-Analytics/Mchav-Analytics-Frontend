@@ -91,34 +91,33 @@ function LoginView() {
           pointer-events: none;
         }
 
-        /* MARCO PRINCIPAL ALINEADO EQUILIBRADAMENTE */
+        /* MARCO PRINCIPAL ADAPTATIVO UNIVERSAL (RESPONSIVE PARA TODAS LAS PANTALLAS) */
         .login-main-frame {
           position: relative;
           z-index: 10;
           width: 100%;
           max-width: 1280px;
-          height: calc(100vh - 4rem);
-          max-height: 750px;
+          min-height: 100vh;
           display: flex;
           align-items: center;
-          justify-content: flex-start;
-          padding-left: 10rem;
+          justify-content: center;
+          padding: 1.5rem 1rem;
         }
 
-        @media (max-width: 1024px) {
+        @media (min-width: 1280px) {
           .login-main-frame {
-            justify-content: center;
-            padding-left: 1rem;
-            padding-right: 1rem;
+            justify-content: flex-start;
+            padding-left: 8rem;
           }
         }
 
         /* ===================================================================
-           ESTRUCTURA TARJETA 3D FLIP (UIVERSE)
+           ESTRUCTURA TARJETA 3D FLIP ADAPTATIVA (UIVERSE)
            =================================================================== */
         .flip-card-container {
-          width: 380px;
-          height: 520px;
+          width: 100%;
+          max-width: 380px;
+          height: clamp(480px, 82vh, 530px);
           perspective: 1000px;
           cursor: pointer;
         }
@@ -133,6 +132,7 @@ function LoginView() {
           border-radius: 20px;
         }
 
+        /* Giro por clic y hover */
         .flip-card-container:hover .flip-card-inner,
         .flip-card-container.is-flipped .flip-card-inner {
           transform: rotateY(180deg);
@@ -147,24 +147,21 @@ function LoginView() {
           -webkit-backface-visibility: hidden;
           border-radius: 20px;
           overflow: hidden;
-          padding: 45px 32px;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
           text-align: center;
         }
 
-        /* CARA FRONTAL (FRONT): LOGO 3D MCHAV Y ESLOGAN */
+        /* CARA FRONTAL (FRONT): ILUSTRACIÓN COMPLETA DE SNOOPY ATLASSIAN */
         .flip-card-front {
-          background-color: rgba(3, 7, 18, 0.58);
-          backdrop-filter: blur(28px) saturate(140%);
-          -webkit-backdrop-filter: blur(28px) saturate(140%);
+          background-color: #060b17;
           border: 1.5px solid rgba(6, 182, 212, 0.4);
           box-shadow: inset 0 0 25px rgba(6, 182, 212, 0.15);
           transform: rotateY(0deg);
         }
 
-        /* CARA REVERSO (BACK): LOGIN CONTROLS */
+        /* CARA REVERSO (BACK): ACCESO DE INICIO DE SESIÓN CON LOGO 3D */
         .flip-card-back {
           background-color: rgba(3, 7, 18, 0.76);
           backdrop-filter: blur(28px);
@@ -198,11 +195,12 @@ function LoginView() {
           inset: 2px;
           background-color: rgba(6, 11, 23, 0.94);
           border-radius: 18px;
-          padding: 40px 28px;
+          padding: clamp(24px, 4vh, 36px) clamp(18px, 4vw, 28px);
           z-index: 1;
           display: flex;
           flex-direction: column;
           justify-content: space-between;
+          overflow-y: auto;
         }
 
         /* Moneda 3D Rotatoria Grande para la Cara Frontal */
