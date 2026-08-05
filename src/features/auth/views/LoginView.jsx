@@ -434,80 +434,52 @@ function LoginView() {
                     </div>
                   )}
 
-                  {/* LOS 3 BOTONES DE ROL */}
-                  <div className="space-y-2.5 my-2">
-
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleRoleLogin('dev@mchav.com', 'DEVELOPER'); }}
-                      disabled={isSubmitting || authLoading}
-                      className="btn-dev-teal w-full h-11 px-4 rounded-xl text-white font-extrabold text-xs flex items-center justify-center gap-3 cursor-pointer group"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="group-hover:scale-110 transition-transform">
-                        <polyline points="16 18 22 12 16 6" />
-                        <polyline points="8 6 2 12 8 18" />
-                      </svg>
-                      <span>Ingresar como Desarrollador</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleRoleLogin('aftorres@mchav.com', 'MANAGER'); }}
-                      disabled={isSubmitting || authLoading}
-                      className="btn-manager-purple w-full h-11 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="group-hover:scale-110 transition-transform">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                      </svg>
-                      <span>Ingresar como Líder Técnico</span>
-                    </button>
-
-                    <button
+                  {/* BOTÓN PRINCIPAL DE ACCESO Y BOTÓN ATLASSIAN */}
+                  <div className="space-y-3 my-3">
+                    <button 
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleRoleLogin('vhoyos@mchav.com', 'ADMIN'); }}
                       disabled={isSubmitting || authLoading}
-                      className="btn-admin-blue w-full h-11 px-4 rounded-xl text-white font-bold text-xs flex items-center justify-center gap-3 cursor-pointer group"
+                      className="w-full h-12 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-lg shadow-cyan-500/25 transition-all cursor-pointer"
                     >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400 group-hover:scale-110 transition-transform">
-                        <polygon points="12 2 2 12 12 22 22 12" />
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
                       </svg>
-                      <span>Ingresar como Administrador</span>
+                      <span>Ingresar a MCHAV Analytics</span>
                     </button>
 
-                  </div>
-
-                  {/* SEPARADOR "O CONTINÚA CON" */}
-                  <div className="relative flex items-center justify-center my-2.5">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-slate-800" />
+                    <div className="relative flex items-center justify-center my-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <div className="w-full border-t border-slate-800" />
+                      </div>
+                      <span className="relative px-3 bg-[#060b17] text-[10px] font-medium text-slate-400 uppercase tracking-wider">
+                        o autentícate con
+                      </span>
                     </div>
-                    <span className="relative px-3 bg-[#060b17] text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                      o continúa con
-                    </span>
+
+                    <button 
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleRoleLogin('vhoyos@mchav.com', 'ADMIN'); }}
+                      disabled={isSubmitting || authLoading}
+                      className="w-full h-11 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer"
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
+                        <polygon points="12 2 2 12 12 22 22 12"/>
+                      </svg>
+                      <span>Continuar con Atlassian (Jira)</span>
+                    </button>
                   </div>
 
-                  {/* BOTÓN CONTINUAR CON ATLASSIAN */}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleRoleLogin('aftorres@mchav.com', 'MANAGER'); }}
-                    disabled={isSubmitting || authLoading}
-                    className="w-full h-10 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
-                      <polygon points="12 2 2 12 12 22 22 12" />
-                    </svg>
-                    <span>Continuar con Atlassian</span>
-                  </button>
-                </div>
+                  <div className="text-[11px] text-slate-400 hover:text-cyan-300 transition-colors pt-2">
+                    <span>Volver a la vista principal ↩</span>
+                  </div>
 
-                <div className="text-[11px] text-slate-400 hover:text-cyan-300 transition-colors pt-2">
-                  <span>Volver a la vista principal ↩</span>
                 </div>
-
               </div>
-            </div>
 
+            </div>
           </div>
+
         </div>
 
       </div>
