@@ -122,41 +122,79 @@ function LoginView() {
           padding: 1rem;
         }
 
-        /* TARJETA COMPACTA SAAS EMPRESARIAL CON BORDE DINÁMICO E INTUITIVO */
+        /* TARJETA CON DISEÑO UIVERSE (RADIAL GRADIENT & ANIMATED ROTATING BORDER BEAM) */
         .auth-card-saas {
+          position: relative;
           width: 100%;
           max-width: 380px;
           min-height: auto;
-          background: rgba(11, 18, 32, 0.88);
-          backdrop-filter: blur(24px);
-          -webkit-backdrop-filter: blur(24px);
-          border: 1.5px solid rgba(6, 182, 212, 0.35);
-          border-radius: 20px;
           padding: 75px 32px;
-          box-shadow:
-            0 20px 50px rgba(0, 0, 0, 0.65),
-            inset 0 1px 1px rgba(255, 255, 255, 0.15),
-            0 0 25px rgba(6, 182, 212, 0.12);
+          border-radius: 20px;
+          background-color: hsla(240, 15%, 9%, 0.92);
+          background-image: 
+            radial-gradient(at 88% 40%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 49% 30%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 14% 26%, hsla(240, 15%, 9%, 1) 0px, transparent 85%),
+            radial-gradient(at 0% 64%, hsl(189, 99%, 26%) 0px, transparent 85%),
+            radial-gradient(at 41% 94%, hsl(189, 97%, 36%) 0px, transparent 85%),
+            radial-gradient(at 100% 99%, hsl(188, 94%, 13%) 0px, transparent 85%);
+          box-shadow: 
+            0px -16px 24px 0px rgba(255, 255, 255, 0.18) inset,
+            0 20px 60px rgba(0, 0, 0, 0.85);
           transform: perspective(1000px) 
                      rotateX(calc(var(--mouse-norm-y, 0) * -1.5deg)) 
                      rotateY(calc(var(--mouse-norm-x, 0) * 1.5deg));
-          transition: transform 0.2s ease-out, border-color 0.4s ease, box-shadow 0.4s ease;
-          animation: cardBorderGlow 4s ease-in-out infinite alternate;
+          transition: transform 0.2s ease-out;
         }
 
-        @keyframes cardBorderGlow {
-          0% {
-            border-color: rgba(6, 182, 212, 0.3);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 0 20px rgba(6, 182, 212, 0.15);
+        .auth-card-saas .card__border {
+          overflow: hidden;
+          pointer-events: none;
+          position: absolute;
+          z-index: 0;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          width: calc(100% + 2px);
+          height: calc(100% + 2px);
+          background-image: linear-gradient(
+            0deg,
+            hsl(0, 0%, 100%) -50%,
+            hsl(0, 0%, 40%) 100%
+          );
+          border-radius: 20px;
+        }
+
+        .auth-card-saas .card__border::before {
+          content: "";
+          pointer-events: none;
+          position: absolute;
+          z-index: 1;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(0deg);
+          transform-origin: left;
+          width: 200%;
+          height: 12rem;
+          background-image: linear-gradient(
+            0deg,
+            hsla(0, 0%, 100%, 0) 0%,
+            hsl(189, 100%, 50%) 40%,
+            hsl(189, 100%, 50%) 60%,
+            hsla(0, 0%, 40%, 0) 100%
+          );
+          animation: uiverseRotate 8s linear infinite;
+        }
+
+        @keyframes uiverseRotate {
+          to {
+            transform: translate(-50%, -50%) rotate(360deg);
           }
-          50% {
-            border-color: rgba(168, 85, 247, 0.45);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.2), 0 0 32px rgba(168, 85, 247, 0.25);
-          }
-          100% {
-            border-color: rgba(56, 189, 248, 0.38);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 0 25px rgba(56, 189, 248, 0.2);
-          }
+        }
+
+        .auth-card-content {
+          position: relative;
+          z-index: 10;
         }
 
         /* Botón 1: Desarrollador (Cian Sobrio / Degradé Elegante) */
@@ -423,11 +461,14 @@ function LoginView() {
         </div>
 
         {/* ===================================================================
-            ZONA DERECHA: TARJETA DE LOGIN COMPACTA SAAS (380PX)
+            ZONA DERECHA: TARJETA DE LOGIN COMPACTA SAAS CON BORDE UIVERSE (380PX)
             =================================================================== */}
         <div ref={cardRef} className="auth-card-saas shrink-0 my-auto text-center z-10 flex flex-col justify-between">
           
-          <div>
+          {/* Borde Animado Giratorio Uiverse.io */}
+          <div className="card__border"></div>
+
+          <div className="auth-card-content">
             {/* 1. LOGO ARRIBA (Insignia Circular con Moneda 3D) */}
             <div className="w-15 h-15 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center mx-auto mb-2.5">
               <div className="mchav-coin-small">
