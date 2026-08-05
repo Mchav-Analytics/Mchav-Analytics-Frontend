@@ -106,9 +106,9 @@ function LoginView() {
           inset: 0;
           background: radial-gradient(circle at 75% 50%, rgba(3, 7, 18, 0.45) 0%, rgba(3, 7, 18, 0.8) 100%);
           pointer-events: none;
-          z-index: 1;
         }
 
+        /* MARCO PRINCIPAL CENTRADO */
         .login-main-frame {
           position: relative;
           z-index: 10;
@@ -118,7 +118,7 @@ function LoginView() {
           max-height: 750px;
           display: flex;
           align-items: center;
-          justify-content: space-between;
+          justify-content: center;
           padding: 1rem;
         }
 
@@ -402,70 +402,10 @@ function LoginView() {
       {/* Capa de Sombra sobre la Imagen de Fondo */}
       <div className="bg-overlay-tint" />
 
-      {/* MARCO PRINCIPAL EN 2 ZONAS */}
+      {/* MARCO PRINCIPAL CENTRADO */}
       <div className="login-main-frame">
 
-        {/* ===================================================================
-            ZONA IZQUIERDA: LOGO 3D Y ESLOGAN
-            =================================================================== */}
-        <div className="hidden lg:flex flex-1 flex-col justify-between h-full pl-12 lg:pl-28 pr-12 text-left py-2">
-
-          {/* Logo Moneda 3D Rotatoria */}
-          <div className="mchav-coin-loader z-10 mt-10 lg:mt-14">
-            <div className="mchav-coin-wrapper">
-              <div className="coin-face coin-front">
-                <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
-              </div>
-              <div className="coin-face coin-back">
-                <img src={logoOfficialImg} alt="MCHAV Logo 3D" />
-              </div>
-            </div>
-            <span className="coin-shadow"></span>
-          </div>
-
-          {/* Eslogan Principal e Íconos Circulares */}
-          <div className="space-y-6 my-auto pt-2 z-10">
-            <div>
-              <h1 className="text-4xl lg:text-5xl font-extrabold text-white leading-tight tracking-tight drop-shadow-lg">
-                Datos que <br />
-                impulsan <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-purple-400 bg-clip-text text-transparent">decisiones.</span>
-              </h1>
-
-              {/* Línea decorativa fina cyan -> violeta debajo de impulsan */}
-              <div className="w-24 h-1.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mt-2 shadow-sm" />
-            </div>
-
-            {/* Los 3 Íconos Circulares: Visualiza, Analiza, Decide */}
-            <div className="flex items-center gap-9 pt-2">
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-13 h-13 rounded-full border border-cyan-500/50 bg-slate-950/80 backdrop-blur-md text-cyan-400 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.3)] p-3">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M12 2a10 10 0 0 1 10 10" /></svg>
-                </div>
-                <span className="text-xs font-bold text-slate-200 drop-shadow">Visualiza</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-13 h-13 rounded-full border border-purple-500/50 bg-slate-950/80 backdrop-blur-md text-purple-400 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)] p-3">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
-                </div>
-                <span className="text-xs font-bold text-slate-200 drop-shadow">Analiza</span>
-              </div>
-
-              <div className="flex flex-col items-center gap-2">
-                <div className="w-13 h-13 rounded-full border border-indigo-500/50 bg-slate-950/80 backdrop-blur-md text-indigo-400 flex items-center justify-center shadow-[0_0_20px_rgba(99,102,241,0.3)] p-3">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="m10 15 5-3-5-3v6z" /></svg>
-                </div>
-                <span className="text-xs font-bold text-slate-200 drop-shadow">Decide</span>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* ===================================================================
-            ZONA DERECHA: TARJETA DE LOGIN COMPACTA SAAS CON BORDE UIVERSE (380PX)
-            =================================================================== */}
+        {/* TARJETA DE LOGIN COMPACTA SAAS CON BORDE UIVERSE (380PX) */}
         <div ref={cardRef} className="auth-card-saas shrink-0 my-auto text-center z-10 flex flex-col justify-between">
           
           {/* Borde Animado Giratorio Uiverse.io */}
