@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockAuthService, mockJiraService, mockProjectService } from './mockData';
+import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData';
 
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;
@@ -195,6 +195,46 @@ export const reportService = {
         console.warn("Abriendo reporte PDF directamente en pestaña...", err);
         window.open(backendUrl, '_blank');
       });
+  },
+
+  downloadCsvReport(projectId, data) {
+    const targetProject = projectId || 'PROJ-01';
+    const csvContent = [];
+    csvContent.push(["Clave Ticket", "Título", "Tipo", "Estado", "Puntos (SP)", "Tiempo Ciclo (días)", "Lead Time (días)", "Asignado", "Fecha"]);
+    
+    const items = data && data.length > 0 ? data : [
+      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, cycleTime: 3.5, leadTime: 5.2, assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-102', title: 'Integración API v3 de Jira Cloud', type: 'Historia', status: 'Done', sp: 5, cycleTime: 4.1, leadTime: 6.0, assignee: 'Andrés Alcalá', date: '2026-08-02' },
+      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, cycleTime: 4.8, leadTime: 7.1, assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, cycleTime: 5.2, leadTime: 8.0, assignee: 'Valentina Hoyos', date: '2026-08-04' },
+      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, cycleTime: 3.5, leadTime: 4.9, assignee: 'Michael Salamanca', date: '2026-08-04' },
+      { key: 'MCHAV-112', title: 'Error de desbordamiento en tooltip de Recharts', type: 'Bug', status: 'In Progress', sp: 3, cycleTime: 2.1, leadTime: 3.0, assignee: 'Heidy Lozano', date: '2026-08-03' }
+    ];
+
+    items.forEach(item => {
+      csvContent.push([
+        `"${item.key || item.key_issue || ''}"`,
+        `"${(item.title || item.summary || '').replace(/"/g, '""')}"`,
+        `"${item.type || 'Historia'}"`,
+        `"${item.status || item.status_actual || ''}"`,
+        item.sp || item.story_points || 0,
+        item.cycleTime || item.cycle_time_days || 0,
+        item.leadTime || 0,
+        `"${item.assignee || 'Sin Asignar'}"`,
+        `"${item.date || ''}"`
+      ]);
+    });
+
+    const csvString = csvContent.map(e => e.join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csvString], { type: 'text/csv;charset=utf-8;' });
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `reporte_metricas_${targetProject}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
   }
 };
 
@@ -363,6 +403,25 @@ export const alertService = {
     } catch (err) {
       return { id_solicitud: requestId, estado: status, atendido_por_name: respondedBy };
     }
+  }
+};
+
+export const automationService = {
+  getSchedulerJobs() {
+    if (USE_MOCK_DATA) return mockAutomationService.getSchedulerJobs();
+    return api.get('/api/v1/automation/schedulers').then(res => res.data);
+  },
+  toggleJobState(jobId) {
+    if (USE_MOCK_DATA) return mockAutomationService.toggleJobState(jobId);
+    return api.put(`/api/v1/automation/schedulers/${jobId}/toggle`).then(res => res.data);
+  },
+  triggerJobManual(jobId) {
+    if (USE_MOCK_DATA) return mockAutomationService.triggerJobManual(jobId);
+    return api.post(`/api/v1/automation/schedulers/${jobId}/trigger`).then(res => res.data);
+  },
+  getHealthMetrics() {
+    if (USE_MOCK_DATA) return mockAutomationService.getHealthMetrics();
+    return api.get('/api/v1/system/health').then(res => res.data);
   }
 };
 
