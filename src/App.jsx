@@ -15,6 +15,7 @@ import DevAlertsView from './features/dashboard/views/DevAlertsView';
 import ActivityHistoryView from './features/dashboard/views/ActivityHistoryView';
 import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
+import SystemHealthView from './features/sync/views/SystemHealthView';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import LoginView from './features/auth/views/LoginView';
@@ -226,8 +227,13 @@ function MainAppContent() {
         };
       case 'sincronizacion':
         return {
-          title: "Auditoría de ETL ",
-          subtitle: "Historial de sincronización y estado de los datos."
+          title: "Auditoría de ETL y Schedulers ",
+          subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
+        };
+      case 'health':
+        return {
+          title: "Monitoreo & Salud del Sistema ",
+          subtitle: "Telemetría en tiempo real, rendimiento de API y pruebas de carga."
         };
       case 'dashboard':
       default:
@@ -304,6 +310,10 @@ function MainAppContent() {
 
       {activeTab === 'sincronizacion' && (
         <SystemSyncTab />
+      )}
+
+      {activeTab === 'health' && (
+        <SystemHealthView />
       )}
 
       {activeTab === 'proyectos' && (

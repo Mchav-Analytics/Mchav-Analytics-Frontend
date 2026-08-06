@@ -134,6 +134,7 @@ function Sidebar({
       { id: 'team_devs', label: 'Rendimiento Devs', icon: icons.users },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.tasks },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+      { id: 'health', label: 'Monitoreo & Salud', icon: icons.target },
     ];
   }, [userRole]);
 
