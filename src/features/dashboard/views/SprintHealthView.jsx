@@ -46,7 +46,7 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
   const [loading, setLoading] = useState(true);
   const [healthData, setHealthData] = useState(null);
   const [sprints, setSprints] = useState([]);
-  const [selectedSprintId, setSelectedSprintId] = useState('SPRINT-24');
+  const [selectedSprintId, setSelectedSprintId] = useState(null);
 
   // 1. Cargar lista de sprints del proyecto activo
   useEffect(() => {
@@ -54,23 +54,16 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
       .then(res => {
         if (res && res.length > 0) {
           setSprints(res);
-          setSelectedSprintId(res[0].id_sprint || 'SPRINT-24');
+          setSelectedSprintId(res[0].id_sprint);
         } else {
-          setSprints([
-            { id_sprint: 'SPRINT-24', nombre_sprint: 'Sprint 24 (Actual)' },
-            { id_sprint: 'SPRINT-23', nombre_sprint: 'Sprint 23' },
-            { id_sprint: 'SPRINT-22', nombre_sprint: 'Sprint 22' },
-            { id_sprint: 'SPRINT-21', nombre_sprint: 'Sprint 21' }
-          ]);
+          setSprints([]);
+          setSelectedSprintId(null);
         }
       })
       .catch(err => {
-        setSprints([
-          { id_sprint: 'SPRINT-24', nombre_sprint: 'Sprint 24 (Actual)' },
-          { id_sprint: 'SPRINT-23', nombre_sprint: 'Sprint 23' },
-          { id_sprint: 'SPRINT-22', nombre_sprint: 'Sprint 22' },
-          { id_sprint: 'SPRINT-21', nombre_sprint: 'Sprint 21' }
-        ]);
+        console.warn("Aviso: Error cargando sprints del proyecto:", err);
+        setSprints([]);
+        setSelectedSprintId(null);
       });
   }, [selectedProjectId]);
 
@@ -143,17 +136,21 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
           {/* SELECTOR DE SPRINT */}
           <div className="flex items-center gap-1.5 bg-slate-800/90 px-3 py-1 rounded-lg border border-indigo-500/30">
             <Layers size={14} className="text-indigo-400" />
-            <select
-              value={selectedSprintId}
-              onChange={(e) => setSelectedSprintId(e.target.value)}
-              className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer pr-1"
-            >
-              {sprints.map((s) => (
-                <option key={s.id_sprint} value={s.id_sprint} className="bg-slate-900 text-white">
-                  {s.nombre_sprint || s.id_sprint}
-                </option>
-              ))}
-            </select>
+            {sprints.length > 0 ? (
+              <select
+                value={selectedSprintId || ''}
+                onChange={(e) => setSelectedSprintId(e.target.value)}
+                className="bg-transparent text-xs font-bold text-white outline-none cursor-pointer pr-1"
+              >
+                {sprints.map((s) => (
+                  <option key={s.id_sprint} value={s.id_sprint} className="bg-slate-900 text-white">
+                    {s.nombre || s.nombre_sprint || s.id_sprint}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="text-xs font-bold text-slate-300">Kanban / Sin Sprints Scrum</span>
+            )}
           </div>
 
           <span className="flex items-center gap-1.5 bg-emerald-950/40 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-800/40 font-medium">
