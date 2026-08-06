@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 // INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
 // true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
 // false = Modo Real (Conectado a FastAPI en http://localhost:8000)
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 export const BACKEND_URL = 'http://localhost:8000';
 
@@ -18,38 +18,38 @@ const api = axios.create({
 export const authService = {
   getLoginUrl() {
     if (USE_MOCK_DATA) return mockAuthService.getLoginUrl();
-    return `${BACKEND_URL}/api/auth/login`;
+    return `${BACKEND_URL}/api/v1/auth/login`;
   },
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
-    return api.get('/api/auth/me').then(res => res.data);
+    return api.get('/api/v1/auth/me').then(res => res.data);
   },
   loginMock(credentials) {
     if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
-    return api.post('/api/auth/login', credentials).then(res => res.data);
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
   },
   logoutMock() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/auth/logout').then(res => res.data);
+    return api.post('/api/v1/auth/logout').then(res => res.data);
   },
   getJiraCredentials() {
     if (USE_MOCK_DATA) return mockAuthService.getJiraCredentials();
-    return api.get('/api/auth/jira-credentials').then(res => res.data);
+    return api.get('/api/v1/auth/jira-credentials').then(res => res.data);
   },
   saveJiraCredentials(payload) {
     if (USE_MOCK_DATA) return mockAuthService.saveJiraCredentials(payload);
-    return api.post('/api/auth/jira-credentials', payload).then(res => res.data);
+    return api.post('/api/v1/auth/jira-credentials', payload).then(res => res.data);
   }
 };
 
 export const jiraService = {
   getMetrics() {
     if (USE_MOCK_DATA) return mockJiraService.getMetrics();
-    return api.get('/api/jira/metrics').then(res => res.data);
+    return api.get('/api/v1/jira/metrics').then(res => res.data);
   },
   triggerSync() {
     if (USE_MOCK_DATA) return mockJiraService.triggerSync();
-    return api.post('/api/jira/sync').then(res => res.data);
+    return api.post('/api/v1/jira/sync').then(res => res.data);
   },
   getSyncLogs(params = {}) {
     if (USE_MOCK_DATA) return mockJiraService.getSyncLogs();
@@ -84,15 +84,15 @@ export const jqlService = {
 export const projectService = {
   getProjects() {
     if (USE_MOCK_DATA) return mockProjectService.getProjects();
-    return api.get('/api/projects').then(res => res.data);
+    return api.get('/api/v1/projects').then(res => res.data);
   },
   getSprints(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getSprints(projectId);
-    return api.get(`/api/projects/${projectId}/sprints`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/sprints`).then(res => res.data);
   },
   getKpis(projectId, sprintId = null) {
     if (USE_MOCK_DATA) return mockProjectService.getKpis(projectId, sprintId);
-    let url = `/api/projects/${projectId}/kpis`;
+    let url = `/api/v1/projects/${projectId}/kpis`;
     if (sprintId) {
       url += `?sprint_id=${sprintId}`;
     }
@@ -100,19 +100,51 @@ export const projectService = {
   },
   getStatuses(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getStatuses(projectId);
-    return api.get(`/api/projects/${projectId}/statuses`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/statuses`).then(res => res.data);
   },
   getMappings(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getMappings(projectId);
-    return api.get(`/api/projects/${projectId}/mappings`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/mappings`).then(res => res.data);
   },
   saveMappings(projectId, mappingsData) {
     if (USE_MOCK_DATA) return mockProjectService.saveMappings(projectId, mappingsData);
-    return api.post(`/api/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
+    return api.post(`/api/v1/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
   },
   getKpiIssuesDetail(projectId, params = {}) {
     if (USE_MOCK_DATA) return mockProjectService.getKpiIssuesDetail ? mockProjectService.getKpiIssuesDetail(projectId, params) : Promise.resolve({ total_issues: 0, issues: [] });
     return api.get(`/api/v1/projects/${projectId}/kpis/issues-detail`, { params }).then(res => res.data);
+  },
+  async getSprintHealth(projectId = 'PROJ-01', sprintId = null) {
+    try {
+      let url = `/api/v1/projects/${projectId}/health`;
+      if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/health`;
+      const response = await api.get(url);
+      return response.data;
+    } catch (err) {
+      console.warn("Error obteniendo salud del sprint...", err);
+      return {
+        proyecto_id: projectId,
+        health_score: 0,
+        diagnostico: "SIN_DATOS",
+        diagnostico_label: "Sin datos suficientes — Sincronice un proyecto desde Jira",
+        color: "slate",
+        metrics: {
+          commitment_reliability_pct: 0,
+          scope_creep_pct: 0,
+          carryover_pct: 0,
+          flow_efficiency_pct: 0,
+          sp_planned: 0,
+          sp_completed: 0,
+          sp_added_mid_sprint: 0,
+          sp_carryover: 0,
+          active_dev_days: 0,
+          waiting_queue_days: 0
+        },
+        bottleneck_stages: [],
+        bottleneck_insight: null,
+        scope_creep_warning: null
+      };
+    }
   }
 };
 
@@ -172,28 +204,22 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Fallback scorecard desarrollador...", err);
+      console.warn("Error cargando scorecard desarrollador...", err);
       return {
         proyecto_id: projectId,
-        cycle_time_personal: 3.2,
-        cycle_time_prev: 3.5,
-        wip_tickets: 7,
-        wip_max: 10,
-        wip_avg: 5.5,
-        throughput_tickets: 14,
-        throughput_avg_daily: 2.3,
-        throughput_last_sprint: 12,
-        story_points_burned: 65.0,
-        story_points_target: 80.0,
-        story_points_achieved_pct: 81,
-        work_distribution: { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 },
-        assigned_issues: [
-          { id_jira: "101", key_issue: "MCHAV-101", summary: "Implementar autenticación SSO y OAuth 2.0", status_actual: "EN PROGRESO", status_base: "IN_PROGRESS", story_points: 8.0, cycle_time_days: 4.1 },
-          { id_jira: "105", key_issue: "MCHAV-105", summary: "Corregir bug en la API de pagos y transacciones", status_actual: "LISTO", status_base: "DONE", story_points: 5.0, cycle_time_days: 2.5 },
-          { id_jira: "112", key_issue: "MCHAV-112", summary: "Rediseñar vista de desarrollador con Recharts", status_actual: "EN REVISIÓN", status_base: "IN_PROGRESS", story_points: 13.0, cycle_time_days: 3.2 },
-          { id_jira: "118", key_issue: "MCHAV-118", summary: "Optimizar rendimiento de consultas SQL en reportes", status_actual: "LISTO", status_base: "DONE", story_points: 7.0, cycle_time_days: 2.9 },
-          { id_jira: "120", key_issue: "MCHAV-120", summary: "Pruebas de integración para Service Gateway X", status_actual: "LISTO", status_base: "DONE", story_points: 8.0, cycle_time_days: 2.9 }
-        ]
+        cycle_time_personal: 0,
+        cycle_time_prev: 0,
+        wip_tickets: 0,
+        wip_max: 0,
+        wip_avg: 0,
+        throughput_tickets: 0,
+        throughput_avg_daily: 0,
+        throughput_last_sprint: 0,
+        story_points_burned: 0,
+        story_points_target: 0,
+        story_points_achieved_pct: 0,
+        work_distribution: { pct_historias: 0, pct_bugs: 0, pct_tareas: 0 },
+        assigned_issues: []
       };
     }
   },
@@ -202,11 +228,8 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      return [
-        { assignee_id: "DEV-101", nombre: "Andrés Felipe Torres", email: "aftorres@mchav.com" },
-        { assignee_id: "DEV-102", nombre: "Clara Gomez", email: "cgomez@mchav.com" },
-        { assignee_id: "DEV-103", nombre: "Michael Salamanca", email: "msalamanca@mchav.com" }
-      ];
+      console.warn("Error cargando desarrolladores...", err);
+      return [];
     }
   },
   async getDeveloperScorecard(assigneeId, projectId = 'PROJ-01') {
@@ -214,6 +237,7 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
+      console.warn("Error cargando scorecard del desarrollador...", err);
       return this.getMyScorecard(projectId);
     }
   },
@@ -222,13 +246,14 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
+      console.warn("Error cargando daily focus...", err);
       return {
-        ai_coach_tip: "Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101.",
-        efficiency_gain_pct: 14,
-        clean_deliveries_pct: 100,
-        urgent_qa_bugs: [{ id_jira: "105", key_issue: "MCHAV-105", summary: "Corregir desbordamiento en API de transacciones", issue_type: "Bug", status_actual: "Bug en QA", time_ago: "Hace 3 horas" }],
-        active_in_progress: [{ id_jira: "101", key_issue: "MCHAV-101", summary: "Implementar autenticación SSO y OAuth 2.0", story_points: 8.0, time_spent: "1.8d / 3.0d" }],
-        in_review: [{ id_jira: "112", key_issue: "MCHAV-112", summary: "Rediseñar vista de desarrollador con Recharts", story_points: 13.0, time_ago: "Hace 18h" }]
+        ai_coach_tip: "No hay información disponible. Sincronice datos desde Jira.",
+        efficiency_gain_pct: 0,
+        clean_deliveries_pct: 0,
+        urgent_qa_bugs: [],
+        active_in_progress: [],
+        in_review: []
       };
     }
   },
@@ -237,12 +262,10 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
+      console.warn("Error cargando alertas de desarrollador...", err);
       return {
-        total_active_alerts: 2,
-        alerts: [
-          { id: "alert-101", issue_id: "101", key_issue: "MCHAV-101", type: "INACTIVITY", level: "CRITICAL", title: "Inactividad: Tarea sin cambios por más de 48 horas", description: "Tu ticket MCHAV-101 (SSO OAuth 2.0) lleva 3.2 días en 'In Progress' sin registrar avances ni notas." },
-          { id: "alert-wip", type: "WIP_EXCEEDED", level: "WARNING", title: "Advertencia de Multitarea Excesiva (WIP = 7 Tareas)", description: "Tienes 7 tareas abiertas en progreso. Mantener más de 3 tareas abiertas ralentiza el tiempo de ciclo." }
-        ]
+        total_active_alerts: 0,
+        alerts: []
       };
     }
   },
@@ -259,21 +282,86 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
+      console.warn("Error cargando historial de actividad...", err);
       return {
-        unlocked_badges_count: 3,
-        activity_feed: [
-          { time: "Hoy 09:30 AM", key: "MCHAV-101", action: "Pasaste a En Desarrollo (In Progress)", points: "8 SP", type: "Story" },
-          { time: "Ayer 04:15 PM", key: "MCHAV-105", action: "Resolviste e hiciste entrega a QA (Done)", points: "5 SP", type: "Bug" },
-          { time: "Hace 2 días", key: "MCHAV-112", action: "Enviaste a Code Review de Pares", points: "13 SP", type: "Story" },
-          { time: "Hace 3 días", key: "MCHAV-118", action: "Completaste optimización de consultas SQL (Done)", points: "7 SP", type: "Task" },
-          { time: "Hace 4 días", key: "MCHAV-120", action: "Completaste pruebas de integración (Done)", points: "8 SP", type: "Task" }
-        ],
-        badges: [
-          { id: "zero-defect", title: "Zero Defect Delivery", description: "2 Sprints consecutivos completados sin re-apertura de bugs en QA.", status: "UNLOCKED" },
-          { id: "fast-delivery", title: "Fast Delivery Hero", description: "Cycle Time menor a 2.5 días en tickets de 5 Story Points.", status: "UNLOCKED" },
-          { id: "sprint-master", title: "Sprint Master", description: "Cumplimiento del 81% de Story Points comprometidos en Sprint 2.", status: "UNLOCKED" }
-        ]
+        unlocked_badges_count: 0,
+        activity_feed: [],
+        badges: []
       };
+    }
+  },
+  async getTeamMatrix(projectId = 'PROJ-01', sprintId = null) {
+    try {
+      const params = { proyecto_id: projectId };
+      if (sprintId) params.sprint_id = sprintId;
+      const response = await api.get(`/api/v1/developers/matrix`, { params });
+      return response.data;
+    } catch (err) {
+      console.warn("Error cargando matriz de equipo...", err);
+      return {
+        proyecto_id: projectId,
+        team_summary: {
+          total_desarrolladores: 0,
+          promedio_score_equipo: 0,
+          team_avg_tickets: 0,
+          team_avg_sp: 0,
+          team_avg_cycle_time: 0,
+          conteo_cuadrantes: { ESTRELLA: 0, METODICO: 0, ALTO_VOLUMEN: 0, ATASCADO: 0 }
+        },
+        developers: []
+      };
+    }
+  }
+};
+
+export const alertService = {
+  async getAlerts(projectId = 'PROJ-01') {
+    try {
+      const response = await api.get(`/api/v1/alerts`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      console.warn("Error cargando alertas del sistema...", err);
+      return [];
+    }
+  },
+  async acknowledgeAlert(alertId) {
+    try {
+      const response = await api.post(`/api/v1/alerts/${alertId}/acknowledge`);
+      return response.data;
+    } catch (err) {
+      return { alert_id: alertId, atendida: true };
+    }
+  },
+  async getHelpRequests(projectId = 'PROJ-01') {
+    try {
+      const response = await api.get(`/api/v1/alerts/help-requests`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      console.warn("Error cargando solicitudes de ayuda...", err);
+      return [];
+    }
+  },
+  async createHelpRequest(payload) {
+    try {
+      const response = await api.post(`/api/v1/alerts/help-requests`, payload);
+      return response.data;
+    } catch (err) {
+      return {
+        id_solicitud: Date.now(),
+        ...payload,
+        estado: "PENDIENTE",
+        fecha_creacion: new Date().toISOString()
+      };
+    }
+  },
+  async updateHelpRequestStatus(requestId, status, respondedBy = null) {
+    try {
+      const response = await api.patch(`/api/v1/alerts/help-requests/${requestId}`, null, {
+        params: { status, responded_by: respondedBy }
+      });
+      return response.data;
+    } catch (err) {
+      return { id_solicitud: requestId, estado: status, atendido_por_name: respondedBy };
     }
   }
 };
