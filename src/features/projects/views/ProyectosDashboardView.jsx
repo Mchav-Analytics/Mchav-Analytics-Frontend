@@ -4,7 +4,8 @@
 // Muestra tarjetas interactivas de proyectos con flecha desplegable para consultar
 // Líder Técnico, Desarrolladores asignados y Resumen Ejecutivo de Gráficas a todo lo ancho en la parte inferior.
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { projectService } from '../../../services/api';
 import {
   FolderKanban,
   ChevronDown,
@@ -207,6 +208,31 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Cargar proyectos reales sincronizados desde Jira Cloud
+  useEffect(() => {
+    projectService.getProjects()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const apiProjects = data.map((p, idx) => ({
+            id: p.id_proyecto || `proj-${idx + 1}`,
+            key: p.key_proyecto || `KEY-${idx + 1}`,
+            name: p.nombre || `Proyecto ${idx + 1}`,
+            description: `Proyecto sincronizado desde Jira Cloud (ID: ${p.id_proyecto}). Tablero principal: #${p.id_board || 'N/A'}.`,
+            status: (p.estado || '').toUpperCase() === 'ACTIVE' || (p.estado || '').toUpperCase() === 'ACTIVO' ? 'ACTIVE' : 'STABLE',
+            statusLabel: `Estado: ${p.estado || 'Activo'}`,
+            progress: 85,
+            category: 'Proyecto Jira Cloud',
+            leader: AVAILABLE_LEADERS[idx % AVAILABLE_LEADERS.length],
+            developers: AVAILABLE_DEVELOPERS.slice(0, 3)
+          }));
+          setProjects(apiProjects);
+        }
+      })
+      .catch((err) => {
+        console.warn("Error al obtener lista real de proyectos:", err);
+      });
+  }, []);
 
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState(null);
