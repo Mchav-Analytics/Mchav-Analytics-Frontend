@@ -12,41 +12,39 @@ import {
   ClipboardList, 
   CheckCircle, 
   Zap, 
+  Target,
   Info, 
   Search, 
   Filter,
   Download,
   ShieldAlert,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { developerService } from '../../../services/api';
 
 const MetricInfoTooltip = ({ text, align = "auto" }) => {
-  const alignClass = 
-    align === "left" ? "left-0" :
-    align === "right" ? "right-0" :
-    "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
-
   return (
-    <div className="group/tooltip relative inline-flex items-center cursor-help ml-2 z-50" title={text}>
-      <Info size={15} className="text-slate-400 hover:text-indigo-400 transition-colors inline shrink-0" />
-      <div className={`opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 absolute bottom-full ${alignClass} mb-2.5 w-64 sm:w-72 p-3.5 bg-slate-950 text-slate-100 text-xs rounded-xl shadow-2xl border border-indigo-500/50 pointer-events-none leading-relaxed text-left z-[99999]`}>
+    <div className="relative group/tooltip flex items-center inline-flex">
+      <Info size={14} className="text-slate-400 hover:text-indigo-400 transition-colors cursor-pointer ml-1" />
+      <div className={`absolute bottom-full mb-2 ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"} hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none text-left backdrop-blur-md`}>
         {text}
+        <div className={`absolute top-full ${align === "right" ? "right-3" : align === "left" ? "left-3" : "left-1/2 -translate-x-1/2"} border-4 border-transparent border-t-slate-900`}></div>
       </div>
     </div>
   );
 };
 
 const SparklineMini = ({ color = "#10b981" }) => {
-  const data = [{ v: 4.2 }, { v: 3.8 }, { v: 4.5 }, { v: 3.1 }, { v: 2.8 }, { v: 3.2 }];
+  const dummyData = [{ v: 4.2 }, { v: 3.8 }, { v: 4.5 }, { v: 3.1 }, { v: 2.8 }, { v: 3.2 }];
   return (
     <div className="w-20 h-7 inline-block">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
+        <AreaChart data={dummyData} margin={{ top: 2, right: 2, left: 2, bottom: 2 }}>
           <defs>
             <linearGradient id={`grad_${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.5}/>
+              <stop offset="0%" stopColor={color} stopOpacity={0.4}/>
               <stop offset="100%" stopColor={color} stopOpacity={0.0}/>
             </linearGradient>
           </defs>
@@ -57,7 +55,7 @@ const SparklineMini = ({ color = "#10b981" }) => {
   );
 };
 
-export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01' }) {
+export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, onNavigateToHealth, onNavigateToAlerts }) {
   const [developers, setDevelopers] = useState([]);
   const [selectedDev, setSelectedDev] = useState(null);
   const [scorecard, setScorecard] = useState(null);
@@ -72,7 +70,12 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01' })
       .then(devs => {
         setDevelopers(devs || []);
         if (devs && devs.length > 0) {
-          setSelectedDev(devs[0]);
+          setSelectedDev(prev => {
+            if (prev && devs.some(d => (d.assignee_id || d.email) === (prev.assignee_id || prev.email))) {
+              return prev;
+            }
+            return devs[0];
+          });
         }
         setLoadingDevs(false);
       })
@@ -83,10 +86,11 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01' })
   }, [selectedProjectId]);
 
   // 2. Cargar el Scorecard individual cuando cambia el desarrollador seleccionado
+  const targetDevId = selectedDev?.assignee_id || selectedDev?.email;
   useEffect(() => {
-    if (!selectedDev) return;
+    if (!targetDevId) return;
     setLoadingCard(true);
-    developerService.getDeveloperScorecard(selectedDev.assignee_id || selectedDev.email, selectedProjectId)
+    developerService.getDeveloperScorecard(targetDevId, selectedProjectId)
       .then(card => {
         setScorecard(card);
         setLoadingCard(false);
@@ -95,7 +99,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01' })
         console.warn("Error al cargar scorecard del desarrollador:", err);
         setLoadingCard(false);
       });
-  }, [selectedDev, selectedProjectId]);
+  }, [targetDevId, selectedProjectId]);
 
   const filteredDevs = developers.filter(d => 
     (d.nombre || '').toLowerCase().includes(searchFilter.toLowerCase()) ||
@@ -119,8 +123,48 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01' })
   const workDist = scorecard?.work_distribution || { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 };
 
   return (
-    <div className="w-full max-w-full overflow-x-hidden space-y-10 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
+    <div className="w-full max-w-full overflow-x-hidden space-y-8 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
+      {/* BARRA SUPERIOR DE ACCESO RÁPIDO Y NAVEGACIÓN */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 px-4 rounded-xl shadow-lg backdrop-blur-md">
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <button 
+            onClick={onNavigateToMatrix}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Users size={14} />
+            <span>Matriz 4 Cuadrantes</span>
+          </button>
+          <button 
+            onClick={onNavigateToHealth}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+          >
+            <Zap size={14} className="text-amber-400" />
+            <span>Salud del Sprint & Flow</span>
+          </button>
+          <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
+            <Target size={14} className="text-cyan-400" />
+            <span>Scorecards Devs</span>
+          </button>
+          <button 
+            onClick={onNavigateToAlerts}
+            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+          >
+            <AlertTriangle size={14} className="text-rose-400" />
+            <span>Alertas & Solicitudes</span>
+          </button>
+        </div>
+
+        <div className="flex items-center gap-3 text-xs text-slate-400 shrink-0">
+          <span className="flex items-center gap-1.5 bg-emerald-950/40 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-800/40 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            ETL Sync Activa
+          </span>
+          <span className="hidden md:inline text-slate-600">|</span>
+          <span className="font-semibold text-slate-300">Proyecto: {selectedProjectId}</span>
+        </div>
+      </div>
+
       {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
       <div className="relative rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-slate-800 transition-all duration-300">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">

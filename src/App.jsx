@@ -14,6 +14,9 @@ import DailyFocusView from './features/dashboard/views/DailyFocusView';
 import DevAlertsView from './features/dashboard/views/DevAlertsView';
 import ActivityHistoryView from './features/dashboard/views/ActivityHistoryView';
 import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsView';
+import TeamMatrixView from './features/dashboard/views/TeamMatrixView';
+import SprintHealthView from './features/dashboard/views/SprintHealthView';
+import AlertsCenterView from './features/dashboard/views/AlertsCenterView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
@@ -211,6 +214,16 @@ function MainAppContent() {
           title: "Rendimiento por Desarrollador ",
           subtitle: "Supervisación y auditoría individual por integrante del equipo (Fase 5)."
         };
+      case 'team_matrix':
+        return {
+          title: "Matriz Comparativa de Equipo & Performance Score ",
+          subtitle: "Evaluación de rendimiento en 4 cuadrantes (Estrella, Metódico, Alto Volumen, Atascado)."
+        };
+      case 'sprint_health':
+        return {
+          title: "Salud del Sprint & Predictibilidad ",
+          subtitle: "Cumplimiento de compromisos, análisis de Scope Creep y Eficiencia del Flujo de Trabajo."
+        };
       case 'tasks':
         return {
           title: "Gestión de Tareas y Burndown ",
@@ -277,6 +290,7 @@ function MainAppContent() {
         <DeveloperView
           kpis={filteredKpis}
           selectedProjectId={selectedProjectId}
+          onNavigateToAlerts={() => setActiveTab('alerts_center')}
         />
       )}
 
@@ -300,6 +314,35 @@ function MainAppContent() {
 
       {activeTab === 'team_devs' && (
         <TeamDevScorecardsView
+          selectedProjectId={selectedProjectId}
+          onNavigateToMatrix={() => setActiveTab('team_matrix')}
+          onNavigateToHealth={() => setActiveTab('sprint_health')}
+          onNavigateToAlerts={() => setActiveTab('alerts_center')}
+        />
+      )}
+
+      {activeTab === 'team_matrix' && (
+        <TeamMatrixView
+          selectedProjectId={selectedProjectId}
+          onSelectDevForScorecard={(assigneeId) => {
+            setActiveTab('team_devs');
+          }}
+          onNavigateToHealth={() => {
+            setActiveTab('sprint_health');
+          }}
+        />
+      )}
+
+      {activeTab === 'sprint_health' && (
+        <SprintHealthView
+          selectedProjectId={selectedProjectId}
+          onNavigateToMatrix={() => setActiveTab('team_matrix')}
+          onNavigateToScorecards={() => setActiveTab('team_devs')}
+        />
+      )}
+
+      {activeTab === 'alerts_center' && (
+        <AlertsCenterView
           selectedProjectId={selectedProjectId}
         />
       )}

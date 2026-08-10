@@ -112,26 +112,35 @@ export default function AdminUsuariosView({
   const [newRole, setNewRole] = useState<'ADMIN' | 'MANAGER' | 'DEVELOPER'>('DEVELOPER');
   const [inviteError, setInviteError] = useState('');
 
+  const approvedUsersKey = (approvedUsers || []).join(',');
+
   React.useEffect(() => {
     try {
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       const approvedList: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '[]');
 
-      setUsers(prevUsers =>
-        prevUsers.map(u => {
-          const storedRole = rolesMap[u.email];
-          const isApproved = approvedList.includes(u.email) || approvedUsers.includes(u.email) || u.role === 'ADMIN';
+      setUsers(prevUsers => {
+        let hasChanges = false;
+        const updated = prevUsers.map(u => {
+          const storedRole = (rolesMap[u.email] as 'ADMIN' | 'MANAGER' | 'DEVELOPER') || u.role;
+          const isApproved = approvedList.includes(u.email) || (approvedUsers && approvedUsers.includes(u.email)) || u.role === 'ADMIN';
+          const newStatus = isApproved ? 'ACTIVE' : u.status;
+
+          if (storedRole !== u.role || newStatus !== u.status) {
+            hasChanges = true;
+          }
           return {
             ...u,
-            role: (storedRole as 'ADMIN' | 'MANAGER' | 'DEVELOPER') || u.role,
-            status: isApproved ? 'ACTIVE' : u.status
+            role: storedRole,
+            status: newStatus
           };
-        })
-      );
+        });
+        return hasChanges ? updated : prevUsers;
+      });
     } catch (e) {
       console.error('Error cargando asignación de roles:', e);
     }
-  }, [approvedUsers]);
+  }, [approvedUsersKey]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
