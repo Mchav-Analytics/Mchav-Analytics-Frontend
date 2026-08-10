@@ -18,12 +18,12 @@ import SystemSyncTab from './features/sync/views/SystemSyncTab';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import LoginView from './features/auth/views/LoginView';
-import { useAuth, AuthProvider } from './features/auth/context/AuthContext';
+import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
 
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
-  const [activeTab, setActiveTab] = useState('usuarios');           // Pestaña activa actual (por defecto Usuarios y Roles para Admin)
+  const [activeTab, setActiveTab] = useState('dashboard');           // Pestaña activa actual (por defecto Dashboard principal)
   const [isDarkMode, setIsDarkMode] = useState(true);              // Estado de tema claro / oscuro
 
   // Filtro de rango de fechas activo
@@ -48,9 +48,11 @@ function MainAppContent() {
 
   // Inicializar o redirigir pestaña según el rol al autenticar (sin bucle de re-render)
   useEffect(() => {
-    if (user?.rol === 'DEVELOPER' && !['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
+    if (!user?.rol) return;
+    const role = normalizeRole(user.rol);
+    if (role === 'DEVELOPER' && !['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
       setActiveTab('developer');
-    } else if (user?.rol === 'MANAGER' && ['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
+    } else if ((role === 'MANAGER' || role === 'ADMIN') && ['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
       setActiveTab('dashboard');
     }
   }, [user?.rol]);

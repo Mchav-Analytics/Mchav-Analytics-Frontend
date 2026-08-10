@@ -8,13 +8,13 @@
   --primary-color: #1e3a8a; /* Deep blue from MCHAV */
   --primary-hover: #1e40af;
   --secondary-color: #0d9488; /* Teal from MCHAV */
-  --bg-dark: #f8fafc; /* Light gray background */
-  --bg-card: #ffffff; /* Pure white cards */
+  --bg-dark: #eaeae5; /* Blanco hueso más opaco para máximo contraste con las tarjetas */
+  --bg-card: #ffffff; /* Tarjetas y contenedores en blanco puro */
   --text-main: #0f172a; /* Dark slate text */
   --text-muted: #64748b; /* Slate 500 */
-  --border-color: #e2e8f0; /* Slate 200 */
-  --sidebar-bg: linear-gradient(180deg, #ffffff 0%, #f8fafc 50%, #eef2ff 100%);
-  --topbar-bg: #ffffff;
+  --border-color: #cbd5e1; /* Slate 300 para bordes definidos */
+  --sidebar-bg: #ffffff;
+  --topbar-bg: #eaeae5;
   --input-bg: #ffffff;
   --accent-red: #ef4444;
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
@@ -3094,3 +3094,210 @@ body {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12), inset 0 0 10px rgba(2, 132, 199, 0.15);
 }
 
+/* ============================================================================
+   ESTILOS SWITCH TEMA SOL / LUNA (Uiverse.io by andrew-demchenk0)
+   ============================================================================ */
+.uiverse-switch {
+  font-size: 17px;
+  position: relative;
+  display: inline-block;
+  width: 54px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.uiverse-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.uiverse-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #73C0FC;
+  transition: .4s;
+  border-radius: 30px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.uiverse-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  border-radius: 20px;
+  left: 3px;
+  bottom: 3px;
+  z-index: 2;
+  background-color: #e8e8e8;
+  transition: .4s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.uiverse-switch .sun svg {
+  position: absolute;
+  top: 4px;
+  left: 29px;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  animation: rotate 15s linear infinite;
+}
+
+.uiverse-switch .moon svg {
+  fill: #73C0FC;
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  z-index: 1;
+  width: 19px;
+  height: 19px;
+  animation: tilt 5s linear infinite;
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes tilt {
+  0% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(10deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}
+
+.uiverse-switch input:checked + .slider {
+  background-color: #183153;
+}
+
+.uiverse-switch input:focus + .slider {
+  box-shadow: 0 0 1px #183153;
+}
+
+.uiverse-switch input:checked + .slider:before {
+  transform: translateX(26px);
+}
+
+/* ============================================================================
+   ESTILOS BURGER TOGGLE ANIMADO SIDEBAR (Uiverse.io by Cevorob)
+   ============================================================================ */
+.burger {
+  position: relative;
+  width: 24px;
+  height: 18px;
+  background: transparent;
+  cursor: pointer;
+  display: block;
+  flex-shrink: 0;
+}
+
+.burger input {
+  display: none;
+}
+
+.burger span {
+  display: block;
+  position: absolute;
+  height: 3px;
+  width: 100%;
+  background: #64748b;
+  border-radius: 9px;
+  opacity: 1;
+  left: 0;
+  transform: rotate(0deg);
+  transition: .25s ease-in-out;
+}
+
+:is(.dark *) .burger span {
+  background: #94a3b8;
+}
+
+.burger:hover span {
+  background: #6366f1;
+}
+
+.burger span:nth-of-type(1) {
+  top: 0px;
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(2) {
+  top: 50%;
+  transform: translateY(-50%);
+  transform-origin: left center;
+}
+
+.burger span:nth-of-type(3) {
+  top: 100%;
+  transform-origin: left center;
+  transform: translateY(-100%);
+}
+
+.burger input:checked ~ span:nth-of-type(1) {
+  transform: rotate(45deg);
+  top: -1px;
+  left: 3px;
+}
+
+.burger input:checked ~ span:nth-of-type(2) {
+  width: 0%;
+  opacity: 0;
+}
+
+.burger input:checked ~ span:nth-of-type(3) {
+  transform: rotate(-45deg);
+  top: 16px;
+  left: 3px;
+}
+
+/* ── SIDEBAR NAV ACTIVE INDICATOR ANIMATION ── */
+
+.sidebar-indicator {
+  animation: sidebarSlideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes sidebarSlideIn {
+  0% {
+    opacity: 0;
+    height: 0;
+    transform: translateY(-50%) scaleY(0);
+  }
+  100% {
+    opacity: 1;
+    height: 1.5rem;
+    transform: translateY(-50%) scaleY(1);
+  }
+}
+
+.sidebar-nav-active {
+  animation: sidebarNavFadeIn 0.3s ease-out both;
+}
+
+@keyframes sidebarNavFadeIn {
+  0% {
+    opacity: 0.5;
+    transform: translateX(-6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

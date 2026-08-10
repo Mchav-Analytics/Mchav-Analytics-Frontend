@@ -7,30 +7,43 @@ axios.defaults.withCredentials = true;
 // INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
 // true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
 // false = Modo Real (Conectado a FastAPI en http://localhost:8000)
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 export const BACKEND_URL = 'http://localhost:8000';
 
 const api = axios.create({
   baseURL: BACKEND_URL,
+  withCredentials: true,
+});
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('mchav_jwt_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export const authService = {
   getLoginUrl() {
     if (USE_MOCK_DATA) return mockAuthService.getLoginUrl();
-    return `${BACKEND_URL}/api/auth/login`;
+    return `${BACKEND_URL}/api/v1/auth/login`;
   },
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
-    return api.get('/api/auth/me').then(res => res.data);
+    return api.get('/api/v1/auth/me').then(res => res.data);
   },
   loginMock(credentials) {
     if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
-    return api.post('/api/auth/login', credentials).then(res => res.data);
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
+  },
+  logout() {
+    if (USE_MOCK_DATA) return mockAuthService.logoutMock();
+    return api.post('/api/v1/auth/logout').then(res => res.data);
   },
   logoutMock() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/auth/logout').then(res => res.data);
+    return api.post('/api/v1/auth/logout').then(res => res.data);
   },
   getJiraCredentials() {
     if (USE_MOCK_DATA) return mockAuthService.getJiraCredentials();

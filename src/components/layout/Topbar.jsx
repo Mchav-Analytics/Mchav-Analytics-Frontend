@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import DatePickerDropdown from '../ui/DatePickerDropdown';
 import ProjectPickerDropdown from '../ui/ProjectPickerDropdown';
+import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import { Settings, Bell, CheckCircle2, UserCheck, X, Shield, Code, Briefcase, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../../features/auth/context/AuthContext';
@@ -96,8 +97,13 @@ function Topbar({
         <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '2px', margin: '0' }}>{subtitle}</p>
       </div>
 
-      {/* Controles de Notificaciones y Perfil */}
+      {/* Controles de Notificaciones, Tema y Perfil */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+        {/* Switch de Tema Sol / Luna Uiverse */}
+        <div className="flex items-center">
+          <ThemeToggleSwitch isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+        </div>
 
         {/* Campanita de Notificaciones para el Administrador */}
         {(activeUser?.rol === 'ADMIN' || activeUser?.rol === 'MANAGER') && (

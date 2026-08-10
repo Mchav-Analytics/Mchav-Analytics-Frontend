@@ -1,9 +1,8 @@
 // ============================================================================
-// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON TARJETA 3D FLIP (UIVERSE)
+// FEATURE AUTH — VISTA DE INICIO DE SESIÓN CON MASCOTA EXTERNA Y TARJETA 3D
 // ============================================================================
-// - Posición: Izquierda de la pantalla para dejar libre la vista de la oficina.
-// - Cara Principal (Front): Logo 3D MCHAV, marca "MCHAV Analytics", eslogan.
-// - Cara Reverso (Back): Controles de inicio de sesión por rol y Atlassian.
+// - Lado Izquierdo: Tarjeta 3D Flip (Front: Logo 3D Grande; Back: Bienvenido a MCHAV + Atlassian)
+// - Lado Derecho: Mascota Búho con bocadillo de diálogo "¡Hola! Estoy aquí para ayudarte..."
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +13,7 @@ import owlMascotImg from '../../../assets/owl_mascot.png';
 
 function LoginView() {
   const navigate = useNavigate();
-  const { login, isAuthenticated, loading: authLoading, error: authError } = useAuth();
+  const { login, loginWithJira, isAuthenticated, loading: authLoading, error: authError } = useAuth();
 
   const [isFlipped, setIsFlipped] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -47,15 +46,15 @@ function LoginView() {
     }
   };
 
-  // Iniciar sesión rápida con un rol específico
-  const handleRoleLogin = async (targetEmail, targetRole) => {
+  // Autenticación real con Atlassian OAuth (Jira)
+  const handleJiraAuth = async () => {
     setIsSubmitting(true);
     setErrorMessage('');
     try {
-      await login({ email: targetEmail, role: targetRole });
-      navigate('/dashboard');
+      await loginWithJira();
     } catch (err) {
-      setErrorMessage("No se pudo iniciar sesión. Inténtalo nuevamente.");
+      console.error("Error al iniciar autenticación Jira:", err);
+      setErrorMessage("No se pudo conectar con Atlassian Jira. Inténtalo nuevamente.");
       setIsSubmitting(false);
     }
   };
@@ -91,17 +90,52 @@ function LoginView() {
           pointer-events: none;
         }
 
-        /* MARCO PRINCIPAL ADAPTATIVO UNIVERSAL (DESDE MÓVILES HASTA MONITORES 4K) */
-        .login-main-frame {
-          position: relative;
-          z-index: 10;
-          width: 100%;
-          max-width: 1800px;
-          min-height: 100vh;
+        /* CONTENEDOR SECCIÓN TARJETA 3D (LADO IZQUIERDO, ADAPTATIVO A PANTALLAS GRANDES Y PC) */
+        .login-card-section {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 380px;
+          height: 100vh;
           display: flex;
           align-items: center;
-          justify-content: center;
-          padding: 1.5rem 1rem;
+          justify-content: flex-start;
+          padding-left: clamp(1.5rem, 4vw, 6rem);
+          z-index: 10;
+          box-sizing: content-box;
+        }
+
+        @media (min-width: 1280px) {
+          .login-card-section {
+            width: 480px;
+          }
+        }
+
+        @media (min-width: 1536px) and (min-height: 800px) {
+          .login-card-section {
+            width: 540px;
+          }
+        }
+
+        /* CONTENEDOR SECCIÓN MASCOTA (LADO DERECHO, ADAPTATIVO A PANTALLAS GRANDES Y PC) */
+        .login-mascot-section {
+          position: absolute;
+          top: 0;
+          right: 0;
+          width: auto;
+          height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: flex-end;
+          padding-right: clamp(3rem, 10vw, 15vw);
+          z-index: 10;
+          pointer-events: none;
+        }
+
+        @media (min-width: 1536px) {
+          .login-mascot-section {
+            padding-right: clamp(4rem, 12vw, 16vw);
+          }
         }
 
         /* ===================================================================
@@ -116,37 +150,17 @@ function LoginView() {
           transition: max-width 0.3s ease, height 0.3s ease;
         }
 
-        /* Level 1: Laptops y Pantallas Escritorio Estándar (1280px+) */
         @media (min-width: 1280px) {
-          .login-main-frame {
-            justify-content: flex-start;
-            padding-left: 7vw;
-          }
           .flip-card-container {
-            max-width: 420px;
-            height: clamp(520px, 75vh, 570px);
+            max-width: 480px;
+            height: clamp(560px, 78vh, 620px);
           }
         }
 
-        /* Level 2: Monitores Full HD / 2K (1536px+) */
         @media (min-width: 1536px) and (min-height: 800px) {
-          .login-main-frame {
-            padding-left: 9vw;
-          }
           .flip-card-container {
-            max-width: 460px;
-            height: clamp(570px, 72vh, 620px);
-          }
-        }
-
-        /* Level 3: Monitores Ultra-Anchos y 4K (1920px+) */
-        @media (min-width: 1920px) and (min-height: 950px) {
-          .login-main-frame {
-            padding-left: 11vw;
-          }
-          .flip-card-container {
-            max-width: 500px;
-            height: clamp(620px, 70vh, 670px);
+            max-width: 540px;
+            height: clamp(620px, 76vh, 680px);
           }
         }
 
@@ -160,7 +174,6 @@ function LoginView() {
           border-radius: 20px;
         }
 
-        /* Giro por clic y hover */
         .flip-card-container:hover .flip-card-inner,
         .flip-card-container.is-flipped .flip-card-inner {
           transform: rotateY(180deg);
@@ -181,20 +194,22 @@ function LoginView() {
           text-align: center;
         }
 
-        /* CARA FRONTAL (FRONT): ILUSTRACIÓN COMPLETA DE SNOOPY ATLASSIAN */
+        /* CARA FRONTAL (FRONT): LOGO 3D EN GRANDE */
         .flip-card-front {
-          background-color: #060b17;
-          border: 1.5px solid rgba(6, 182, 212, 0.4);
-          box-shadow: inset 0 0 25px rgba(6, 182, 212, 0.15);
+          background-color: rgba(6, 11, 23, 0.92);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border: 1.5px solid rgba(6, 182, 212, 0.45);
+          box-shadow: inset 0 0 30px rgba(6, 182, 212, 0.15), 0 10px 40px rgba(0,0,0,0.6);
           transform: rotateY(0deg);
         }
 
-        /* CARA REVERSO (BACK): ACCESO DE INICIO DE SESIÓN CON LOGO 3D */
+        /* CARA REVERSO (BACK): ACCESO DE INICIO DE SESIÓN CON ATLASSIAN */
         .flip-card-back {
-          background-color: rgba(3, 7, 18, 0.76);
+          background-color: rgba(3, 7, 18, 0.88);
           backdrop-filter: blur(28px);
           -webkit-backdrop-filter: blur(28px);
-          border: 1.5px solid rgba(6, 182, 212, 0.4);
+          border: 1.5px solid rgba(6, 182, 212, 0.45);
           transform: rotateY(180deg);
         }
 
@@ -221,7 +236,7 @@ function LoginView() {
         .flip-card-back-content {
           position: absolute;
           inset: 2px;
-          background-color: rgba(6, 11, 23, 0.94);
+          background-color: rgba(6, 11, 23, 0.95);
           border-radius: 18px;
           padding: clamp(24px, 4vh, 36px) clamp(18px, 4vw, 28px);
           z-index: 1;
@@ -231,108 +246,31 @@ function LoginView() {
           overflow-y: auto;
         }
 
-        /* Moneda 3D Rotatoria Grande para la Cara Frontal */
-        .mchav-coin-loader-card {
+        /* Moneda 3D Rotatoria Grande para la Cara Frontal (Adaptativa para PC) */
+        .mchav-coin-large {
           position: relative;
-          width: 150px;
-          height: 150px;
+          width: 230px;
+          height: 230px;
           display: block;
           transform-style: preserve-3d;
           margin: 0 auto;
         }
 
-        .mchav-coin-wrapper-card {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          transform-style: preserve-3d;
-          animation: coinSpin 3s linear infinite;
+        @media (min-width: 1280px) {
+          .mchav-coin-large {
+            width: 270px;
+            height: 270px;
+          }
         }
 
-        @keyframes coinSpin {
-          0%   { transform: rotateY(0deg); }
-          100% { transform: rotateY(360deg); }
+        @media (min-width: 1536px) {
+          .mchav-coin-large {
+            width: 310px;
+            height: 310px;
+          }
         }
 
-        .coin-face-card {
-          position: absolute;
-          width: 150px;
-          height: 150px;
-          top: 0;
-          left: 0;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: transparent;
-          backface-visibility: hidden;
-        }
-
-        .coin-face-card img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          filter: drop-shadow(0 0 16px rgba(6, 182, 212, 0.75));
-        }
-
-        .coin-front-card { transform: translateZ(1px); }
-        .coin-back-card  { transform: rotateY(180deg) translateZ(1px); }
-
-        /* Botón 1: Desarrollador (Cian Sobrio / Degradé Elegante) */
-        .btn-dev-teal {
-          background: linear-gradient(135deg, #093b44 0%, #0e5b6a 50%, #15798c 100%);
-          border: 1px solid rgba(45, 212, 191, 0.35);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .btn-dev-teal:hover {
-          transform: translateY(-2px) scale(1.015);
-          background: linear-gradient(135deg, #0d4a55 0%, #136f82 50%, #1a95ad 100%);
-          border-color: rgba(45, 212, 191, 0.7);
-          box-shadow: 0 8px 24px rgba(6, 182, 212, 0.25);
-          filter: brightness(1.1);
-        }
-
-        /* Botón 2: Líder Técnico (Púrpura Sobrio / Degradé Elegante) */
-        .btn-manager-purple {
-          background: linear-gradient(135deg, #24143a 0%, #3a1d5c 50%, #522780 100%);
-          border: 1px solid rgba(167, 139, 250, 0.35);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .btn-manager-purple:hover {
-          transform: translateY(-2px) scale(1.015);
-          background: linear-gradient(135deg, #2e1a4a 0%, #482473 50%, #66319e 100%);
-          border-color: rgba(167, 139, 250, 0.7);
-          box-shadow: 0 8px 24px rgba(168, 85, 247, 0.25);
-          filter: brightness(1.1);
-        }
-
-        /* Botón 3: Administrador (Azul Sobrio / Degradé Elegante) */
-        .btn-admin-blue {
-          background: linear-gradient(135deg, #0e2246 0%, #18386c 50%, #225199 100%);
-          border: 1px solid rgba(96, 165, 250, 0.35);
-          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .btn-admin-blue:hover {
-          transform: translateY(-2px) scale(1.015);
-          background: linear-gradient(135deg, #132d5c 0%, #20488a 50%, #2c68c2 100%);
-          border-color: rgba(96, 165, 250, 0.7);
-          box-shadow: 0 8px 24px rgba(59, 130, 246, 0.25);
-          filter: brightness(1.1);
-        }
-
-        /* Moneda 3D Rotatoria Pequeña */
-        .mchav-coin-small {
-          position: relative;
-          width: 44px;
-          height: 44px;
-          display: block;
-          transform-style: preserve-3d;
-        }
-
-        .mchav-coin-wrapper-small {
+        .mchav-coin-wrapper-large {
           position: relative;
           width: 100%;
           height: 100%;
@@ -340,10 +278,15 @@ function LoginView() {
           animation: coinSpin 3.5s linear infinite;
         }
 
-        .coin-face-small {
+        @keyframes coinSpin {
+          0%   { transform: rotateY(0deg); }
+          100% { transform: rotateY(360deg); }
+        }
+
+        .coin-face-large {
           position: absolute;
-          width: 44px;
-          height: 44px;
+          width: 230px;
+          height: 230px;
           top: 0;
           left: 0;
           border-radius: 50%;
@@ -354,24 +297,45 @@ function LoginView() {
           backface-visibility: hidden;
         }
 
-        .coin-face-small img {
+        @media (min-width: 1280px) {
+          .coin-face-large {
+            width: 270px;
+            height: 270px;
+          }
+        }
+
+        @media (min-width: 1536px) {
+          .coin-face-large {
+            width: 310px;
+            height: 310px;
+          }
+        }
+
+        .coin-face-large img {
           width: 100%;
           height: 100%;
           object-fit: contain;
-          filter: drop-shadow(0 0 8px rgba(6, 182, 212, 0.6));
+          filter: drop-shadow(0 0 38px rgba(6, 182, 212, 0.95));
         }
 
-        .coin-front-small { transform: translateZ(1px); }
-        .coin-back-small  { transform: rotateY(180deg) translateZ(1px); }
+        .coin-front-large { transform: translateZ(1px); }
+        .coin-back-large  { transform: rotateY(180deg) translateZ(1px); }
+
+        @keyframes floatSlow {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+
+        .animate-float-mascot {
+          animation: floatSlow 4s ease-in-out infinite;
+        }
       `}</style>
 
       {/* Capa de Sombra sobre la Imagen de Fondo */}
       <div className="bg-overlay-tint" />
 
-      {/* MARCO PRINCIPAL EN EL LADO IZQUIERDO */}
-      <div className="login-main-frame">
-
-        {/* TARJETA 3D FLIP UIVERSE */}
+      {/* LADO IZQUIERDO: TARJETA 3D FLIP UIVERSE */}
+      <div className="login-card-section">
         <div
           ref={cardRef}
           onClick={() => setIsFlipped(!isFlipped)}
@@ -379,109 +343,116 @@ function LoginView() {
         >
           <div className="flip-card-inner">
 
-            {/* ===============================================================
-                CARA FRONTAL (FRONT): MASCOTA BÚHO MCHAV ANALYTICS
-                =============================================================== */}
-            <div className="flip-card-front !p-4 overflow-hidden relative group flex flex-col items-center justify-between bg-slate-950/80 backdrop-blur-xl">
-              
-              <img 
-                src={owlMascotImg} 
-                alt="Mascota Búho MCHAV Analytics" 
-                className="w-full h-[85%] object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-transform duration-300 group-hover:scale-105"
-              />
+            {/* CARA FRONTAL (FRONT): LOGO 3D EN GRANDE */}
+            <div className="flip-card-front !p-6 overflow-hidden relative group flex flex-col items-center justify-between">
 
-              {/* Píldora interactiva de indicación de giro en la parte inferior */}
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 text-xs font-bold backdrop-blur-md flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.45)] animate-pulse shrink-0">
+              {/* Encabezado Principal */}
+              <div className="pt-3 xl:pt-5 text-center z-10 shrink-0">
+                <h2 className="text-2xl xl:text-3xl 2xl:text-4xl font-extrabold text-white tracking-tight">
+                  MCHAV Analytics
+                </h2>
+                <p className="text-xs xl:text-sm 2xl:text-base text-cyan-400 font-medium mt-1">Plataforma de Métricas y KPIs</p>
+                <div className="w-12 xl:w-16 h-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-2 shadow-[0_0_10px_rgba(6,182,212,0.7)]" />
+              </div>
+
+              {/* Logo 3D MCHAV Rotatorio Grande */}
+              <div className="w-full flex-1 flex items-center justify-center my-4 relative">
+                <div className="mchav-coin-large">
+                  <div className="mchav-coin-wrapper-large">
+                    <div className="coin-face-large coin-front-large">
+                      <img src={logoOfficialImg} alt="MCHAV Logo 3D Grande" />
+                    </div>
+                    <div className="coin-face-large coin-back-large">
+                      <img src={logoOfficialImg} alt="MCHAV Logo 3D Grande" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Indicador de Giro en la Parte Inferior */}
+              <div className="mb-2 px-5 xl:px-6 py-2 xl:py-2.5 rounded-full bg-slate-950/90 border border-cyan-500/50 text-cyan-300 text-xs xl:text-sm font-bold backdrop-blur-md flex items-center gap-2 shadow-[0_0_20px_rgba(6,182,212,0.45)] animate-pulse shrink-0 z-10">
                 <span>Girar para iniciar sesión</span>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="xl:w-4 xl:h-4">
                   <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
                 </svg>
               </div>
 
             </div>
 
-            {/* ===============================================================
-                CARA REVERSO (BACK): ACCESO DE INICIO DE SESIÓN CON LOGO 3D
-                =============================================================== */}
+            {/* CARA REVERSO (BACK): ACCESO DE INICIO DE SESIÓN CON ATLASSIAN */}
             <div className="flip-card-back">
-              <div className="flip-card-back-content">
+              <div className="flip-card-back-content flex flex-col justify-center items-center pt-8 pb-6 px-6">
 
-                <div>
-                  {/* Badge con Moneda Pequeña 3D MCHAV */}
-                  <div className="w-13 h-13 rounded-full bg-slate-950/90 border border-cyan-400/60 p-1 shadow-[0_0_20px_rgba(6,182,212,0.35)] flex items-center justify-center mx-auto mb-2">
-                    <div className="mchav-coin-small">
-                      <div className="mchav-coin-wrapper-small">
-                        <div className="coin-face-small coin-front-small">
-                          <img src={logoOfficialImg} alt="MCHAV Logo" />
-                        </div>
-                        <div className="coin-face-small coin-back-small">
-                          <img src={logoOfficialImg} alt="MCHAV Logo" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="w-full my-auto flex flex-col items-center">
 
-                  {/* Título "Bienvenido" */}
-                  <h2 className="text-xl font-bold text-white tracking-tight">
-                    Bienvenido
+                  {/* Título "Bienvenido a MCHAV" */}
+                  <h2 className="text-2xl xl:text-3xl 2xl:text-4xl font-extrabold text-white tracking-tight text-center">
+                    Bienvenido a MCHAV
                   </h2>
-                  <div className="w-8 h-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-1 mb-3 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+                  <p className="text-xs xl:text-sm 2xl:text-base text-slate-400 mt-1.5 text-center">Ingresa con tu cuenta corporativa de Atlassian</p>
+                  <div className="w-12 xl:w-16 h-0.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mx-auto mt-2 mb-6 shadow-[0_0_10px_rgba(6,182,212,0.6)]" />
 
                   {/* Mensaje de Error si Ocurre */}
                   {(errorMessage || authError) && (
-                    <div className="w-full p-2 mb-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold">
+                    <div className="w-full p-2.5 mb-4 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-200 text-xs font-semibold text-center">
                       ⚠️ {errorMessage || authError}
                     </div>
                   )}
 
-                  {/* BOTÓN PRINCIPAL DE ACCESO Y BOTÓN ATLASSIAN */}
-                  <div className="space-y-3 my-3">
-                    <button 
+                  {/* BOTÓN ÚNICO DE AUTENTICACIÓN CON ATLASSIAN (JIRA) */}
+                  <div className="my-4 w-full">
+                    <button
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); handleRoleLogin('vhoyos@mchav.com', 'ADMIN'); }}
+                      onClick={(e) => { e.stopPropagation(); handleJiraAuth(); }}
                       disabled={isSubmitting || authLoading}
-                      className="w-full h-12 rounded-xl bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 hover:from-cyan-400 hover:to-purple-500 text-white font-extrabold text-xs flex items-center justify-center gap-2.5 shadow-lg shadow-cyan-500/25 transition-all cursor-pointer"
+                      className="w-full h-12 xl:h-14 2xl:h-16 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-extrabold text-xs sm:text-sm xl:text-base 2xl:text-lg flex items-center justify-center gap-3 shadow-lg shadow-blue-500/30 hover:shadow-cyan-500/40 transition-all cursor-pointer group"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/>
-                      </svg>
-                      <span>Ingresar a MCHAV Analytics</span>
-                    </button>
-
-                    <div className="relative flex items-center justify-center my-2">
-                      <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-800" />
-                      </div>
-                      <span className="relative px-3 bg-[#060b17] text-[10px] font-medium text-slate-400 uppercase tracking-wider">
-                        o autentícate con
-                      </span>
-                    </div>
-
-                    <button 
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleRoleLogin('vhoyos@mchav.com', 'ADMIN'); }}
-                      disabled={isSubmitting || authLoading}
-                      className="w-full h-11 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-slate-700 text-white font-semibold text-xs flex items-center justify-center gap-2.5 transition-all cursor-pointer"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="text-blue-400">
-                        <polygon points="12 2 2 12 12 22 22 12"/>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" className="text-blue-200 group-hover:scale-110 transition-transform xl:w-6 xl:h-6">
+                        <polygon points="12 2 2 12 12 22 22 12" />
                       </svg>
                       <span>Continuar con Atlassian (Jira)</span>
                     </button>
                   </div>
 
-                  <div className="text-[11px] text-slate-400 hover:text-cyan-300 transition-colors pt-2">
+                  <div className="text-xs xl:text-sm text-slate-400 hover:text-cyan-300 transition-colors pt-4 cursor-pointer">
                     <span>Volver a la vista principal ↩</span>
                   </div>
 
                 </div>
               </div>
-
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* LADO DERECHO: MASCOTA BÚHO ADAPTATIVA A PANTALLAS DE PC Y MONITORES GRANDES */}
+      <div className="login-mascot-section">
+        <div className="hidden lg:flex flex-col items-center justify-center relative z-10 max-w-md xl:max-w-lg 2xl:max-w-xl pointer-events-none select-none animate-float-mascot">
+
+          {/* Bocadillo de Diálogo (Speech Bubble Escalable) */}
+          <div className="relative mb-6 p-5 xl:p-6 2xl:p-7 rounded-2xl bg-slate-950/85 backdrop-blur-xl border border-indigo-500/40 shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(6,182,212,0.25)] max-w-xs xl:max-w-sm 2xl:max-w-md transition-all duration-300">
+            <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-black text-white mb-2 flex items-center gap-2">
+              ¡Hola! <span className="w-2.5 h-2.5 xl:w-3 xl:h-3 rounded-full bg-cyan-400 animate-ping inline-block" />
+            </h3>
+            <p className="text-sm xl:text-base 2xl:text-lg text-slate-200 font-medium leading-relaxed">
+              Estoy aquí para ayudarte a <span className="text-cyan-400 font-bold">conectar tu equipo</span> con lo que importa.
+            </p>
+            <div className="w-10 xl:w-14 h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mt-3 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+
+            {/* Flecha del Bocadillo apuntando al búho */}
+            <div className="absolute -bottom-3 right-14 xl:right-16 2xl:right-20 w-0 h-0 border-l-[10px] xl:border-l-[12px] border-l-transparent border-r-[10px] xl:border-r-[12px] border-r-transparent border-t-[12px] xl:border-t-[14px] border-t-slate-950/90" />
+          </div>
+
+          {/* Imagen de la Mascota Búho (Escalado Proporcional para PC: de 320px a 420px y 480px) */}
+          <div className="relative w-80 h-96 xl:w-[420px] xl:h-[500px] 2xl:w-[480px] 2xl:h-[570px] flex items-center justify-center transition-all duration-300">
+            <img
+              src={owlMascotImg}
+              alt="Mascota Búho MCHAV Analytics"
+              className="w-full h-full object-contain filter drop-shadow-[0_0_40px_rgba(6,182,212,0.55)] transition-transform duration-500"
+            />
           </div>
 
         </div>
-
       </div>
 
     </div>

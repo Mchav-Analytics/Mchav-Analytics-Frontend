@@ -349,7 +349,7 @@ export default function AdminUsuariosView({
         </div>
       </section>
 
-      {/* CONTENEDOR 2 — Cabecera del directorio + búsqueda */}
+      {/* CONTENEDOR 2 — Cabecera del directorio + botones "Todos" / "Inactivos" + búsqueda */}
       <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl">
         <div className="pointer-events-none absolute -top-16 right-0 h-36 w-36 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
@@ -365,81 +365,53 @@ export default function AdminUsuariosView({
             </p>
           </div>
 
-          <label className="relative flex items-center w-full lg:w-[380px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-            <span className="flex items-center justify-center w-11 shrink-0 text-indigo-500 dark:text-indigo-400 pointer-events-none">
-              <Search size={16} />
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar por nombre o correo..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full min-h-[44px] bg-transparent border-0 py-2.5 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            />
-            {searchTerm && (
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* Botones Todos e Inactivos a la derecha */}
+            <div className="flex items-center gap-2">
               <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="pr-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+                onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  roleFilter === 'ALL' && statusFilter === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
               >
-                <X size={15} />
+                Todos ({users.length})
               </button>
-            )}
-          </label>
-        </div>
-      </section>
+              <button
+                onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  statusFilter === 'INACTIVE'
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                    : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-900/40'
+                }`}
+              >
+                Inactivos ({pendingRequests.length})
+              </button>
+            </div>
 
-      {/* CONTENEDOR 3 — Filtros */}
-      <section className="relative bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl space-y-4">
-        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 inline-flex items-center gap-1.5">
-          <Filter size={14} className="text-indigo-500 dark:text-indigo-400" /> Filtros
-        </span>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
-          <button
-            onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'ALL' && statusFilter === 'ALL'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
-              : 'bg-slate-50 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700'
-              }`}
-          >
-            Todos ({users.length})
-          </button>
-          <button
-            onClick={() => setRoleFilter('ADMIN')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'ADMIN'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
-              : 'bg-purple-50 dark:bg-slate-950/80 text-purple-700 dark:text-purple-300/80 hover:text-purple-800 dark:hover:text-purple-200 border border-purple-200 dark:border-purple-900/40'
-              }`}
-          >
-            Admins ({adminUsers.length})
-          </button>
-          <button
-            onClick={() => setRoleFilter('MANAGER')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'MANAGER'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-              : 'bg-blue-50 dark:bg-slate-950/80 text-blue-700 dark:text-blue-300/80 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-900/40'
-              }`}
-          >
-            Líderes ({managerUsers.length})
-          </button>
-          <button
-            onClick={() => setRoleFilter('DEVELOPER')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'DEVELOPER'
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
-              : 'bg-emerald-50 dark:bg-slate-950/80 text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 border border-emerald-200 dark:border-emerald-900/40'
-              }`}
-          >
-            Devs ({developerUsers.length})
-          </button>
-          <button
-            onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center col-span-2 sm:col-span-1 ${statusFilter === 'INACTIVE'
-              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25'
-              : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 border border-amber-200 dark:border-amber-900/40'
-              }`}
-          >
-            Inactivos ({pendingRequests.length})
-          </button>
+            <label className="relative flex items-center w-full sm:w-[300px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+              <span className="flex items-center justify-center w-11 shrink-0 text-indigo-500 dark:text-indigo-400 pointer-events-none">
+                <Search size={16} />
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar por nombre o correo..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full min-h-[44px] bg-transparent border-0 py-2.5 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="pr-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </label>
+          </div>
         </div>
       </section>
 

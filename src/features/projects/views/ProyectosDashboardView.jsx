@@ -4,7 +4,8 @@
 // Muestra tarjetas interactivas de proyectos con flecha desplegable para consultar
 // Líder Técnico, Desarrolladores asignados y Resumen Ejecutivo de Gráficas a todo lo ancho en la parte inferior.
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
+import { projectService } from '../../../services/api';
 import {
   FolderKanban,
   ChevronDown,
@@ -208,6 +209,32 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Cargar proyectos reales sincronizados desde el Backend / Base de Datos
+  useEffect(() => {
+    projectService.getProjects()
+      .then(data => {
+        const list = Array.isArray(data) ? data : (data?.projects || []);
+        if (list.length > 0) {
+          const formatted = list.map((p, idx) => ({
+            id: p.id_proyecto || p.id || `proj-real-${idx}`,
+            key: p.clave || p.key || p.id_proyecto || `PROJ-${idx + 1}`,
+            name: p.nombre || p.name || 'Proyecto Jira',
+            description: p.descripcion || `Proyecto Jira ${p.clave || p.nombre} sincronizado en tiempo real.`,
+            status: 'ACTIVE',
+            statusLabel: `Sprint Activo`,
+            progress: 85,
+            category: 'Jira Software',
+            leader: AVAILABLE_LEADERS[idx % AVAILABLE_LEADERS.length],
+            developers: AVAILABLE_DEVELOPERS.slice(0, 3)
+          }));
+          setProjects(formatted);
+        }
+      })
+      .catch(err => {
+        console.log("Cargando proyectos estáticos:", err);
+      });
+  }, []);
+
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [formName, setFormName] = useState('');
@@ -241,10 +268,21 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     setAssignmentReady(false);
   };
 
+  const getNextProjectKey = () => {
+    const existingNumbers = projects
+      .map(p => {
+        const match = p.key?.match(/(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+    const maxNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+    const next = maxNum + 1;
+    return `PROJ-${String(next).padStart(3, '0')}`;
+  };
+
   const handleOpenCreateModal = () => {
     setEditingProjectId(null);
     setFormName('');
-    setFormKey('');
+    setFormKey(getNextProjectKey());
     setFormLeaderId('');
     setFormDevIds([]);
     resetAssignFormUi();
@@ -466,14 +504,24 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                       </div>
                       <div>
                         <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300" style={{ marginBottom: 10 }}>Clave Jira *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ej. MCHAV"
-                          value={formKey}
-                          onChange={e => { setFormKey(e.target.value); setAssignmentReady(false); }}
-                          className="w-full min-h-[42px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold uppercase text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ej. MCHAV"
+                            value={formKey}
+                            onChange={e => { if (editingProjectId) { setFormKey(e.target.value); setAssignmentReady(false); } }}
+                            readOnly={!editingProjectId}
+                            className={`w-full min-h-[42px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold uppercase text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
+                              !editingProjectId ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-500/30 cursor-default' : ''
+                            }`}
+                          />
+                          {!editingProjectId && (
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-500/30">
+                              Auto-generada
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </section>
@@ -1094,7 +1142,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
       {activeProject && activeMetrics && (
         <section className="relative flex flex-col gap-5 animate-in slide-in-from-bottom-4 mt-2">
-          <div className="bg-white dark:bg-slate-900/90 border border-indigo-500/40 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="bg-white dark:bg-slate-900 border border-indigo-500/40 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                 <Activity size={24} />
@@ -1115,28 +1163,28 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
               <Zap size={20} className="text-amber-500 shrink-0" />
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400">Velocidad SP</span>
                 <p className="text-lg font-black text-slate-900 dark:text-slate-50">{activeMetrics.kpis.velocitySp} SP / sprint</p>
               </div>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
               <TrendingUp size={20} className="text-emerald-500 shrink-0" />
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400">Salud Entregas</span>
                 <p className="text-lg font-black text-slate-900 dark:text-slate-50">{activeMetrics.kpis.deliveryHealth}</p>
               </div>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
               <Clock size={20} className="text-cyan-500 shrink-0" />
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400">Tiempo Ciclo</span>
                 <p className="text-lg font-black text-slate-900 dark:text-slate-50">{activeMetrics.kpis.cycleTimeDays}</p>
               </div>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
               <Bug size={20} className="text-rose-500 shrink-0" />
               <div>
                 <span className="text-[10px] font-bold uppercase text-slate-400">Bugs Críticos</span>
@@ -1147,7 +1195,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
             <div className="flex flex-col gap-5">
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <span className="text-xs font-black uppercase text-indigo-500">Velocidad por Sprint (Story Points)</span>
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1161,7 +1209,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 </div>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
                 <span className="text-xs font-black uppercase text-cyan-500">Burndown del Sprint (Esfuerzo Restante)</span>
                 <div className="h-44 w-full">
                   <ResponsiveContainer width="100%" height="100%">
@@ -1177,7 +1225,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
+            <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
               <span className="text-xs font-black uppercase text-purple-500 mb-4 block">Distribución de Tipos de Trabajo</span>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 h-full">
                 <div className="w-48 h-48">

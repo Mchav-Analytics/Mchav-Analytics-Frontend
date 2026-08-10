@@ -4,7 +4,8 @@
 
 import React from 'react';
 import Logo from './Logo';
-import { useAuth } from '../../features/auth/context/AuthContext';
+import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
+import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
 
 function Sidebar({
   activeTab,
@@ -24,7 +25,7 @@ function Sidebar({
     await logout();
   };
 
-  const userRole = user?.rol || 'ADMIN';
+  const userRole = normalizeRole(user?.rol);
 
   // ── Iconos SVG exactos del snippet Meraki UI ──
   const icons = {
@@ -137,21 +138,9 @@ function Sidebar({
     ];
   }, [userRole]);
 
-  // ── Lista de Proyectos (con fallback enriquecido) ──
-  const defaultProjects = [
-    { id_proyecto: 'PROJ-01', nombre: 'MCHAV Analytics SPA', color: 'bg-pink-500' },
-    { id_proyecto: 'PROJ-02', nombre: 'Portal CRM Clientes', color: 'bg-slate-500' },
-    { id_proyecto: 'PROJ-03', nombre: 'API Gateway Microservicios', color: 'bg-indigo-500' }
-  ];
-
-  const projectsList = projects && projects.length > 0 ? projects : defaultProjects;
-
-  // ── Clases del snippet Meraki UI ──
-  const linkClasses = 'flex items-center px-3 py-2 text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700';
-  const activeLinkClasses = 'flex items-center px-3 py-2 text-gray-700 bg-gray-100 transition-colors duration-300 transform rounded-lg dark:bg-gray-800 dark:text-gray-200';
-
-  const projectLinkClasses = 'flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-gray-600 transition-colors duration-300 transform rounded-lg dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 dark:hover:text-gray-200 hover:text-gray-700';
-  const activeProjectClasses = 'flex items-center justify-between w-full px-3 py-2 text-xs font-medium text-gray-700 transition-colors duration-300 transform bg-gray-100 rounded-lg dark:bg-gray-800 dark:text-gray-200';
+  // ── Clases de navegación con efecto dinámico ──
+  const linkClasses = 'group/nav relative flex items-center px-3 py-2.5 text-gray-500 dark:text-gray-400 rounded-xl transition-all duration-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-800/60 hover:translate-x-0.5';
+  const activeLinkClasses = 'sidebar-nav-active group/nav relative flex items-center px-3 py-2.5 rounded-xl text-indigo-600 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-500/15 font-semibold shadow-md shadow-indigo-200/60 dark:shadow-indigo-500/20 border border-indigo-200/80 dark:border-indigo-500/20 transition-all duration-300';
 
   // ── Iniciales del usuario ──
   const userInitials = user?.nombre
@@ -166,68 +155,37 @@ function Sidebar({
       style={{ flexShrink: 0 }}
     >
 
-      {/* ── BOTÓN DE COLAPSO ── */}
-      <button
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          right: '-12px',
-          transform: 'translateY(-50%)',
-          width: '24px',
-          height: '24px',
-          borderRadius: '50%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 50,
-          border: '1px solid',
-          borderColor: isDarkMode ? '#374151' : '#e5e7eb',
-          background: isDarkMode ? '#1f2937' : '#ffffff',
-          color: isDarkMode ? '#9ca3af' : '#6b7280',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.15)',
-          transition: 'all 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.background = '#6366f1';
-          e.currentTarget.style.color = '#ffffff';
-          e.currentTarget.style.borderColor = '#6366f1';
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.background = isDarkMode ? '#1f2937' : '#ffffff';
-          e.currentTarget.style.color = isDarkMode ? '#9ca3af' : '#6b7280';
-          e.currentTarget.style.borderColor = isDarkMode ? '#374151' : '#e5e7eb';
-        }}
-        aria-label={isCollapsed ? 'Expandir panel' : 'Colapsar panel'}
-      >
-        {isCollapsed ? (
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" style={{ width: '14px', height: '14px' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" style={{ width: '14px', height: '14px' }}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        )}
-      </button>
+      {/* ── CABECERA CON LOGO Y BURGER ANIMADO DE COLAPSO (Uiverse) ── */}
+      <div className={`flex items-center justify-between w-full ${isCollapsed ? 'flex-col gap-4 justify-center' : ''}`}>
+        <a href="#" onClick={(e) => e.preventDefault()} className={`${isCollapsed ? 'flex justify-center' : ''}`}>
+          <Logo
+            style={{
+              width: isCollapsed ? '36px' : '44px',
+              height: isCollapsed ? '36px' : '44px',
+              borderRadius: '10px',
+              marginRight: 0,
+            }}
+          />
+        </a>
 
-      {/* ── LOGO MCHAV ── */}
-      <a href="#" onClick={(e) => e.preventDefault()} className={`${isCollapsed ? 'flex justify-center' : ''}`}>
-        <Logo
-          style={{
-            width: isCollapsed ? '36px' : '44px',
-            height: isCollapsed ? '36px' : '44px',
-            borderRadius: '10px',
-            marginRight: 0,
-          }}
-        />
-      </a>
+        {/* Botón Burger Animado */}
+        <label className="burger" htmlFor="sidebar-burger-toggle" title={isCollapsed ? 'Expandir panel' : 'Colapsar panel'}>
+          <input
+            type="checkbox"
+            id="sidebar-burger-toggle"
+            checked={!isCollapsed}
+            onChange={() => setIsCollapsed(!isCollapsed)}
+          />
+          <span></span>
+          <span></span>
+          <span></span>
+        </label>
+      </div>
 
       <div className="flex flex-col justify-between flex-1 mt-6">
 
         {/* ── NAVEGACIÓN PRINCIPAL ── */}
-        <nav className={`${isCollapsed ? 'space-y-4 flex flex-col items-center' : '-mx-3 space-y-3'}`}>
+        <nav className={`${isCollapsed ? 'space-y-2 flex flex-col items-center' : '-mx-3 space-y-1'}`}>
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
 
@@ -236,14 +194,17 @@ function Sidebar({
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`p-2.5 rounded-lg transition-colors duration-300 cursor-pointer ${
+                  className={`relative p-2.5 rounded-xl transition-all duration-300 cursor-pointer ${
                     isActive
-                      ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200'
-                      : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200'
+                      ? 'bg-indigo-100 dark:from-indigo-500/15 dark:to-purple-500/10 text-indigo-600 dark:text-indigo-400 shadow-md shadow-indigo-200/60 dark:shadow-indigo-500/25 scale-110 border border-indigo-200/80 dark:border-indigo-500/20'
+                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 hover:scale-105'
                   }`}
-                  style={{ border: 'none', background: isActive ? undefined : 'transparent' }}
+                  style={{ border: isActive ? undefined : 'none', background: isActive ? undefined : 'transparent' }}
                   title={item.label}
                 >
+                  {isActive && (
+                    <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-purple-600 shadow-md shadow-indigo-400/60" />
+                  )}
                   {item.icon}
                 </button>
               );
@@ -254,85 +215,35 @@ function Sidebar({
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
                 className={isActive ? activeLinkClasses : linkClasses}
-                style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: 'none', background: isActive ? undefined : 'transparent' }}
+                style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: isActive ? undefined : 'none', background: isActive ? undefined : 'transparent' }}
               >
-                {item.icon}
-                <span className="mx-2 text-sm font-medium">{item.label}</span>
+                {/* Indicador lateral animado */}
+                {isActive && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-gradient-to-b from-indigo-500 to-purple-600 shadow-lg shadow-indigo-400/60 sidebar-indicator" />
+                )}
+                <span className={`transition-transform duration-300 ${isActive ? 'text-indigo-600 dark:text-indigo-400 scale-110' : 'group-hover/nav:scale-110'}`}>
+                  {item.icon}
+                </span>
+                <span className={`mx-2 text-sm transition-all duration-300 ${
+                  isActive ? 'font-bold tracking-tight' : 'font-medium group-hover/nav:font-semibold'
+                }`}>{item.label}</span>
+                {isActive && (
+                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-pulse" />
+                )}
               </button>
             );
           })}
         </nav>
 
-        {/* ── SECCIÓN DE PROYECTOS CONECTADA CON DATOS Y METRICAS ── */}
-        <div className="mt-6">
-          {!isCollapsed ? (
-            <div>
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-gray-800 dark:text-white">Projects</h2>
 
-                <button
-                  className="p-0.5 hover:bg-gray-100 duration-200 transition-colors text-gray-500 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800 border rounded-lg"
-                  style={{ cursor: 'pointer', background: 'transparent' }}
-                  title="Nuevo proyecto"
-                >
-                  {icons.plus}
-                </button>
-              </div>
-
-              <nav className="mt-4 -mx-3 space-y-3">
-                {projectsList.map((proj, idx) => {
-                  const projId = proj.id_proyecto || proj.key || `PROJ-0${idx + 1}`;
-                  const projName = proj.nombre || proj.name || projId;
-                  const isSelected = selectedProjectId === projId;
-                  const colorDots = ['bg-pink-500', 'bg-slate-500', 'bg-indigo-500', 'bg-blue-500', 'bg-yellow-500'];
-                  const dotColor = proj.color || colorDots[idx % colorDots.length];
-
-                  return (
-                    <button
-                      key={projId}
-                      onClick={() => setSelectedProjectId && setSelectedProjectId(projId)}
-                      className={isSelected ? activeProjectClasses : projectLinkClasses}
-                      style={{ cursor: 'pointer', border: 'none', background: isSelected ? undefined : 'transparent' }}
-                      title={`Seleccionar proyecto ${projName}`}
-                    >
-                      <div className="flex items-center gap-x-2 truncate">
-                        <span className={`w-2 h-2 rounded-full shrink-0 ${dotColor}`}></span>
-                        <span className="truncate">{projName}</span>
-                      </div>
-
-                      {icons.chevronRight}
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center space-y-3 mt-4">
-              <div className="w-6 h-6 rounded-full bg-pink-500 opacity-60"></div>
-              <div className="w-6 h-6 rounded-full bg-indigo-500 opacity-60"></div>
-              <div className="w-6 h-6 rounded-full bg-blue-500 opacity-60"></div>
-            </div>
-          )}
-        </div>
 
         {/* ── FOOTER: PERFIL DE USUARIO, MODO CLARO/OSCURO Y BOTÓN DE CERRAR SESIÓN ── */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
           
-          {/* Botón de Modo Claro / Modo Oscuro */}
-          <button
-            type="button"
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`flex items-center justify-between w-full text-xs font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg cursor-pointer ${
-              isCollapsed ? 'p-2 justify-center' : 'px-3 py-2'
-            }`}
-            title={isDarkMode ? "Cambiar a Modo Claro" : "Cambiar a Modo Oscuro"}
-            style={{ border: 'none', background: 'transparent' }}
-          >
-            <div className="flex items-center gap-x-2">
-              {isDarkMode ? icons.moon : icons.sun}
-              {!isCollapsed && <span>{isDarkMode ? "Modo Oscuro" : "Modo Claro"}</span>}
-            </div>
-          </button>
+          {/* Switch de Tema Sol / Luna Uiverse (Alineado a la izquierda) */}
+          <div className="flex items-center justify-start px-1 py-1">
+            <ThemeToggleSwitch isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
+          </div>
 
           {/* Fila de Perfil de Usuario y Botón Cerrar Sesión */}
           {!isCollapsed ? (

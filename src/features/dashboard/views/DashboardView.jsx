@@ -294,7 +294,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
             setDrilldownKey('points');
             openDrillDown('Puntos Entregados (Velocity)', 'velocity');
           }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-purple-500/60 dark:hover:border-purple-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-500/60 dark:hover:border-purple-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
@@ -326,7 +326,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
             setDrilldownKey('completed');
             openDrillDown('Tareas Completadas (Throughput)', 'throughput');
           }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-teal-500/60 dark:hover:border-teal-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-teal-500/60 dark:hover:border-teal-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
@@ -358,7 +358,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
             setDrilldownKey('cycle');
             openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time');
           }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-amber-500/60 dark:hover:border-amber-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
@@ -390,7 +390,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
             setDrilldownKey('retrabajo');
             openDrillDown('Lead Time Promedio', 'lead_time');
           }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
+          className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
@@ -422,7 +422,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Gráfica 1: Velocidad por Sprint */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-4">
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-4">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
@@ -445,7 +445,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
         </div>
 
         {/* Gráfica 2: Progreso de Tareas (Burndown) */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-4">
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-4">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burndown)</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Esfuerzo restante en story points vs. ideal</p>
@@ -474,7 +474,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Bloque Salud del Sprint */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-5">
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-5">
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Salud del sprint</h3>
@@ -528,7 +528,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
         </div>
 
         {/* Bloque Gráfica de Dona: Distribución del Trabajo */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
           <div>
             <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
