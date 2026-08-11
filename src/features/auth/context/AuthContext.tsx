@@ -181,8 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (USE_MOCK_DATA) {
       return login({ email: "vhoyos@mchav.com" });
     }
-    const url = authService.getLoginUrl();
-    window.location.href = url;
+    window.location.href = `${BACKEND_URL}/api/v1/auth/login`;
   };
 
   // Cierre de sesión real: Si sale el Desarrollador, reinicia aprobaciones para permitir enviar la notificación de nuevo

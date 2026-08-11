@@ -260,6 +260,21 @@ function MainAppContent() {
 
   const headerDetails = getTabHeaderDetails();
 
+  if (authLoading) {
+    return (
+      <div className="flex items-center justify-center h-screen bg-slate-950 text-white font-sans">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm font-semibold text-slate-400">Cargando MCHAV Analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginView />;
+  }
+
   return (
     <MainLayout
       activeTab={activeTab}
