@@ -71,15 +71,39 @@ const mockDistributionData = [
   { name: 'Tareas / Deuda Técnica', value: 0, percentage: 0, color: '#64748b', icon: FileText }
 ];
 
-// Tooltip flotante informativo
-const InfoTooltip = ({ text }) => (
-  <div className="group relative inline-block cursor-help ml-1 z-30">
-    <Info size={13} className="text-slate-400 hover:text-indigo-500 transition-colors" />
-    <div className="opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-slate-905 dark:bg-slate-900 text-slate-100 dark:text-slate-100 text-[11px] rounded-xl shadow-2xl border border-slate-800 pointer-events-none leading-snug">
-      {text}
+// Tooltip flotante informativo que aparece ÚNICAMENTE al pasar el cursor sobre el ícono (i)
+const InfoTooltip = ({ text, align = 'center' }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <div 
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => e.stopPropagation()} 
+      className="relative inline-flex items-center cursor-pointer ml-1.5 z-10"
+    >
+      <Info 
+        size={14} 
+        className="text-slate-400 dark:text-slate-400 hover:text-cyan-400 dark:hover:text-cyan-300 transition-colors shrink-0" 
+      />
+      
+      {isHovered && (
+        <div className={`absolute z-50 p-3 bg-slate-950/95 backdrop-blur-md text-slate-100 text-xs font-medium rounded-xl shadow-[0_10px_35px_rgba(0,0,0,0.9)] border border-slate-700/80 pointer-events-none leading-relaxed text-left w-64 animate-in fade-in duration-150 ${
+          align === 'right' 
+            ? 'top-full mt-2.5 right-0' 
+            : 'bottom-full mb-2.5 left-1/2 -translate-x-1/2'
+        }`}>
+          <span className="block">{text}</span>
+          {align === 'right' ? (
+            <div className="absolute bottom-full right-3 -mb-px w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-slate-950/95" />
+          ) : (
+            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-slate-950/95" />
+          )}
+        </div>
+      )}
     </div>
-  </div>
-);
+  );
+};
 
 // Datos de Drill-down de incidencias por KPI (HU-015)
 const mockKpiDrilldownData = {
@@ -136,11 +160,26 @@ const mockKpiDrilldownData = {
   }
 };
 
+// Datos de Bugs y Cuellos de Botella para el modo enfocado de Salud del Sprint
+const mockSprintBugsList = [
+  { key: 'PA-112', summary: 'Bug crítico en pasarela de pagos durante checkout', status: 'En Curso', assignee: 'Stephany Leon', severity: 'Crítica' },
+  { key: 'PA-111', summary: 'Tarea demorada en homologación de roles de usuario', status: 'En Curso', assignee: 'Carlos Perez', severity: 'Alta' },
+  { key: 'PA-108', summary: 'Falla de renderizado en modal de reporte en Safari', status: 'Por Hacer', assignee: 'Ana Martinez', severity: 'Media' },
+  { key: 'PA-104', summary: 'Error 500 al exportar listado masivo a formato CSV', status: 'En Revisión', assignee: 'David Gomez', severity: 'Alta' },
+  { key: 'PA-99',  summary: 'Inconsistencia de decimales en cálculo de tiempo', status: 'Por Hacer', assignee: 'Stephany Leon', severity: 'Baja' },
+  { key: 'PA-94',  summary: 'Timeout intermitente al sincronizar webhooks con Jira', status: 'En Curso', assignee: 'Carlos Perez', severity: 'Crítica' }
+];
+
 function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis }) {
   const { user } = useAuth();
   const [isRefreshing, setIsRefreshing] = useState(false); // Estado de animación del botón de refresco
   const [showActiveToast, setShowActiveToast] = useState(true);
   
+  // Estado para el modo enfocado de Bugs de Salud del Sprint (Backdrop blur)
+  const [isBugsFocused, setIsBugsFocused] = useState(false);
+  const [bugsPage, setBugsPage] = useState(1);
+  const [bugsSearch, setBugsSearch] = useState('');
+
   // Estado para el modal de drill-down de KPI (HU-015)
   const [drilldownKey, setDrilldownKey] = useState(null);
   const [drilldownSearch, setDrilldownSearch] = useState('');
@@ -155,6 +194,37 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
     setModalMetricType(metricType);
     setIsModalOpen(true);
   };
+
+  const getSeverityBadge = (severity) => {
+    switch (severity) {
+      case 'Crítica':
+        return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20';
+      case 'Alta':
+        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
+      case 'Media':
+        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
+      default:
+        return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
+    }
+  };
+
+  const bugsPageSize = 4;
+  const filteredBugs = useMemo(() => {
+    const q = bugsSearch.trim().toLowerCase();
+    if (!q) return mockSprintBugsList;
+    return mockSprintBugsList.filter(b => 
+      b.key.toLowerCase().includes(q) ||
+      b.summary.toLowerCase().includes(q) ||
+      b.assignee.toLowerCase().includes(q) ||
+      b.severity.toLowerCase().includes(q)
+    );
+  }, [bugsSearch]);
+
+  const totalBugsPages = Math.ceil(filteredBugs.length / bugsPageSize) || 1;
+  const paginatedBugs = useMemo(() => {
+    const start = (bugsPage - 1) * bugsPageSize;
+    return filteredBugs.slice(start, start + bugsPageSize);
+  }, [filteredBugs, bugsPage, bugsPageSize]);
 
   const isPending = user?.status === 'PENDING' && user?.rol === 'MANAGER';
 
@@ -277,7 +347,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
           {/* Botón de Refrescar Datos */}
           <button
             onClick={handleRefresh}
-            className="h-10 w-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+            className="h-10 w-10 rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center"
             title="Actualizar datos del sprint"
           >
             <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
@@ -285,205 +355,31 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
         </div>
       </div>
 
-      {/* 2. FILA DE 4 TARJETAS KPI SUPERIORES (INTERACTIVAS CON DRILL-DOWN HU-015) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Overlay de fondo desenfocado (Backdrop Blur) cuando se activa la vista de bugs */}
+      {isBugsFocused && (
+        <div 
+          onClick={() => setIsBugsFocused(false)}
+          className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md z-40 transition-all duration-300 animate-in fade-in"
+        />
+      )}
+
+      {/* 2. SECCIÓN SUPERIOR: SALUD DEL SPRINT Y DISTRIBUCIÓN / MODO BUGS FOCUSED */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch relative">
         
-        {/* KPI 1: Puntos Entregados (SP) */}
-        <div 
-          onClick={() => {
-            setDrilldownKey('points');
-            openDrillDown('Puntos Entregados (Velocity)', 'velocity');
-          }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-purple-500/60 dark:hover:border-purple-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-              <Zap size={14} className="text-purple-500 dark:text-purple-400 shrink-0" />
-              <span>Puntos Entregados</span>
-            </div>
-            <InfoTooltip text="Suma de Story Points (SP) de las tareas finalizadas en este sprint. Haz clic para ver el desglose por ticket (HU-015)." />
-          </div>
-          <div className="flex items-baseline justify-between mt-2.5">
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].velocity_total_sp : 30}
-              </span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">SP</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center gap-1">
-              🔍 Ver detalle
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-purple-600 dark:text-purple-400 font-extrabold">
-            <span>Ver desglose de tickets Jira</span>
-            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
-          </div>
-        </div>
-
-        {/* KPI 2: Tareas Completadas */}
-        <div 
-          onClick={() => {
-            setDrilldownKey('completed');
-            openDrillDown('Tareas Completadas (Throughput)', 'throughput');
-          }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-teal-500/60 dark:hover:border-teal-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-              <CheckCircle2 size={14} className="text-teal-500 dark:text-teal-400 shrink-0" />
-              <span>Tareas Completadas</span>
-            </div>
-            <InfoTooltip text="Cantidad de tareas completadas en relación al total planificado. Haz clic para ver la lista de tickets (HU-015)." />
-          </div>
-          <div className="flex items-baseline justify-between mt-2.5">
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].throughput_issues : 10}
-              </span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">tickets</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-teal-500/10 text-teal-400 border border-teal-500/20 flex items-center gap-1">
-              🔍 Ver detalle
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-teal-600 dark:text-teal-400 font-extrabold">
-            <span>Ver desglose de tickets Jira</span>
-            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
-          </div>
-        </div>
-
-        {/* KPI 3: Tiempo de Ciclo */}
-        <div 
-          onClick={() => {
-            setDrilldownKey('cycle');
-            openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time');
-          }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-amber-500/60 dark:hover:border-amber-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-              <Clock size={14} className="text-amber-500 dark:text-amber-400 shrink-0" />
-              <span>Tiempo de Ciclo</span>
-            </div>
-            <InfoTooltip text="Días promedio que tarda una tarea en completarse desde que inicia desarrollo (HU-012/HU-015)." />
-          </div>
-          <div className="flex items-baseline justify-between mt-2.5">
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].cycle_time_promedio_dias : 4.2}
-              </span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center gap-1">
-              🔍 Ver detalle
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-amber-600 dark:text-amber-400 font-extrabold">
-            <span>Ver desglose de tickets Jira</span>
-            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
-          </div>
-        </div>
-
-        {/* KPI 4: Lead Time Promedio */}
-        <div 
-          onClick={() => {
-            setDrilldownKey('retrabajo');
-            openDrillDown('Lead Time Promedio', 'lead_time');
-          }}
-          className="p-4 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm hover:shadow-lg transition-all duration-200 flex flex-col relative overflow-hidden group cursor-pointer"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-              <Clock size={14} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
-              <span>Lead Time Promedio</span>
-            </div>
-            <InfoTooltip text="Días promedio desde la creación de la incidencia hasta su resolución final (HU-012/HU-015)." />
-          </div>
-          <div className="flex items-baseline justify-between mt-2.5">
-            <div className="flex items-baseline gap-1">
-              <span className="text-3xl font-extrabold text-slate-900 dark:text-white">
-                {kpis && kpis.length > 0 ? kpis[kpis.length - 1].lead_time_promedio_dias : 6.8}
-              </span>
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
-            </div>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 flex items-center gap-1">
-              🔍 Ver detalle
-            </span>
-          </div>
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-[10px] text-cyan-600 dark:text-cyan-400 font-extrabold">
-            <span>Ver desglose de tickets Jira</span>
-            <Search size={12} className="group-hover:translate-x-0.5 transition-transform" />
-          </div>
-        </div>
-
-      </div>
-
-      {/* 3. FILA MEDIA: GRÁFICAS DE VELOCIDAD Y BURNDOWN (CON ESPACIADO MODERNO Y BORDE SLEEK) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Gráfica 1: Velocidad por Sprint */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
-              <InfoTooltip text="Evolución del rendimiento en Story Points a lo largo de los sprints finalizados." />
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución del rendimiento en story points</p>
-          </div>
-
-          <div className="h-64 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={mockSprintVelocity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="sprint" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
-                <RechartsTooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="sp" fill="#6366f1" radius={[4, 4, 0, 0]} name="Story Points" barSize={32} />
-                <Line type="monotone" dataKey="promedio" stroke="#10b981" strokeWidth={3} dot={false} name="Promedio histórico" />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Gráfica 2: Progreso de Tareas (Burndown) */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-4">
-          <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burndown)</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Esfuerzo restante en story points vs. ideal</p>
-          </div>
-
-          <div className="h-60 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockBurndownData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={11} tickLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={11} tickLine={false} />
-                <RechartsTooltip contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="real" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 4, fill: '#8b5cf6' }} name="REAL" />
-                <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          <p className="text-[11px] text-teal-600 dark:text-teal-400 font-medium pt-1 flex items-center gap-1.5">
-            ✨ Avance óptimo. El ritmo real de quemado coincide casi a la perfección con la línea ideal de entrega.
-          </p>
-        </div>
-
-      </div>
-
-      {/* 4. FILA INFERIOR: SALUD DEL SPRINT Y DISTRIBUCIÓN DE TRABAJO */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        {/* Bloque Salud del Sprint */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-5">
+        {/* Columna 1 (Izquierda): Salud del Sprint */}
+        <div className={`p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] flex flex-col justify-between transition-all duration-300 ${
+          isBugsFocused ? 'relative z-50 ring-2 ring-amber-500/60 shadow-2xl' : ''
+        }`}>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Salud del sprint</h3>
-              <InfoTooltip text="Salud calculada sobre bugs críticos y cuellos de botella detectados." />
+              {!isBugsFocused && (
+                <InfoTooltip text="Evaluación general que mide si el equipo avanza a buen ritmo sin bloqueos o errores graves." />
+              )}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Salud calculada sobre bugs críticos y cuellos de botella</p>
           </div>
 
-          {/* Anillo de Medición Circular de Salud */}
           <div className="flex flex-col items-center justify-center py-2">
             <div className="relative w-36 h-36 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -514,222 +410,378 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
             </p>
           </div>
 
-          {/* Alertas de Incidencias Críticas */}
-          <div className="space-y-2 pt-1">
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-900 dark:text-slate-300 text-xs flex items-center gap-2">
-              <AlertTriangle size={15} className="text-amber-500 dark:text-amber-400 shrink-0" />
-              <span><strong>PA-112:</strong> Bug crítico asignado a <strong>Stephany Leon</strong> requiere atención inmediata.</span>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-900 dark:text-slate-300 text-xs flex items-center gap-2">
-              <AlertTriangle size={15} className="text-amber-500 dark:text-amber-400 shrink-0" />
-              <span><strong>PA-111:</strong> Tarea demorada (5.8d en curso). Sugerencia: revisar con <strong>Carlos Perez</strong> en la Daily.</span>
-            </div>
-          </div>
+          {/* Botón Cargar Bugs / Ocultar Bugs */}
+          <button
+            onClick={() => {
+              setIsBugsFocused(!isBugsFocused);
+              setBugsPage(1);
+            }}
+            className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 ${
+              isBugsFocused 
+                ? 'bg-amber-500 text-slate-950 shadow-md font-black' 
+                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20'
+            }`}
+          >
+            <Bug size={15} />
+            <span>{isBugsFocused ? 'Ocultar bugs' : 'Cargar bugs'}</span>
+          </button>
         </div>
 
-        {/* Bloque Gráfica de Dona: Distribución del Trabajo */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800/80 shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
-          <div>
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
-          </div>
+        {/* Si isBugsFocused es TRUE: Mostramos la Tabla de Bugs ocupando Columna 2 y 3 sin desenfoque */}
+        {isBugsFocused ? (
+          <div className="lg:col-span-2 relative z-50 p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-2xl flex flex-col justify-between animate-in fade-in zoom-in-95 duration-200">
+            <div>
+              {/* Header de la Tabla de Bugs */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                    <Bug size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      Bugs y Cuellos de Botella
+                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                        {filteredBugs.length} incidencias
+                      </span>
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Listado de fallos del sprint actual</p>
+                  </div>
+                </div>
 
-          {/* GRÁFICA DE DONA DE RECHARTS CON LEYENDA E INTERACTIVIDAD JS */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4 py-2">
-            
-            {/* Gráfica de Dona con Centro Total */}
-            <div className="h-48 w-full relative flex items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={mockDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
+                <div className="flex items-center gap-2">
+                  {/* Buscador de bugs */}
+                  <div className="relative w-44">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
+                    <input
+                      type="text"
+                      placeholder="Buscar bug..."
+                      value={bugsSearch}
+                      onChange={(e) => {
+                        setBugsSearch(e.target.value);
+                        setBugsPage(1);
+                      }}
+                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
+                    />
+                  </div>
+
+                  {/* Botón cerrar X */}
+                  <button
+                    onClick={() => setIsBugsFocused(false)}
+                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                    title="Cerrar vista de bugs"
                   >
-                    {mockDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip contentStyle={tooltipStyle} />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                <span className="text-xl font-black text-slate-900 dark:text-white">14</span>
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Total Incidencias</span>
+                    <X size={18} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabla de Bugs */}
+              <div className="mt-3 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden min-h-[220px]">
+                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300 table-fixed">
+                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 uppercase text-[10px] tracking-wider">
+                    <tr className="h-9">
+                      <th className="px-3 w-[90px]">Clave</th>
+                      <th className="px-3">Resumen / Título</th>
+                      <th className="px-3 w-[110px]">Estado</th>
+                      <th className="px-3 w-[120px]">Asignado</th>
+                      <th className="px-3 w-[90px] text-center">Severidad</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
+                    {paginatedBugs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-8 text-center text-slate-500">
+                          No hay bugs que coincidan con la búsqueda.
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedBugs.map((bug) => (
+                        <tr key={bug.key} className="h-10 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                          <td className="px-3 font-bold text-amber-600 dark:text-amber-400 font-mono">
+                            {bug.key}
+                          </td>
+                          <td className="px-3 font-semibold text-slate-900 dark:text-white truncate">
+                            {bug.summary}
+                          </td>
+                          <td className="px-3">
+                            <span className="px-2 py-0.5 border rounded-lg text-[10px] font-semibold inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
+                              {bug.status}
+                            </span>
+                          </td>
+                          <td className="px-3 text-slate-600 dark:text-slate-300 truncate">
+                            {bug.assignee}
+                          </td>
+                          <td className="px-3 text-center">
+                            <span className={`px-2 py-0.5 border rounded-lg text-[10px] font-bold ${getSeverityBadge(bug.severity)}`}>
+                              {bug.severity}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
 
-            {/* Leyenda y Porcentajes de la Dona */}
-            <div className="space-y-3">
-              {mockDistributionData.map((item, idx) => {
-                const IconComponent = item.icon;
-                return (
-                  <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                      <div className="flex items-center gap-1.5">
-                        <IconComponent size={14} className="text-slate-500 dark:text-slate-400" />
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
-                      </div>
-                    </div>
-                    <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                      {item.value} <span className="text-slate-500 dark:text-slate-400 text-[10px]">({item.percentage}%)</span>
-                    </span>
+            {/* Paginación de la Tabla de Bugs */}
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 mt-2">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                Página {bugsPage} de {totalBugsPages} ({filteredBugs.length} bugs)
+              </span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={bugsPage === 1}
+                  onClick={() => setBugsPage((p) => Math.max(1, p - 1))}
+                  className="px-3 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                >
+                  Anterior
+                </button>
+                <button
+                  disabled={bugsPage >= totalBugsPages}
+                  onClick={() => setBugsPage((p) => Math.min(totalBugsPages, p + 1))}
+                  className="px-3 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Columna 2 (Centro/Izquierda): Distribución del Trabajo */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] flex flex-col justify-start gap-2">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
+                  <InfoTooltip text="Muestra en qué porcentaje se dividió el tiempo entre crear nuevas funciones, arreglar fallos o hacer mejoras técnicas." />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4 mt-1">
+                <div className="h-44 w-full relative flex items-center justify-center">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={mockDistributionData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={50}
+                        outerRadius={75}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {mockDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip contentStyle={tooltipStyle} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                    <span className="text-xl font-black text-slate-900 dark:text-white">14</span>
+                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Total Incidencias</span>
                   </div>
-                );
-              })}
+                </div>
+
+                <div className="space-y-2">
+                  {mockDistributionData.map((item, idx) => {
+                    const IconComponent = item.icon;
+                    return (
+                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
+                        <div className="flex items-center gap-2">
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                          <div className="flex items-center gap-1.5">
+                            <IconComponent size={13} className="text-slate-500 dark:text-slate-400" />
+                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
+                          </div>
+                        </div>
+                        <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                          {item.value} <span className="text-slate-500 dark:text-slate-400 text-[10px]">({item.percentage}%)</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
             </div>
 
-          </div>
+            {/* Columna 3 (Derecha): Tarjetas KPI (Última Sincronización, Tiempo de Ciclo y Lead Time Promedio) */}
+            <div className="flex flex-col gap-3 justify-between">
+              
+              {/* Tarjeta 1: Última Sincronización (Ubicada ARRIBA) */}
+              <div className="p-3.5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
+                      <RefreshCw size={13} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                      <span className="text-slate-700 dark:text-slate-300 font-extrabold">ÚLTIMA SINCRONIZACIÓN</span>
+                    </div>
+                    <InfoTooltip align="right" text="Fecha, hora y usuario responsable de la última actualización de datos desde Jira Cloud." />
+                  </div>
 
-        </div>
+                  <div className="mt-2.5 flex flex-col gap-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                        10 Ago 2026, 10:45 AM
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                        Exitosa
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium pt-0.5">
+                      <User size={12} className="text-indigo-400 shrink-0" />
+                      <span className="truncate">{user?.nombre || user?.email ? (user.nombre || user.email) : 'Valentina Hoyos'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* KPI 2: Tiempo de Ciclo */}
+              {(() => {
+                const cycleTimeNum = kpis && kpis.length > 0 ? parseFloat(kpis[kpis.length - 1].cycle_time_promedio_dias) : 4.2;
+                let colorClass = "text-emerald-500 dark:text-emerald-400";
+                let bgBtnClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20";
+                let borderClass = "border-emerald-200 dark:border-emerald-500/50";
+                let shadowClass = "shadow-sm dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)]";
+                let statusText = "Óptimo";
+
+                if (cycleTimeNum > 14) {
+                  colorClass = "text-rose-500 dark:text-rose-400";
+                  bgBtnClass = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20";
+                  borderClass = "border-rose-200 dark:border-rose-500/50";
+                  shadowClass = "shadow-sm dark:shadow-[0_4px_20px_rgba(244,63,94,0.15)]";
+                  statusText = "Crítico";
+                } else if (cycleTimeNum > 7) {
+                  colorClass = "text-amber-500 dark:text-amber-400";
+                  bgBtnClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20";
+                  borderClass = "border-amber-200 dark:border-amber-500/50";
+                  shadowClass = "shadow-sm dark:shadow-[0_4px_20px_rgba(245,158,11,0.15)]";
+                  statusText = "En Riesgo";
+                }
+
+                return (
+                  <div 
+                    onClick={() => openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time')}
+                    className={`p-3.5 rounded-2xl bg-white dark:bg-[#191c3d] border ${borderClass} ${shadowClass} transition-all duration-200 flex flex-col justify-between relative group cursor-pointer hover:shadow-md`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
+                          <Clock size={13} className={`${colorClass} shrink-0`} />
+                          <span className="text-slate-700 dark:text-slate-300 font-extrabold">TIEMPO DE CICLO</span>
+                          <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white dark:bg-[#191c3d] border ${borderClass} ${colorClass}`}>{statusText}</span>
+                        </div>
+                        <InfoTooltip align="right" text="Días promedio que tarda el equipo en terminar una tarea desde que empieza a trabajar en ella. Haz clic para ver el detalle." />
+                      </div>
+
+                      <div className="flex items-baseline justify-between mt-2.5">
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                            {cycleTimeNum}
+                          </span>
+                          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border transition-all flex items-center gap-1 ${bgBtnClass}`}>
+                          Ver detalle
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* KPI 3: Lead Time Promedio */}
+              <div 
+                onClick={() => openDrillDown('Lead Time Promedio', 'lead_time')}
+                className="p-3.5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group cursor-pointer"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
+                      <Clock size={13} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
+                      <span className="text-slate-700 dark:text-slate-300 font-extrabold">LEAD TIME PROMEDIO</span>
+                    </div>
+                    <InfoTooltip align="right" text="Días promedio que transcurren desde que se solicita o crea una tarea hasta su resolución final. Haz clic para ver el detalle." />
+                  </div>
+
+                  <div className="flex items-baseline justify-between mt-2.5">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                        {kpis && kpis.length > 0 ? kpis[kpis.length - 1].lead_time_promedio_dias : 6.8}
+                      </span>
+                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all flex items-center gap-1">
+                      Ver detalle
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </>
+        )}
 
       </div>
 
-      {/* 5. MODAL DE DRILL-DOWN DE INCIDENCIAS (HU-015) */}
-      {drilldownKey && activeDrilldown && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-4xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left max-h-[85vh] flex flex-col">
-            
-            {/* Cabecera del Modal */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4 shrink-0">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0">
-                  <Layers size={20} />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-                    {activeDrilldown.title}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {activeDrilldown.description}
-                  </p>
-                </div>
-              </div>
-              <button 
-                onClick={() => { setDrilldownKey(null); setDrilldownSearch(''); }}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+      {/* 3. SECCIÓN INFERIOR SEGÚN BOCETO: 2 COLUMNAS (VELOCIDAD POR SPRINT Y PROGRESO DE TAREAS) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* Velocidad por Sprint */}
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
+              <InfoTooltip text="Muestra cuánto trabajo ha entregado el equipo en cada período para ver si el ritmo aumenta o se mantiene." />
             </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución del rendimiento en story points</p>
+          </div>
 
-            {/* Fila de Estadísticas y Buscador */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 text-xs font-black">
-                  Valor KPI: {activeDrilldown.kpiValue}
-                </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                  {filteredDrilldownIssues.length} incidencias listadas
-                </span>
-              </div>
-
-              {/* Buscador interno */}
-              <div className="relative min-w-[220px]">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Buscar por ticket, título o desarrollador..."
-                  value={drilldownSearch}
-                  onChange={(e) => setDrilldownSearch(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500/40"
-                />
-              </div>
-            </div>
-
-            {/* Tabla de Incidencias Trazables */}
-            <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden overflow-y-auto flex-1 shadow-inner">
-              <table className="w-full text-xs text-left border-collapse">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-300 font-extrabold uppercase text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
-                  <tr>
-                    <th className="py-3 px-4">Clave Ticket</th>
-                    <th className="py-3 px-4">Título / Historia</th>
-                    <th className="py-3 px-4">Tipo</th>
-                    <th className="py-3 px-4">Estado</th>
-                    {drilldownKey === 'points' && <th className="py-3 px-4 text-center">SP</th>}
-                    {drilldownKey === 'cycle' && <th className="py-3 px-4 text-center">Tiempo Ciclo</th>}
-                    <th className="py-3 px-4">Asignado</th>
-                    <th className="py-3 px-4">Fecha</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-200 font-medium">
-                  {filteredDrilldownIssues.length === 0 ? (
-                    <tr>
-                      <td colSpan={7} className="py-8 text-center text-slate-400 italic">
-                        No se encontraron tickets con el filtro de búsqueda.
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredDrilldownIssues.map((iss) => (
-                      <tr key={iss.key} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <td className="py-3 px-4 font-black text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                          <span>{iss.key}</span>
-                          <ExternalLink size={11} className="opacity-60" />
-                        </td>
-                        <td className="py-3 px-4 max-w-[280px] truncate font-bold text-slate-900 dark:text-slate-100">
-                          {iss.title}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            iss.type === 'Bug' 
-                              ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-300 dark:border-rose-500/30'
-                              : 'bg-purple-100 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-300 dark:border-purple-500/30'
-                          }`}>
-                            {iss.type}
-                          </span>
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            iss.status === 'Done'
-                              ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
-                              : iss.status === 'In Progress'
-                              ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400'
-                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
-                          }`}>
-                            {iss.status}
-                          </span>
-                        </td>
-                        {drilldownKey === 'points' && (
-                          <td className="py-3 px-4 text-center font-extrabold text-purple-600 dark:text-purple-400">
-                            {iss.sp} SP
-                          </td>
-                        )}
-                        {drilldownKey === 'cycle' && (
-                          <td className="py-3 px-4 text-center font-extrabold text-amber-600 dark:text-amber-400">
-                            {iss.cycleTime}
-                          </td>
-                        )}
-                        <td className="py-3 px-4 font-semibold text-slate-800 dark:text-slate-200">
-                          {iss.assignee}
-                        </td>
-                        <td className="py-3 px-4 text-slate-500 dark:text-slate-400 text-[11px]">
-                          {iss.date}
-                        </td>
-                      </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pie del Modal */}
-            <div className="flex justify-end pt-1 shrink-0">
-              <button
-                onClick={() => { setDrilldownKey(null); setDrilldownSearch(''); }}
-                className="px-5 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold text-xs hover:bg-slate-300 dark:hover:bg-slate-700 transition-all cursor-pointer"
-              >
-                Cerrar Desglose
-              </button>
-            </div>
-
+          <div className="h-84 w-full pt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={mockSprintVelocity} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+                <XAxis dataKey="sprint" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} />
+                <RechartsTooltip contentStyle={tooltipStyle} />
+                <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Story Points" barSize={36} />
+                <Line type="monotone" dataKey="promedio" stroke="#10b981" strokeWidth={3} dot={false} name="Promedio histórico" />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
         </div>
-      )}
+
+        {/* Progreso de tareas (Burndown) */}
+        <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burndown)</h3>
+              <InfoTooltip text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal de entrega." />
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Esfuerzo restante en story points vs. ideal</p>
+          </div>
+
+          <div className="h-80 w-full pt-2">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={mockBurndownData} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
+                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} />
+                <RechartsTooltip contentStyle={tooltipStyle} />
+                <Line type="monotone" dataKey="real" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5, fill: '#8b5cf6' }} name="REAL" />
+                <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <p className="text-[11px] text-teal-600 dark:text-teal-400 font-medium pt-1 flex items-center gap-1.5">
+            ✨ Avance óptimo. El ritmo real de quemado coincide casi a la perfección con la línea ideal de entrega.
+          </p>
+        </div>
+
+      </div>
 
       {/* Modal de Drill-down de métricas por ticket (HU-015) */}
       <KpiDetailModal

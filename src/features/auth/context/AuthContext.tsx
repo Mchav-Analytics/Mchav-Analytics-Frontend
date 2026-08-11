@@ -16,6 +16,14 @@ export interface AuthUser {
   [key: string]: any;
 }
 
+export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPER' {
+  if (!rawRole) return 'ADMIN';
+  const str = String(rawRole).toUpperCase();
+  if (str.includes('DEV') || str.includes('DESARROLLADOR')) return 'DEVELOPER';
+  if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER')) return 'MANAGER';
+  return 'ADMIN';
+}
+
 export interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
@@ -61,7 +69,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
     return saved ? JSON.parse(saved) : ['vhoyos@mchav.com'];
   });
 
-  // Consultar sesión activa al cargar la aplicación
   useEffect(() => {
     checkAuthSession();
   }, []);
@@ -70,19 +77,45 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setLoading(true);
     setError(null);
     try {
-      const userData = await authService.getCurrentUser();
+      const urlParams = new URLSearchParams(window.location.search);
+      const isLoginSuccess = urlParams.get('login') === 'success';
+      const tokenParam = urlParams.get('token');
+
+      if (tokenParam) {
+        localStorage.setItem('mchav_jwt_token', tokenParam);
+      }
+
+      if (isLoginSuccess) {
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+
+      let userData;
+      try {
+        userData = await authService.getCurrentUser();
+      } catch (firstErr) {
+        if (isLoginSuccess) {
+          await new Promise(r => setTimeout(r, 350));
+          userData = await authService.getCurrentUser();
+        } else {
+          throw firstErr;
+        }
+      }
       
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       
-      // Verificar si el usuario ya fue aprobado por el Administrador
-      const isApproved = currentApproved.includes(userData.email);
-      const assignedRole = rolesMap[userData.email] || userData.rol;
+      const normRole = normalizeRole(userData.rol);
+      const isApproved = USE_MOCK_DATA 
+        ? currentApproved.includes(userData.email) 
+        : (userData.activo !== false);
+
+      const assignedRole = USE_MOCK_DATA ? (rolesMap[userData.email] || normRole) : normRole;
 
       setUser({
         ...userData,
         rol: assignedRole,
-        status: isApproved ? 'ACTIVE' : (userData.rol === 'ADMIN' ? 'ACTIVE' : 'PENDING')
+        original_rol: userData.rol,
+        status: isApproved ? 'ACTIVE' : (assignedRole === 'ADMIN' ? 'ACTIVE' : 'PENDING')
       });
     } catch (err) {
       console.log("Sin sesión activa actualmente:", err);
@@ -155,7 +188,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Cierre de sesión real: Si sale el Desarrollador, reinicia aprobaciones para permitir enviar la notificación de nuevo
   const logout = async () => {
     try {
-      await authService.logoutMock();
+      await authService.logout();
     } catch (err) {
       console.error("Error cerrando sesión:", err);
     } finally {
@@ -166,8 +199,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setApprovedUsers(['vhoyos@mchav.com', 'cgomez@mchav.com', 'dev@mchav.com']);
       }
 
+      sessionStorage.removeItem('mchav_app_session');
+      sessionStorage.removeItem('mchav_authenticated_tab');
       localStorage.removeItem('mock_user_session');   // Eliminar datos de la sesión activa
-      setUser(null);                                  // Limpiar estado de usuario en React (cambio de vista SPA inmediato sin pantallazo)
+      setUser(null);                                  // Limpiar estado de usuario en React
     }
   };
 

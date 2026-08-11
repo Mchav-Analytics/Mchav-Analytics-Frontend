@@ -59,7 +59,7 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
     <div className="w-full space-y-10 py-4 px-1 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
       {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA */}
-      <div className="relative group rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300">
+      <div className="relative group rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-rose-500/20 via-amber-500/20 to-red-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
@@ -67,14 +67,14 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
               <AlertTriangle size={26} />
             </div>
             <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                 Mis Bloqueos y Alertas
-                <span className="flex items-center gap-2 rounded-full bg-rose-500/10 px-3.5 py-1 text-xs font-semibold text-rose-400 border border-rose-500/20">
-                  <span className="h-2 w-2 rounded-full bg-rose-400 animate-pulse"></span>
+                <span className="flex items-center gap-2 rounded-full bg-rose-500/10 px-3.5 py-1 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                  <span className="h-2 w-2 rounded-full bg-rose-500 animate-pulse"></span>
                   {alerts.length} Alertas Activadas
                 </span>
               </h1>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Detector automático de inactividad, multitarea excesiva y cuellos de botella.
               </p>
             </div>
@@ -84,7 +84,7 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
 
       {/* TOAST DE RESPUESTA DE ACCIÓN API */}
       {actionMsg && (
-        <div className="p-4 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-bold flex items-center gap-3 shadow-xl transition-all">
+        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold flex items-center gap-3 shadow-sm dark:shadow-xl transition-all">
           <CheckCircle2 size={18} />
           <span>{actionMsg}</span>
         </div>
@@ -96,7 +96,7 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
         {alerts.map((alert, idx) => {
           const isCritical = alert.level === 'CRITICAL';
           return (
-            <div key={idx} className="group relative flex flex-col rounded-2xl bg-slate-950 p-8 shadow-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-rose-500/20 border border-slate-800/80 space-y-6">
+            <div key={idx} className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-rose-500/20 border border-slate-200 dark:border-[#33376b] space-y-6">
               <div className={`absolute inset-0 rounded-2xl bg-gradient-to-r ${isCritical ? 'from-rose-500 via-red-500 to-amber-500' : 'from-amber-500 via-orange-500 to-yellow-500'} opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none`}></div>
               <div className="relative z-10 space-y-5">
                 <div className="flex items-start justify-between gap-4">

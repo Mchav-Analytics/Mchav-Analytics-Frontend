@@ -59,7 +59,7 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
     <div className="space-y-6 pb-12 font-sans text-left">
       
       {/* BARRA SUPERIOR DE ACCESO RÁPIDO Y NAVEGACIÓN */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 px-4 rounded-xl shadow-lg backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
             <Users size={14} />
@@ -68,58 +68,58 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
           {onNavigateToHealth && (
             <button 
               onClick={onNavigateToHealth}
-              className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
             >
-              <Zap size={14} className="text-amber-400" />
+              <Zap size={14} className="text-amber-500 dark:text-amber-400" />
               <span>Salud del Sprint & Flow</span>
             </button>
           )}
           <button 
             onClick={() => onSelectDevForScorecard && onSelectDevForScorecard(null)}
-            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700 flex items-center gap-1.5 cursor-pointer"
           >
-            <Target size={14} className="text-cyan-400" />
+            <Target size={14} className="text-cyan-600 dark:text-cyan-400" />
             <span>Scorecards Devs</span>
           </button>
         </div>
 
-        <div className="flex items-center gap-3 text-xs text-slate-400 shrink-0">
-          <span className="flex items-center gap-1.5 bg-emerald-950/40 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-800/40 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 shrink-0">
+          <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             ETL Sync Activa
           </span>
-          <span className="hidden md:inline text-slate-600">|</span>
-          <span className="font-semibold text-slate-300">Proyecto: {selectedProjectId}</span>
+          <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
+          <span className="font-semibold text-slate-700 dark:text-slate-300">Proyecto: {selectedProjectId}</span>
         </div>
       </div>
 
       {/* CABECERA DE LA VISTA */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#191c3d] p-6 rounded-2xl border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-xl">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="px-3 py-1 text-xs font-bold bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 rounded-full">
+            <span className="px-3 py-1 text-xs font-bold bg-indigo-50 dark:bg-indigo-600/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/40 rounded-full">
               FASE 6 & 7 — ENGINE INTEL
             </span>
-            <span className="text-xs text-slate-400">Proyecto: {selectedProjectId}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Proyecto: {selectedProjectId}</span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
             Matriz Comparativa de Equipo & Performance Score
           </h1>
-          <p className="text-sm text-slate-400 max-w-2xl">
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
             Evaluación objetiva y transparente basada en Throughput, Velocity, Cycle Time, Predictibilidad y Calidad.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           {topPerformer && (
-            <div className="flex items-center gap-3 bg-slate-900/80 p-3 rounded-xl border border-amber-500/30 shadow-lg">
+            <div className="flex items-center gap-3 bg-amber-50 dark:bg-[#191c3d] p-3 rounded-xl border border-amber-200 dark:border-amber-500/30 shadow-sm dark:shadow-lg">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-md">
                 <Trophy size={20} />
               </div>
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase font-bold text-amber-400 tracking-wider">Top Performer</span>
-                <span className="text-sm font-bold text-white">{topPerformer.nombre}</span>
-                <span className="text-xs text-emerald-400 font-semibold">{topPerformer.performance_score} / 100 Pts</span>
+                <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400 tracking-wider">Top Performer</span>
+                <span className="text-sm font-bold text-slate-900 dark:text-white">{topPerformer.nombre}</span>
+                <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold">{topPerformer.performance_score} / 100 Pts</span>
               </div>
             </div>
           )}
@@ -130,55 +130,55 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         
         {/* KPI 1: SCORE PROMEDIO */}
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-xs font-semibold uppercase tracking-wider">Score Promedio Equipo</span>
-            <TrendingUp size={18} className="text-emerald-400" />
+            <TrendingUp size={18} className="text-emerald-500 dark:text-emerald-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-white">{teamSummary.promedio_score_equipo || 80.0}</span>
-            <span className="text-xs text-slate-400">/ 100 Pts</span>
+            <span className="text-3xl font-extrabold text-slate-900 dark:text-white">{teamSummary.promedio_score_equipo || 80.0}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">/ 100 Pts</span>
           </div>
-          <p className="text-[11px] text-slate-400">Promedio móvil sobre {developers.length} desarrolladores.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Promedio móvil sobre {developers.length} desarrolladores.</p>
         </div>
 
         {/* KPI 2: DESARROLLADORES ESTRELLA */}
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-xs font-semibold uppercase tracking-wider">Cuadrante Estrella</span>
-            <Award size={18} className="text-emerald-400" />
+            <Award size={18} className="text-emerald-500 dark:text-emerald-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-emerald-400">{conteo.ESTRELLA || 0}</span>
-            <span className="text-xs text-slate-400">Devs Top Performance</span>
+            <span className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{conteo.ESTRELLA || 0}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Devs Top Performance</span>
           </div>
-          <p className="text-[11px] text-slate-400">Cycle Time ágil y 0 devoluciones de QA.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Cycle Time ágil y 0 devoluciones de QA.</p>
         </div>
 
         {/* KPI 3: METÓDICOS Y ALTO VOLUMEN */}
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-xs font-semibold uppercase tracking-wider">Metódicos & Precisión</span>
-            <Target size={18} className="text-indigo-400" />
+            <Target size={18} className="text-indigo-500 dark:text-indigo-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-indigo-400">{conteo.METODICO || 0}</span>
-            <span className="text-xs text-slate-400">Devs de alta precisión</span>
+            <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">{conteo.METODICO || 0}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">Devs de alta precisión</span>
           </div>
-          <p className="text-[11px] text-slate-400">Código robusto con enfoque en calidad.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Código robusto con enfoque en calidad.</p>
         </div>
 
         {/* KPI 4: CYCLE TIME PROMEDIO */}
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl shadow-lg space-y-2">
-          <div className="flex items-center justify-between text-slate-400">
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <span className="text-xs font-semibold uppercase tracking-wider">Cycle Time Promedio</span>
-            <Clock size={18} className="text-cyan-400" />
+            <Clock size={18} className="text-cyan-500 dark:text-cyan-400" />
           </div>
           <div className="flex items-baseline gap-2">
-            <span className="text-3xl font-extrabold text-cyan-400">{teamSummary.team_avg_cycle_time || 0}</span>
-            <span className="text-xs text-slate-400">días / ticket</span>
+            <span className="text-3xl font-extrabold text-cyan-600 dark:text-cyan-400">{teamSummary.team_avg_cycle_time || 0}</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">días / ticket</span>
           </div>
-          <p className="text-[11px] text-slate-400">Promedio de entrega del equipo.</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Promedio de entrega del equipo.</p>
         </div>
 
       </div>
@@ -186,11 +186,11 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
       {/* SECCIÓN DEL GRÁFICO DE 4 CUADRANTES */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <BarChart3 size={20} className="text-indigo-400" />
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <BarChart3 size={20} className="text-indigo-500 dark:text-indigo-400" />
             Matriz de Dispersión de 4 Cuadrantes Operativos
           </h2>
-          <span className="text-xs text-slate-400">Posición basada en Calidad vs Performance Score</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Posición basada en Calidad vs Performance Score</span>
         </div>
 
         <FourQuadrantChart 
@@ -205,17 +205,17 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
       {/* TABLA DE LEADERBOARD DE EQUIPO CON EXPLICACIÓN DE RESULTADOS ("EL PORQUÉ DE LAS COSAS") */}
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Trophy size={20} className="text-amber-400" />
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <Trophy size={20} className="text-amber-500 dark:text-amber-400" />
             Ranking General & Explicación de Rendimiento por Desarrollador
           </h2>
-          <span className="text-xs text-slate-400">Puntuación ponderada de 0 a 100 puntos</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400">Puntuación ponderada de 0 a 100 puntos</span>
         </div>
 
-        <div className="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-950/80 text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-800">
+              <thead className="bg-[#12142e] text-slate-400 uppercase tracking-wider font-semibold border-b border-[#33376b]">
                 <tr>
                   <th className="px-4 py-3 text-center">Rank</th>
                   <th className="px-4 py-3">Desarrollador</th>

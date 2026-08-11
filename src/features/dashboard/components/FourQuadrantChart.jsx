@@ -101,7 +101,7 @@ function FourQuadrantChart({ developers = [], onSelectDev }) {
   };
 
   return (
-    <div className="relative w-full h-[400px] bg-slate-900/80 border border-slate-800 rounded-2xl p-4 shadow-2xl overflow-hidden">
+    <div className="relative w-full h-[400px] bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-4 shadow-sm dark:shadow-2xl overflow-hidden">
       
       {/* Fondo Visual Elegante de los 4 Cuadrantes */}
       <div className="absolute inset-0 grid grid-cols-2 grid-rows-2 pointer-events-none opacity-15 p-6">

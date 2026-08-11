@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import {
   ResponsiveContainer,
+  ComposedChart,
   BarChart,
   Bar,
   LineChart,
@@ -44,6 +45,27 @@ import {
 } from 'recharts';
 import { projectService } from '../../../services/api';
 import PercentilesChart from '../../dashboard/components/PercentilesChart';
+
+const tooltipStyle = {
+  backgroundColor: 'var(--bg-card)',
+  borderColor: 'var(--border-color)',
+  borderRadius: '12px',
+  color: 'var(--text-main)',
+  fontSize: '12px',
+  boxShadow: 'var(--shadow-card)'
+};
+
+const MetricInfoTooltip = ({ text, align = "auto" }) => {
+  return (
+    <div className="relative group/tooltip flex items-center inline-flex">
+      <Info size={13} className="text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors cursor-pointer ml-1 shrink-0" />
+      <div className={`absolute bottom-full mb-2 ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"} hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none text-left backdrop-blur-md font-normal leading-relaxed`}>
+        {text}
+        <div className={`absolute top-full ${align === "right" ? "right-3" : align === "left" ? "left-3" : "left-1/2 -translate-x-1/2"} border-4 border-transparent border-t-slate-900`}></div>
+      </div>
+    </div>
+  );
+};
 
 // Líderes Técnicos disponibles para asignación
 const AVAILABLE_LEADERS = [
@@ -364,7 +386,6 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       }));
     });
   }, [expandedProjectId]);
-
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [editingProjectId, setEditingProjectId] = useState(null);
   const [formName, setFormName] = useState('');
@@ -410,10 +431,21 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     setAssignmentReady(false);
   };
 
+  const getNextProjectKey = () => {
+    const existingNumbers = projects
+      .map(p => {
+        const match = p.key?.match(/(\d+)$/);
+        return match ? parseInt(match[1], 10) : 0;
+      });
+    const maxNum = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+    const next = maxNum + 1;
+    return `PROJ-${String(next).padStart(3, '0')}`;
+  };
+
   const handleOpenCreateModal = () => {
     setEditingProjectId(null);
     setFormName('');
-    setFormKey('');
+    setFormKey(getNextProjectKey());
     setFormLeaderId('');
     setFormDevIds([]);
     resetAssignFormUi();
@@ -635,14 +667,24 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                       </div>
                       <div>
                         <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300" style={{ marginBottom: 10 }}>Clave Jira *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ej. MCHAV"
-                          value={formKey}
-                          onChange={e => { setFormKey(e.target.value); setAssignmentReady(false); }}
-                          className="w-full min-h-[42px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold uppercase text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500"
-                        />
+                        <div className="relative">
+                          <input
+                            type="text"
+                            required
+                            placeholder="Ej. MCHAV"
+                            value={formKey}
+                            onChange={e => { if (editingProjectId) { setFormKey(e.target.value); setAssignmentReady(false); } }}
+                            readOnly={!editingProjectId}
+                            className={`w-full min-h-[42px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold uppercase text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
+                              !editingProjectId ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-500/30 cursor-default' : ''
+                            }`}
+                          />
+                          {!editingProjectId && (
+                            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-500/30">
+                              Auto-generada
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </section>
@@ -973,7 +1015,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      <section className="bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl px-5 py-4 sm:px-7 sm:py-4 shadow-sm">
+      <section className="bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-2xl px-5 py-4 sm:px-7 sm:py-4 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* Botón Asignar + Buscador al lado (Izquierda) */}
           <div className="flex flex-wrap items-center gap-3">
@@ -1040,7 +1082,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               onClick={() => setStatusTab('ACTIVE')}
               className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'ACTIVE'
                   ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'bg-white dark:bg-[#12142e] border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -1052,7 +1094,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               onClick={() => setStatusTab('INACTIVE')}
               className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'INACTIVE'
                   ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm'
-                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'bg-white dark:bg-[#12142e] border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
@@ -1064,7 +1106,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               onClick={() => setStatusTab('ALL')}
               className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'ALL'
                   ? 'bg-purple-50 dark:bg-purple-500/15 border-purple-200 dark:border-purple-500/40 text-purple-600 dark:text-purple-400 shadow-sm'
-                  : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
+                  : 'bg-white dark:bg-[#12142e] border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
             >
               <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
@@ -1083,7 +1125,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           const colorClasses = isPurple
             ? {
               borderActive: 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/20',
-              borderInactive: 'border-purple-200 dark:border-purple-500/30 hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15',
+              borderInactive: 'border-purple-200 dark:border-[#33376b] hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15',
               iconBox: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 ring-purple-500/20',
               subtitle: 'text-purple-700 dark:text-purple-300/80',
               button: 'bg-purple-100 dark:bg-purple-500/25 border-purple-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-200 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/40'
@@ -1091,14 +1133,14 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             : isEmerald
               ? {
                 borderActive: 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20',
-                borderInactive: 'border-emerald-200 dark:border-emerald-500/30 hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15',
+                borderInactive: 'border-emerald-200 dark:border-[#33376b] hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15',
                 iconBox: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20',
                 subtitle: 'text-emerald-700 dark:text-emerald-300/80',
                 button: 'bg-emerald-100 dark:bg-emerald-500/25 border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-200 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/40'
               }
               : {
                 borderActive: 'border-indigo-500 ring-2 ring-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-lg shadow-indigo-500/20',
-                borderInactive: 'border-indigo-200 dark:border-indigo-500/30 hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-indigo-500/15',
+                borderInactive: 'border-indigo-200 dark:border-[#33376b] hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-indigo-500/15',
                 iconBox: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 ring-indigo-500/20',
                 subtitle: 'text-indigo-700 dark:text-indigo-300/80',
                 button: 'bg-indigo-100 dark:bg-indigo-500/25 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-200 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/40'
@@ -1108,7 +1150,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             <div
               key={proj.id}
               onClick={() => toggleExpand(proj.id)}
-              className={`group relative bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex flex-col justify-between ${isExpanded ? colorClasses.borderActive : colorClasses.borderInactive
+              className={`group relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex flex-col justify-between ${isExpanded ? colorClasses.borderActive : colorClasses.borderInactive
                 }`}
             >
               <div className="flex items-center justify-between gap-4 min-w-0">
@@ -1143,17 +1185,6 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 <div className="flex flex-col items-center shrink-0" style={{ gap: 12 }}>
                   {isAdmin ? (
                     <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        title="Editar asignación"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenEditModal(proj);
-                        }}
-                        className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors cursor-pointer"
-                      >
-                        <Edit3 size={14} />
-                      </button>
                       {proj.status === 'INACTIVE' ? (
                         <button
                           type="button"
@@ -1263,17 +1294,17 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
       {activeProject && activeMetrics && (
         <section className="relative flex flex-col gap-5 animate-in slide-in-from-bottom-4 mt-2">
-          <div className="bg-white dark:bg-slate-900/90 border border-indigo-500/40 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="bg-white dark:bg-slate-900 border border-indigo-500/40 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
                 <Activity size={24} />
               </div>
               <div>
-                <span className="text-[10px] font-black uppercase text-indigo-600 bg-indigo-100 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-md">
+                <span className="text-[10px] font-black uppercase text-indigo-600 dark:text-white bg-indigo-100 dark:bg-indigo-500/20 px-2.5 py-0.5 rounded-md">
                   {activeProject.key} • {activeProject.category || 'Backend'}
                 </span>
-                <h3 className="text-base sm:text-lg font-black mt-1 text-slate-900 dark:text-slate-50">
-                  Panel de Rendimiento — {activeProject.name}
+                <h3 className="text-base sm:text-lg font-black mt-1 text-slate-900 dark:text-white">
+                  Resumen Ejecutivo & Métricas Jira — {activeProject.name}
                 </h3>
               </div>
             </div>
@@ -1315,90 +1346,168 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             <>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
+              <div className="absolute top-3 right-3">
+                <MetricInfoTooltip align="left" text="Cuántos puntos de trabajo termina el equipo en cada sprint. Entre más alto, más productivo es el equipo." />
+              </div>
               <Zap size={20} className="text-amber-500 shrink-0" />
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Velocidad SP</span>
-                <p className="text-lg font-black text-slate-900 dark:text-slate-50">{activeMetrics.kpis.velocitySp} SP / sprint</p>
+                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Velocidad SP</span>
+                <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.velocitySp} SP / sprint</p>
               </div>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
+            <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
+              <div className="absolute top-3 right-3">
+                <MetricInfoTooltip align="right" text="Porcentaje de tareas entregadas a tiempo. Si es alto, el equipo cumple bien con los plazos." />
+              </div>
               <TrendingUp size={20} className="text-emerald-500 shrink-0" />
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Salud Entregas</span>
-                <p className="text-lg font-black text-slate-900 dark:text-slate-50">{activeMetrics.kpis.deliveryHealth}</p>
+                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Salud Entregas</span>
+                <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.deliveryHealth}</p>
               </div>
             </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
-              <Clock size={20} className="text-cyan-500 shrink-0" />
-              <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Tiempo Ciclo</span>
-                <p className="text-lg font-black text-slate-900 dark:text-slate-50">{activeMetrics.kpis.cycleTimeDays}</p>
+            {(() => {
+              const cycleTimeNum = parseFloat(activeMetrics.kpis.cycleTimeDays) || 0;
+              let colorClass = "text-emerald-600 dark:text-emerald-500";
+              let borderClass = "border-emerald-500/30 dark:border-emerald-500/50";
+              let shadowClass = "shadow-[0_4px_20px_rgba(16,185,129,0.1)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)]";
+              let statusText = "Óptimo";
+
+              if (cycleTimeNum > 14) {
+                colorClass = "text-rose-600 dark:text-rose-500";
+                borderClass = "border-rose-500/30 dark:border-rose-500/50";
+                shadowClass = "shadow-[0_4px_20px_rgba(244,63,94,0.1)] dark:shadow-[0_4px_20px_rgba(244,63,94,0.15)]";
+                statusText = "Crítico";
+              } else if (cycleTimeNum > 7) {
+                colorClass = "text-amber-600 dark:text-amber-500";
+                borderClass = "border-amber-500/30 dark:border-amber-500/50";
+                shadowClass = "shadow-[0_4px_20px_rgba(245,158,11,0.1)] dark:shadow-[0_4px_20px_rgba(245,158,11,0.15)]";
+                statusText = "En Riesgo";
+              }
+
+              return (
+                <div className={`relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border ${borderClass} ${shadowClass} flex items-center gap-3 transition-colors`}>
+                  <div className="absolute top-3 right-3">
+                    <MetricInfoTooltip align="right" text="Cuántos días tarda en promedio una tarea desde que se empieza hasta que se termina. Menos días es mejor." />
+                  </div>
+                  <Clock size={20} className={`${colorClass} shrink-0`} />
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Tiempo Ciclo</span>
+                      <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white dark:bg-[#191c3d] border ${borderClass} ${colorClass}`}>{statusText}</span>
+                    </div>
+                    <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.cycleTimeDays}</p>
+                  </div>
+                </div>
+              );
+            })()}
+            <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
+              <div className="absolute top-3 right-3">
+                <MetricInfoTooltip align="right" text="Errores graves que siguen sin resolver. Necesitan arreglarse lo antes posible." />
               </div>
-            </div>
-            <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
               <Bug size={20} className="text-rose-500 shrink-0" />
               <div>
-                <span className="text-[10px] font-bold uppercase text-slate-400">Bugs Críticos</span>
-                <p className="text-lg font-black text-rose-500">{activeMetrics.kpis.criticalBugs} Activos</p>
+                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Bugs Críticos</span>
+                <p className="text-lg font-black text-rose-500 dark:text-rose-400">{activeMetrics.kpis.criticalBugs} Activos</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            <div className="flex flex-col gap-5">
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <span className="text-xs font-black uppercase text-indigo-500">Velocidad por Sprint (Story Points)</span>
-                <div className="h-44 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={activeMetrics.velocity}>
-                      <XAxis dataKey="sprint" stroke="#64748b" fontSize={11} />
-                      <YAxis stroke="#64748b" fontSize={11} axisLine={false} />
-                      <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '12px', color: '#fff' }} />
-                      <Bar dataKey="sp" fill="#8b5cf6" radius={[6, 6, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-5">
+            {/* Velocidad por Sprint */}
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
+                  <MetricInfoTooltip align="left" text="Muestra cuánto trabajo ha entregado el equipo en cada período para ver si el ritmo aumenta o se mantiene." />
                 </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución del rendimiento en story points</p>
               </div>
 
-              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
-                <span className="text-xs font-black uppercase text-cyan-500">Burndown del Sprint (Esfuerzo Restante)</span>
-                <div className="h-44 w-full">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={activeMetrics.burndown}>
-                      <XAxis dataKey="day" stroke="#64748b" fontSize={11} />
-                      <YAxis stroke="#64748b" fontSize={11} axisLine={false} />
-                      <RechartsTooltip contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '12px', fontSize: '12px', color: '#fff' }} />
-                      <Line type="monotone" dataKey="real" stroke="#06b6d4" strokeWidth={3} />
-                      <Line type="monotone" dataKey="ideal" stroke="#64748b" strokeDasharray="4 4" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+              <div className="h-64 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+                    <XAxis dataKey="sprint" stroke="#64748b" fontSize={12} tickLine={false} />
+                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
+                    <RechartsTooltip contentStyle={tooltipStyle} />
+                    <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Story Points" barSize={36} />
+                    <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia" />
+                  </ComposedChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col justify-between">
-              <span className="text-xs font-black uppercase text-purple-500 mb-4 block">Distribución de Tipos de Trabajo</span>
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 h-full">
-                <div className="w-48 h-48">
+            {/* Progreso de tareas (Burndown) */}
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burndown)</h3>
+                  <MetricInfoTooltip align="left" text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal de entrega." />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Esfuerzo restante en story points vs. ideal</p>
+              </div>
+
+              <div className="h-64 w-full pt-2">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={activeMetrics.burndown} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
+                    <XAxis dataKey="day" stroke="#64748b" fontSize={12} tickLine={false} />
+                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
+                    <RechartsTooltip contentStyle={tooltipStyle} />
+                    <Line type="monotone" dataKey="real" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5, fill: '#8b5cf6' }} name="REAL" />
+                    <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            
+            {/* Distribución del trabajo */}
+            <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] lg:col-span-2 flex flex-col gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
+                  <MetricInfoTooltip text="Muestra en qué porcentaje se dividió el tiempo entre crear nuevas funciones, arreglar fallos o hacer mejoras técnicas." />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 mt-2 h-64">
+                <div className="h-full w-full relative flex items-center justify-center">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={activeMetrics.distribution} innerRadius={48} outerRadius={75} paddingAngle={5} dataKey="value">
-                        {activeMetrics.distribution.map((entry, i) => (
-                          <Cell key={`cell-${i}`} fill={entry.color} />
+                      <Pie
+                        data={activeMetrics.distribution}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={100}
+                        paddingAngle={5}
+                        dataKey="value"
+                      >
+                        {activeMetrics.distribution.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
+                      <RechartsTooltip contentStyle={tooltipStyle} />
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                    <span className="text-3xl font-black text-slate-900 dark:text-white">
+                      {activeMetrics.distribution.reduce((acc, curr) => acc + curr.value, 0)}
+                    </span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mt-1">Total Incidencias</span>
+                  </div>
                 </div>
-                <div className="space-y-3 w-full sm:w-auto">
-                  {activeMetrics.distribution.map((item, i) => (
-                    <div key={i} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-6">
-                      <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
+
+                <div className="space-y-3">
+                  {activeMetrics.distribution.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
                       </div>
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-100">{item.percentage}%</span>
+                      <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+                        {item.value} <span className="text-slate-500 dark:text-slate-400 text-xs font-semibold ml-1">({item.percentage}%)</span>
+                      </span>
                     </div>
                   ))}
                 </div>

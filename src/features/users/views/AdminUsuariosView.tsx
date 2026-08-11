@@ -96,6 +96,14 @@ export default function AdminUsuariosView({
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
 
+  // Estado de Paginación de Usuarios
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, statusFilter]);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [isInviteOpen, setIsInviteOpen] = useState(false);
@@ -223,6 +231,12 @@ export default function AdminUsuariosView({
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage) || 1;
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div className="w-full flex flex-col gap-6 sm:gap-8 px-2 sm:px-4 py-4 text-left animate-in fade-in duration-300">
       {toastMessage && (
@@ -236,7 +250,7 @@ export default function AdminUsuariosView({
       )}
 
       {/* CONTENEDOR 1 — Resumen RBAC y roles */}
-      <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 lg:p-8 shadow-sm dark:shadow-2xl space-y-4">
+      <section className="relative overflow-hidden bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 sm:p-7 lg:p-8 shadow-sm dark:shadow-2xl space-y-4">
         <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-purple-400/20 dark:bg-purple-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
 
@@ -246,10 +260,10 @@ export default function AdminUsuariosView({
           {/* TARJETA 1: ADMINISTRADOR */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'ADMIN' ? 'ALL' : 'ADMIN')}
-            className={`group bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
+            className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
               roleFilter === 'ADMIN'
                 ? 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/20'
-                : 'border-purple-200 dark:border-purple-500/30 hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15'
+                : 'border-purple-200 dark:border-[#33376b] hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15'
             }`}
           >
             <div className="flex items-center gap-4 min-w-0">
@@ -279,10 +293,10 @@ export default function AdminUsuariosView({
           {/* TARJETA 2: LÍDER TÉCNICO */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'MANAGER' ? 'ALL' : 'MANAGER')}
-            className={`group bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
+            className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
               roleFilter === 'MANAGER'
                 ? 'border-blue-500 ring-2 ring-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20 shadow-lg shadow-blue-500/20'
-                : 'border-blue-200 dark:border-blue-500/30 hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-blue-500/15'
+                : 'border-blue-200 dark:border-[#33376b] hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-blue-500/15'
             }`}
           >
             <div className="flex items-center gap-4 min-w-0">
@@ -312,10 +326,10 @@ export default function AdminUsuariosView({
           {/* TARJETA 3: DESARROLLADOR */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'DEVELOPER' ? 'ALL' : 'DEVELOPER')}
-            className={`group bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
+            className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
               roleFilter === 'DEVELOPER'
                 ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20'
-                : 'border-emerald-200 dark:border-emerald-500/30 hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15'
+                : 'border-emerald-200 dark:border-[#33376b] hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15'
             }`}
           >
             <div className="flex items-center gap-4 min-w-0">
@@ -344,8 +358,8 @@ export default function AdminUsuariosView({
         </div>
       </section>
 
-      {/* CONTENEDOR 2 — Cabecera del directorio + búsqueda */}
-      <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl">
+      {/* CONTENEDOR 2 — Cabecera del directorio + botones "Todos" / "Inactivos" + búsqueda */}
+      <section className="relative overflow-hidden bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl">
         <div className="pointer-events-none absolute -top-16 right-0 h-36 w-36 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-1.5 min-w-0 pl-2 sm:pl-3">
@@ -360,86 +374,58 @@ export default function AdminUsuariosView({
             </p>
           </div>
 
-          <label className="relative flex items-center w-full lg:w-[380px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-            <span className="flex items-center justify-center w-11 shrink-0 text-indigo-500 dark:text-indigo-400 pointer-events-none">
-              <Search size={16} />
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar por nombre o correo..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="w-full min-h-[44px] bg-transparent border-0 py-2.5 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-            />
-            {searchTerm && (
+          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+            {/* Botones Todos e Inactivos a la derecha */}
+            <div className="flex items-center gap-2">
               <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="pr-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+                onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  roleFilter === 'ALL' && statusFilter === 'ALL'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                }`}
               >
-                <X size={15} />
+                Todos ({users.length})
               </button>
-            )}
-          </label>
-        </div>
-      </section>
+              <button
+                onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  statusFilter === 'INACTIVE'
+                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                    : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-900/40'
+                }`}
+              >
+                Inactivos ({pendingRequests.length})
+              </button>
+            </div>
 
-      {/* CONTENEDOR 3 — Filtros */}
-      <section className="relative bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-700 rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl space-y-4">
-        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 inline-flex items-center gap-1.5">
-          <Filter size={14} className="text-indigo-500 dark:text-indigo-400" /> Filtros
-        </span>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 w-full">
-          <button
-            onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'ALL' && statusFilter === 'ALL'
-              ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
-              : 'bg-slate-50 dark:bg-slate-950/80 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 border border-slate-200 dark:border-slate-700'
-              }`}
-          >
-            Todos ({users.length})
-          </button>
-          <button
-            onClick={() => setRoleFilter('ADMIN')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'ADMIN'
-              ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/25'
-              : 'bg-purple-50 dark:bg-slate-950/80 text-purple-700 dark:text-purple-300/80 hover:text-purple-800 dark:hover:text-purple-200 border border-purple-200 dark:border-purple-900/40'
-              }`}
-          >
-            Admins ({adminUsers.length})
-          </button>
-          <button
-            onClick={() => setRoleFilter('MANAGER')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'MANAGER'
-              ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/25'
-              : 'bg-blue-50 dark:bg-slate-950/80 text-blue-700 dark:text-blue-300/80 hover:text-blue-800 dark:hover:text-blue-200 border border-blue-200 dark:border-blue-900/40'
-              }`}
-          >
-            Líderes ({managerUsers.length})
-          </button>
-          <button
-            onClick={() => setRoleFilter('DEVELOPER')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center ${roleFilter === 'DEVELOPER'
-              ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/25'
-              : 'bg-emerald-50 dark:bg-slate-950/80 text-emerald-700 dark:text-emerald-300/80 hover:text-emerald-800 dark:hover:text-emerald-200 border border-emerald-200 dark:border-emerald-900/40'
-              }`}
-          >
-            Devs ({developerUsers.length})
-          </button>
-          <button
-            onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
-            className={`w-full min-h-11 px-3 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer text-center col-span-2 sm:col-span-1 ${statusFilter === 'INACTIVE'
-              ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/25'
-              : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 border border-amber-200 dark:border-amber-900/40'
-              }`}
-          >
-            Inactivos ({pendingRequests.length})
-          </button>
+            <label className="relative flex items-center w-full sm:w-[300px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+              <span className="flex items-center justify-center w-11 shrink-0 text-indigo-500 dark:text-indigo-400 pointer-events-none">
+                <Search size={16} />
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar por nombre o correo..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="w-full min-h-[44px] bg-transparent border-0 py-2.5 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="pr-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+                >
+                  <X size={15} />
+                </button>
+              )}
+            </label>
+          </div>
         </div>
       </section>
 
       {/* CONTENEDOR 4 — Listado de usuarios */}
-      <section className="relative bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-2xl space-y-4">
+      <section className="relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-2xl space-y-4">
         <div className="flex items-center justify-between gap-3 pb-1">
           <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Listado de cuentas
@@ -457,14 +443,14 @@ export default function AdminUsuariosView({
           <span className="text-center">Auditoría</span>
         </div>
 
-        {filteredUsers.map(u => {
+        {paginatedUsers.map(u => {
           const isExpanded = expandedUserId === u.id;
           return (
             <div
               key={u.id}
               className={`rounded-2xl border transition-all duration-200 ${isExpanded
-                ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-slate-900/80 shadow-md shadow-indigo-100 dark:shadow-none'
-                : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900/50 hover:shadow-sm'
+                ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-[#12142e] shadow-md shadow-indigo-100 dark:shadow-none'
+                : 'border-slate-200 dark:border-[#33376b] bg-slate-50/70 dark:bg-[#12142e] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900/50 hover:shadow-sm'
                 }`}
             >
               <div className="grid grid-cols-1 xl:grid-cols-[minmax(220px,1.4fr)_minmax(160px,1fr)_minmax(180px,1.1fr)_minmax(140px,0.9fr)_110px] gap-4 xl:gap-5 items-center px-5 py-5">
@@ -579,11 +565,55 @@ export default function AdminUsuariosView({
             No hay usuarios con esos filtros.
           </div>
         )}
+
+        {/* Controles de Paginación */}
+        {filteredUsers.length > 0 && (
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+              Mostrando del {((currentPage - 1) * itemsPerPage) + 1} al {Math.min(currentPage * itemsPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios
+            </span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Anterior
+              </button>
+
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
+                  <button
+                    key={pg}
+                    onClick={() => setCurrentPage(pg)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      currentPage === pg
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </section>
 
+      {/* MODAL CONFIGURACIÓN RBAC */}
       {showConfigModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="w-full max-w-3xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
                 <Sliders size={20} className="text-purple-600 dark:text-purple-400" /> Matriz de Permisos Efectivos RBAC
@@ -645,9 +675,10 @@ export default function AdminUsuariosView({
         </div>
       )}
 
+      {/* MODAL INVITAR NUEVO USUARIOS */}
       {isInviteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <UserPlus size={18} className="text-indigo-600 dark:text-indigo-400" /> Invitar Nuevo Usuario
