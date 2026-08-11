@@ -18,7 +18,6 @@ import TeamMatrixView from './features/dashboard/views/TeamMatrixView';
 import SprintHealthView from './features/dashboard/views/SprintHealthView';
 import AlertsCenterView from './features/dashboard/views/AlertsCenterView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
-import SystemHealthView from './features/sync/views/SystemHealthView';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import LoginView from './features/auth/views/LoginView';
@@ -358,7 +357,7 @@ function MainAppContent() {
       )}
 
       {activeTab === 'health' && (
-        <SystemHealthView />
+        <SystemSyncTab />
       )}
 
       {activeTab === 'proyectos' && (
