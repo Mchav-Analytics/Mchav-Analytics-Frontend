@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 // INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
 // true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
 // false = Modo Real (Conectado a FastAPI en http://localhost:8000)
-export const USE_MOCK_DATA = true;
+export const USE_MOCK_DATA = false;
 
 export const BACKEND_URL = 'http://localhost:8000';
 
@@ -62,7 +62,7 @@ export const jiraService = {
   },
   getSyncLogs(params = {}) {
     if (USE_MOCK_DATA) return mockJiraService.getSyncLogs();
-    return api.get('/api/v1/jira/sync/logs', { params }).then(res => res.data);
+    return api.get('/jira/sync/logs', { params }).then(res => res.data);
   }
 };
 
@@ -183,29 +183,57 @@ export const projectService = {
         scope_creep_warning: null
       };
     }
+  },
+  getPercentiles(projectId) {
+    if (USE_MOCK_DATA) {
+      return Promise.resolve([
+        {
+          issue_type: "Story",
+          has_enough_data: true,
+          count: 12,
+          lead_time: { avg: 5.2, p25: 2.1, p50: 4.5, p75: 7.2, p90: 10.5 },
+          cycle_time: { avg: 3.1, p25: 1.5, p50: 2.8, p75: 4.2, p90: 6.1 }
+        },
+        {
+          issue_type: "Bug",
+          has_enough_data: true,
+          count: 8,
+          lead_time: { avg: 2.5, p25: 0.8, p50: 1.5, p75: 3.2, p90: 5.1 },
+          cycle_time: { avg: 1.8, p25: 0.5, p50: 1.2, p75: 2.5, p90: 3.8 }
+        },
+        {
+          issue_type: "Epic",
+          has_enough_data: false,
+          count: 2,
+          lead_time: { avg: 15.0 },
+          cycle_time: { avg: 10.0 }
+        }
+      ]);
+    }
+    return api.get(`/api/v1/projects/${projectId}/percentiles`).then(res => res.data);
   }
 };
 
 export const userService = {
   getUsers() {
     if (USE_MOCK_DATA) return Promise.resolve([]);
-    return api.get('/api/v1/users').then(res => res.data);
+    return api.get('/users').then(res => res.data);
   },
   getRoles() {
     if (USE_MOCK_DATA) return Promise.resolve([]);
-    return api.get('/api/v1/users/roles').then(res => res.data);
+    return api.get('/users/roles').then(res => res.data);
   },
   updateUserStatus(userId, activo) {
     if (USE_MOCK_DATA) return Promise.resolve({ status: 'success' });
-    return api.put(`/api/v1/users/${userId}/status`, { activo }).then(res => res.data);
+    return api.put(`/users/${userId}/status`, { activo }).then(res => res.data);
   },
   updateUserRole(userId, roleId) {
     if (USE_MOCK_DATA) return Promise.resolve({ status: 'success' });
-    return api.put(`/api/v1/users/${userId}/role`, { id_rol: roleId }).then(res => res.data);
+    return api.put(`/users/${userId}/role`, { id_rol: roleId }).then(res => res.data);
   },
   assignUserProjects(userId, projectIds) {
     if (USE_MOCK_DATA) return Promise.resolve({ status: 'success' });
-    return api.post(`/api/v1/users/${userId}/projects`, { id_proyectos: projectIds }).then(res => res.data);
+    return api.post(`/users/${userId}/projects`, { id_proyectos: projectIds }).then(res => res.data);
   }
 };
 
@@ -279,7 +307,7 @@ export const reportService = {
 export const developerService = {
   async getMyScorecard(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/developers/me/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       console.warn("Fallback scorecard desarrollador...", err);
@@ -309,7 +337,7 @@ export const developerService = {
   },
   async getDevelopers(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/developers`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return [
@@ -321,7 +349,7 @@ export const developerService = {
   },
   async getDeveloperScorecard(assigneeId, projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return this.getMyScorecard(projectId);
@@ -329,7 +357,7 @@ export const developerService = {
   },
   async getDailyFocus(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return {
@@ -344,7 +372,7 @@ export const developerService = {
   },
   async getDevAlerts(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/developers/me/alerts`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return {
@@ -358,7 +386,7 @@ export const developerService = {
   },
   async performAlertAction(issueId, actionType = 'request_help') {
     try {
-      const response = await api.post(`/api/v1/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
+      const response = await api.post(`/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
       return response.data;
     } catch (err) {
       return { status: "SUCCESS", issue_id: issueId, action_type: actionType, message: `Acción '${actionType}' ejecutada exitosamente para el ticket #${issueId}.` };
@@ -366,7 +394,7 @@ export const developerService = {
   },
   async getActivityHistory(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/developers/me/activity-history`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return {
