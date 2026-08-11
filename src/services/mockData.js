@@ -294,3 +294,87 @@ export const mockProjectService = {
     };
   }
 };
+
+// 8. Lista de tareas programadas (Schedulers / Cron Jobs)
+export const mockSchedulerJobs = [
+  {
+    id: "job-etl-jira",
+    name: "Extracción Incremental Jira (ETL)",
+    description: "Extrae proyectos, sprints, tickets e historiales de cambios desde Jira Cloud.",
+    frequency: "Diaria (02:00 AM UTC)",
+    cronExpression: "0 2 * * *",
+    status: "ACTIVE",
+    lastRun: "2026-08-05 02:00:00",
+    nextRun: "2026-08-06 02:00:00",
+    successRate: 99.4,
+    retriesCount: 0,
+    lastDurationSec: 42
+  },
+  {
+    id: "job-recalc-kpi",
+    name: "Recálculo Masivo de KPIs y Velocidad",
+    description: "Consolida Lead Time, Cycle Time, Velocity y Throughput por Sprint y Desarrollador.",
+    frequency: "Semanal (Domingos 23:50 PM UTC)",
+    cronExpression: "50 23 * * 0",
+    status: "ACTIVE",
+    lastRun: "2026-08-03 23:50:00",
+    nextRun: "2026-08-10 23:50:00",
+    successRate: 100.0,
+    retriesCount: 0,
+    lastDurationSec: 18
+  },
+  {
+    id: "job-log-cleanup",
+    name: "Archivado & Mantenimiento de Logs",
+    description: "Depura logs de auditoría de sincronización antiguos y optimiza la base de datos.",
+    frequency: "Mensual (Día 1 04:00 AM UTC)",
+    cronExpression: "0 4 1 * *",
+    status: "ACTIVE",
+    lastRun: "2026-08-01 04:00:00",
+    nextRun: "2026-09-01 04:00:00",
+    successRate: 98.0,
+    retriesCount: 1,
+    lastDurationSec: 12
+  }
+];
+
+// 9. Métricas de salud del sistema y rendimiento de API
+export const mockHealthMetrics = {
+  avgLatencyMs: 138,
+  p95LatencyMs: 185,
+  p99LatencyMs: 240,
+  throughputReqMin: 420,
+  errorRatePct: 0.15,
+  cpuUsagePct: 24,
+  memoryUsagePct: 42,
+  cacheHitRatioPct: 91.5,
+  status: "HEALTHY"
+};
+
+export const mockAutomationService = {
+  async getSchedulerJobs() {
+    await delay(250);
+    return mockSchedulerJobs;
+  },
+  async toggleJobState(jobId) {
+    await delay(300);
+    const job = mockSchedulerJobs.find(j => j.id === jobId);
+    if (job) {
+      job.status = job.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
+    }
+    return { success: true, job };
+  },
+  async triggerJobManual(jobId) {
+    await delay(400);
+    const job = mockSchedulerJobs.find(j => j.id === jobId);
+    if (job) {
+      job.lastRun = new Date().toISOString().replace('T', ' ').slice(0, 19);
+    }
+    return { message: `Job ${jobId} ejecutado manualmente con éxito.`, job };
+  },
+  async getHealthMetrics() {
+    await delay(200);
+    return mockHealthMetrics;
+  }
+};
+

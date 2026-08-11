@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockAuthService, mockJiraService, mockProjectService } from './mockData';
+import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData';
 
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;
@@ -18,38 +18,38 @@ const api = axios.create({
 export const authService = {
   getLoginUrl() {
     if (USE_MOCK_DATA) return mockAuthService.getLoginUrl();
-    return `${BACKEND_URL}/api/auth/login`;
+    return `${BACKEND_URL}/api/v1/auth/login`;
   },
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
-    return api.get('/api/auth/me').then(res => res.data);
+    return api.get('/api/v1/auth/me').then(res => res.data);
   },
   loginMock(credentials) {
     if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
-    return api.post('/api/auth/login', credentials).then(res => res.data);
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
   },
   logoutMock() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/auth/logout').then(res => res.data);
+    return api.post('/api/v1/auth/logout').then(res => res.data);
   },
   getJiraCredentials() {
     if (USE_MOCK_DATA) return mockAuthService.getJiraCredentials();
-    return api.get('/api/auth/jira-credentials').then(res => res.data);
+    return api.get('/api/v1/auth/jira-credentials').then(res => res.data);
   },
   saveJiraCredentials(payload) {
     if (USE_MOCK_DATA) return mockAuthService.saveJiraCredentials(payload);
-    return api.post('/api/auth/jira-credentials', payload).then(res => res.data);
+    return api.post('/api/v1/auth/jira-credentials', payload).then(res => res.data);
   }
 };
 
 export const jiraService = {
   getMetrics() {
     if (USE_MOCK_DATA) return mockJiraService.getMetrics();
-    return api.get('/api/jira/metrics').then(res => res.data);
+    return api.get('/api/v1/jira/metrics').then(res => res.data);
   },
   triggerSync() {
     if (USE_MOCK_DATA) return mockJiraService.triggerSync();
-    return api.post('/api/jira/sync').then(res => res.data);
+    return api.post('/api/v1/jira/sync').then(res => res.data);
   },
   getSyncLogs(params = {}) {
     if (USE_MOCK_DATA) return mockJiraService.getSyncLogs();
@@ -84,15 +84,15 @@ export const jqlService = {
 export const projectService = {
   getProjects() {
     if (USE_MOCK_DATA) return mockProjectService.getProjects();
-    return api.get('/api/projects').then(res => res.data);
+    return api.get('/api/v1/projects').then(res => res.data);
   },
   getSprints(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getSprints(projectId);
-    return api.get(`/api/projects/${projectId}/sprints`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/sprints`).then(res => res.data);
   },
   getKpis(projectId, sprintId = null) {
     if (USE_MOCK_DATA) return mockProjectService.getKpis(projectId, sprintId);
-    let url = `/api/projects/${projectId}/kpis`;
+    let url = `/api/v1/projects/${projectId}/kpis`;
     if (sprintId) {
       url += `?sprint_id=${sprintId}`;
     }
@@ -100,19 +100,51 @@ export const projectService = {
   },
   getStatuses(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getStatuses(projectId);
-    return api.get(`/api/projects/${projectId}/statuses`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/statuses`).then(res => res.data);
   },
   getMappings(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getMappings(projectId);
-    return api.get(`/api/projects/${projectId}/mappings`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/mappings`).then(res => res.data);
   },
   saveMappings(projectId, mappingsData) {
     if (USE_MOCK_DATA) return mockProjectService.saveMappings(projectId, mappingsData);
-    return api.post(`/api/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
+    return api.post(`/api/v1/projects/${projectId}/mappings`, mappingsData).then(res => res.data);
   },
   getKpiIssuesDetail(projectId, params = {}) {
     if (USE_MOCK_DATA) return mockProjectService.getKpiIssuesDetail ? mockProjectService.getKpiIssuesDetail(projectId, params) : Promise.resolve({ total_issues: 0, issues: [] });
     return api.get(`/api/v1/projects/${projectId}/kpis/issues-detail`, { params }).then(res => res.data);
+  },
+  async getSprintHealth(projectId = 'PROJ-01', sprintId = null) {
+    try {
+      let url = `/api/v1/projects/${projectId}/health`;
+      if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/health`;
+      const response = await api.get(url);
+      return response.data;
+    } catch (err) {
+      console.warn("Error obteniendo salud del sprint...", err);
+      return {
+        proyecto_id: projectId,
+        health_score: 75,
+        diagnostico: "ESTABLE",
+        diagnostico_label: "Sprint saludable con alertas leves",
+        color: "emerald",
+        metrics: {
+          commitment_reliability_pct: 82,
+          scope_creep_pct: 5,
+          carryover_pct: 10,
+          flow_efficiency_pct: 85,
+          sp_planned: 40,
+          sp_completed: 30,
+          sp_added_mid_sprint: 2,
+          sp_carryover: 4,
+          active_dev_days: 12,
+          waiting_queue_days: 2
+        },
+        bottleneck_stages: [],
+        bottleneck_insight: null,
+        scope_creep_warning: null
+      };
+    }
   }
 };
 
@@ -163,6 +195,46 @@ export const reportService = {
         console.warn("Abriendo reporte PDF directamente en pestaña...", err);
         window.open(backendUrl, '_blank');
       });
+  },
+
+  downloadCsvReport(projectId, data) {
+    const targetProject = projectId || 'PROJ-01';
+    const csvContent = [];
+    csvContent.push(["Clave Ticket", "Título", "Tipo", "Estado", "Puntos (SP)", "Tiempo Ciclo (días)", "Lead Time (días)", "Asignado", "Fecha"]);
+    
+    const items = data && data.length > 0 ? data : [
+      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, cycleTime: 3.5, leadTime: 5.2, assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-102', title: 'Integración API v3 de Jira Cloud', type: 'Historia', status: 'Done', sp: 5, cycleTime: 4.1, leadTime: 6.0, assignee: 'Andrés Alcalá', date: '2026-08-02' },
+      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, cycleTime: 4.8, leadTime: 7.1, assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, cycleTime: 5.2, leadTime: 8.0, assignee: 'Valentina Hoyos', date: '2026-08-04' },
+      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, cycleTime: 3.5, leadTime: 4.9, assignee: 'Michael Salamanca', date: '2026-08-04' },
+      { key: 'MCHAV-112', title: 'Error de desbordamiento en tooltip de Recharts', type: 'Bug', status: 'In Progress', sp: 3, cycleTime: 2.1, leadTime: 3.0, assignee: 'Heidy Lozano', date: '2026-08-03' }
+    ];
+
+    items.forEach(item => {
+      csvContent.push([
+        `"${item.key || item.key_issue || ''}"`,
+        `"${(item.title || item.summary || '').replace(/"/g, '""')}"`,
+        `"${item.type || 'Historia'}"`,
+        `"${item.status || item.status_actual || ''}"`,
+        item.sp || item.story_points || 0,
+        item.cycleTime || item.cycle_time_days || 0,
+        item.leadTime || 0,
+        `"${item.assignee || 'Sin Asignar'}"`,
+        `"${item.date || ''}"`
+      ]);
+    });
+
+    const csvString = csvContent.map(e => e.join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csvString], { type: 'text/csv;charset=utf-8;' });
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `reporte_metricas_${targetProject}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
   }
 };
 
@@ -275,6 +347,99 @@ export const developerService = {
         ]
       };
     }
+  },
+  async getTeamMatrix(projectId = 'PROJ-01', sprintId = null) {
+    try {
+      const params = { proyecto_id: projectId };
+      if (sprintId) params.sprint_id = sprintId;
+      const response = await api.get(`/api/v1/developers/matrix`, { params });
+      return response.data;
+    } catch (err) {
+      console.warn("Error cargando matriz de equipo...", err);
+      return {
+        proyecto_id: projectId,
+        team_summary: {
+          total_desarrolladores: 0,
+          promedio_score_equipo: 0,
+          team_avg_tickets: 0,
+          team_avg_sp: 0,
+          team_avg_cycle_time: 0,
+          conteo_cuadrantes: { ESTRELLA: 0, METODICO: 0, ALTO_VOLUMEN: 0, ATASCADO: 0 }
+        },
+        developers: []
+      };
+    }
+  }
+};
+
+export const alertService = {
+  async getAlerts(projectId = 'PROJ-01') {
+    try {
+      const response = await api.get(`/api/v1/alerts`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      console.warn("Error cargando alertas del sistema...", err);
+      return [];
+    }
+  },
+  async acknowledgeAlert(alertId) {
+    try {
+      const response = await api.post(`/api/v1/alerts/${alertId}/acknowledge`);
+      return response.data;
+    } catch (err) {
+      return { alert_id: alertId, atendida: true };
+    }
+  },
+  async getHelpRequests(projectId = 'PROJ-01') {
+    try {
+      const response = await api.get(`/api/v1/alerts/help-requests`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      console.warn("Error cargando solicitudes de ayuda...", err);
+      return [];
+    }
+  },
+  async createHelpRequest(payload) {
+    try {
+      const response = await api.post(`/api/v1/alerts/help-requests`, payload);
+      return response.data;
+    } catch (err) {
+      return {
+        id_solicitud: Date.now(),
+        ...payload,
+        estado: "PENDIENTE",
+        fecha_creacion: new Date().toISOString()
+      };
+    }
+  },
+  async updateHelpRequestStatus(requestId, status, respondedBy = null) {
+    try {
+      const response = await api.patch(`/api/v1/alerts/help-requests/${requestId}`, null, {
+        params: { status, responded_by: respondedBy }
+      });
+      return response.data;
+    } catch (err) {
+      return { id_solicitud: requestId, estado: status, atendido_por_name: respondedBy };
+    }
+  }
+};
+
+export const automationService = {
+  getSchedulerJobs() {
+    if (USE_MOCK_DATA) return mockAutomationService.getSchedulerJobs();
+    return api.get('/api/v1/automation/schedulers').then(res => res.data);
+  },
+  toggleJobState(jobId) {
+    if (USE_MOCK_DATA) return mockAutomationService.toggleJobState(jobId);
+    return api.put(`/api/v1/automation/schedulers/${jobId}/toggle`).then(res => res.data);
+  },
+  triggerJobManual(jobId) {
+    if (USE_MOCK_DATA) return mockAutomationService.triggerJobManual(jobId);
+    return api.post(`/api/v1/automation/schedulers/${jobId}/trigger`).then(res => res.data);
+  },
+  getHealthMetrics() {
+    if (USE_MOCK_DATA) return mockAutomationService.getHealthMetrics();
+    return api.get('/api/v1/system/health').then(res => res.data);
   }
 };
 

@@ -114,7 +114,7 @@ function Sidebar({
       return [
         { id: 'developer', label: 'Mi Trabajo', icon: icons.home },
         { id: 'daily_focus', label: 'Enfoque Diario', icon: icons.target },
-        { id: 'dev_alerts', label: 'Bloqueos y Alertas', icon: icons.alert },
+        { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
         { id: 'activity_history', label: 'Historial', icon: icons.history },
       ];
     }
@@ -122,18 +122,21 @@ function Sidebar({
     if (userRole === 'MANAGER') {
       return [
         { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
+        { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
+        { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
-        { id: 'team_devs', label: 'Rendimiento Devs', icon: icons.users },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
       ];
     }
 
     return [
       { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
+      { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
+      { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
-      { id: 'team_devs', label: 'Rendimiento Devs', icon: icons.users },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.tasks },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+      { id: 'health', label: 'Monitoreo & Salud', icon: icons.target },
     ];
   }, [userRole]);
 

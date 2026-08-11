@@ -50,7 +50,7 @@ const SparklineMini = ({ color = "#10b981" }) => {
   );
 };
 
-export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01' }) {
+export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01', onNavigateToAlerts }) {
   const { user, approveUserPermission } = useAuth();
   const [scorecard, setScorecard] = useState(null);
 
@@ -81,7 +81,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-10 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
 
-      {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA */}
+      {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA CON BOTÓN DE ALERTAS Y AYUDA */}
       <div className="relative group rounded-2xl bg-slate-950 p-8 shadow-2xl border border-slate-800/80 transition-all duration-300">
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -102,6 +102,14 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
               </p>
             </div>
           </div>
+
+          <button
+            onClick={onNavigateToAlerts}
+            className="px-4 py-2.5 text-xs font-bold bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white rounded-xl shadow-lg border border-rose-400/30 flex items-center justify-center gap-2 cursor-pointer transition-all hover:scale-[1.02] shrink-0"
+          >
+            <Zap size={16} className="text-amber-300" />
+            <span>Alertas & Solicitar Ayuda</span>
+          </button>
         </div>
       </div>
 
@@ -356,34 +364,42 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/80 text-slate-300">
-                {assignedIssuesList.map((issue, idx) => (
-                  <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
-                    <td className="px-5 py-4 font-mono font-bold text-indigo-400 text-sm">
-                      {issue.key_issue}
-                    </td>
-                    <td className="px-5 py-4 font-semibold text-slate-200 hover:text-indigo-300 transition-colors cursor-pointer max-w-md truncate">
-                      {issue.summary}
-                    </td>
-                    <td className="px-5 py-4 text-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
-                        issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                          : issue.status_actual?.toUpperCase().includes('REVISI')
-                          ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                      }`}>
-                        {issue.status_actual}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 text-right font-bold text-slate-200 text-sm">
-                      {issue.story_points}
-                    </td>
-                    <td className="px-5 py-4 text-right font-semibold text-teal-400 flex items-center justify-end gap-3">
-                      <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
-                      <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
+                {assignedIssuesList.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-5 py-8 text-center text-slate-400">
+                      No hay incidencias asignadas registradas en el sistema para este proyecto. Sincronice su proyecto con Jira para cargar información real.
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  assignedIssuesList.map((issue, idx) => (
+                    <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
+                      <td className="px-5 py-4 font-mono font-bold text-indigo-400 text-sm">
+                        {issue.key_issue}
+                      </td>
+                      <td className="px-5 py-4 font-semibold text-slate-200 hover:text-indigo-300 transition-colors cursor-pointer max-w-md truncate">
+                        {issue.summary}
+                      </td>
+                      <td className="px-5 py-4 text-center">
+                        <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
+                          issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
+                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                            : issue.status_actual?.toUpperCase().includes('REVISI')
+                            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                        }`}>
+                          {issue.status_actual}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right font-bold text-slate-200 text-sm">
+                        {issue.story_points}
+                      </td>
+                      <td className="px-5 py-4 text-right font-semibold text-teal-400 flex items-center justify-end gap-3">
+                        <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
+                        <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
