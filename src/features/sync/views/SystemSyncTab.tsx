@@ -62,7 +62,7 @@ export default function SystemSyncTab() {
   const [syncErrorMsg, setSyncErrorMsg] = useState('');
 
   // Estado Consola JQL Real con Validador Sintáctico Backend (HU-009)
-  const [jqlQuery, setJqlQuery] = useState('project = "SCRUM" AND status = "In Progress"');
+  const [jqlQuery, setJqlQuery] = useState('project = "10000" AND status in ("In Progress", "En curso")');
   const [jqlError, setJqlError] = useState('');
   const [jqlSuccess, setJqlSuccess] = useState('');
   const [isExecutingJql, setIsExecutingJql] = useState(false);
@@ -633,56 +633,56 @@ export default function SystemSyncTab() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM"')}
+                  onClick={() => setJqlQuery('project = "10000"')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
                 >
                   Todas las Incidencias
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND status = "In Progress"')}
+                  onClick={() => setJqlQuery('project = "10000" AND status in ("In Progress", "En curso")')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
                 >
                   En Progreso
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND status = "To Do"')}
+                  onClick={() => setJqlQuery('project = "10000" AND status in ("To Do", "Por hacer", "Pendiente")')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
                 >
                   Pendientes (To Do)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND status = "Done"')}
+                  onClick={() => setJqlQuery('project = "10000" AND status in ("Done", "Finalizado", "Completado")')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
                 >
                   Completadas (Done)
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND priority in (High, Highest) AND status != "Done"')}
+                  onClick={() => setJqlQuery('project = "10000" AND priority in (High, Highest, Alta) AND status not in ("Done", "Finalizado", "Completado")')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
                 >
                   Alta Prioridad
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND assignee is EMPTY AND status != "Done"')}
+                  onClick={() => setJqlQuery('project = "10000" AND assignee is EMPTY AND status not in ("Done", "Finalizado", "Completado")')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
                 >
                   Sin Asignar
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND issuetype = Bug AND status != "Done"')}
+                  onClick={() => setJqlQuery('project = "10000" AND issuetype in (Bug, Error) AND status not in ("Done", "Finalizado", "Completado")')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 hover:bg-rose-100 transition-colors cursor-pointer"
                 >
                   Bugs Activos
                 </button>
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "SCRUM" AND updated >= -7d ORDER BY updated DESC')}
+                  onClick={() => setJqlQuery('project = "10000" AND updated >= -7d ORDER BY updated DESC')}
                   className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
                 >
                   Actualizadas 7 días
