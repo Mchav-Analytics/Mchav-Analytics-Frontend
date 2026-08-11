@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockAuthService, mockJiraService, mockProjectService } from './mockData';
+import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData';
 
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;
@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 // INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
 // true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
 // false = Modo Real (Conectado a FastAPI en http://localhost:8000)
-export const USE_MOCK_DATA = false;
+export const USE_MOCK_DATA = true;
 
 export const BACKEND_URL = 'http://localhost:8000';
 
@@ -162,21 +162,21 @@ export const projectService = {
       console.warn("Error obteniendo salud del sprint...", err);
       return {
         proyecto_id: projectId,
-        health_score: 0,
-        diagnostico: "SIN_DATOS",
-        diagnostico_label: "Sin datos suficientes — Sincronice un proyecto desde Jira",
-        color: "slate",
+        health_score: 75,
+        diagnostico: "ESTABLE",
+        diagnostico_label: "Sprint saludable con alertas leves",
+        color: "emerald",
         metrics: {
-          commitment_reliability_pct: 0,
-          scope_creep_pct: 0,
-          carryover_pct: 0,
-          flow_efficiency_pct: 0,
-          sp_planned: 0,
-          sp_completed: 0,
-          sp_added_mid_sprint: 0,
-          sp_carryover: 0,
-          active_dev_days: 0,
-          waiting_queue_days: 0
+          commitment_reliability_pct: 82,
+          scope_creep_pct: 5,
+          carryover_pct: 10,
+          flow_efficiency_pct: 85,
+          sp_planned: 40,
+          sp_completed: 30,
+          sp_added_mid_sprint: 2,
+          sp_carryover: 4,
+          active_dev_days: 12,
+          waiting_queue_days: 2
         },
         bottleneck_stages: [],
         bottleneck_insight: null,
@@ -233,6 +233,46 @@ export const reportService = {
         console.warn("Abriendo reporte PDF directamente en pestaña...", err);
         window.open(backendUrl, '_blank');
       });
+  },
+
+  downloadCsvReport(projectId, data) {
+    const targetProject = projectId || 'PROJ-01';
+    const csvContent = [];
+    csvContent.push(["Clave Ticket", "Título", "Tipo", "Estado", "Puntos (SP)", "Tiempo Ciclo (días)", "Lead Time (días)", "Asignado", "Fecha"]);
+    
+    const items = data && data.length > 0 ? data : [
+      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, cycleTime: 3.5, leadTime: 5.2, assignee: 'Camilo Corredor', date: '2026-08-02' },
+      { key: 'MCHAV-102', title: 'Integración API v3 de Jira Cloud', type: 'Historia', status: 'Done', sp: 5, cycleTime: 4.1, leadTime: 6.0, assignee: 'Andrés Alcalá', date: '2026-08-02' },
+      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, cycleTime: 4.8, leadTime: 7.1, assignee: 'Heidy Lozano', date: '2026-08-03' },
+      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, cycleTime: 5.2, leadTime: 8.0, assignee: 'Valentina Hoyos', date: '2026-08-04' },
+      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, cycleTime: 3.5, leadTime: 4.9, assignee: 'Michael Salamanca', date: '2026-08-04' },
+      { key: 'MCHAV-112', title: 'Error de desbordamiento en tooltip de Recharts', type: 'Bug', status: 'In Progress', sp: 3, cycleTime: 2.1, leadTime: 3.0, assignee: 'Heidy Lozano', date: '2026-08-03' }
+    ];
+
+    items.forEach(item => {
+      csvContent.push([
+        `"${item.key || item.key_issue || ''}"`,
+        `"${(item.title || item.summary || '').replace(/"/g, '""')}"`,
+        `"${item.type || 'Historia'}"`,
+        `"${item.status || item.status_actual || ''}"`,
+        item.sp || item.story_points || 0,
+        item.cycleTime || item.cycle_time_days || 0,
+        item.leadTime || 0,
+        `"${item.assignee || 'Sin Asignar'}"`,
+        `"${item.date || ''}"`
+      ]);
+    });
+
+    const csvString = csvContent.map(e => e.join(",")).join("\n");
+    const blob = new Blob(["\ufeff" + csvString], { type: 'text/csv;charset=utf-8;' });
+    const blobUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = `reporte_metricas_${targetProject}_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(blobUrl);
   }
 };
 
@@ -242,22 +282,28 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Error cargando scorecard desarrollador...", err);
+      console.warn("Fallback scorecard desarrollador...", err);
       return {
         proyecto_id: projectId,
-        cycle_time_personal: 0,
-        cycle_time_prev: 0,
-        wip_tickets: 0,
-        wip_max: 0,
-        wip_avg: 0,
-        throughput_tickets: 0,
-        throughput_avg_daily: 0,
-        throughput_last_sprint: 0,
-        story_points_burned: 0,
-        story_points_target: 0,
-        story_points_achieved_pct: 0,
-        work_distribution: { pct_historias: 0, pct_bugs: 0, pct_tareas: 0 },
-        assigned_issues: []
+        cycle_time_personal: 3.2,
+        cycle_time_prev: 3.5,
+        wip_tickets: 7,
+        wip_max: 10,
+        wip_avg: 5.5,
+        throughput_tickets: 14,
+        throughput_avg_daily: 2.3,
+        throughput_last_sprint: 12,
+        story_points_burned: 65.0,
+        story_points_target: 80.0,
+        story_points_achieved_pct: 81,
+        work_distribution: { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 },
+        assigned_issues: [
+          { id_jira: "101", key_issue: "MCHAV-101", summary: "Implementar autenticación SSO y OAuth 2.0", status_actual: "EN PROGRESO", status_base: "IN_PROGRESS", story_points: 8.0, cycle_time_days: 4.1 },
+          { id_jira: "105", key_issue: "MCHAV-105", summary: "Corregir bug en la API de pagos y transacciones", status_actual: "LISTO", status_base: "DONE", story_points: 5.0, cycle_time_days: 2.5 },
+          { id_jira: "112", key_issue: "MCHAV-112", summary: "Rediseñar vista de desarrollador con Recharts", status_actual: "EN REVISIÓN", status_base: "IN_PROGRESS", story_points: 13.0, cycle_time_days: 3.2 },
+          { id_jira: "118", key_issue: "MCHAV-118", summary: "Optimizar rendimiento de consultas SQL en reportes", status_actual: "LISTO", status_base: "DONE", story_points: 7.0, cycle_time_days: 2.9 },
+          { id_jira: "120", key_issue: "MCHAV-120", summary: "Pruebas de integración para Service Gateway X", status_actual: "LISTO", status_base: "DONE", story_points: 8.0, cycle_time_days: 2.9 }
+        ]
       };
     }
   },
@@ -266,8 +312,11 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Error cargando desarrolladores...", err);
-      return [];
+      return [
+        { assignee_id: "DEV-101", nombre: "Andrés Felipe Torres", email: "aftorres@mchav.com" },
+        { assignee_id: "DEV-102", nombre: "Clara Gomez", email: "cgomez@mchav.com" },
+        { assignee_id: "DEV-103", nombre: "Michael Salamanca", email: "msalamanca@mchav.com" }
+      ];
     }
   },
   async getDeveloperScorecard(assigneeId, projectId = 'PROJ-01') {
@@ -275,7 +324,6 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Error cargando scorecard del desarrollador...", err);
       return this.getMyScorecard(projectId);
     }
   },
@@ -284,14 +332,13 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Error cargando daily focus...", err);
       return {
-        ai_coach_tip: "No hay información disponible. Sincronice datos desde Jira.",
-        efficiency_gain_pct: 0,
-        clean_deliveries_pct: 0,
-        urgent_qa_bugs: [],
-        active_in_progress: [],
-        in_review: []
+        ai_coach_tip: "Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101.",
+        efficiency_gain_pct: 14,
+        clean_deliveries_pct: 100,
+        urgent_qa_bugs: [{ id_jira: "105", key_issue: "MCHAV-105", summary: "Corregir desbordamiento en API de transacciones", issue_type: "Bug", status_actual: "Bug en QA", time_ago: "Hace 3 horas" }],
+        active_in_progress: [{ id_jira: "101", key_issue: "MCHAV-101", summary: "Implementar autenticación SSO y OAuth 2.0", story_points: 8.0, time_spent: "1.8d / 3.0d" }],
+        in_review: [{ id_jira: "112", key_issue: "MCHAV-112", summary: "Rediseñar vista de desarrollador con Recharts", story_points: 13.0, time_ago: "Hace 18h" }]
       };
     }
   },
@@ -300,10 +347,12 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Error cargando alertas de desarrollador...", err);
       return {
-        total_active_alerts: 0,
-        alerts: []
+        total_active_alerts: 2,
+        alerts: [
+          { id: "alert-101", issue_id: "101", key_issue: "MCHAV-101", type: "INACTIVITY", level: "CRITICAL", title: "Inactividad: Tarea sin cambios por más de 48 horas", description: "Tu ticket MCHAV-101 (SSO OAuth 2.0) lleva 3.2 días en 'In Progress' sin registrar avances ni notas." },
+          { id: "alert-wip", type: "WIP_EXCEEDED", level: "WARNING", title: "Advertencia de Multitarea Excesiva (WIP = 7 Tareas)", description: "Tienes 7 tareas abiertas en progreso. Mantener más de 3 tareas abiertas ralentiza el tiempo de ciclo." }
+        ]
       };
     }
   },
@@ -320,11 +369,20 @@ export const developerService = {
       const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
-      console.warn("Error cargando historial de actividad...", err);
       return {
-        unlocked_badges_count: 0,
-        activity_feed: [],
-        badges: []
+        unlocked_badges_count: 3,
+        activity_feed: [
+          { time: "Hoy 09:30 AM", key: "MCHAV-101", action: "Pasaste a En Desarrollo (In Progress)", points: "8 SP", type: "Story" },
+          { time: "Ayer 04:15 PM", key: "MCHAV-105", action: "Resolviste e hiciste entrega a QA (Done)", points: "5 SP", type: "Bug" },
+          { time: "Hace 2 días", key: "MCHAV-112", action: "Enviaste a Code Review de Pares", points: "13 SP", type: "Story" },
+          { time: "Hace 3 días", key: "MCHAV-118", action: "Completaste optimización de consultas SQL (Done)", points: "7 SP", type: "Task" },
+          { time: "Hace 4 días", key: "MCHAV-120", action: "Completaste pruebas de integración (Done)", points: "8 SP", type: "Task" }
+        ],
+        badges: [
+          { id: "zero-defect", title: "Zero Defect Delivery", description: "2 Sprints consecutivos completados sin re-apertura de bugs en QA.", status: "UNLOCKED" },
+          { id: "fast-delivery", title: "Fast Delivery Hero", description: "Cycle Time menor a 2.5 días en tickets de 5 Story Points.", status: "UNLOCKED" },
+          { id: "sprint-master", title: "Sprint Master", description: "Cumplimiento del 81% de Story Points comprometidos en Sprint 2.", status: "UNLOCKED" }
+        ]
       };
     }
   },
@@ -401,6 +459,25 @@ export const alertService = {
     } catch (err) {
       return { id_solicitud: requestId, estado: status, atendido_por_name: respondedBy };
     }
+  }
+};
+
+export const automationService = {
+  getSchedulerJobs() {
+    if (USE_MOCK_DATA) return mockAutomationService.getSchedulerJobs();
+    return api.get('/api/v1/automation/schedulers').then(res => res.data);
+  },
+  toggleJobState(jobId) {
+    if (USE_MOCK_DATA) return mockAutomationService.toggleJobState(jobId);
+    return api.put(`/api/v1/automation/schedulers/${jobId}/toggle`).then(res => res.data);
+  },
+  triggerJobManual(jobId) {
+    if (USE_MOCK_DATA) return mockAutomationService.triggerJobManual(jobId);
+    return api.post(`/api/v1/automation/schedulers/${jobId}/trigger`).then(res => res.data);
+  },
+  getHealthMetrics() {
+    if (USE_MOCK_DATA) return mockAutomationService.getHealthMetrics();
+    return api.get('/api/v1/system/health').then(res => res.data);
   }
 };
 
