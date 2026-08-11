@@ -217,23 +217,23 @@ export const projectService = {
 export const userService = {
   getUsers() {
     if (USE_MOCK_DATA) return Promise.resolve([]);
-    return api.get('/users').then(res => res.data);
+    return api.get('/api/v1/users').then(res => res.data);
   },
   getRoles() {
     if (USE_MOCK_DATA) return Promise.resolve([]);
-    return api.get('/users/roles').then(res => res.data);
+    return api.get('/api/v1/users/roles').then(res => res.data);
   },
   updateUserStatus(userId, activo) {
     if (USE_MOCK_DATA) return Promise.resolve({ status: 'success' });
-    return api.put(`/users/${userId}/status`, { activo }).then(res => res.data);
+    return api.put(`/api/v1/users/${userId}/status`, { activo }).then(res => res.data);
   },
   updateUserRole(userId, roleId) {
     if (USE_MOCK_DATA) return Promise.resolve({ status: 'success' });
-    return api.put(`/users/${userId}/role`, { id_rol: roleId }).then(res => res.data);
+    return api.put(`/api/v1/users/${userId}/role`, { id_rol: roleId }).then(res => res.data);
   },
   assignUserProjects(userId, projectIds) {
     if (USE_MOCK_DATA) return Promise.resolve({ status: 'success' });
-    return api.post(`/users/${userId}/projects`, { id_proyectos: projectIds }).then(res => res.data);
+    return api.post(`/api/v1/users/${userId}/projects`, { id_proyectos: projectIds }).then(res => res.data);
   }
 };
 
