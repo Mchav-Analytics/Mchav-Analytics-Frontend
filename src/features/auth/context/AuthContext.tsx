@@ -181,7 +181,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (USE_MOCK_DATA) {
       return login({ email: "vhoyos@mchav.com" });
     }
-    const url = await authService.getLoginUrl();
+    const url = authService.getLoginUrl();
     window.location.href = url;
   };
 

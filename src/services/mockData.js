@@ -123,9 +123,8 @@ const delay = () => Promise.resolve();
 // ============================================================================
 
 export const mockAuthService = {
-  // Simula la obtención de la URL de redirección a Jira
   getLoginUrl() {
-    return "#";
+    return 'http://localhost:8000/api/v1/auth/login';
   },
   // Simula la consulta del usuario en sesión desde el localStorage del navegador
   async getCurrentUser() {
