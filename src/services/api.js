@@ -87,6 +87,35 @@ export const jqlService = {
       });
     }
     return api.post('/api/v1/jql/execute', { jql, max_results: maxResults }).then(res => res.data);
+  },
+  getPresets(projectKey = 'MCHAV') {
+    if (USE_MOCK_DATA) {
+      return Promise.resolve({
+        status: "success",
+        project_key: projectKey,
+        categories: [
+          {
+            category: "Consultas Básicas del Proyecto",
+            queries: [
+              { id: "all", nombre: "Todas las Incidencias del Proyecto", jql: `project = "${projectKey}"`, description: "Obtiene la totalidad de incidencias del proyecto." },
+              { id: "todo", nombre: "Pendientes por Iniciar (To Do)", jql: `project = "${projectKey}" AND status = "To Do"`, description: "Incidencias registradas aún no iniciadas." },
+              { id: "in_progress", nombre: "En Progreso (Trabajo Activo)", jql: `project = "${projectKey}" AND status = "In Progress"`, description: "Incidencias en desarrollo actualmente." },
+              { id: "done", nombre: "Completadas (Done)", jql: `project = "${projectKey}" AND status = "Done"`, description: "Incidencias finalizadas con éxito." }
+            ]
+          },
+          {
+            category: "Filtros de Control Operativo y Calidad",
+            queries: [
+              { id: "high_priority", nombre: "Alta Prioridad / Críticos Pendientes", jql: `project = "${projectKey}" AND priority in (High, Highest) AND status != "Done"`, description: "Incidencias críticas pendientes de solución." },
+              { id: "unassigned", nombre: "Incidencias Sin Asignar", jql: `project = "${projectKey}" AND assignee is EMPTY AND status != "Done"`, description: "Tareas pendientes sin responsable asignado." },
+              { id: "bugs", nombre: "Bugs y Errores Activos", jql: `project = "${projectKey}" AND issuetype = Bug AND status != "Done"`, description: "Fallas o bugs en estado activo." },
+              { id: "recent_7d", nombre: "Actualizadas en los últimos 7 días", jql: `project = "${projectKey}" AND updated >= -7d ORDER BY updated DESC`, description: "Histórico reciente de cambios." }
+            ]
+          }
+        ]
+      });
+    }
+    return api.get('/api/v1/jql/presets', { params: { project_key: projectKey } }).then(res => res.data);
   }
 };
 

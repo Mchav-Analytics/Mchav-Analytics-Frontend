@@ -4,12 +4,12 @@
 // Permite auditar las ejecuciones del motor ETL, programar horarios CRON,
 // lanzar sincronizaciones manuales en segundo plano y descargar logs JSON.
 
-import React, { useState, useEffect } from 'react';
-import { 
-  RefreshCcw, 
-  Clock, 
-  Calendar, 
-  CheckCircle2, 
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  RefreshCcw,
+  Clock,
+  Calendar,
+  CheckCircle2,
   XCircle,
   Server,
   Zap,
@@ -19,7 +19,12 @@ import {
   RotateCw,
   Download,
   Terminal,
-  AlertTriangle
+  AlertTriangle,
+  Database,
+  Search,
+  Copy,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { jiraService, authService, jqlService } from '../../../services/api';
 
@@ -40,27 +45,121 @@ interface SyncLog {
   detalleError?: string;
 }
 
+const formatTimestamp = (ts: string) => {
+  if (!ts) return 'Sin fecha';
+  return ts.replace('T', ' ').substring(0, 19);
+};
+
 export default function SystemSyncTab() {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
     lastSync: 'Sin registros',
     nextScheduledSync: 'Hoy 23:00:00',
     status: 'IDLE'
   });
-  
+
   const [logs, setLogs] = useState<SyncLog[]>([]);
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [syncErrorMsg, setSyncErrorMsg] = useState('');
 
   // Estado Consola JQL Real con Validador Sintáctico Backend (HU-009)
-  const [jqlQuery, setJqlQuery] = useState('project = "MCHAV" AND status = "In Progress"');
+  const [jqlQuery, setJqlQuery] = useState('project = "SCRUM" AND status = "In Progress"');
   const [jqlError, setJqlError] = useState('');
   const [jqlSuccess, setJqlSuccess] = useState('');
   const [isExecutingJql, setIsExecutingJql] = useState(false);
   const [jqlIssues, setJqlIssues] = useState<any[]>([]);
   const [showJqlTable, setShowJqlTable] = useState(true);
+  const [showDictionaryTable, setShowDictionaryTable] = useState(false);
   const [jqlCurrentPage, setJqlCurrentPage] = useState(1);
   const [jqlPageSize, setJqlPageSize] = useState(5);
-  
+
+  // Estado Diccionario JQL para Admin (Vista Horizontal)
+  const dictScrollRef = useRef<HTMLDivElement>(null);
+  const [copiedJqlIdx, setCopiedJqlIdx] = useState<number | null>(null);
+  const [dictionarySearch, setDictionarySearch] = useState('');
+  const [selectedDictCategory, setSelectedDictCategory] = useState('TODAS');
+
+  const handleScrollLeft = () => {
+    dictScrollRef.current?.scrollBy({ left: -340, behavior: 'smooth' });
+  };
+
+  const handleScrollRight = () => {
+    dictScrollRef.current?.scrollBy({ left: 340, behavior: 'smooth' });
+  };
+
+  const jqlDictionaryList = [
+    {
+      category: 'Consultas Básicas',
+      categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+      title: 'Todas las Incidencias del Proyecto',
+      description: 'Obtiene el catálogo completo de tareas registradas sin ningún filtro.',
+      jql: 'project = "SCRUM"'
+    },
+    {
+      category: 'Consultas Básicas',
+      categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+      title: 'Incidencias En Progreso (Trabajo Activo)',
+      description: 'Filtra las tareas actualmente en desarrollo activo por el equipo.',
+      jql: 'project = "SCRUM" AND status = "In Progress"'
+    },
+    {
+      category: 'Consultas Básicas',
+      categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+      title: 'Incidencias Completadas (Done)',
+      description: 'Muestra todas las tareas finalizadas y entregadas con éxito.',
+      jql: 'project = "SCRUM" AND status = "Done"'
+    },
+    {
+      category: 'Consultas Básicas',
+      categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
+      title: 'Incidencias Pendientes (To Do)',
+      description: 'Muestra el trabajo acumulado en Backlog aún no iniciado.',
+      jql: 'project = "SCRUM" AND status = "To Do"'
+    },
+    {
+      category: 'Control Operativo',
+      categoryBadge: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+      title: 'Alta Prioridad / Críticos Pendientes',
+      description: 'Detecta tareas bloqueantes o de alta prioridad sin resolver.',
+      jql: 'project = "SCRUM" AND priority in (High, Highest) AND status != "Done"'
+    },
+    {
+      category: 'Control Operativo',
+      categoryBadge: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
+      title: 'Incidencias Sin Asignar',
+      description: 'Identifica tareas huérfanas sin desarrollador asignado.',
+      jql: 'project = "SCRUM" AND assignee is EMPTY AND status != "Done"'
+    },
+    {
+      category: 'Calidad y Bugs',
+      categoryBadge: 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
+      title: 'Bugs y Errores Activos',
+      description: 'Lista todas las fallas o bugs reportados que siguen pendientes.',
+      jql: 'project = "SCRUM" AND issuetype = Bug AND status != "Done"'
+    },
+    {
+      category: 'Tiempos y Recientes',
+      categoryBadge: 'bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
+      title: 'Actualizadas en los Últimos 7 Días',
+      description: 'Muestra los cambios y actividad más reciente del proyecto.',
+      jql: 'project = "SCRUM" AND updated >= -7d ORDER BY updated DESC'
+    }
+  ];
+
+  const handleCopyToClipboard = (text: string, idx: number) => {
+    navigator.clipboard.writeText(text);
+    setCopiedJqlIdx(idx);
+    setTimeout(() => setCopiedJqlIdx(null), 2000);
+  };
+
+  const handleLoadIntoConsole = (jql: string) => {
+    setJqlQuery(jql);
+    const textareaEl = document.getElementById('jql-console-textarea');
+    if (textareaEl) {
+      textareaEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      textareaEl.focus();
+    }
+  };
+
   // Configuración de Cron
   const [isAutoSync, setIsAutoSync] = useState(true);
   const [cronSchedule, setCronSchedule] = useState('6h');
@@ -95,6 +194,26 @@ export default function SystemSyncTab() {
       });
   };
 
+  const exportJqlToCsv = () => {
+    if (!jqlIssues || jqlIssues.length === 0) return;
+    const headers = ['Clave', 'Tipo', 'Resumen', 'Estado', 'Asignado a'];
+    const rows = jqlIssues.map(issue => [
+      `"${issue.key || ''}"`,
+      `"${issue.fields?.issuetype?.name || 'Issue'}"`,
+      `"${(issue.fields?.summary || '').replace(/"/g, '""')}"`,
+      `"${issue.fields?.status?.name || 'Desconocido'}"`,
+      `"${issue.fields?.assignee?.displayName || 'Sin asignar'}"`
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `jql_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const mapApiLogToSyncLog = (apiLog: any): SyncLog => ({
     id: `log-${apiLog.id_log || apiLog.id}`,
     timestamp: (apiLog.fecha_ejecucion || apiLog.fecha_inicio || '').replace('T', ' ').substring(0, 19),
@@ -108,15 +227,17 @@ export default function SystemSyncTab() {
 
   const fetchLogsFromApi = () => {
     jiraService.getSyncLogs()
-      .then((data: any[]) => {
-        const mapped = data.map(mapApiLogToSyncLog);
-        setLogs(mapped);
-        if (mapped.length > 0) {
-          setSyncStatus(prev => ({
-            ...prev,
-            lastSync: formatTimestamp(mapped[0].timestamp),
-            status: data[0].resultado === 'RUNNING' ? 'SYNCING' : (data[0].resultado === 'FAILED' ? 'FAILED' : 'IDLE')
-          }));
+      .then((data: any) => {
+        if (Array.isArray(data)) {
+          const mapped = data.map(mapApiLogToSyncLog);
+          setLogs(mapped);
+          if (mapped.length > 0) {
+            setSyncStatus(prev => ({
+              ...prev,
+              lastSync: formatTimestamp(mapped[0].timestamp),
+              status: data[0].resultado === 'RUNNING' ? 'SYNCING' : (data[0].resultado === 'FAILED' ? 'FAILED' : 'IDLE')
+            }));
+          }
         }
       })
       .catch(err => {
@@ -137,7 +258,7 @@ export default function SystemSyncTab() {
     setTimeout(() => {
       setSavedCronTime(cronTime);
       setIsSavingCron(false);
-      
+
       const nextDate = syncStatus.nextScheduledSync.split(' ')[0];
       setSyncStatus(prev => ({
         ...prev,
@@ -148,7 +269,7 @@ export default function SystemSyncTab() {
 
   const handleManualSync = () => {
     if (syncStatus.status === 'SYNCING') return;
-    
+
     setSyncStatus(prev => ({ ...prev, status: 'SYNCING' }));
     setShowSuccessAlert(false);
     setSyncErrorMsg('');
@@ -158,30 +279,34 @@ export default function SystemSyncTab() {
         let attempts = 0;
         const interval = setInterval(() => {
           jiraService.getSyncLogs()
-            .then((logRes: any[]) => {
-              const mapped = logRes.map(mapApiLogToSyncLog);
-              setLogs(mapped);
-              attempts++;
-              
-              if (mapped.length > 0) {
-                const latestLog = mapped[0];
-                if (latestLog.result !== 'RUNNING' || attempts > 6) {
-                  clearInterval(interval);
-                  setSyncStatus(prev => ({
-                    ...prev,
-                    status: latestLog.result === 'SUCCESS' ? 'IDLE' : (latestLog.result === 'RUNNING' ? 'SYNCING' : 'FAILED'),
-                    lastSync: formatTimestamp(latestLog.timestamp)
-                  }));
-                  
-                  if (latestLog.result === 'SUCCESS') {
-                    setShowSuccessAlert(true);
-                    setTimeout(() => setShowSuccessAlert(false), 5000);
-                  } else if (latestLog.result === 'RUNNING') {
-                    setSyncErrorMsg("La sincronización está tomando más tiempo del habitual, pero sigue ejecutándose en segundo plano.");
-                  } else {
-                    setSyncErrorMsg(latestLog.detalleError || "Error durante la ejecución del job.");
+            .then((logRes: any) => {
+              if (Array.isArray(logRes)) {
+                const mapped = logRes.map(mapApiLogToSyncLog);
+                setLogs(mapped);
+                attempts++;
+
+                if (mapped.length > 0) {
+                  const latestLog = mapped[0];
+                  if (latestLog.result !== 'RUNNING' || attempts > 6) {
+                    clearInterval(interval);
+                    setSyncStatus(prev => ({
+                      ...prev,
+                      status: latestLog.result === 'SUCCESS' ? 'IDLE' : (latestLog.result === 'RUNNING' ? 'SYNCING' : 'FAILED'),
+                      lastSync: formatTimestamp(latestLog.timestamp)
+                    }));
+
+                    if (latestLog.result === 'SUCCESS') {
+                      setShowSuccessAlert(true);
+                      setTimeout(() => setShowSuccessAlert(false), 5000);
+                    } else if (latestLog.result === 'RUNNING') {
+                      setSyncErrorMsg("La sincronización está tomando más tiempo del habitual, pero sigue ejecutándose en segundo plano.");
+                    } else {
+                      setSyncErrorMsg(latestLog.detalleError || "Error durante la ejecución del job.");
+                    }
                   }
                 }
+              } else {
+                clearInterval(interval);
               }
             })
             .catch(err => {
@@ -235,7 +360,7 @@ export default function SystemSyncTab() {
       const minutes = String(d.getMinutes()).padStart(2, '0');
       const ampm = hours >= 12 ? 'PM' : 'AM';
       hours = hours % 12;
-      hours = hours ? hours : 12; 
+      hours = hours ? hours : 12;
       return `${day}.${month}.${year} ${hours}:${minutes} ${ampm}`;
     } catch (e) {
       return tsStr;
@@ -283,7 +408,7 @@ export default function SystemSyncTab() {
             <XCircle size={18} />
             <p className="text-sm font-semibold text-left break-all">{syncErrorMsg}</p>
           </div>
-          <button 
+          <button
             onClick={() => setSyncErrorMsg('')}
             className="text-xs font-bold underline hover:no-underline whitespace-nowrap ml-2"
           >
@@ -294,10 +419,10 @@ export default function SystemSyncTab() {
 
       {/* SECCIÓN SUPERIOR: GRID DE CONFIGURACIÓN Y CONSOLA JQL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
+
         {/* COLUMNA IZQUIERDA: CONFIGURACIÓN MANUAL DE CRON (1/3) */}
         <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 shadow-sm">
             <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
               <Settings2 className="text-teal-600 dark:text-teal-500" size={20} />
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
@@ -316,7 +441,7 @@ export default function SystemSyncTab() {
                     Sincronización automática periódica.
                   </p>
                 </div>
-                <button 
+                <button
                   onClick={() => setIsAutoSync(!isAutoSync)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isAutoSync ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'}`}
                 >
@@ -329,7 +454,7 @@ export default function SystemSyncTab() {
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                   Programación CRON
                 </label>
-                <select 
+                <select
                   value={cronSchedule}
                   onChange={(e) => setCronSchedule(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-700 dark:text-slate-200 outline-none cursor-pointer focus:ring-2 focus:ring-teal-500/50"
@@ -346,14 +471,14 @@ export default function SystemSyncTab() {
                   Horario de Ejecución Diaria
                 </label>
                 <div className="flex items-center gap-2">
-                  <input 
-                    type="time" 
+                  <input
+                    type="time"
                     value={cronTime}
                     onChange={handleCronTimeChange}
                     disabled={isSavingCron}
                     className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/50"
                   />
-                  <button 
+                  <button
                     onClick={handleSaveCronTime}
                     disabled={isSavingCron || cronTime === savedCronTime}
                     className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
@@ -364,11 +489,125 @@ export default function SystemSyncTab() {
               </div>
             </div>
           </div>
+
+          {/* DICCIONARIO DE CONSULTAS JQL (UBICADO EN LA COLUMNA IZQUIERDA PARA OCUPAR EL ESPACIO JUNTO A LOS RESULTADOS) */}
+          {showDictionaryTable && (
+            <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 shadow-sm animate-in fade-in zoom-in-95 duration-200">
+              <div className="pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                    <Database size={16} className="text-indigo-500" />
+                    Diccionario de Consultas JQL
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setShowDictionaryTable(false)}
+                    className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
+                    title="Cerrar Diccionario"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Catálogo de consultas predefinidas. Haz clic en "⚡ Cargar" para probar cualquier sintaxis.
+                </p>
+              </div>
+
+              {/* BUSCADOR */}
+              <div className="relative mb-3">
+                <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={dictionarySearch}
+                  onChange={(e) => setDictionarySearch(e.target.value)}
+                  placeholder="Buscar consulta..."
+                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 dark:text-slate-200"
+                />
+              </div>
+
+              {/* FILTROS POR CATEGORÍA */}
+              <div className="flex flex-wrap items-center gap-1.5 mb-4">
+                {['TODAS', 'Consultas Básicas', 'Control Operativo', 'Calidad y Bugs', 'Tiempos'].map((cat) => (
+                  <button
+                    key={cat}
+                    type="button"
+                    onClick={() => setSelectedDictCategory(cat === 'Tiempos' ? 'Tiempos y Recientes' : cat)}
+                    className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors cursor-pointer ${
+                      (selectedDictCategory === cat || (cat === 'Tiempos' && selectedDictCategory === 'Tiempos y Recientes'))
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* LISTA DE TARJETAS COMPACTAS (MAX ALTURA CON SCROLLBAR ELEGANTE) */}
+              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-indigo-500/30">
+                {jqlDictionaryList
+                  .filter(item => {
+                    const matchesCategory = selectedDictCategory === 'TODAS' || item.category === selectedDictCategory;
+                    const matchesQuery = !dictionarySearch || 
+                      item.title.toLowerCase().includes(dictionarySearch.toLowerCase()) || 
+                      item.jql.toLowerCase().includes(dictionarySearch.toLowerCase()) ||
+                      item.description.toLowerCase().includes(dictionarySearch.toLowerCase());
+                    return matchesCategory && matchesQuery;
+                  })
+                  .map((item, idx) => (
+                    <div 
+                      key={idx} 
+                      className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-200 group"
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold border ${item.categoryBadge}`}>
+                          {item.category}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleCopyToClipboard(item.jql, idx)}
+                          className="p-1 rounded text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+                          title="Copiar JQL"
+                        >
+                          {copiedJqlIdx === idx ? (
+                            <span className="text-emerald-500 font-bold text-[9px] flex items-center gap-0.5">
+                              <CheckCircle2 size={11} /> ¡Copiado!
+                            </span>
+                          ) : (
+                            <Copy size={12} />
+                          )}
+                        </button>
+                      </div>
+
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        {item.title}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 font-normal mt-0.5 line-clamp-2">
+                        {item.description}
+                      </p>
+
+                      <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2">
+                        <code className="text-[10px] font-mono text-emerald-400 bg-slate-950 px-2 py-1 rounded border border-slate-800 truncate flex-1" title={item.jql}>
+                          {item.jql}
+                        </code>
+                        <button
+                          type="button"
+                          onClick={() => handleLoadIntoConsole(item.jql)}
+                          className="py-1 px-2.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600 text-indigo-600 hover:text-white dark:text-indigo-400 dark:hover:text-white border border-indigo-500/20 font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+                        >
+                          <Terminal size={11} /> ⚡ Cargar
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* COLUMNA DERECHA: CONSOLA JQL REAL (2/3) */}
         <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-sm">
+          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 shadow-sm">
             <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2.5">
                 <Terminal className="text-indigo-600 dark:text-indigo-400" size={20} />
@@ -386,12 +625,78 @@ export default function SystemSyncTab() {
               </span>
             </div>
 
+            {/* DICCIONARIO DE CONSULTAS JQL RECOMENDADAS (PRESETS) */}
+            <div className="mb-4 text-left">
+              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
+                Diccionario de Consultas Recomendadas (Presets)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                >
+                  Todas las Incidencias
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND status = "In Progress"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                >
+                  En Progreso
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND status = "To Do"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                >
+                  Pendientes (To Do)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND status = "Done"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                >
+                  Completadas (Done)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND priority in (High, Highest) AND status != "Done"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
+                >
+                  Alta Prioridad
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND assignee is EMPTY AND status != "Done"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
+                >
+                  Sin Asignar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND issuetype = Bug AND status != "Done"')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 hover:bg-rose-100 transition-colors cursor-pointer"
+                >
+                  Bugs Activos
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setJqlQuery('project = "SCRUM" AND updated >= -7d ORDER BY updated DESC')}
+                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
+                >
+                  Actualizadas 7 días
+                </button>
+              </div>
+            </div>
+
             <form onSubmit={handleExecuteJql} className="space-y-4 text-left">
               <div>
                 <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
                   Consulta JQL a Validar
                 </label>
                 <textarea
+                  id="jql-console-textarea"
                   rows={3}
                   value={jqlQuery}
                   onChange={(e) => setJqlQuery(e.target.value)}
@@ -401,9 +706,20 @@ export default function SystemSyncTab() {
               </div>
 
               {jqlSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-                  <CheckCircle2 size={16} />
-                  <span>{jqlSuccess}</span>
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={16} />
+                    <span>{jqlSuccess}</span>
+                  </div>
+                  {jqlIssues.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={exportJqlToCsv}
+                      className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all shadow cursor-pointer flex items-center gap-1.5"
+                    >
+                      <Download size={12} /> Exportar CSV
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -415,22 +731,15 @@ export default function SystemSyncTab() {
               )}
 
               <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setJqlQuery('project = "MCHAV" AND status = "In Progress"')}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    Preset: En Progreso
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setJqlQuery('project = "MCHAV" AND issueType = "Bug" ORDER BY created DESC')}
-                    className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    Preset: Bugs Recientes
-                  </button>
-                </div>
+                {/* BOTÓN DESPLEGAR DICCIONARIO DE CONSULTAS (A LA IZQUIERDA EN LA PARTE DE ABAJO) */}
+                <button
+                  type="button"
+                  onClick={() => setShowDictionaryTable(!showDictionaryTable)}
+                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 text-xs font-bold transition-all shadow-sm cursor-pointer"
+                >
+                  <Database size={15} />
+                  <span>{showDictionaryTable ? '📖 Ocultar Diccionario JQL' : '📖 Ver Diccionario de Consultas JQL'}</span>
+                </button>
 
                 <button
                   type="submit"
@@ -451,8 +760,8 @@ export default function SystemSyncTab() {
             </form>
 
             {/* PREVISUALIZACION DE INCIDENCIAS EN TABLA CON PAGINACIÓN */}
-            {jqlIssues.length > 0 && (() => {
-              const jqlTotalPages = Math.ceil(jqlIssues.length / jqlPageSize);
+            {jqlSuccess && (() => {
+              const jqlTotalPages = Math.max(1, Math.ceil(jqlIssues.length / jqlPageSize));
               const startIdx = (jqlCurrentPage - 1) * jqlPageSize;
               const paginatedJqlIssues = jqlIssues.slice(startIdx, startIdx + jqlPageSize);
               const startItem = jqlIssues.length > 0 ? startIdx + 1 : 0;
@@ -467,15 +776,15 @@ export default function SystemSyncTab() {
                   >
                     <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
                       <Terminal size={14} className="text-indigo-500" /> Previsualización de Resultados
-                      <span className="ml-2 px-2 py-0.5 rounded-full text-[10px] bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-extrabold border border-indigo-200 dark:border-indigo-800/50">
+                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${jqlIssues.length > 0 ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'}`}>
                         {jqlIssues.length} {jqlIssues.length === 1 ? 'incidencia' : 'incidencias'}
                       </span>
                     </span>
                     <div className={`text-slate-400 transition-transform duration-300 ${showJqlTable ? 'rotate-180' : ''}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
                     </div>
                   </button>
-                  
+
                   {showJqlTable && (
                     <>
                       <div className="overflow-x-hidden overflow-y-auto max-h-[350px] border-t border-slate-200 dark:border-slate-700/50">
@@ -490,30 +799,47 @@ export default function SystemSyncTab() {
                             </tr>
                           </thead>
                           <tbody className="text-xs text-slate-700 dark:text-slate-300">
-                            {paginatedJqlIssues.map((issue: any, idx: number) => (
-                              <tr key={issue.id || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-colors">
-                                <td className="px-4 py-2.5 font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
-                                  {issue.key}
-                                </td>
-                                <td className="px-4 py-2.5 whitespace-nowrap flex items-center gap-2">
-                                  {issue.fields?.issuetype?.iconUrl && (
-                                    <img src={issue.fields.issuetype.iconUrl} alt="icon" className="w-3.5 h-3.5 rounded-sm" />
-                                  )}
-                                  <span>{issue.fields?.issuetype?.name || 'Issue'}</span>
-                                </td>
-                                <td className="px-4 py-2.5 truncate max-w-[200px]" title={issue.fields?.summary}>
-                                  {issue.fields?.summary}
-                                </td>
-                                <td className="px-4 py-2.5 whitespace-nowrap">
-                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                    {issue.fields?.status?.name || 'Desconocido'}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-2.5 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                                  {issue.fields?.assignee?.displayName || 'Sin asignar'}
+                            {paginatedJqlIssues.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
+                                  No se encontraron incidencias para esta consulta JQL.
                                 </td>
                               </tr>
-                            ))}
+                            ) : (
+                              paginatedJqlIssues.map((issue: any, idx: number) => {
+                                const issueKey = issue.key || issue.key_issue || 'N/A';
+                                const summary = issue.fields?.summary || issue.summary || 'Sin Resumen';
+                                const statusName = issue.fields?.status?.name || issue.status_actual || 'Desconocido';
+                                const assigneeName = issue.fields?.assignee?.displayName || issue.assignee || 'Sin asignar';
+                                const issueTypeName = issue.fields?.issuetype?.name || issue.issue_type || 'Issue';
+                                const iconUrl = issue.fields?.issuetype?.iconUrl;
+
+                                return (
+                                  <tr key={issue.id || issueKey || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-colors">
+                                    <td className="px-4 py-2.5 font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
+                                      {issueKey}
+                                    </td>
+                                    <td className="px-4 py-2.5 whitespace-nowrap flex items-center gap-2">
+                                      {iconUrl && (
+                                        <img src={iconUrl} alt="icon" className="w-3.5 h-3.5 rounded-sm" />
+                                      )}
+                                      <span>{issueTypeName}</span>
+                                    </td>
+                                    <td className="px-4 py-2.5 truncate max-w-[200px]" title={summary}>
+                                      {summary}
+                                    </td>
+                                    <td className="px-4 py-2.5 whitespace-nowrap">
+                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                                        {statusName}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-2.5 whitespace-nowrap text-slate-500 dark:text-slate-400">
+                                      {assigneeName}
+                                    </td>
+                                  </tr>
+                                )
+                              })
+                            )}
                           </tbody>
                         </table>
                       </div>
@@ -549,7 +875,7 @@ export default function SystemSyncTab() {
                           >
                             ◀ Anterior
                           </button>
-                          
+
                           <span className="px-3 py-1 font-bold text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 rounded border border-indigo-200 dark:border-indigo-800/60">
                             {jqlCurrentPage} / {jqlTotalPages || 1}
                           </span>
@@ -570,12 +896,10 @@ export default function SystemSyncTab() {
               );
             })()}
           </div>
-        </div>
-
-      </div>
+        </div>      </div>
 
       {/* SECCIÓN INFERIOR COMPLETA (100% ANCHO): TABLA DE HISTORIAL DE TAREAS (LOGS) */}
-      <div className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-hidden">
+      <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-sm overflow-hidden">
         <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
           <div>
             <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
@@ -586,12 +910,12 @@ export default function SystemSyncTab() {
               Registro inmutable de auditoría de sincronizaciones.
             </p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             {/* Filtro Temporal */}
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
               <span className="text-[11px] font-bold text-slate-400">📅</span>
-              <select 
+              <select
                 value={timeFilter}
                 onChange={(e) => setTimeFilter(e.target.value)}
                 className="bg-transparent text-[11px] font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer border-0 p-0"
@@ -685,14 +1009,14 @@ export default function SystemSyncTab() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className="flex items-center justify-center gap-2.5">
-                        <button 
+                        <button
                           title="Ver detalles"
                           onClick={() => handleShowLogDetail(log)}
                           className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                         >
                           <Eye size={15} className="text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
                         </button>
-                        <button 
+                        <button
                           title="Re-ejecutar"
                           onClick={handleManualSync}
                           disabled={syncStatus.status === 'SYNCING'}
@@ -700,7 +1024,7 @@ export default function SystemSyncTab() {
                         >
                           <RotateCw size={15} className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" />
                         </button>
-                        <button 
+                        <button
                           title="Descargar log"
                           onClick={() => handleDownloadLog(log)}
                           className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"

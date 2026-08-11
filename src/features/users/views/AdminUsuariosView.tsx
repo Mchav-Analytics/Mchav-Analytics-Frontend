@@ -250,7 +250,7 @@ export default function AdminUsuariosView({
       )}
 
       {/* CONTENEDOR 1 — Resumen RBAC y roles */}
-      <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-7 lg:p-8 shadow-sm dark:shadow-2xl space-y-4">
+      <section className="relative overflow-hidden bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 sm:p-7 lg:p-8 shadow-sm dark:shadow-2xl space-y-4">
         <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-purple-400/20 dark:bg-purple-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
 
@@ -260,10 +260,10 @@ export default function AdminUsuariosView({
           {/* TARJETA 1: ADMINISTRADOR */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'ADMIN' ? 'ALL' : 'ADMIN')}
-            className={`group bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
+            className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
               roleFilter === 'ADMIN'
                 ? 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/20'
-                : 'border-purple-200 dark:border-purple-500/30 hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15'
+                : 'border-purple-200 dark:border-[#33376b] hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15'
             }`}
           >
             <div className="flex items-center gap-4 min-w-0">
@@ -293,10 +293,10 @@ export default function AdminUsuariosView({
           {/* TARJETA 2: LÍDER TÉCNICO */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'MANAGER' ? 'ALL' : 'MANAGER')}
-            className={`group bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
+            className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
               roleFilter === 'MANAGER'
                 ? 'border-blue-500 ring-2 ring-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20 shadow-lg shadow-blue-500/20'
-                : 'border-blue-200 dark:border-blue-500/30 hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-blue-500/15'
+                : 'border-blue-200 dark:border-[#33376b] hover:border-blue-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-blue-500/15'
             }`}
           >
             <div className="flex items-center gap-4 min-w-0">
@@ -326,10 +326,10 @@ export default function AdminUsuariosView({
           {/* TARJETA 3: DESARROLLADOR */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'DEVELOPER' ? 'ALL' : 'DEVELOPER')}
-            className={`group bg-white dark:bg-slate-900/50 backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
+            className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
               roleFilter === 'DEVELOPER'
                 ? 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20'
-                : 'border-emerald-200 dark:border-emerald-500/30 hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15'
+                : 'border-emerald-200 dark:border-[#33376b] hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15'
             }`}
           >
             <div className="flex items-center gap-4 min-w-0">
@@ -359,7 +359,7 @@ export default function AdminUsuariosView({
       </section>
 
       {/* CONTENEDOR 2 — Cabecera del directorio + botones "Todos" / "Inactivos" + búsqueda */}
-      <section className="relative overflow-hidden bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl">
+      <section className="relative overflow-hidden bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl">
         <div className="pointer-events-none absolute -top-16 right-0 h-36 w-36 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
         <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
           <div className="space-y-1.5 min-w-0 pl-2 sm:pl-3">
@@ -425,7 +425,7 @@ export default function AdminUsuariosView({
       </section>
 
       {/* CONTENEDOR 4 — Listado de usuarios */}
-      <section className="relative bg-white dark:bg-slate-900/70 backdrop-blur-xl border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-2xl space-y-4">
+      <section className="relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-2xl space-y-4">
         <div className="flex items-center justify-between gap-3 pb-1">
           <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Listado de cuentas
@@ -449,8 +449,8 @@ export default function AdminUsuariosView({
             <div
               key={u.id}
               className={`rounded-2xl border transition-all duration-200 ${isExpanded
-                ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-slate-900/80 shadow-md shadow-indigo-100 dark:shadow-none'
-                : 'border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900/50 hover:shadow-sm'
+                ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-[#12142e] shadow-md shadow-indigo-100 dark:shadow-none'
+                : 'border-slate-200 dark:border-[#33376b] bg-slate-50/70 dark:bg-[#12142e] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900/50 hover:shadow-sm'
                 }`}
             >
               <div className="grid grid-cols-1 xl:grid-cols-[minmax(220px,1.4fr)_minmax(160px,1fr)_minmax(180px,1.1fr)_minmax(140px,0.9fr)_110px] gap-4 xl:gap-5 items-center px-5 py-5">
@@ -610,9 +610,10 @@ export default function AdminUsuariosView({
         )}
       </section>
 
+      {/* MODAL CONFIGURACIÓN RBAC */}
       {showConfigModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="w-full max-w-3xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
                 <Sliders size={20} className="text-purple-600 dark:text-purple-400" /> Matriz de Permisos Efectivos RBAC
@@ -674,9 +675,10 @@ export default function AdminUsuariosView({
         </div>
       )}
 
+      {/* MODAL INVITAR NUEVO USUARIOS */}
       {isInviteOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 dark:bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150">
+          <div className="w-full max-w-md bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-7 shadow-2xl space-y-5 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <UserPlus size={18} className="text-indigo-600 dark:text-indigo-400" /> Invitar Nuevo Usuario

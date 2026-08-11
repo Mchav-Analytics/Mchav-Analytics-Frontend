@@ -108,7 +108,7 @@ export default function DatePickerDropdown({ dateFilter, setDateFilter, disabled
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 shadow-sm transition-all cursor-pointer"
+        className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800/80 shadow-sm transition-all cursor-pointer"
         title="Filtrar por Rango de Fecha"
       >
         <Calendar size={15} className="text-teal-600 dark:text-teal-400" />
@@ -117,7 +117,7 @@ export default function DatePickerDropdown({ dateFilter, setDateFilter, disabled
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-3 space-y-3 text-left animate-in fade-in duration-150">
+        <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-xl z-50 p-3 space-y-3 text-left animate-in fade-in duration-150">
           <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800 pb-2">
             Seleccionar Filtro de Fecha
           </div>

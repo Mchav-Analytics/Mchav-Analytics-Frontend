@@ -22,7 +22,7 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
     "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
 
   return (
-    <div className="group/tooltip relative inline-flex items-center cursor-help ml-2 z-50" title={text}>
+    <div className="group/tooltip relative inline-flex items-center cursor-help ml-2 z-10" title={text}>
       <Info size={15} className="text-slate-400 hover:text-indigo-400 transition-colors inline shrink-0" />
       <div className={`opacity-0 group-hover/tooltip:opacity-100 transition-all duration-200 absolute bottom-full ${alignClass} mb-2.5 w-64 sm:w-72 p-3.5 bg-slate-950 text-slate-100 text-xs rounded-xl shadow-2xl border border-indigo-500/50 pointer-events-none leading-relaxed text-left z-[99999]`}>
         {text}
@@ -82,7 +82,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
     <div className="w-full max-w-full overflow-x-hidden space-y-10 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
 
       {/* ENCABEZADO ESPACIOSO CON SOPORTE MODO OSCURO/CLARO */}
-      <div className="relative group rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-slate-800 transition-all duration-300">
+      <div className="relative group rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500/20 via-purple-500/20 to-pink-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
@@ -144,7 +144,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
         {/* TARJETA 1: Cycle Time Personal */}
-        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
           <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -183,7 +183,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
         </div>
 
         {/* TARJETA 2: Tickets WIP */}
-        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
           <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -224,7 +224,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
         </div>
 
         {/* TARJETA 3: Throughput */}
-        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
           <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -257,7 +257,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
         </div>
 
         {/* TARJETA 4: Story Points */}
-        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
           <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -291,7 +291,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
       </div>
 
       {/* SECCIÓN DISTRIBUCIÓN DEL TRABAJO */}
-      <div className="relative rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-slate-800 transition-all duration-300 space-y-6">
+      <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300 space-y-6">
         <div className="relative z-10 space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2">
@@ -331,7 +331,7 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
       </div>
 
       {/* SECCIÓN TABLA DE INCIDENCIAS ASIGNADAS */}
-      <div className="relative rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-slate-800 transition-all duration-300 space-y-6">
+      <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300 space-y-6">
         <div className="relative z-10 space-y-5">
           <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-3">

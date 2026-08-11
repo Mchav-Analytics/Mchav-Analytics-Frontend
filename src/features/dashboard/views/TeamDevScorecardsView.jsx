@@ -62,6 +62,8 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
   const [loadingDevs, setLoadingDevs] = useState(true);
   const [loadingCard, setLoadingCard] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // 1. Cargar la lista de desarrolladores del proyecto activo
   useEffect(() => {
@@ -90,6 +92,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
   useEffect(() => {
     if (!targetDevId) return;
     setLoadingCard(true);
+    setCurrentPage(1);
     developerService.getDeveloperScorecard(targetDevId, selectedProjectId)
       .then(card => {
         setScorecard(card);
@@ -126,47 +129,40 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
     <div className="w-full max-w-full overflow-x-hidden space-y-8 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
       {/* BARRA SUPERIOR DE ACCESO RÁPIDO Y NAVEGACIÓN */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 px-4 rounded-xl shadow-lg backdrop-blur-md">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <button 
             onClick={onNavigateToMatrix}
-            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
           >
             <Users size={14} />
             <span>Matriz 4 Cuadrantes</span>
           </button>
           <button 
             onClick={onNavigateToHealth}
-            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
+            className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
           >
-            <Zap size={14} className="text-amber-400" />
+            <Zap size={14} className="text-amber-500 dark:text-amber-400" />
             <span>Salud del Sprint & Flow</span>
           </button>
           <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
             <Target size={14} className="text-cyan-400" />
             <span>Scorecards Devs</span>
           </button>
-          <button 
-            onClick={onNavigateToAlerts}
-            className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800/80 hover:bg-slate-800 rounded-lg transition-colors border border-slate-700 flex items-center gap-1.5 cursor-pointer"
-          >
-            <AlertTriangle size={14} className="text-rose-400" />
-            <span>Alertas & Solicitudes</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-slate-400 shrink-0">
-          <span className="flex items-center gap-1.5 bg-emerald-950/40 text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-800/40 font-medium">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
             ETL Sync Activa
           </span>
-          <span className="hidden md:inline text-slate-600">|</span>
-          <span className="font-semibold text-slate-300">Proyecto: {selectedProjectId}</span>
+          <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-300">Proyecto: {selectedProjectId}</span>
         </div>
       </div>
 
       {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
-      <div className="relative rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-slate-800 transition-all duration-300">
+      <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-teal-500 text-white font-extrabold shadow-xl shadow-indigo-500/25">
@@ -187,7 +183,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-800 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition-all hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
+            <button className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-[#12142e] px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#33376b] transition-all hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
               <Download size={15} /> Exportar Reporte Dev
             </button>
           </div>
@@ -208,7 +204,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
               placeholder="Buscar desarrollador..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>
@@ -225,13 +221,13 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
                 className={`relative flex items-center gap-4 p-4 rounded-xl border text-left transition-all duration-200 cursor-pointer ${
                   isSelected 
                     ? 'bg-indigo-50 dark:bg-indigo-950/40 border-indigo-500 shadow-sm ring-1 ring-indigo-500/50' 
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                    : 'bg-white dark:bg-[#191c3d] border-slate-200 dark:border-[#33376b] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/60'
                 }`}
               >
                 <div className={`flex h-11 w-11 items-center justify-center rounded-xl font-bold text-sm text-white shrink-0 ${
                   isSelected 
                     ? 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md' 
-                    : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                    : 'bg-slate-200 dark:bg-[#12142e] text-slate-700 dark:text-slate-300'
                 }`}>
                   {initials}
                 </div>
@@ -249,10 +245,10 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
       {/* DASHBOARD INDIVIDUAL DEL DESARROLLADOR SELECCIONADO */}
       {selectedDev && (
-        <div className="space-y-8 pt-4 border-t border-slate-200 dark:border-slate-800">
+        <div className="space-y-8 pt-4 border-t border-slate-200 dark:border-[#33376b]">
           
           {/* BANNER DEL DESARROLLADOR SELECCIONADO */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-sm">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-extrabold text-lg">
                 {(selectedDev.nombre || 'Dev').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
@@ -274,7 +270,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
 
             {/* TARJETA 1: Cycle Time Personal */}
-            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
               <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -313,7 +309,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
             </div>
 
             {/* TARJETA 2: Tickets WIP */}
-            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
               <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -325,24 +321,15 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
                   <MetricInfoTooltip align="left" text="Work In Progress del Desarrollador: Número de tareas en progreso asignadas a este desarrollador." />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-3xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
-                      {scorecard?.wip_tickets || 7}
-                    </span>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Tickets activos</p>
-                  </div>
-                  <div className="w-16 h-16 relative flex items-center justify-center">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie data={donutWipData} innerRadius={18} outerRadius={28} dataKey="value" stroke="none">
-                          {donutWipData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={index === 1 ? (document.documentElement.classList.contains('dark') ? '#1e293b' : '#e2e8f0') : entry.color} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
-                    <span className="absolute text-[9px] font-bold text-purple-600 dark:text-purple-300">WIP</span>
+                <div>
+                  <span className="text-3xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
+                    {scorecard?.wip_tickets || 7} <span className="text-sm font-bold text-purple-600 dark:text-purple-500">Tickets activos</span>
+                  </span>
+                  <div className="w-full bg-slate-100 dark:bg-slate-900 h-3 rounded-full mt-4 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
+                    <div 
+                      className="bg-gradient-to-r from-purple-500 to-indigo-600 h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, ((scorecard?.wip_tickets || 7) / (scorecard?.wip_max || 10)) * 100)}%` }}
+                    ></div>
                   </div>
                 </div>
 
@@ -354,7 +341,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
             </div>
 
             {/* TARJETA 3: Throughput */}
-            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
               <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -387,7 +374,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
             </div>
 
             {/* TARJETA 4: Story Points */}
-            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-slate-900 p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-slate-800 min-h-[220px] justify-between">
+            <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
               <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -421,7 +408,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
           </div>
 
           {/* TABLA DE INCIDENCIAS DEL DESARROLLADOR SELECCIONADO */}
-          <div className="relative rounded-2xl bg-white dark:bg-slate-900 p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-slate-800 transition-all duration-300 space-y-6">
+          <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300 space-y-6">
             <div className="relative z-10 space-y-5">
               <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
                 <div className="flex items-center gap-3">
@@ -447,7 +434,12 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80 text-slate-700 dark:text-slate-300">
-                    {assignedIssuesList.map((issue, idx) => (
+                    {(() => {
+                      const indexOfLastItem = currentPage * itemsPerPage;
+                      const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+                      const currentIssues = assignedIssuesList.slice(indexOfFirstItem, indexOfLastItem);
+
+                      return currentIssues.map((issue, idx) => (
                       <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-900/60 transition-colors">
                         <td className="px-5 py-4 font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">
                           {issue.key_issue}
@@ -456,28 +448,83 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
                           {issue.summary}
                         </td>
                         <td className="px-5 py-4 text-center">
-                          <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
-                            issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
-                              ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
-                              : issue.status_actual?.toUpperCase().includes('REVISI')
-                              ? 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/20'
-                              : 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20'
-                          }`}>
-                            {issue.status_actual}
-                          </span>
+                          {(() => {
+                            const status = (issue.status_actual || '').toUpperCase();
+                            let bgClass = "bg-slate-50 dark:bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-500/20"; // default (To Do / unknown)
+                            
+                            if (status.includes('LISTO') || status.includes('DONE') || status.includes('FINALIZADO') || status.includes('COMPLETADO')) {
+                              bgClass = "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
+                            } else if (status.includes('CURSO') || status.includes('PROGRESS') || status.includes('HACIENDO') || status.includes('PROGRESO')) {
+                              bgClass = "bg-cyan-50 dark:bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-200 dark:border-cyan-500/20";
+                            } else if (status.includes('REVISI') || status.includes('REVIEW') || status.includes('TEST')) {
+                              bgClass = "bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/20";
+                            } else if (status.includes('BLOCK') || status.includes('BLOQUEADO')) {
+                              bgClass = "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
+                            }
+
+                            return (
+                              <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${bgClass}`}>
+                                {issue.status_actual}
+                              </span>
+                            );
+                          })()}
                         </td>
                         <td className="px-5 py-4 text-right font-bold text-slate-900 dark:text-slate-200 text-sm">
                           {issue.story_points}
                         </td>
-                        <td className="px-5 py-4 text-right font-semibold text-teal-600 dark:text-teal-400 flex items-center justify-end gap-3">
-                          <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
-                          <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
+                        <td className="px-5 py-4 text-right font-semibold flex items-center justify-end gap-3">
+                          {(() => {
+                            const days = issue.cycle_time_days || 0;
+                            let colorClass = "text-emerald-600 dark:text-emerald-400";
+                            let sparklineColor = "#10b981"; // emerald-500
+
+                            if (days > 14) {
+                              colorClass = "text-rose-600 dark:text-rose-400";
+                              sparklineColor = "#f43f5e"; // rose-500
+                            } else if (days > 7) {
+                              colorClass = "text-amber-600 dark:text-amber-400";
+                              sparklineColor = "#f59e0b"; // amber-500
+                            }
+
+                            return (
+                              <>
+                                <span className={`text-sm ${colorClass}`}>{days > 0 ? `${days}d` : '-'}</span>
+                                <SparklineMini color={sparklineColor} />
+                              </>
+                            );
+                          })()}
                         </td>
                       </tr>
-                    ))}
+                    ));
+                  })()}
                   </tbody>
                 </table>
               </div>
+
+              {/* Controles de paginación */}
+              {assignedIssuesList.length > itemsPerPage && (
+                <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, assignedIssuesList.length)} a {Math.min(currentPage * itemsPerPage, assignedIssuesList.length)} de {assignedIssuesList.length} tareas
+                  </span>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="px-3 py-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Anterior
+                    </button>
+                    <button 
+                      onClick={() => setCurrentPage(p => Math.min(Math.ceil(assignedIssuesList.length / itemsPerPage), p + 1))}
+                      disabled={currentPage === Math.ceil(assignedIssuesList.length / itemsPerPage)}
+                      className="px-3 py-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 

@@ -117,7 +117,7 @@ function Topbar({
                   setIsNotificationsOpen(!isNotificationsOpen);
                 }
               }}
-              className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer relative shadow-sm"
+              className="p-2.5 rounded-2xl bg-slate-100 dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 transition-all cursor-pointer relative shadow-sm"
               title="Bandeja de notificaciones y solicitudes de acceso"
             >
               <Bell size={18} />
@@ -132,7 +132,7 @@ function Topbar({
 
             {/* Desplegable Popover secundario de Campanita de Notificaciones */}
             {isNotificationsOpen && (
-              <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl z-50 p-4 space-y-3 text-left animate-in fade-in duration-150">
+              <div className="absolute right-0 mt-3 w-80 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl shadow-2xl z-50 p-4 space-y-3 text-left animate-in fade-in duration-150">
                 <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-2.5">
                   <div className="flex items-center gap-2">
                     <Bell size={16} className="text-indigo-500" />

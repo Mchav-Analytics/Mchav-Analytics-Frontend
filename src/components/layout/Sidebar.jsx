@@ -151,7 +151,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col h-screen py-8 overflow-y-auto bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-gray-900 dark:border-gray-700 transition-all duration-300 relative ${
+      className={`flex flex-col h-screen py-8 overflow-y-auto bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative ${
         isCollapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-5'
       }`}
       style={{ flexShrink: 0 }}
@@ -186,52 +186,20 @@ function Sidebar({
 
       <div className="flex flex-col justify-between flex-1 mt-6">
 
-        {/* ── NAVEGACIÓN PRINCIPAL ── */}
-        <nav className={`${isCollapsed ? 'space-y-2 flex flex-col items-center' : '-mx-3 space-y-1'}`}>
+        {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}
+        <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2' : ''}`}>
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
-
-            if (isCollapsed) {
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`relative p-2.5 rounded-xl transition-all duration-300 cursor-pointer ${
-                    isActive
-                      ? 'bg-indigo-100 dark:from-indigo-500/15 dark:to-purple-500/10 text-indigo-600 dark:text-indigo-400 shadow-md shadow-indigo-200/60 dark:shadow-indigo-500/25 scale-110 border border-indigo-200/80 dark:border-indigo-500/20'
-                      : 'text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200 hover:scale-105'
-                  }`}
-                  style={{ border: isActive ? undefined : 'none', background: isActive ? undefined : 'transparent' }}
-                  title={item.label}
-                >
-                  {isActive && (
-                    <span className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full bg-gradient-to-b from-indigo-500 to-purple-600 shadow-md shadow-indigo-400/60" />
-                  )}
-                  {item.icon}
-                </button>
-              );
-            }
 
             return (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={isActive ? activeLinkClasses : linkClasses}
-                style={{ width: '100%', textAlign: 'left', cursor: 'pointer', border: isActive ? undefined : 'none', background: isActive ? undefined : 'transparent' }}
+                className={`uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
+                title={isCollapsed ? item.label : undefined}
               >
-                {/* Indicador lateral animado */}
-                {isActive && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 rounded-full bg-gradient-to-b from-indigo-500 to-purple-600 shadow-lg shadow-indigo-400/60 sidebar-indicator" />
-                )}
-                <span className={`transition-transform duration-300 ${isActive ? 'text-indigo-600 dark:text-indigo-400 scale-110' : 'group-hover/nav:scale-110'}`}>
-                  {item.icon}
-                </span>
-                <span className={`mx-2 text-sm transition-all duration-300 ${
-                  isActive ? 'font-bold tracking-tight' : 'font-medium group-hover/nav:font-semibold'
-                }`}>{item.label}</span>
-                {isActive && (
-                  <span className="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-pulse" />
-                )}
+                {item.icon}
+                {!isCollapsed && <span>{item.label}</span>}
               </button>
             );
           })}
