@@ -36,7 +36,7 @@ function Topbar({
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [selectedRoleForUser, setSelectedRoleForUser] = useState('DEVELOPER'); // 'DEVELOPER' o 'MANAGER'
 
-  const { user: authUser, logout, approveUserPermission, approvedUsers } = useAuth(); // Hook de autenticación global
+  const { user: authUser, logout, approveUserPermission, approvedUsers, switchViewRole, isRealAdmin } = useAuth(); // Hook de autenticación global
 
   const activeUser = authUser || propUserProfile;
 
@@ -99,6 +99,51 @@ function Topbar({
 
       {/* Controles de Notificaciones, Tema y Perfil */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+
+        {/* Selector de Modo de Vista de Rol para el Administrador */}
+        {isRealAdmin && (
+          <div className="hidden sm:flex items-center gap-1 p-1 bg-slate-100 dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-xs mr-1">
+            <span className="text-[10px] font-bold text-slate-400 dark:text-slate-400 px-2 uppercase tracking-wider">
+              Vista:
+            </span>
+            <button
+              type="button"
+              onClick={() => switchViewRole('ADMIN')}
+              className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                normalizeRole(activeUser?.rol) === 'ADMIN'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Ver plataforma como Administrador"
+            >
+              👑 Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => switchViewRole('MANAGER')}
+              className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                normalizeRole(activeUser?.rol) === 'MANAGER'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Ver plataforma como Líder Técnico"
+            >
+              👔 Líder
+            </button>
+            <button
+              type="button"
+              onClick={() => switchViewRole('DEVELOPER')}
+              className={`px-2.5 py-1 text-[11px] font-bold rounded-xl transition-all cursor-pointer ${
+                normalizeRole(activeUser?.rol) === 'DEVELOPER'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800'
+              }`}
+              title="Ver plataforma como Desarrollador"
+            >
+              💻 Dev
+            </button>
+          </div>
+        )}
 
         {/* Switch de Tema Sol / Luna Uiverse */}
         <div className="flex items-center">

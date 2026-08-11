@@ -18,7 +18,7 @@ function Sidebar({
   selectedProjectId = 'PROJ-01',
   setSelectedProjectId
 }) {
-  const { logout, user } = useAuth();
+  const { logout, user, switchViewRole, isRealAdmin } = useAuth();
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -186,6 +186,60 @@ function Sidebar({
       </div>
 
       <div className="flex flex-col justify-between flex-1 mt-6">
+
+        {/* ── SELECTOR DE MODOS DE VISTA DE ROL (PARA EL ADMINISTRADOR) ── */}
+        {isRealAdmin && !isCollapsed && (
+          <div className="mb-4 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs">
+            <div className="flex items-center justify-between mb-2 px-1">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                👁️ Vista de Rol
+              </span>
+              {user?.isSimulated && (
+                <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 animate-pulse">
+                  Simulando
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                type="button"
+                onClick={() => switchViewRole('ADMIN')}
+                className={`py-1 px-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                  userRole === 'ADMIN'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+                title="Ver plataforma como Administrador"
+              >
+                👑 Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => switchViewRole('MANAGER')}
+                className={`py-1 px-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                  userRole === 'MANAGER'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+                title="Ver plataforma como Líder Técnico"
+              >
+                👔 Líder
+              </button>
+              <button
+                type="button"
+                onClick={() => switchViewRole('DEVELOPER')}
+                className={`py-1 px-1 text-[10px] font-bold rounded-lg transition-all flex items-center justify-center cursor-pointer ${
+                  userRole === 'DEVELOPER'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800'
+                }`}
+                title="Ver plataforma como Desarrollador"
+              >
+                💻 Dev
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}
         <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2' : ''}`}>

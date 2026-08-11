@@ -34,7 +34,8 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   checkAuthSession: () => Promise<void>;
   approvedUsers: string[];
-  approveUserPermission: (email: string, newRole?: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | string) => void;
+  switchViewRole: (newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => void;
+  isRealAdmin: boolean;
   resetDemoState: () => void;
 }
 
@@ -49,6 +50,8 @@ const defaultContextValue: AuthContextType = {
   checkAuthSession: async () => {},
   approvedUsers: ['vhoyos@mchav.com'],
   approveUserPermission: () => {},
+  switchViewRole: () => {},
+  isRealAdmin: true,
   resetDemoState: () => {}
 };
 
@@ -212,6 +215,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setApprovedUsers(['vhoyos@mchav.com', 'cgomez@mchav.com', 'dev@mchav.com']);
   };
 
+  const isRealAdmin = !user || normalizeRole(user.original_rol || user.rol) === 'ADMIN' || user.email === 'vhoyos@mchav.com';
+
+  const switchViewRole = (newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+    setUser(prev => {
+      if (!prev) return null;
+      return {
+        ...prev,
+        rol: newRole,
+        isSimulated: newRole !== 'ADMIN'
+      };
+    });
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -223,6 +239,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     checkAuthSession,
     approvedUsers,
     approveUserPermission,
+    switchViewRole,
+    isRealAdmin,
     resetDemoState
   };
 
