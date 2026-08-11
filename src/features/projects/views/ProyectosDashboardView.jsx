@@ -42,6 +42,8 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { projectService } from '../../../services/api';
+import PercentilesChart from '../../dashboard/components/PercentilesChart';
 
 // Líderes Técnicos disponibles para asignación
 const AVAILABLE_LEADERS = [
@@ -208,6 +210,31 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Cargar proyectos reales del backend para que tengan el ID correcto al consultar percentiles
+  React.useEffect(() => {
+    projectService.getProjects()
+      .then(realProjects => {
+        if (realProjects && realProjects.length > 0) {
+          const mappedProjects = realProjects.map((rp, i) => {
+            const baseMock = INITIAL_PROJECTS[i % INITIAL_PROJECTS.length];
+            return {
+              ...baseMock,
+              id: rp.key_proyecto, // Usamos la key real (Ej. MCHAV) para que el backend la encuentre
+              key: rp.key_proyecto,
+              name: rp.nombre
+            };
+          });
+          setProjects(mappedProjects);
+        }
+      })
+      .catch(err => console.error("Error al cargar proyectos reales:", err));
+  }, []);
+  
+  // Estados para HU-014 Análisis de Tiempos
+  const [activeProjectTab, setActiveProjectTab] = useState('RESUMEN');
+  const [percentilesData, setPercentilesData] = useState(null);
+  const [loadingPercentiles, setLoadingPercentiles] = useState(false);
 
   const [availableLeaders, setAvailableLeaders] = useState(AVAILABLE_LEADERS);
   const [availableDevelopers, setAvailableDevelopers] = useState(AVAILABLE_DEVELOPERS);
@@ -360,7 +387,19 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   };
 
   const toggleExpand = (projectId) => {
-    setExpandedProjectId(prev => (prev === projectId ? null : projectId));
+    if (expandedProjectId === projectId) {
+      setExpandedProjectId(null);
+    } else {
+      setExpandedProjectId(projectId);
+      setActiveProjectTab('RESUMEN');
+      
+      // HU-014: Cargar datos de percentiles en paralelo
+      setLoadingPercentiles(true);
+      projectService.getPercentiles(projectId)
+        .then(data => setPercentilesData(data))
+        .catch(err => console.error("Error al cargar percentiles", err))
+        .finally(() => setLoadingPercentiles(false));
+    }
   };
 
   const resetAssignFormUi = () => {
@@ -1234,15 +1273,46 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   {activeProject.key} • {activeProject.category || 'Backend'}
                 </span>
                 <h3 className="text-base sm:text-lg font-black mt-1 text-slate-900 dark:text-slate-50">
-                  Resumen Ejecutivo & Métricas Jira — {activeProject.name}
+                  Panel de Rendimiento — {activeProject.name}
                 </h3>
               </div>
             </div>
 
-            <button type="button" onClick={() => setExpandedProjectId(null)} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-200">
-              <X size={15} /> Ocultar Resumen
-            </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              {/* Pestañas internas del proyecto */}
+              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setActiveProjectTab('RESUMEN')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    activeProjectTab === 'RESUMEN' 
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-sm' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Resumen General
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveProjectTab('TIEMPOS')}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+                    activeProjectTab === 'TIEMPOS' 
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-sm' 
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  Análisis de Tiempos
+                </button>
+              </div>
+              
+              <button type="button" onClick={() => setExpandedProjectId(null)} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
+                <X size={15} /> Ocultar
+              </button>
+            </div>
           </div>
+
+          {activeProjectTab === 'RESUMEN' ? (
+            <>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center gap-3">
@@ -1335,6 +1405,34 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </div>
             </div>
           </div>
+          </>
+          ) : (
+            /* Pestaña de Análisis de Tiempos (Percentiles) HU-014 */
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
+              {loadingPercentiles ? (
+                <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500 animate-pulse">
+                  Calculando percentiles y agregando datos de los últimos 15 días...
+                </div>
+              ) : percentilesData && percentilesData.length > 0 ? (
+                percentilesData.map((data, idx) => {
+                  const colors = ['indigo', 'emerald', 'rose', 'sky', 'amber'];
+                  return (
+                    <div key={data.issue_type} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
+                      <PercentilesChart 
+                        title={`Análisis de ${data.issue_type}`} 
+                        data={data} 
+                        colorTheme={colors[idx % colors.length]} 
+                      />
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500">
+                  No se encontraron datos de tareas resueltas en este proyecto en los últimos 15 días.
+                </div>
+              )}
+            </div>
+          )}
         </section>
       )}
     </div>
