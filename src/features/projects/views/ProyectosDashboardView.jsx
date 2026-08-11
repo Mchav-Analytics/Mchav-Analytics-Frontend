@@ -43,7 +43,6 @@ import {
   Pie,
   Cell
 } from 'recharts';
-import { projectService } from '../../../services/api';
 import PercentilesChart from '../../dashboard/components/PercentilesChart';
 
 const tooltipStyle = {
