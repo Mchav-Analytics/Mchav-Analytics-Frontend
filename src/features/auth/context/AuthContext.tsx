@@ -34,6 +34,7 @@ export interface AuthContextType {
   logout: () => Promise<void>;
   checkAuthSession: () => Promise<void>;
   approvedUsers: string[];
+  approveUserPermission: (email: string, newRole?: string) => void;
   switchViewRole: (newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => void;
   isRealAdmin: boolean;
   resetDemoState: () => void;
