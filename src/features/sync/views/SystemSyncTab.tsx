@@ -92,56 +92,56 @@ export default function SystemSyncTab() {
       categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
       title: 'Todas las Incidencias del Proyecto',
       description: 'Obtiene el catálogo completo de tareas registradas sin ningún filtro.',
-      jql: 'project = "SCRUM"'
+      jql: 'project = "10000"'
     },
     {
       category: 'Consultas Básicas',
       categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
       title: 'Incidencias En Progreso (Trabajo Activo)',
       description: 'Filtra las tareas actualmente en desarrollo activo por el equipo.',
-      jql: 'project = "SCRUM" AND status = "In Progress"'
+      jql: 'project = "10000" AND status in ("In Progress", "En curso")'
     },
     {
       category: 'Consultas Básicas',
       categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
       title: 'Incidencias Completadas (Done)',
       description: 'Muestra todas las tareas finalizadas y entregadas con éxito.',
-      jql: 'project = "SCRUM" AND status = "Done"'
+      jql: 'project = "10000" AND status in ("Done", "Finalizado", "Completado")'
     },
     {
       category: 'Consultas Básicas',
       categoryBadge: 'bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800',
       title: 'Incidencias Pendientes (To Do)',
       description: 'Muestra el trabajo acumulado en Backlog aún no iniciado.',
-      jql: 'project = "SCRUM" AND status = "To Do"'
+      jql: 'project = "10000" AND status in ("To Do", "Por hacer", "Pendiente")'
     },
     {
       category: 'Control Operativo',
       categoryBadge: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
       title: 'Alta Prioridad / Críticos Pendientes',
       description: 'Detecta tareas bloqueantes o de alta prioridad sin resolver.',
-      jql: 'project = "SCRUM" AND priority in (High, Highest) AND status != "Done"'
+      jql: 'project = "10000" AND priority in (High, Highest, Alta) AND status not in ("Done", "Finalizado", "Completado")'
     },
     {
       category: 'Control Operativo',
       categoryBadge: 'bg-amber-100 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-800',
       title: 'Incidencias Sin Asignar',
       description: 'Identifica tareas huérfanas sin desarrollador asignado.',
-      jql: 'project = "SCRUM" AND assignee is EMPTY AND status != "Done"'
+      jql: 'project = "10000" AND assignee is EMPTY AND status not in ("Done", "Finalizado", "Completado")'
     },
     {
       category: 'Calidad y Bugs',
       categoryBadge: 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800',
       title: 'Bugs y Errores Activos',
       description: 'Lista todas las fallas o bugs reportados que siguen pendientes.',
-      jql: 'project = "SCRUM" AND issuetype = Bug AND status != "Done"'
+      jql: 'project = "10000" AND issuetype in (Bug, Error) AND status not in ("Done", "Finalizado", "Completado")'
     },
     {
       category: 'Tiempos y Recientes',
       categoryBadge: 'bg-cyan-100 dark:bg-cyan-950/80 text-cyan-700 dark:text-cyan-300 border-cyan-200 dark:border-cyan-800',
       title: 'Actualizadas en los Últimos 7 Días',
       description: 'Muestra los cambios y actividad más reciente del proyecto.',
-      jql: 'project = "SCRUM" AND updated >= -7d ORDER BY updated DESC'
+      jql: 'project = "10000" AND updated >= -7d ORDER BY updated DESC'
     }
   ];
 
