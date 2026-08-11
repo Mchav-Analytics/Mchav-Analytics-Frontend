@@ -11,7 +11,35 @@ import {
   Legend,
   ReferenceLine
 } from 'recharts';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Info } from 'lucide-react';
+
+const InfoTooltip = ({ text, align = 'center' }) => {
+  const [isHovered, React_setIsHovered] = React.useState(false);
+
+  return (
+    <div 
+      onMouseEnter={() => React_setIsHovered(true)}
+      onMouseLeave={() => React_setIsHovered(false)}
+      onClick={(e) => e.stopPropagation()} 
+      className="relative inline-flex items-center cursor-pointer ml-1.5 z-10"
+    >
+      <Info 
+        size={14} 
+        className="text-slate-400 dark:text-slate-400 hover:text-cyan-400 dark:hover:text-cyan-300 transition-colors shrink-0" 
+      />
+      
+      {isHovered && (
+        <div className={`absolute z-50 p-3 bg-slate-950/95 backdrop-blur-md text-slate-100 text-xs font-medium rounded-xl shadow-[0_10px_35px_rgba(0,0,0,0.9)] border border-slate-700/80 pointer-events-none leading-relaxed text-left w-64 animate-in fade-in duration-150 ${
+          align === 'right' 
+            ? 'top-full mt-2.5 right-0' 
+            : 'bottom-full mb-2.5 left-1/2 -translate-x-1/2'
+        }`}>
+          <span className="block">{text}</span>
+        </div>
+      )}
+    </div>
+  );
+};
 
 /**
  * [HU-014] Componente reutilizable para renderizar un gráfico de barras agrupadas
@@ -81,9 +109,12 @@ export default function PercentilesChart({ data, title, colorTheme = 'indigo' })
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-black uppercase text-slate-800 dark:text-slate-100">
-          {title}
-        </h4>
+        <div className="flex items-center gap-2">
+          <h4 className="text-sm font-black uppercase text-slate-800 dark:text-slate-100">
+            {title}
+          </h4>
+          <InfoTooltip text="Métrica calculada sobre los últimos 15 días. Conocer los percentiles (P90) te permite saber con qué rapidez se atiende el 90% de las tareas, evitando que los picos aíslados afecten el promedio." align="left" />
+        </div>
         <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
           {data.count} muestras (15 días)
         </span>

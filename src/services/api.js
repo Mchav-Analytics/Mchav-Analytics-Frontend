@@ -62,7 +62,7 @@ export const jiraService = {
   },
   getSyncLogs(params = {}) {
     if (USE_MOCK_DATA) return mockJiraService.getSyncLogs();
-    return api.get('/jira/sync/logs', { params }).then(res => res.data);
+    return api.get('/api/v1/jira/sync/logs', { params }).then(res => res.data);
   }
 };
 
