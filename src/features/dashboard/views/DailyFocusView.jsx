@@ -222,49 +222,7 @@ export default function DailyFocusView({ data: propData }) {
 
       </div>
 
-      {/* MATRIZ DE ATENCIÓN DIARIA EN 3 COLUMNAS CON ACCIONES REALES */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1">
 
-        {/* COLUMNA 1: URGENTE */}
-        <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-2xl transition-all duration-300 hover:scale-[1.02] hover:shadow-rose-500/20 border border-slate-200 dark:border-[#33376b] justify-between min-h-[260px]">
-          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 opacity-15 blur-sm transition-opacity duration-300 group-hover:opacity-30 pointer-events-none"></div>
-          <div className="relative z-10 space-y-6 flex flex-col justify-between h-full">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-red-600">
-                  <AlertOctagon className="h-4 w-4 text-white" />
-                </div>
-                <h2 className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">1. Atención Inmediata</h2>
-              </div>
-              <span className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-1 text-[11px] font-bold text-rose-600 dark:text-rose-400 border border-rose-500/20">
-                {urgentBugs.length} URGENTE
-              </span>
-            </div>
-
-            {urgentBugs.map((bug, idx) => (
-              <div key={idx} className="rounded-xl bg-slate-50 dark:bg-[#12142e] p-5 border border-slate-200 dark:border-[#33376b] space-y-3">
-                <div className="flex justify-between items-start">
-                  <span className="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">{bug.key_issue}</span>
-                  <span className="text-[11px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 px-2.5 py-1 border border-rose-500/30 rounded-lg">
-                    {bug.issue_type || "Bug"}
-                  </span>
-                </div>
-                <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{bug.summary}</h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Devuelto por QA tras encontrar falla en pruebas.</p>
-                <div className="pt-3 flex justify-between items-center text-xs text-slate-500 border-t border-slate-200 dark:border-slate-800">
-                  <span>{bug.time_ago || "Reciente"}</span>
-                  <button 
-                    onClick={() => handleActionClick(bug.key_issue, "Iniciado trabajo de corrección de bug en QA")}
-                    className="flex items-center gap-1.5 rounded-lg bg-gradient-to-r from-rose-500 to-red-600 px-3 py-1.5 text-xs font-bold text-white transition-all hover:from-rose-600 hover:to-red-700 cursor-pointer"
-                  >
-                    Corregir <ArrowRight size={12} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
       <form onSubmit={handleAddItem} className="rounded-2xl bg-[#141738] p-3.5 shadow-2xl border border-[#272b5c] flex flex-col sm:flex-row items-center gap-3 shrink-0">
         <div className="relative flex-1 w-full">
           <Plus size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-indigo-400" />
