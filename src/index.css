@@ -3505,3 +3505,18 @@ body {
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
+
+/* REGLAS EXCLUSIVAS PARA IMPRESIÓN Y EXPORTACIÓN A PDF */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  aside, nav, header, button, .no-print {
+    display: none !important;
+  }
+  @page {
+    size: A4 portrait;
+    margin: 1.2cm;
+  }
+}
