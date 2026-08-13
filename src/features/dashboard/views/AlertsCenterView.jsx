@@ -1,7 +1,3 @@
-// ============================================================================
-// VISTA: CENTRO DE ACTIVIDAD Y SEGUIMIENTO EN TIEMPO REAL (JIRA INTEGRADO)
-// ============================================================================
-
 import React, { useState, useEffect } from 'react';
 import {
   AlertTriangle,
@@ -20,11 +16,21 @@ import {
   ExternalLink,
   ArrowRight,
   MessageCircle,
-  FileText
+  FileText,
+  User,
+  Crown
 } from 'lucide-react';
+import { useAuth } from '../../../features/auth/context/AuthContext';
 import { alertService, jiraService } from '../../../services/api';
 
 function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
+  const { user } = useAuth();
+  
+  // Detectar rol y usuario activo
+  const isDev = user?.rol && user.rol.toUpperCase().includes('DEV');
+  const currentUserRole = isDev ? 'DEVELOPER' : 'ADMIN';
+  const currentUserName = user?.nombre || (isDev ? 'Carlos Pérez (Desarrollador)' : 'Líder Técnico Admin');
+
   const [activeTab, setActiveTab] = useState('ALL'); // 'ALL' | 'SOLICITUDES' | 'ALERTAS' | 'NOTIFICACIONES'
   const [statusFilter, setStatusFilter] = useState('ALL'); // 'ALL' | 'NUEVA' | 'EN_REVISION' | 'EN_CONVERSACION' | 'RESUELTA'
   const [loading, setLoading] = useState(true);
@@ -44,9 +50,9 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
     descripcion: '',
     key_issue: '',
     prioridad: 'MEDIA',
-    solicitado_por_name: 'Desarrollador MCHAV',
-    solicitado_por_email: 'dev@mchav.com',
-    rol_usuario: 'DEVELOPER'
+    solicitado_por_name: currentUserName,
+    solicitado_por_email: user?.email || 'dev@mchav.com',
+    rol_usuario: currentUserRole
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -110,21 +116,23 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
 
     setSendingReply(true);
 
-    // Si tiene un ticket de Jira real, publicar comentario en la API de Jira
     const issueKey = activeThread.key_issue || 'MCHAV-128';
     
     jiraService.addComment(issueKey, replyText)
       .then(() => {
         const newMsg = {
           id: Date.now(),
-          emisor: 'Líder Técnico Admin',
-          rol: 'ADMIN',
+          emisor: currentUserName,
+          rol: currentUserRole,
           texto: replyText,
           hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
-        // Actualizar automáticamente a EN_CONVERSACION
-        const nextStatus = activeThread.estado === 'NUEVA' ? 'EN_CONVERSACION' : activeThread.estado;
+        // Si responde el Admin/Líder: pasa a EN_CONVERSACION
+        // Si responde el Dev: pasa a EN_REVISION (Esperando respuesta del Líder)
+        const nextStatus = !isDev 
+          ? (activeThread.estado === 'NUEVA' ? 'EN_CONVERSACION' : activeThread.estado)
+          : 'EN_REVISION';
 
         setHelpRequests(prev => prev.map(r => 
           r.id_solicitud === activeThread.id_solicitud 
@@ -140,8 +148,8 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
 
         setReplyText('');
         setSendingReply(false);
-        setToastMsg('💬 Comentario publicado en Jira real y sincronizado');
-        setTimeout(() => setToastMsg(''), 3000);
+        setToastMsg(`💬 Respuesta enviada por ${isDev ? 'Desarrollador' : 'Líder Técnico'} y publicada en Jira`);
+        setTimeout(() => setToastMsg(''), 3500);
       })
       .catch(err => {
         console.log("Error al publicar en Jira:", err);
@@ -391,24 +399,30 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
               </div>
             </div>
 
-            {/* MENSAJES DEL HILO DE CONVERSACIÓN */}
+            {/* MENSAJES DEL HILO DE CONVERSACIÓN (DESARROLLADOR <-> LÍDER / ADMIN) */}
             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
-              {(activeThread.mensajes || []).map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3.5 rounded-2xl max-w-[85%] space-y-1 ${
-                    msg.rol === 'ADMIN'
-                      ? 'ml-auto bg-indigo-600 text-white text-right'
-                      : 'bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center justify-between gap-2 text-[10px] opacity-80 font-bold">
-                    <span>👤 {msg.emisor}</span>
-                    <span>{msg.hora}</span>
+              {(activeThread.mensajes || []).map((msg, idx) => {
+                const isAdminMsg = msg.rol === 'ADMIN';
+                return (
+                  <div
+                    key={idx}
+                    className={`p-3.5 rounded-2xl max-w-[85%] space-y-1 ${
+                      isAdminMsg
+                        ? 'ml-auto bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-right shadow-md'
+                        : 'bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2 text-[10px] opacity-90 font-extrabold">
+                      <span className="flex items-center gap-1">
+                        {isAdminMsg ? <Crown size={11} className="text-amber-300" /> : <User size={11} className="text-indigo-400" />}
+                        {msg.emisor} ({isAdminMsg ? 'Líder / Admin' : 'Desarrollador'})
+                      </span>
+                      <span>{msg.hora}</span>
+                    </div>
+                    <p className="text-xs font-medium leading-relaxed">{msg.texto}</p>
                   </div>
-                  <p className="text-xs font-medium leading-relaxed">{msg.texto}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* FORMULARIO PARA RESPONDER Y PUBLICAR EN JIRA */}
