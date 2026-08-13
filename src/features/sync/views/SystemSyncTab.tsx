@@ -444,7 +444,7 @@ export default function SystemSyncTab() {
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
               Sincronización del Sistema
             </h1>
           </div>
