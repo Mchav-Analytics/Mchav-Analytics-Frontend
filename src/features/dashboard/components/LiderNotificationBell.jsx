@@ -1,13 +1,25 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, X, AlertTriangle, Activity, CheckCircle2, MessageSquare, ExternalLink, ArrowRight } from 'lucide-react';
+import {
+  Bell,
+  X,
+  AlertTriangle,
+  MessageSquare,
+  RefreshCw,
+  FileBarChart2,
+  Bug,
+  ExternalLink,
+  ArrowRight,
+  CheckCircle2
+} from 'lucide-react';
+import { jiraService } from '../../../services/api';
 
 const initialNotifications = [
   {
     id: 'notif-1',
-    type: 'HELP',
-    priority: 'HIGH',
-    title: '💬 Solicitud de Actualización de Sprint',
-    description: 'Carlos Pérez solicita confirmación sobre la entrega de SSO (MCHAV-128).',
+    type: 'SOLICITUD',
+    title: '💬 Solicitud de Actualización',
+    description: 'Carlos Pérez solicita confirmación sobre la entrega del módulo SSO (MCHAV-128).',
+    tagline: 'Necesita interacción humana.',
     time: 'Hace 15 min',
     isRead: false,
     issueKey: 'MCHAV-128'
@@ -15,27 +27,47 @@ const initialNotifications = [
   {
     id: 'notif-2',
     type: 'BUG',
-    priority: 'HIGH',
-    title: '🐞 3 Bugs Críticos Detectados en QA',
-    description: 'Proyecto MCHAV Analytics reportó fallos devueltos por pruebas.',
+    title: '🐞 Bug Crítico Detectado',
+    description: 'Fallos devueltos en QA para MCHAV Analytics (MCHAV-105).',
+    tagline: 'No necesariamente necesita respuesta.',
     time: 'Hace 45 min',
     isRead: false,
     issueKey: 'MCHAV-105'
   },
   {
     id: 'notif-3',
-    type: 'METRIC',
-    priority: 'MEDIUM',
-    title: '⚠️ Cycle Time Elevado (> 3.5 días)',
-    description: 'Proyecto MCHAV Analytics supera el umbral configurado de ciclo de entrega.',
+    type: 'ALERTA',
+    title: '⚠️ Inactividad Prolongada (>48h)',
+    description: 'MCHAV-104 lleva más de 3 días sin registro de avances.',
+    tagline: 'Normalmente necesita acción.',
     time: 'Hace 2 horas',
     isRead: false
+  },
+  {
+    id: 'notif-4',
+    type: 'SYNC_FAIL',
+    title: '🔄 Sincronización Fallida',
+    description: 'Fallo de conexión en el motor de ingesta de Jira Cloud API.',
+    tagline: 'Acción técnica.',
+    time: 'Hace 3 horas',
+    isRead: false
+  },
+  {
+    id: 'notif-5',
+    type: 'REPORT',
+    title: '📊 Informe Generado',
+    description: 'Resumen semanal de velocidad y salud del Sprint 04 disponible.',
+    tagline: 'No necesita respuesta.',
+    time: 'Hace 5 horas',
+    isRead: true
   }
 ];
 
-export default function LiderNotificationBell({ className = "", onNavigateToHub }) {
+export default function LiderNotificationBell({ className = "", onNavigateToHub, onNavigateTab }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
+  const [syncingId, setSyncingId] = useState(null);
+  const [syncMsg, setSyncMsg] = useState('');
   const popoverRef = useRef(null);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -69,6 +101,33 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
     }
   };
 
+  const handleNavigate = (tabName) => {
+    setIsOpen(false);
+    if (onNavigateTab) {
+      onNavigateTab(tabName);
+    } else if (onNavigateToHub) {
+      onNavigateToHub(tabName);
+    }
+  };
+
+  const handleRetrySync = (id) => {
+    setSyncingId(id);
+    jiraService.triggerSync()
+      .then(() => {
+        setSyncMsg('✨ Sincronización reintentada con éxito');
+        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        setTimeout(() => setSyncMsg(''), 3000);
+      })
+      .catch((err) => {
+        console.error("Error al reintentar sync:", err);
+        setSyncMsg('⚠️ Error reintentando sync');
+        setTimeout(() => setSyncMsg(''), 3000);
+      })
+      .finally(() => {
+        setSyncingId(null);
+      });
+  };
+
   return (
     <div className={`relative inline-block ${className}`} ref={popoverRef}>
       {/* BOTÓN DE CAMPANA */}
@@ -94,7 +153,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
             <div className="flex items-center gap-2">
               <Bell size={16} className="text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                Centro de Actividad
+                Notificaciones
               </h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 font-bold text-[10px]">
@@ -122,7 +181,13 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
             </div>
           </div>
 
-          {/* LISTA DE TARJETAS DE ACTIVIDAD */}
+          {syncMsg && (
+            <div className="p-2 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 text-[11px] font-bold text-center animate-in fade-in">
+              {syncMsg}
+            </div>
+          )}
+
+          {/* LISTA DE NOTIFICACIONES CATEGORIZADAS */}
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 pr-1 space-y-2">
             {notifications.map((notif) => (
               <div
@@ -136,13 +201,17 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
               >
                 <div className="flex items-start gap-2.5">
                   <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
-                    notif.type === 'HELP' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' :
+                    notif.type === 'SOLICITUD' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
                     notif.type === 'BUG' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
-                    'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    notif.type === 'ALERTA' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
+                    notif.type === 'SYNC_FAIL' ? 'bg-red-500/15 text-red-600 dark:text-red-400' :
+                    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                   }`}>
-                    {notif.type === 'HELP' ? <MessageSquare size={14} /> :
-                     notif.type === 'BUG' ? <AlertTriangle size={14} /> :
-                     <Activity size={14} />}
+                    {notif.type === 'SOLICITUD' ? <MessageSquare size={14} /> :
+                     notif.type === 'BUG' ? <Bug size={14} /> :
+                     notif.type === 'ALERTA' ? <AlertTriangle size={14} /> :
+                     notif.type === 'SYNC_FAIL' ? <RefreshCw size={14} /> :
+                     <FileBarChart2 size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
@@ -154,32 +223,60 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
                       {notif.description}
                     </p>
+                    {notif.tagline && (
+                      <p className="text-[10px] font-semibold text-indigo-600 dark:text-indigo-300 mt-1 italic">
+                        {notif.tagline}
+                      </p>
+                    )}
                   </div>
                 </div>
 
-                {/* BOTONES DE ACCIÓN RÁPIDA DE LA TARJETA */}
+                {/* BOTONES DE ACCIÓN RÁPIDA EXACTOS */}
                 <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
-                  {notif.type === 'HELP' ? (
-                    <>
-                      <button
-                        onClick={handleGoToHub}
-                        className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors flex items-center gap-1 cursor-pointer"
-                      >
-                        <MessageSquare size={11} /> Responder
-                      </button>
-                      <button
-                        onClick={handleGoToHub}
-                        className="px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-400 transition-colors flex items-center gap-1 cursor-pointer"
-                      >
-                        Ver en Centro <ExternalLink size={11} />
-                      </button>
-                    </>
-                  ) : (
+                  {notif.type === 'SOLICITUD' && (
                     <button
                       onClick={handleGoToHub}
-                      className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors flex items-center gap-1 cursor-pointer"
                     >
-                      Ver detalle <ArrowRight size={11} />
+                      <MessageSquare size={11} /> Responder
+                    </button>
+                  )}
+
+                  {notif.type === 'BUG' && (
+                    <button
+                      onClick={() => handleNavigate('team_matrix')}
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-rose-600/20 text-rose-700 dark:text-rose-300 hover:bg-rose-600 hover:text-white border border-rose-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <Bug size={11} /> Ver bug
+                    </button>
+                  )}
+
+                  {notif.type === 'ALERTA' && (
+                    <button
+                      onClick={handleGoToHub}
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-amber-600/20 text-amber-700 dark:text-amber-300 hover:bg-amber-600 hover:text-white border border-amber-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <AlertTriangle size={11} /> Revisar
+                    </button>
+                  )}
+
+                  {notif.type === 'SYNC_FAIL' && (
+                    <button
+                      onClick={() => handleRetrySync(notif.id)}
+                      disabled={syncingId === notif.id}
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-red-600 text-white hover:bg-red-500 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <RefreshCw size={11} className={syncingId === notif.id ? 'animate-spin' : ''} />
+                      {syncingId === notif.id ? 'Reintentando...' : 'Reintentar'}
+                    </button>
+                  )}
+
+                  {notif.type === 'REPORT' && (
+                    <button
+                      onClick={() => handleNavigate('sprint_health')}
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-emerald-600/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-600 hover:text-white border border-emerald-500/30 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <FileBarChart2 size={11} /> Ver informe
                     </button>
                   )}
                 </div>
@@ -187,13 +284,13 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
             ))}
           </div>
 
-          {/* PIE DE PANEL EMERGENTE CON ACCESO DIRECTO AL CENTRO DE ACTIVIDAD */}
+          {/* PIE DE PANEL EMERGENTE */}
           <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               onClick={handleGoToHub}
               className="w-full py-1.5 px-3 text-center text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              <span>Ver todo en Centro de Actividad</span>
+              <span>Ir al Centro de Actividad completo</span>
               <ArrowRight size={13} />
             </button>
           </div>
@@ -202,4 +299,5 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
     </div>
   );
 }
+
 
