@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
+import Topbar from './Topbar';
 import { authService } from '../../services/api';
 
 function MainLayout({
@@ -17,8 +18,12 @@ function MainLayout({
   setSelectedProjectId,
   syncLoading,
   handleSyncNow,
+  topbarTitle,
+  topbarSubtitle,
   dateFilter,
-  setDateFilter
+  setDateFilter,
+  alerts,
+  setAlerts
 }) {
   const [userProfile, setUserProfile] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -50,7 +55,7 @@ function MainLayout({
 
       {/* Contenido Principal */}
       <main className="main-content">
-        <div className="dashboard-inner pt-6">
+        <div className="dashboard-inner pt-4">
           {children}
         </div>
       </main>

@@ -29,6 +29,7 @@ import {
   Cell
 } from 'recharts';
 import { projectService } from '../../../services/api';
+import LiderNotificationBell from '../components/LiderNotificationBell';
 
 const MetricInfoTooltip = ({ text, align = "auto" }) => {
   return (
@@ -42,11 +43,85 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
   );
 };
 
-function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, onNavigateToScorecards }) {
+const STAGE_EXPLANATIONS = {
+  'Desarrollo Activo': {
+    icon: '⚙️',
+    description: 'Tiempo real en que los desarrolladores están escribiendo código, creando lógica o corrigiendo bugs activos.',
+    type: 'Tiempo Activo'
+  },
+  'Revisión de Código': {
+    icon: '🔍',
+    description: 'Tiempo en que las Pull Requests (PRs) están abiertas esperando revisión por pares o por el Líder Técnico.',
+    type: 'Tiempo de Fricción / Espera'
+  },
+  'Pruebas de Calidad (QA)': {
+    icon: '🧪',
+    description: 'Tiempo en que las tareas entregadas están en ambiente de pruebas siendo validadas por el equipo de QA.',
+    type: 'Tiempo de Validación'
+  },
+  'En Cola de Espera': {
+    icon: '⏳',
+    description: 'Tiempo inactivo o congelado en backlog / Por Hacer antes de que el trabajo sea iniciado.',
+    type: 'Tiempo Inactivo / Cola'
+  }
+};
+
+const CustomFlowTooltip = ({ active, payload, isDark }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const stageName = data.spanishStage || data.stage;
+    const info = STAGE_EXPLANATIONS[stageName] || {
+      icon: '📊',
+      description: 'Días acumulados en esta fase del flujo de trabajo.',
+      type: 'Etapa del Sprint'
+    };
+
+    return (
+      <div className={`p-3.5 rounded-xl border shadow-2xl max-w-xs font-sans text-xs space-y-2 backdrop-blur-md ${
+        isDark ? 'bg-slate-900/95 border-slate-700 text-white' : 'bg-white/95 border-slate-200 text-slate-900'
+      }`}>
+        <div className="flex items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2">
+          <span className="font-bold flex items-center gap-1.5 text-sm">
+            <span>{info.icon}</span>
+            <span>{stageName}</span>
+          </span>
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+            {info.type}
+          </span>
+        </div>
+        
+        <div className="flex items-baseline justify-between pt-0.5">
+          <span className="text-slate-500 dark:text-slate-400">Tiempo Acumulado:</span>
+          <span className="font-black text-sm text-indigo-600 dark:text-indigo-400">{data.days} días</span>
+        </div>
+
+        <p className="text-[11px] leading-relaxed text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-950/60 p-2 rounded-lg border border-slate-200/60 dark:border-slate-800/60">
+          💡 <strong>¿Qué significa?</strong> {info.description}
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
+function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, onNavigateToScorecards, isDarkMode }) {
   const [loading, setLoading] = useState(true);
   const [healthData, setHealthData] = useState(null);
   const [sprints, setSprints] = useState([]);
   const [selectedSprintId, setSelectedSprintId] = useState(null);
+
+  // Detección de tema oscuro/claro
+  const isDark = isDarkMode !== undefined 
+    ? Boolean(isDarkMode) 
+    : typeof document !== 'undefined' && (
+        document.documentElement.classList.contains('dark') || 
+        Boolean(document.querySelector('.dark-theme.dark')) ||
+        Boolean(document.querySelector('.dashboard-layout.dark'))
+      );
+
+  const axisLabelFill = isDark ? '#ffffff' : '#0f172a';
+  const axisTickFill = isDark ? '#f8fafc' : '#1e293b';
+  const gridLineStroke = isDark ? '#475569' : '#cbd5e1';
 
   // 1. Cargar lista de sprints del proyecto activo
   useEffect(() => {
@@ -92,9 +167,22 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
     );
   }
 
+  const formatSpanishStage = (rawStage) => {
+    if (!rawStage) return 'Etapa';
+    if (rawStage.includes('In Progress') || rawStage.includes('Desarrollo')) return 'Desarrollo Activo';
+    if (rawStage.includes('In Review') || rawStage.includes('Revisión')) return 'Revisión de Código';
+    if (rawStage.includes('QA') || rawStage.includes('Testing') || rawStage.includes('Pruebas')) return 'Pruebas de Calidad (QA)';
+    if (rawStage.includes('To Do') || rawStage.includes('Cola') || rawStage.includes('Espera')) return 'En Cola de Espera';
+    return rawStage;
+  };
+
   const metrics = healthData?.metrics || {};
   const healthScore = healthData?.health_score ?? 0;
-  const stages = healthData?.bottleneck_stages || [];
+  const rawStages = healthData?.bottleneck_stages || [];
+  const stages = rawStages.map(s => ({
+    ...s,
+    spanishStage: formatSpanishStage(s.stage)
+  }));
   const insight = healthData?.bottleneck_insight || {};
   const warning = healthData?.scope_creep_warning;
 
@@ -116,19 +204,16 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
             onClick={onNavigateToMatrix}
             className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
           >
-            <Users size={14} />
             <span>Matriz 4 Cuadrantes</span>
           </button>
           <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
-            <Zap size={14} className="text-amber-400" />
             <span>Salud del Sprint & Flow</span>
           </button>
           <button 
             onClick={onNavigateToScorecards}
             className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
           >
-            <Target size={14} className="text-cyan-600 dark:text-cyan-400" />
-            <span>Scorecards Devs</span>
+            <span>Scorecards Desarrolladores</span>
           </button>
         </div>
 
@@ -152,6 +237,8 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300">Kanban / Sin Sprints Scrum</span>
             )}
           </div>
+
+          <LiderNotificationBell />
 
           <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -217,11 +304,11 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
       {/* 4 TARJETAS KPIS DE PREDICTIBILIDAD */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         
-        {/* KPI 1: COMMITMENT RELIABILITY */}
+        {/* KPI 1: CONFIABILIDAD DEL COMPROMISO */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Commitment Reliability</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Confiabilidad del Compromiso</span>
               <MetricInfoTooltip text="Mide el porcentaje de Story Points realmente entregados frente a los comprometidos al iniciar el sprint. Es la métrica principal de estabilidad operativa." />
             </div>
             <Target size={18} className="text-emerald-500 dark:text-emerald-400" />
@@ -234,11 +321,11 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
           </p>
         </div>
 
-        {/* KPI 2: SCOPE CREEP RATE */}
+        {/* KPI 2: VARIACIÓN DEL ALCANCE (SCOPE CREEP) */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Scope Creep Rate</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Variación del Alcance</span>
               <MetricInfoTooltip text="Porcentaje de Story Points añadidos a mitad del sprint después de la planificación inicial. Un valor >15% indica alteraciones o emergencias no previstas." />
             </div>
             <AlertTriangle size={18} className="text-amber-500 dark:text-amber-400" />
@@ -251,11 +338,11 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
           </p>
         </div>
 
-        {/* KPI 3: CARRYOVER RATE */}
+        {/* KPI 3: TASA DE INCOMPLETOS (CARRYOVER) */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Carryover Rate</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Tasa de Incompletos (Carryover)</span>
               <MetricInfoTooltip text="Porcentaje de Story Points planificados que no lograron completarse a tiempo y deben ser trasladados (Carryover) al siguiente sprint." />
             </div>
             <Layers size={18} className="text-rose-500 dark:text-rose-400" />
@@ -268,11 +355,11 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
           </p>
         </div>
 
-        {/* KPI 4: FLOW EFFICIENCY */}
+        {/* KPI 4: EFICIENCIA DEL FLUJO */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
             <div className="flex items-center gap-1">
-              <span className="text-xs font-semibold uppercase tracking-wider">Flow Efficiency</span>
+              <span className="text-xs font-semibold uppercase tracking-wider">Eficiencia del Flujo</span>
               <MetricInfoTooltip align="right" text="Proporción del tiempo en que las tareas estuvieron en desarrollo activo (In Progress) vs. el tiempo total incluyendo colas de espera (Review, QA, Bloqueos)." />
             </div>
             <Zap size={18} className="text-cyan-500 dark:text-cyan-400" />
@@ -292,27 +379,75 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
         
         {/* GRÁFICO DE BARRAS DE TIEMPO ACUMULADO POR ETAPA */}
         <div className="lg:col-span-2 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <BarChart3 size={18} className="text-indigo-600 dark:text-indigo-400" />
-              Descomposición de Tiempo de Flujo por Etapa (Días Acumulados)
+              <span>Descomposición de Tiempo de Flujo por Etapa (Días Acumulados)</span>
+              <MetricInfoTooltip text="Muestra los días acumulados que los tickets del sprint pasan en cada estado (Desarrollo, PR Review, QA, Cola de Espera). Pasa el cursor sobre las barras o botones flotantes para conocer el significado de cada etapa." />
             </h2>
             <span className="text-xs text-slate-500 dark:text-slate-400">Tiempo Activo vs. Tiempos de Espera</span>
           </div>
 
-          <div className="w-full h-[280px]">
+          {/* LEYENDA INTERACTIVA DE ETAPAS CON TOOLTIPS INFORMATIVOS */}
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="group/stage relative">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 cursor-help transition-all hover:scale-105">
+                ⚙️ Desarrollo Activo
+              </span>
+              <div className="absolute bottom-full mb-2 left-0 hidden group-hover/stage:block w-64 p-3 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed">
+                <strong>⚙️ Desarrollo Activo:</strong> Tiempo real que los desarrolladores pasan programando en su entorno local, construyendo lógica o resolviendo bugs.
+              </div>
+            </div>
+
+            <div className="group/stage relative">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 cursor-help transition-all hover:scale-105">
+                🔍 Revisión de Código
+              </span>
+              <div className="absolute bottom-full mb-2 left-0 hidden group-hover/stage:block w-64 p-3 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed">
+                <strong>🔍 Revisión de Código:</strong> Tiempo en que las Pull Requests (PRs) están abiertas esperando o recibiendo aprobación por pares o por el Líder Técnico.
+              </div>
+            </div>
+
+            <div className="group/stage relative">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 border border-cyan-200 dark:border-cyan-800/40 cursor-help transition-all hover:scale-105">
+                🧪 Pruebas de Calidad (QA)
+              </span>
+              <div className="absolute bottom-full mb-2 left-0 hidden group-hover/stage:block w-64 p-3 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed">
+                <strong>🧪 Pruebas de Calidad (QA):</strong> Tiempo en que el ticket se encuentra en ambiente de pruebas (Staging) siendo validado por el equipo de QA.
+              </div>
+            </div>
+
+            <div className="group/stage relative">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 cursor-help transition-all hover:scale-105">
+                ⏳ En Cola de Espera
+              </span>
+              <div className="absolute bottom-full mb-2 left-0 hidden group-hover/stage:block w-64 p-3 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed">
+                <strong>⏳ En Cola de Espera:</strong> Tiempo inactivo o congelado en backlog (To Do) antes de que la tarea sea iniciada por un desarrollador.
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full h-[290px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stages} layout="vertical" margin={{ top: 10, right: 30, left: 40, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" opacity={0.5} />
-                <XAxis type="number" stroke="#64748b" fontSize={11} label={{ value: 'Días Acumulados →', position: 'insideBottomRight', offset: -5, fill: '#64748b', fontSize: 10 }} />
-                <YAxis type="category" dataKey="stage" stroke="#64748b" fontSize={11} width={150} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff', fontSize: '12px' }}
-                  formatter={(val, name) => [`${val} días`, 'Tiempo Acumulado']}
+              <BarChart data={stages} layout="vertical" margin={{ top: 15, right: 35, left: 10, bottom: 25 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={gridLineStroke} opacity={0.4} />
+                <XAxis 
+                  type="number" 
+                  stroke={isDark ? "#94a3b8" : "#64748b"} 
+                  tick={{ fill: axisTickFill, fontSize: 11, fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}
+                  label={{ value: 'Días Acumulados →', position: 'insideBottomRight', offset: -10, fill: axisLabelFill, fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} 
                 />
+                <YAxis 
+                  type="category" 
+                  dataKey="spanishStage" 
+                  stroke={isDark ? "#94a3b8" : "#64748b"} 
+                  width={175}
+                  tick={{ fill: axisTickFill, fontSize: 12, fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}
+                />
+                <Tooltip content={<CustomFlowTooltip isDark={isDark} />} />
                 <Bar dataKey="days" radius={[0, 8, 8, 0]}>
                   {stages.map((entry, index) => {
-                    const isDevelopment = entry.stage.includes("In Progress");
+                    const isDevelopment = entry.stage && (entry.stage.includes("In Progress") || entry.stage.includes("Desarrollo"));
                     return (
                       <Cell 
                         key={`cell-${index}`} 
@@ -329,29 +464,29 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
         {/* CUELLO DE BOTELLA CLAVE E INSIGHT ANALÍTICO */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+            <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
               <Info size={18} />
               <span>Identificación de Cuellos de Botella</span>
             </div>
 
-            <div className="bg-slate-950/80 p-4 rounded-xl border border-slate-800 space-y-2">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">Etapa de Mayor Fricción</span>
-              <span className="text-base font-extrabold text-amber-300 block">{insight.main_stage}</span>
+            <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">Etapa de Mayor Fricción</span>
+              <span className="text-base font-extrabold text-amber-600 dark:text-amber-300 block">{insight.main_stage}</span>
               <div className="flex items-baseline gap-2 pt-1">
-                <span className="text-2xl font-black text-white">{insight.days_spent} días</span>
-                <span className="text-xs text-slate-400">({insight.percentage}% del tiempo total)</span>
+                <span className="text-2xl font-black text-slate-900 dark:text-white">{insight.days_spent} días</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">({insight.percentage}% del tiempo total)</span>
               </div>
             </div>
 
-            <div className="p-3 bg-indigo-950/30 border border-indigo-800/40 rounded-xl space-y-1 text-xs">
-              <span className="font-bold text-indigo-300 block">💡 Recomendación del Predictability Engine:</span>
-              <p className="text-slate-300 leading-relaxed">{insight.recommendation}</p>
+            <div className="p-3 bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/40 rounded-xl space-y-1 text-xs">
+              <span className="font-bold text-indigo-700 dark:text-indigo-300 block">💡 Recomendación del Motor de Predictibilidad:</span>
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{insight.recommendation}</p>
             </div>
           </div>
 
-          <div className="pt-3 border-t border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Flow Ratio Eficiente:</span>
-            <span className="font-bold text-emerald-400">{metrics.flow_efficiency_pct}% Útil</span>
+          <div className="pt-3 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
+            <span>Proporción de Flujo Eficiente:</span>
+            <span className="font-bold text-emerald-600 dark:text-emerald-400">{metrics.flow_efficiency_pct}% Útil</span>
           </div>
         </div>
 

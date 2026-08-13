@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { developerService } from '../../../services/api';
+import owlMascotImg from '../../../assets/owl_mascot.png';
 
 export default function DailyFocusView({ selectedProjectId = 'PROJ-01' }) {
   const { user } = useAuth();
@@ -80,24 +81,51 @@ export default function DailyFocusView({ selectedProjectId = 'PROJ-01' }) {
         </div>
       )}
 
-      {/* BLOQUE AI DEV COACH BANNER ESPACIOSO */}
-      <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl transition-all duration-300 hover:scale-[1.01] hover:shadow-indigo-500/20 border border-slate-200 dark:border-[#33376b]">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-20 blur-sm transition-opacity duration-300 group-hover:opacity-35 pointer-events-none"></div>
-        <div className="relative z-10 space-y-4">
-          <div className="flex items-center gap-3 text-indigo-600 dark:text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
-            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-purple-500">
-              <Sparkles size={16} className="text-white" />
+      {/* SECCIÓN AI DEV COACH CON MASCOTA LIBRE Y BOCADILLO ADAPTATIVO */}
+      <div className="flex flex-col md:flex-row items-center md:items-center gap-6 md:gap-8 px-1 py-1">
+        
+        {/* MASCOTA BÚHO MÁS GRANDE SALIENDO DIRECTAMENTE */}
+        <div className="relative shrink-0 flex flex-col items-center group/mascot">
+          <img 
+            src={owlMascotImg} 
+            alt="Mascota Búho AI Dev Coach" 
+            className="relative w-36 h-36 sm:w-44 sm:h-44 object-contain drop-shadow-xl transition-transform duration-300 group-hover/mascot:scale-105" 
+          />
+          <span className="mt-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs">
+            🦉 AI Coach
+          </span>
+        </div>
+
+        {/* BOCADILLO DE DIÁLOGO ADAPTATIVO MODO CLARO / OSCURO */}
+        <div className="relative flex-1 rounded-3xl bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-white dark:from-[#191c3d] dark:via-[#241e54] dark:to-[#191c3d] p-7 shadow-lg dark:shadow-2xl border border-indigo-200/80 dark:border-indigo-500/30 space-y-4 group transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-400/50">
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-10 dark:opacity-20 blur-md transition-opacity duration-300 group-hover:opacity-25 pointer-events-none"></div>
+
+          {/* Flecha del bocadillo hacia la mascota (izquierda) */}
+          <div className="hidden md:block absolute top-1/2 -left-3 -translate-y-1/2 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-r-[14px] border-r-indigo-50/90 dark:border-r-[#191c3d]"></div>
+
+          <div className="relative z-10 space-y-4">
+            <div className="flex items-center gap-3 text-indigo-700 dark:text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+                <Sparkles size={16} />
+              </div>
+              <span>Asistente Inteligente — AI Dev Coach</span>
             </div>
-            <span>Asistente Inteligente — AI Dev Coach</span>
-          </div>
-          <p className="text-base text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-            💡 <strong>Diagnóstico del Sprint:</strong> *"{data?.ai_coach_tip || "Tu tiempo de ciclo personal ha mejorado un +14%. Enfócate en cerrar los tickets activos."}"*
-          </p>
-          <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-500 dark:text-slate-400 pt-4 border-t border-slate-200 dark:border-slate-800/80">
-            <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400"><TrendingUp size={16} /> Ritmo: +{data?.efficiency_gain_pct || 14}% Eficiencia</span>
-            <span className="flex items-center gap-2 text-amber-600 dark:text-amber-400"><ShieldCheck size={16} /> Calidad: {data?.clean_deliveries_pct || 100}% Entregas Limpias</span>
+
+            <p className="text-sm sm:text-base text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
+              💡 <strong>Diagnóstico del Sprint:</strong> *"{data?.ai_coach_tip || "Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101."}"*
+            </p>
+
+            <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-4 border-t border-indigo-200/60 dark:border-slate-700/60">
+              <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
+                <TrendingUp size={16} /> Ritmo: +{data?.efficiency_gain_pct || 14}% Eficiencia
+              </span>
+              <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold">
+                <ShieldCheck size={16} /> Calidad: {data?.clean_deliveries_pct || 100}% Entregas Limpias
+              </span>
+            </div>
           </div>
         </div>
+
       </div>
 
       {/* MATRIZ DE ATENCIÓN DIARIA EN 3 COLUMNAS CON ACCIONES REALES */}

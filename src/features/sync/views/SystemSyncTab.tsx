@@ -27,6 +27,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { jiraService, authService, jqlService } from '../../../services/api';
+import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 
 interface SyncStatus {
   lastSync: string;
@@ -47,7 +48,26 @@ interface SyncLog {
 
 const formatTimestamp = (ts: string) => {
   if (!ts) return 'Sin fecha';
-  return ts.replace('T', ' ').substring(0, 19);
+  
+  const dateString = ts.endsWith('Z') ? ts : `${ts}Z`;
+  const dt = new Date(dateString);
+  
+  if (isNaN(dt.getTime())) {
+    return ts.replace('T', ' ').substring(0, 19);
+  }
+
+  const day = String(dt.getDate()).padStart(2, '0');
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const year = dt.getFullYear();
+  let hours = dt.getHours();
+  const minutes = String(dt.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+  
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const hoursStr = String(hours).padStart(2, '0');
+  
+  return `${day}/${month}/${year}, ${hoursStr}:${minutes} ${ampm}`;
 };
 
 export default function SystemSyncTab() {
@@ -180,7 +200,8 @@ export default function SystemSyncTab() {
       .then((res: any) => {
         setIsExecutingJql(false);
         const count = res.total !== undefined ? res.total : (res.issues ? res.issues.length : 0);
-        setJqlSuccess(`Consulta JQL validada por el backend. ${count} incidencias encontradas.`);
+        const timeNow = new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+        setJqlSuccess(`Consulta JQL ejecutada a las ${timeNow}. ${count} incidencias encontradas.`);
         if (res.issues && Array.isArray(res.issues)) {
           setJqlIssues(res.issues);
           setJqlCurrentPage(1);
@@ -216,10 +237,10 @@ export default function SystemSyncTab() {
 
   const mapApiLogToSyncLog = (apiLog: any): SyncLog => ({
     id: `log-${apiLog.id_log || apiLog.id}`,
-    timestamp: (apiLog.fecha_ejecucion || apiLog.fecha_inicio || '').replace('T', ' ').substring(0, 19),
+    timestamp: apiLog.fecha_ejecucion || apiLog.fecha_inicio || '',
     executionType: apiLog.tipo_sincronizacion === 'AUTOMATIC' ? 'AUTOMATIC' : 'MANUAL',
     processedIssues: apiLog.issues_procesados || apiLog.registros_procesados || 0,
-    durationSeconds: apiLog.tiempo_ejecucion_segundos || 12,
+    durationSeconds: apiLog.tiempo_ejecucion_segundos || 0,
     result: (apiLog.resultado === 'ERROR' ? 'FAILED' : apiLog.resultado) as 'SUCCESS' | 'FAILED' | 'RUNNING',
     ejecutadoPor: apiLog.ejecutado_por || 'Sistema',
     detalleError: apiLog.detalle_error
@@ -287,7 +308,7 @@ export default function SystemSyncTab() {
 
                 if (mapped.length > 0) {
                   const latestLog = mapped[0];
-                  if (latestLog.result !== 'RUNNING' || attempts > 6) {
+                  if (latestLog.result !== 'RUNNING' || attempts > 20) {
                     clearInterval(interval);
                     setSyncStatus(prev => ({
                       ...prev,
@@ -341,36 +362,22 @@ export default function SystemSyncTab() {
     }
   };
 
-  const formatDuration = (seconds: number) => {
-    if (seconds === undefined || seconds === null) return '0s';
+  const formatDuration = (seconds: number, result?: string) => {
+    if (result === 'RUNNING') return 'En curso...';
+    if (seconds === undefined || seconds === null || seconds === 0) return '0s';
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     if (m === 0) return `${s}s`;
     return `${m}m ${s}s`;
   };
 
-  const formatTimestamp = (tsStr: string) => {
-    try {
-      const d = new Date(tsStr.replace(/-/g, '/'));
-      if (isNaN(d.getTime())) return tsStr;
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      let hours = d.getHours();
-      const minutes = String(d.getMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      hours = hours % 12;
-      hours = hours ? hours : 12;
-      return `${day}.${month}.${year} ${hours}:${minutes} ${ampm}`;
-    } catch (e) {
-      return tsStr;
-    }
-  };
+
 
   // Filtrado temporal
   const filteredLogs = logs.filter(log => {
     if (timeFilter === 'all') return true;
-    const logDate = new Date(log.timestamp.replace(/-/g, '/'));
+    const dateString = log.timestamp.endsWith('Z') ? log.timestamp : `${log.timestamp}Z`;
+    const logDate = new Date(dateString);
     if (isNaN(logDate.getTime())) return true;
     const now = new Date();
     const diffDays = (now.getTime() - logDate.getTime()) / (1000 * 3600 * 24);
@@ -416,6 +423,15 @@ export default function SystemSyncTab() {
           </button>
         </div>
       )}
+
+      {/* BARRA SUPERIOR DE NOTIFICACIONES Y ESTADO DE ETLS */}
+      <div className="flex items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-2xl shadow-sm mb-4">
+        <div className="flex items-center gap-2">
+          <Zap className="text-teal-500" size={18} />
+          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Motor de Sincronización ETL & Consola JQL</h2>
+        </div>
+        <LiderNotificationBell />
+      </div>
 
       {/* SECCIÓN SUPERIOR: GRID DE CONFIGURACIÓN Y CONSOLA JQL */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -985,7 +1001,7 @@ export default function SystemSyncTab() {
                       ) : (
                         <div className="relative group inline-block">
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 cursor-pointer">
-                            <XCircle size={12} /> Fallido
+                            <XCircle size={12} /> Fallo
                           </span>
                           {log.detalleError && (
                             <div className="absolute right-0 top-full mt-2 w-72 bg-slate-800 dark:bg-slate-950 text-white text-[11px] rounded-xl p-3 shadow-xl z-20 hidden group-hover:block transition-all border border-slate-700 text-left font-sans">
@@ -1002,7 +1018,7 @@ export default function SystemSyncTab() {
                       {log.processedIssues}
                     </td>
                     <td className="px-6 py-4 text-right font-medium text-slate-600 dark:text-slate-400 text-xs">
-                      {formatDuration(log.durationSeconds)}
+                      {formatDuration(log.durationSeconds, log.result)}
                     </td>
                     <td className="px-6 py-4 text-xs whitespace-nowrap font-medium">
                       {log.ejecutadoPor}

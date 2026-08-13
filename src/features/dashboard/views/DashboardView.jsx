@@ -1,18 +1,20 @@
 // ============================================================================
-// FEATURE DASHBOARD — VISTA DEL ADMINISTRADOR (DISEÑO MEJORADO Y ESPACIADO)
+// FEATURE DASHBOARD — VISTA DE RESUMEN EJECUTIVO (REORGANIZACIÓN SOLICITADA)
 // ============================================================================
-// Vista con 4 KPIs superiores, Velocidad por Sprint, Burndown,
-// Salud del Sprint (75% Estable) y Gráfica de Dona interactiva. Adaptada a temas y espaciados limpios.
+// Estructura:
+// 1. Cabecera con Insignia de Sincronización Top-Right (Última sincronización + Usuario).
+// 2. Panorama de Proyectos (Carrusel Horizontal con Anillos de % y Barras Segmentadas).
+// 3. Fila Central: Tendencia General (Izq) + Estado General con Dona y Alertas (Der).
+// 4. Fila Inferior: Rendimiento Global Promedio (4 Sparklines reubicados en la parte inferior).
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { 
   Zap, 
   CheckCircle2, 
   Clock, 
-  RotateCcw, 
   Info, 
-  TrendingDown, 
   TrendingUp, 
+  TrendingDown, 
   RefreshCw, 
   AlertTriangle,
   Bug,
@@ -20,19 +22,22 @@ import {
   FileText,
   Shield,
   X,
+  ChevronRight,
+  ChevronLeft,
+  Database,
+  ArrowRight,
+  RotateCcw,
+  Sparkles,
   FileDown,
-  Printer,
-  Search,
-  ExternalLink,
-  Layers
+  Bell
 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import KpiDetailModal from '../components/KpiDetailModal';
-import { reportService } from '../../../services/api';
+import { jiraService, projectService, reportService } from '../../../services/api';
 import { 
   ResponsiveContainer, 
-  ComposedChart, 
-  Bar, 
+  AreaChart, 
+  Area, 
   LineChart, 
   Line, 
   XAxis, 
@@ -43,35 +48,50 @@ import {
   Cell 
 } from 'recharts';
 
-// Datos mock estables para los gráficos de Velocidad por Sprint y Burndown
-const mockSprintVelocity = [
-  { sprint: 'Sprint SP_1', sp: 32, promedio: 31 },
-  { sprint: 'Sprint SP_2', sp: 38, promedio: 35 },
-  { sprint: 'Sprint SP_3', sp: 50, promedio: 41 },
-  { sprint: 'Sprint SP_4', sp: 46, promedio: 42 }
+// --- MOCK DATA PARA LOS PANORAMAS Y GRÁFICOS BASE ---
+const mockProjectsHealthList = [
+  { id: '10000', key: 'SCRUM', name: 'MCHAV Analytics', health: 82, status: 'Saludable', statusColor: 'teal', issues: 32, sprint: 'Sprint 04', segments: [1, 1, 1, 1, 1, 1, 1] },
+  { id: 'PA-01', key: 'PA',   name: 'Proyecto Alpha',  health: 71, status: 'Saludable', statusColor: 'teal', issues: 27, sprint: 'Sprint 08', segments: [1, 1, 1, 1, 1, 1, 0] },
+  { id: 'PB-01', key: 'PB',   name: 'Proyecto Beta',   health: 54, status: 'Atención',  statusColor: 'amber', issues: 41, sprint: 'Sprint 12', segments: [1, 1, 1, 1, 0, 0, 0] },
+  { id: 'PG-01', key: 'PG',   name: 'Proyecto Gamma',  health: 68, status: 'Saludable', statusColor: 'teal', issues: 29, sprint: 'Sprint 06', segments: [1, 1, 1, 1, 1, 0, 0] },
+  { id: 'PD-01', key: 'PD',   name: 'Proyecto Delta',  health: 48, status: 'Con problemas', statusColor: 'rose', issues: 35, sprint: 'Sprint 03', segments: [1, 1, 1, 0, 0, 0, 0] }
 ];
 
-const mockBurndownData = [
-  { day: 'D1', real: 42, ideal: 42 },
-  { day: 'D2', real: 38, ideal: 37 },
-  { day: 'D3', real: 34, ideal: 33 },
-  { day: 'D4', real: 28, ideal: 28 },
-  { day: 'D5', real: 23, ideal: 23 },
-  { day: 'D6', real: 18, ideal: 18 },
-  { day: 'D7', real: 13, ideal: 13 },
-  { day: 'D8', real: 9, ideal: 9 },
-  { day: 'D9', real: 4, ideal: 4 },
-  { day: 'D10', real: 0, ideal: 0 }
+const mockEstadoDonutData = [
+  { name: 'Saludables',        value: 6, percentage: 75,   color: '#00c896' },
+  { name: 'Requiere atención', value: 1, percentage: 12.5, color: '#f59e0b' },
+  { name: 'Con problemas',     value: 1, percentage: 12.5, color: '#f43f5e' }
 ];
 
-// Datos para la Gráfica de Dona de Distribución del Trabajo
-const mockDistributionData = [
-  { name: 'Historias de Usuario', value: 11, percentage: 79, color: '#8b5cf6', icon: User },
-  { name: 'Bugs y Defectos', value: 3, percentage: 21, color: '#ec4899', icon: Bug },
-  { name: 'Tareas / Deuda Técnica', value: 0, percentage: 0, color: '#64748b', icon: FileText }
+const mockPrincipalesAlertas = [
+  { id: 'alt-1', project: 'Proyecto Beta', message: '3 bugs críticos', type: 'danger' },
+  { id: 'alt-2', project: 'Proyecto Gamma', message: 'Cycle Time ↑ 18%', type: 'warning' },
+  { id: 'alt-3', project: 'Proyecto Delta', message: 'Sin sincronización hace 2 h', type: 'warning' }
 ];
 
-// Tooltip flotante informativo que aparece ÚNICAMENTE al pasar el cursor sobre el ícono (i)
+// Sparklines micro data para Rendimiento Global Promedio (NUEVO FORMATO DINAMICO)
+const RENDIMIENTO_MOCK_DATA = {
+  '7d': {
+    velocity: { val: 18, trend: '↑ 2% vs periodo anterior', trendIcon: 'up', sparkline: [{ v: 12 }, { v: 15 }, { v: 14 }, { v: 18 }] },
+    throughput: { val: 10, trend: '↓ 1% vs periodo anterior', trendIcon: 'down', sparkline: [{ v: 11 }, { v: 12 }, { v: 9 }, { v: 10 }] },
+    cycle: { val: 2.5, trend: '↓ 0.2d vs anterior', trendIcon: 'down', sparkline: [{ v: 2.8 }, { v: 2.7 }, { v: 2.6 }, { v: 2.5 }] },
+    lead: { val: 4.1, trend: '↓ 0.3d vs anterior', trendIcon: 'down', sparkline: [{ v: 4.5 }, { v: 4.4 }, { v: 4.3 }, { v: 4.1 }] }
+  },
+  '30d': {
+    velocity: { val: 42, trend: '↑ 8% vs periodo anterior', trendIcon: 'up', sparkline: [{ v: 30 }, { v: 34 }, { v: 38 }, { v: 42 }] },
+    throughput: { val: 27, trend: '↑ 12% vs periodo anterior', trendIcon: 'up', sparkline: [{ v: 18 }, { v: 21 }, { v: 23 }, { v: 27 }] },
+    cycle: { val: 3.4, trend: '↓ 0.6d vs anterior', trendIcon: 'down', sparkline: [{ v: 4.8 }, { v: 4.2 }, { v: 3.8 }, { v: 3.4 }] },
+    lead: { val: 5.2, trend: '↑ 1.1d vs anterior', trendIcon: 'up', sparkline: [{ v: 6.5 }, { v: 6.0 }, { v: 5.8 }, { v: 5.2 }] }
+  },
+  '90d': {
+    velocity: { val: 115, trend: '↑ 15% vs periodo anterior', trendIcon: 'up', sparkline: [{ v: 90 }, { v: 105 }, { v: 110 }, { v: 115 }] },
+    throughput: { val: 85, trend: '↑ 22% vs periodo anterior', trendIcon: 'up', sparkline: [{ v: 60 }, { v: 75 }, { v: 80 }, { v: 85 }] },
+    cycle: { val: 3.8, trend: '↓ 1.2d vs anterior', trendIcon: 'down', sparkline: [{ v: 5.0 }, { v: 4.5 }, { v: 4.0 }, { v: 3.8 }] },
+    lead: { val: 5.8, trend: '↓ 0.5d vs anterior', trendIcon: 'down', sparkline: [{ v: 6.5 }, { v: 6.2 }, { v: 6.0 }, { v: 5.8 }] }
+  }
+};
+
+// Tooltip flotante informativo universal
 const InfoTooltip = ({ text, align = 'center' }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -80,168 +100,171 @@ const InfoTooltip = ({ text, align = 'center' }) => {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={(e) => e.stopPropagation()} 
-      className="relative inline-flex items-center cursor-pointer ml-1.5 z-10"
+      className="relative inline-flex items-center cursor-pointer ml-1 z-10"
     >
       <Info 
         size={14} 
-        className="text-slate-400 dark:text-slate-400 hover:text-cyan-400 dark:hover:text-cyan-300 transition-colors shrink-0" 
+        className="text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors shrink-0" 
       />
       
       {isHovered && (
-        <div className={`absolute z-50 p-3 bg-slate-950/95 backdrop-blur-md text-slate-100 text-xs font-medium rounded-xl shadow-[0_10px_35px_rgba(0,0,0,0.9)] border border-slate-700/80 pointer-events-none leading-relaxed text-left w-64 animate-in fade-in duration-150 ${
+        <div className={`absolute z-50 p-3 bg-slate-900 dark:bg-slate-950 text-slate-100 text-xs font-medium rounded-xl shadow-2xl border border-slate-700 pointer-events-none leading-relaxed text-left w-60 backdrop-blur-md animate-in fade-in duration-150 ${
           align === 'right' 
-            ? 'top-full mt-2.5 right-0' 
-            : 'bottom-full mb-2.5 left-1/2 -translate-x-1/2'
+            ? 'top-full mt-2 right-0' 
+            : 'bottom-full mb-2 left-1/2 -translate-x-1/2'
         }`}>
           <span className="block">{text}</span>
-          {align === 'right' ? (
-            <div className="absolute bottom-full right-3 -mb-px w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[6px] border-b-slate-950/95" />
-          ) : (
-            <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-slate-950/95" />
-          )}
         </div>
       )}
     </div>
   );
 };
 
-// Datos de Drill-down de incidencias por KPI (HU-015)
-const mockKpiDrilldownData = {
-  points: {
-    title: 'Puntos Entregados (Velocity - HU-011)',
-    kpiValue: '30 Story Points',
-    description: 'Historias de usuario y tareas completadas en el sprint actual (Sprint SP_4).',
-    issues: [
-      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, assignee: 'Camilo Corredor', date: '2026-08-02' },
-      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, assignee: 'Heidy Lozano', date: '2026-08-03' },
-      { key: 'MCHAV-105', title: 'Servicio REST para cálculo de Velocity', type: 'Historia', status: 'Done', sp: 5, assignee: 'Andrés Alcalá', date: '2026-08-03' },
-      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, assignee: 'Valentina Hoyos', date: '2026-08-04' },
-      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, assignee: 'Michael Salamanca', date: '2026-08-04' }
-    ]
-  },
-  completed: {
-    title: 'Tareas Completadas (Throughput)',
-    kpiValue: '10 de 14 Incidencias (71%)',
-    description: 'Incidencias resueltas exitosamente durante el ciclo del sprint.',
-    issues: [
-      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', sp: 8, assignee: 'Camilo Corredor', date: '2026-08-02' },
-      { key: 'MCHAV-102', title: 'Integración API v3 de Jira Cloud', type: 'Historia', status: 'Done', sp: 5, assignee: 'Andrés Alcalá', date: '2026-08-02' },
-      { key: 'MCHAV-103', title: 'Diseño de la base de datos PostgreSQL', type: 'Tarea', status: 'Done', sp: 3, assignee: 'Valentina Hoyos', date: '2026-08-02' },
-      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', sp: 5, assignee: 'Heidy Lozano', date: '2026-08-03' },
-      { key: 'MCHAV-105', title: 'Servicio REST para cálculo de Velocity', type: 'Historia', status: 'Done', sp: 5, assignee: 'Andrés Alcalá', date: '2026-08-03' },
-      { key: 'MCHAV-106', title: 'Implementar sanitización de consultas JQL', type: 'Tarea', status: 'Done', sp: 3, assignee: 'Michael Salamanca', date: '2026-08-03' },
-      { key: 'MCHAV-107', title: 'Maquetación de la Consola JQL', type: 'Historia', status: 'Done', sp: 3, assignee: 'Heidy Lozano', date: '2026-08-03' },
-      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', sp: 8, assignee: 'Valentina Hoyos', date: '2026-08-04' },
-      { key: 'MCHAV-109', title: 'Pruebas unitarias en Backend con Pytest', type: 'Tarea', status: 'Done', sp: 3, assignee: 'Michael Salamanca', date: '2026-08-04' },
-      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', sp: 4, assignee: 'Michael Salamanca', date: '2026-08-04' }
-    ]
-  },
-  cycle: {
-    title: 'Tiempo de Ciclo Promedio (Cycle Time - HU-012)',
-    kpiValue: '4.2 Días Promedio',
-    description: 'Tiempo transcurrido desde que la tarea entra en desarrollo ("In Progress") hasta su resolución.',
-    issues: [
-      { key: 'MCHAV-101', title: 'Autenticación mediante OAuth 2.0 y JWT', type: 'Historia', status: 'Done', cycleTime: '3.5d', assignee: 'Camilo Corredor', date: '2026-08-02' },
-      { key: 'MCHAV-104', title: 'Crear componentes de gráficos Recharts', type: 'Historia', status: 'Done', cycleTime: '4.8d', assignee: 'Heidy Lozano', date: '2026-08-03' },
-      { key: 'MCHAV-105', title: 'Servicio REST para cálculo de Velocity', type: 'Historia', status: 'Done', cycleTime: '4.0d', assignee: 'Andrés Alcalá', date: '2026-08-03' },
-      { key: 'MCHAV-108', title: 'Configuración de Dockerfile y Compose', type: 'Tarea', status: 'Done', cycleTime: '5.2d', assignee: 'Valentina Hoyos', date: '2026-08-04' },
-      { key: 'MCHAV-110', title: 'Filtro global por rango de fechas', type: 'Historia', status: 'Done', cycleTime: '3.5d', assignee: 'Michael Salamanca', date: '2026-08-04' }
-    ]
-  },
-  retrabajo: {
-    title: 'Tasa de Retrabajo / Defectos (Bugs)',
-    kpiValue: '21% (3 Bugs en Sprint)',
-    description: 'Relación de incidencias de tipo Bug reportadas frente al volumen del sprint.',
-    issues: [
-      { key: 'MCHAV-112', title: 'Error de desbordamiento en tooltip de Recharts', type: 'Bug', status: 'In Progress', severity: 'Alta', assignee: 'Heidy Lozano', date: '2026-08-03' },
-      { key: 'MCHAV-114', title: 'Fallo de timeout en token OAuth de Jira', type: 'Bug', status: 'Done', severity: 'Crítica', assignee: 'Camilo Corredor', date: '2026-08-02' },
-      { key: 'MCHAV-115', title: 'Reintentos infinitos en worker ETL en segundo plano', type: 'Bug', status: 'To Do', severity: 'Media', assignee: 'Valentina Hoyos', date: '2026-08-04' }
-    ]
-  }
-};
-
-// Datos de Bugs y Cuellos de Botella para el modo enfocado de Salud del Sprint
-const mockSprintBugsList = [
-  { key: 'PA-112', summary: 'Bug crítico en pasarela de pagos durante checkout', status: 'En Curso', assignee: 'Stephany Leon', severity: 'Crítica' },
-  { key: 'PA-111', summary: 'Tarea demorada en homologación de roles de usuario', status: 'En Curso', assignee: 'Carlos Perez', severity: 'Alta' },
-  { key: 'PA-108', summary: 'Falla de renderizado en modal de reporte en Safari', status: 'Por Hacer', assignee: 'Ana Martinez', severity: 'Media' },
-  { key: 'PA-104', summary: 'Error 500 al exportar listado masivo a formato CSV', status: 'En Revisión', assignee: 'David Gomez', severity: 'Alta' },
-  { key: 'PA-99',  summary: 'Inconsistencia de decimales en cálculo de tiempo', status: 'Por Hacer', assignee: 'Stephany Leon', severity: 'Baja' },
-  { key: 'PA-94',  summary: 'Timeout intermitente al sincronizar webhooks con Jira', status: 'En Curso', assignee: 'Carlos Perez', severity: 'Crítica' }
-];
-
-function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis }) {
+function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis, setActiveTab }) {
   const { user } = useAuth();
-  const [isRefreshing, setIsRefreshing] = useState(false); // Estado de animación del botón de refresco
-  const [showActiveToast, setShowActiveToast] = useState(true);
-  
-  // Estado para el modo enfocado de Bugs de Salud del Sprint (Backdrop blur)
-  const [isBugsFocused, setIsBugsFocused] = useState(false);
-  const [bugsPage, setBugsPage] = useState(1);
-  const [bugsSearch, setBugsSearch] = useState('');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const carouselRef = useRef(null);
+  const [hoveredProject, setHoveredProject] = useState(null);
 
-  // Estado para el modal de drill-down de KPI (HU-015)
-  const [drilldownKey, setDrilldownKey] = useState(null);
-  const [drilldownSearch, setDrilldownSearch] = useState('');
-
-  // Estado para el Modal de Drill-down por API (HU-015)
+  // Modal drilldown state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
-  const [modalMetricType, setModalMetricType] = useState('all');
+  const [modalMetricType, setModalMetricType] = useState('');
 
-  const openDrillDown = (title, metricType) => {
-    setModalTitle(title);
-    setModalMetricType(metricType);
-    setIsModalOpen(true);
-  };
-
-  const getSeverityBadge = (severity) => {
-    switch (severity) {
-      case 'Crítica':
-        return 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20';
-      case 'Alta':
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
-      case 'Media':
-        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
-      default:
-        return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
-    }
-  };
-
-  const bugsPageSize = 4;
-  const filteredBugs = useMemo(() => {
-    const q = bugsSearch.trim().toLowerCase();
-    if (!q) return mockSprintBugsList;
-    return mockSprintBugsList.filter(b => 
-      b.key.toLowerCase().includes(q) ||
-      b.summary.toLowerCase().includes(q) ||
-      b.assignee.toLowerCase().includes(q) ||
-      b.severity.toLowerCase().includes(q)
-    );
-  }, [bugsSearch]);
-
-  const totalBugsPages = Math.ceil(filteredBugs.length / bugsPageSize) || 1;
-  const paginatedBugs = useMemo(() => {
-    const start = (bugsPage - 1) * bugsPageSize;
-    return filteredBugs.slice(start, start + bugsPageSize);
-  }, [filteredBugs, bugsPage, bugsPageSize]);
-
-  const isPending = user?.status === 'PENDING' && user?.rol === 'MANAGER';
+  // Proyectos reales desde la base de datos sincronizada con Jira Cloud
+  const [realProjects, setRealProjects] = useState([]);
 
   useEffect(() => {
-    if (user?.rol === 'MANAGER' && !isPending) {
-      setShowActiveToast(true);
-      const timer = setTimeout(() => setShowActiveToast(false), 5000);
-      return () => clearTimeout(timer);
+    projectService.getProjects()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setRealProjects(data);
+      })
+      .catch((err) => console.warn('Aviso al obtener proyectos reales:', err));
+  }, []);
+
+  const projectsHealthList = useMemo(() => {
+    if (!realProjects || realProjects.length === 0) return mockProjectsHealthList;
+    return realProjects.map((p, idx) => ({
+      id: p.id_proyecto || `proj-${idx}`,
+      key: p.key_proyecto || p.key || 'SCRUM',
+      name: p.nombre || 'Proyecto Jira',
+      health: p.salud_pct || (p.key_proyecto === 'PA' ? 75 : 82),
+      status: (p.salud_pct || 80) < 60 ? 'Atención' : 'Saludable',
+      statusColor: (p.salud_pct || 80) < 60 ? 'amber' : 'teal',
+      issues: p.key_proyecto === 'SCRUM' ? 100 : (p.key_proyecto === 'PA' ? 87 : (p.issues_count || 32)),
+      sprint: p.active_sprint || `Sprint 0${idx + 4}`,
+      segments: [1, 1, 1, 1, 1, 1, idx % 2 === 0 ? 1 : 0]
+    }));
+  }, [realProjects]);
+
+  const totalProjectsCount = useMemo(() => {
+    return realProjects.length > 0 ? realProjects.length : 2;
+  }, [realProjects]);
+
+  const estadoDonutData = useMemo(() => {
+    if (!realProjects || realProjects.length === 0) {
+      return [
+        { name: 'Saludables', value: 2, percentage: 100, color: '#6366f1' },
+        { name: 'Requiere atención', value: 0, percentage: 0, color: '#f59e0b' },
+        { name: 'Con problemas', value: 0, percentage: 0, color: '#f43f5e' }
+      ];
     }
-  }, [isPending, user?.rol]);
+    const total = projectsHealthList.length;
+    const saludables = projectsHealthList.filter(p => p.status === 'Saludable').length;
+    const atencion   = projectsHealthList.filter(p => p.status === 'Atención').length;
+    const problemas  = projectsHealthList.filter(p => p.status === 'Con problemas').length;
+    return [
+      { name: 'Saludables',        value: saludables, percentage: Math.round((saludables / total) * 100), color: '#00c896' },
+      { name: 'Requiere atención', value: atencion,   percentage: Math.round((atencion   / total) * 100), color: '#f59e0b' },
+      { name: 'Con problemas',     value: problemas,  percentage: Math.round((problemas  / total) * 100), color: '#f43f5e' }
+    ];
+  }, [realProjects, projectsHealthList]);
+
+  // Fecha de última sincronización desde backend
+  const [lastSyncInfo, setLastSyncInfo] = useState({
+    dateText: '12 Ago 2026, 13:04:22',
+    status: 'Exitosa',
+    user: user?.nombre || user?.email || 'Vhoyos'
+  });
+
+  useEffect(() => {
+    if (jiraService?.getSyncLogs) {
+      jiraService.getSyncLogs()
+        .then(logs => {
+          if (Array.isArray(logs) && logs.length > 0) {
+            const latest = logs[0];
+            const dateString = latest.fecha_ejecucion.endsWith('Z') 
+              ? latest.fecha_ejecucion 
+              : `${latest.fecha_ejecucion}Z`;
+            const dt = new Date(dateString);
+            setLastSyncInfo({
+              dateText: isNaN(dt.getTime())
+                ? '12 Ago 2026, 13:04:22'
+                : dt.toLocaleString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }),
+              status: latest.resultado === 'SUCCESS' ? 'Exitosa' : (latest.resultado === 'RUNNING' ? 'Sincronizando...' : 'Exitosa'),
+              user: latest.ejecutado_por || user?.nombre || 'Vhoyos'
+            });
+          }
+        })
+        .catch(() => {});
+    }
+  }, [user]);
+
+  // Filtros de Tendencia General (interactivos pero datos estáticos)
+  const [trendMetric, setTrendMetric] = useState('completed');
+  const [trendTimeframe, setTrendTimeframe] = useState('6m');
+
+  const TREND_DATA = {
+    '6m': {
+      completed: [{ month: 'Mar', valor: 38 }, { month: 'Abr', valor: 62 }, { month: 'May', valor: 71 }, { month: 'Jun', valor: 80 }, { month: 'Jul', valor: 92 }, { month: 'Ago', valor: 100 }],
+      created:   [{ month: 'Mar', valor: 42 }, { month: 'Abr', valor: 55 }, { month: 'May', valor: 68 }, { month: 'Jun', valor: 75 }, { month: 'Jul', valor: 85 }, { month: 'Ago', valor: 94 }]
+    },
+    '3m': {
+      completed: [{ month: 'Jun', valor: 40 }, { month: 'Jul', valor: 65 }, { month: 'Ago', valor: 87 }],
+      created:   [{ month: 'Jun', valor: 45 }, { month: 'Jul', valor: 58 }, { month: 'Ago', valor: 64 }]
+    },
+    '30d': {
+      completed: [{ month: 'Sem 1', valor: 12 }, { month: 'Sem 2', valor: 25 }, { month: 'Sem 3', valor: 31 }, { month: 'Sem 4', valor: 42 }],
+      created:   [{ month: 'Sem 1', valor: 14 }, { month: 'Sem 2', valor: 22 }, { month: 'Sem 3', valor: 18 }, { month: 'Sem 4', valor: 29 }]
+    }
+  };
+  const tendenciaData = TREND_DATA[trendTimeframe][trendMetric];
+
+  // Hook: contador animado para los KPI (count-up al cargar)
+  const useAnimatedCounter = (target, duration = 1200) => {
+    const [count, setCount] = useState(0);
+    useEffect(() => {
+      let start = 0;
+      const step = target / (duration / 16);
+      const timer = setInterval(() => {
+        start += step;
+        if (start >= target) { setCount(target); clearInterval(timer); }
+        else setCount(Math.round(start * 10) / 10);
+      }, 16);
+      return () => clearInterval(timer);
+    }, [target, duration]);
+    return count;
+  };
+
+  const [rendimientoTimeFilter, setRendimientoTimeFilter] = useState('30d');
+  const rd = RENDIMIENTO_MOCK_DATA[rendimientoTimeFilter];
+
+  const animVelocity   = useAnimatedCounter(rd.velocity.val);
+  const animThroughput = useAnimatedCounter(rd.throughput.val);
+  const animCycle      = useAnimatedCounter(rd.cycle.val, 1400);
+  const animLead       = useAnimatedCounter(rd.lead.val, 1400);
+
+  const handleScrollCarouselRight = () => {
+    if (carouselRef.current) {
+      carouselRef.current.scrollBy({ left: 300, behavior: 'smooth' });
+    }
+  };
 
   const handleRefresh = () => {
     setIsRefreshing(true);
     setTimeout(() => setIsRefreshing(false), 800);
   };
 
-  // Función para exportar reporte en PDF (HU-016)
   const handleExportPDF = () => {
     if (selectedProjectId && reportService?.downloadPdfReport) {
       reportService.downloadPdfReport(selectedProjectId);
@@ -250,76 +273,16 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
     }
   };
 
-  // Estilo dinámico de Recharts Tooltip con variables CSS de tema
-  const tooltipStyle = {
-    backgroundColor: 'var(--bg-card)',
-    borderColor: 'var(--border-color)',
-    borderRadius: '12px',
-    color: 'var(--text-main)',
-    fontSize: '12px',
-    boxShadow: 'var(--shadow-card)'
+  const openDrillDown = (title, type) => {
+    setModalTitle(title);
+    setModalMetricType(type);
+    setIsModalOpen(true);
   };
 
-  const activeDrilldown = drilldownKey ? mockKpiDrilldownData[drilldownKey] : null;
-
-  const filteredDrilldownIssues = useMemo(() => {
-    if (!activeDrilldown) return [];
-    const q = drilldownSearch.trim().toLowerCase();
-    if (!q) return activeDrilldown.issues;
-    return activeDrilldown.issues.filter(
-      iss => iss.key.toLowerCase().includes(q) ||
-             iss.title.toLowerCase().includes(q) ||
-             iss.assignee.toLowerCase().includes(q) ||
-             iss.type.toLowerCase().includes(q)
-    );
-  }, [activeDrilldown, drilldownSearch]);
-
   return (
-    <div className="space-y-6 text-left animate-in fade-in duration-200">
+    <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
       
-      {/* CUADRO DE NOTIFICACIÓN DE ESTADO PENDIENTE PARA MANAGER */}
-      {isPending && (
-        <div className="bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 border border-amber-500/30 dark:border-amber-500/40 rounded-2xl p-5 shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <div className="p-3 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl shrink-0 mt-0.5">
-              <Clock size={24} className="animate-pulse" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2.5">
-                <h3 className="text-base font-extrabold text-slate-900 dark:text-amber-200">
-                  ⏳ Estado: Pendiente de Asignación de Rol de Líder Técnico
-                </h3>
-              </div>
-              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                Tu solicitud ha sido enviada al Administrador. Una vez aprobada, tendrás acceso completo a la gestión de proyectos y tableros consolidados.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TOAST FLOTANTE TEMPORAL DE ROL ACTIVADO (MÁNAGER) */}
-      {!isPending && user?.rol === 'MANAGER' && showActiveToast && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 shadow-md flex items-center justify-between gap-3 text-emerald-900 dark:text-emerald-300 animate-in fade-in duration-300">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-500 font-bold shrink-0">
-              <Shield size={18} />
-            </div>
-            <div>
-              <h4 className="text-xs font-extrabold">🎉 ¡Rol Activado: Líder Técnico (MANAGER)!</h4>
-              <p className="text-[11px] text-emerald-700 dark:text-emerald-400">El Administrador te ha asignado el acceso a los tableros consolidados y métricas del equipo.</p>
-            </div>
-          </div>
-          <button 
-            onClick={() => setShowActiveToast(false)}
-            className="text-emerald-500 hover:text-emerald-700 p-1 rounded-lg"
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
-      
-      {/* 1. CABECERA: HISTÓRICO GENERAL, BOTÓN DE REFRESCO Y EXPORTACIÓN A PDF (HU-016) */}
+      {/* 1. CABECERA CON INSIGNIA DE SINCRONIZACIÓN EN EL EXTREMO SUPERIOR DERECHO */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-500 dark:text-indigo-400 font-extrabold flex items-center justify-center text-base border border-indigo-500/30 shadow-sm">
@@ -333,452 +296,467 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis 
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          {/* Botón Exportar PDF (HU-016) */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          
+          {/* Botón Exportar PDF */}
           <button
+            type="button"
             onClick={handleExportPDF}
-            className="h-10 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20"
-            title="Exportar reporte consolidado en PDF (HU-016)"
+            className="h-9 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20"
+            title="Exportar reporte consolidado en PDF"
           >
-            <FileDown size={16} />
+            <FileDown size={15} />
             <span>Exportar PDF</span>
+          </button>
+
+          {/* Botón Campana de Notificaciones */}
+          <button
+            type="button"
+            onClick={() => setActiveTab && setActiveTab('alerts_center')}
+            className="h-9 w-9 rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center relative"
+            title="Centro de alertas y notificaciones"
+          >
+            <Bell size={15} />
           </button>
 
           {/* Botón de Refrescar Datos */}
           <button
+            type="button"
             onClick={handleRefresh}
-            className="h-10 w-10 rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center"
+            className="h-9 w-9 rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center"
             title="Actualizar datos del sprint"
           >
-            <RefreshCw size={16} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
+            <RefreshCw size={15} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
           </button>
         </div>
       </div>
 
-      {/* Overlay de fondo desenfocado (Backdrop Blur) cuando se activa la vista de bugs */}
-      {isBugsFocused && (
-        <div 
-          onClick={() => setIsBugsFocused(false)}
-          className="fixed inset-0 bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-md z-40 transition-all duration-300 animate-in fade-in"
-        />
-      )}
 
-      {/* 2. SECCIÓN SUPERIOR: SALUD DEL SPRINT Y DISTRIBUCIÓN / MODO BUGS FOCUSED */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch relative">
+
+      {/* ============================================================================ */}
+      {/* SECCIÓN 1: PANORAMA DE PROYECTOS (CARRUSEL DE TARJETAS DE SALUD) */}
+      {/* ============================================================================ */}
+      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4">
         
-        {/* Columna 1 (Izquierda): Salud del Sprint */}
-        <div className={`p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] flex flex-col justify-between transition-all duration-300 ${
-          isBugsFocused ? 'relative z-50 ring-2 ring-amber-500/60 shadow-2xl' : ''
-        }`}>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Salud del sprint</h3>
-              {!isBugsFocused && (
-                <InfoTooltip text="Evaluación general que mide si el equipo avanza a buen ritmo sin bloqueos o errores graves." />
-              )}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Salud calculada sobre bugs críticos y cuellos de botella</p>
+        {/* CABECERA DEL SECTOR 1 */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>Panorama de proyectos</span>
+              <InfoTooltip text="Estado consolidado de salud, avance y total de incidencias de todos los proyectos activos en Jira." />
+            </h2>
           </div>
 
-          <div className="flex flex-col items-center justify-center py-2">
-            <div className="relative w-36 h-36 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                <path
-                  className="text-slate-200 dark:text-slate-800"
-                  strokeWidth="3.5"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-                <path
-                  className="text-amber-500"
-                  strokeDasharray="75, 100"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  stroke="currentColor"
-                  fill="none"
-                  d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-2xl font-black text-slate-900 dark:text-white">75%</span>
-                <span className="text-[10px] font-extrabold tracking-widest text-amber-500 dark:text-amber-400 uppercase">ESTABLE</span>
-              </div>
-            </div>
-            <p className="text-xs text-slate-700 dark:text-slate-300 font-semibold mt-2">
-              El sprint necesita seguimiento para evitar retrasos.
-            </p>
-          </div>
-
-          {/* Botón Cargar Bugs / Ocultar Bugs */}
           <button
-            onClick={() => {
-              setIsBugsFocused(!isBugsFocused);
-              setBugsPage(1);
-            }}
-            className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer mt-2 ${
-              isBugsFocused 
-                ? 'bg-amber-500 text-slate-950 shadow-md font-black' 
-                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20'
-            }`}
+            type="button"
+            onClick={() => setActiveTab && setActiveTab('proyectos')}
+            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors cursor-pointer"
           >
-            <Bug size={15} />
-            <span>{isBugsFocused ? 'Ocultar bugs' : 'Cargar bugs'}</span>
+            <span>Ver todos los proyectos</span>
+            <ChevronRight size={15} />
           </button>
         </div>
 
-        {/* Si isBugsFocused es TRUE: Mostramos la Tabla de Bugs ocupando Columna 2 y 3 sin desenfoque */}
-        {isBugsFocused ? (
-          <div className="lg:col-span-2 relative z-50 p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-2xl flex flex-col justify-between animate-in fade-in zoom-in-95 duration-200">
-            <div>
-              {/* Header de la Tabla de Bugs */}
-              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-                <div className="flex items-center gap-2">
-                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                    <Bug size={18} />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                      Bugs y Cuellos de Botella
-                      <span className="px-2 py-0.5 text-[10px] font-extrabold rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                        {filteredBugs.length} incidencias
-                      </span>
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">Listado de fallos del sprint actual</p>
-                  </div>
-                </div>
+        {/* CONTENEDOR CARRUSEL CON BOTÓN DE DESPLAZAMIENTO REUTILIZABLE */}
+        <div className="relative">
+          <div 
+            ref={carouselRef}
+            className="flex items-center gap-4 overflow-x-auto scrollbar-none pb-1 scroll-smooth pr-10"
+          >
+            {projectsHealthList.map((proj) => {
+              const isGreen = proj.statusColor === 'teal';
+              const isAmber = proj.statusColor === 'amber';
+              const statusBadgeBg = isGreen
+                ? 'border'
+                : isAmber
+                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20'
+                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20';
 
-                <div className="flex items-center gap-2">
-                  {/* Buscador de bugs */}
-                  <div className="relative w-44">
-                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" size={13} />
-                    <input
-                      type="text"
-                      placeholder="Buscar bug..."
-                      value={bugsSearch}
-                      onChange={(e) => {
-                        setBugsSearch(e.target.value);
-                        setBugsPage(1);
-                      }}
-                      className="w-full pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
+              const ringColor  = isGreen ? '#00c896' : isAmber ? '#f59e0b' : '#f43f5e';
+              const blockColor = isGreen ? '' : isAmber ? 'bg-amber-500' : 'bg-rose-500';
+              const badgeStyle = isGreen
+                ? { background: 'rgba(0,200,150,0.12)', color: '#00b386', border: '1px solid rgba(0,200,150,0.3)' }
+                : {};
+              const dotStyle = isGreen ? { backgroundColor: '#00c896' } : {};
 
-                  {/* Botón cerrar X */}
-                  <button
-                    onClick={() => setIsBugsFocused(false)}
-                    className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                    title="Cerrar vista de bugs"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              </div>
+              const isHovered = hoveredProject === proj.id;
+              const glowColor = isGreen ? 'rgba(0,200,150,0.25)' : isAmber ? 'rgba(245,158,11,0.25)' : 'rgba(244,63,94,0.25)';
+              const borderHoverColor = isGreen ? 'rgba(0,200,150,0.5)' : isAmber ? 'rgba(245,158,11,0.5)' : 'rgba(244,63,94,0.5)';
 
-              {/* Tabla de Bugs */}
-              <div className="mt-3 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden min-h-[220px]">
-                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300 table-fixed">
-                  <thead className="bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 font-bold border-b border-slate-200 dark:border-slate-800 uppercase text-[10px] tracking-wider">
-                    <tr className="h-9">
-                      <th className="px-3 w-[90px]">Clave</th>
-                      <th className="px-3">Resumen / Título</th>
-                      <th className="px-3 w-[110px]">Estado</th>
-                      <th className="px-3 w-[120px]">Asignado</th>
-                      <th className="px-3 w-[90px] text-center">Severidad</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200 dark:divide-slate-800/60">
-                    {paginatedBugs.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="py-8 text-center text-slate-500">
-                          No hay bugs que coincidan con la búsqueda.
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedBugs.map((bug) => (
-                        <tr key={bug.key} className="h-10 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                          <td className="px-3 font-bold text-amber-600 dark:text-amber-400 font-mono">
-                            {bug.key}
-                          </td>
-                          <td className="px-3 font-semibold text-slate-900 dark:text-white truncate">
-                            {bug.summary}
-                          </td>
-                          <td className="px-3">
-                            <span className="px-2 py-0.5 border rounded-lg text-[10px] font-semibold inline-flex items-center gap-1 bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20">
-                              {bug.status}
-                            </span>
-                          </td>
-                          <td className="px-3 text-slate-600 dark:text-slate-300 truncate">
-                            {bug.assignee}
-                          </td>
-                          <td className="px-3 text-center">
-                            <span className={`px-2 py-0.5 border rounded-lg text-[10px] font-bold ${getSeverityBadge(bug.severity)}`}>
-                              {bug.severity}
-                            </span>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Paginación de la Tabla de Bugs */}
-            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 mt-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Página {bugsPage} de {totalBugsPages} ({filteredBugs.length} bugs)
-              </span>
-
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={bugsPage === 1}
-                  onClick={() => setBugsPage((p) => Math.max(1, p - 1))}
-                  className="px-3 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              return (
+                <div
+                  key={proj.id}
+                  onMouseEnter={() => setHoveredProject(proj.id)}
+                  onMouseLeave={() => setHoveredProject(null)}
+                  className="min-w-[260px] sm:min-w-[280px] flex-1 bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3 cursor-pointer group hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300"
                 >
-                  Anterior
-                </button>
-                <button
-                  disabled={bugsPage >= totalBugsPages}
-                  onClick={() => setBugsPage((p) => Math.min(totalBugsPages, p + 1))}
-                  className="px-3 py-1 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
-                >
-                  Siguiente
-                </button>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <>
-            {/* Columna 2 (Centro/Izquierda): Distribución del Trabajo */}
-            <div className="p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] flex flex-col justify-start gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
-                  <InfoTooltip text="Muestra en qué porcentaje se dividió el tiempo entre crear nuevas funciones, arreglar fallos o hacer mejoras técnicas." />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4 mt-1">
-                <div className="h-44 w-full relative flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={mockDistributionData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={50}
-                        outerRadius={75}
-                        paddingAngle={5}
-                        dataKey="value"
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1.5">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-extrabold border ${isGreen ? '' : statusBadgeBg}`}
+                        style={isGreen ? badgeStyle : {}}
                       >
-                        {mockDistributionData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip contentStyle={tooltipStyle} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-xl font-black text-slate-900 dark:text-white">14</span>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Total Incidencias</span>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  {mockDistributionData.map((item, idx) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <div key={idx} className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                          <div className="flex items-center gap-1.5">
-                            <IconComponent size={13} className="text-slate-500 dark:text-slate-400" />
-                            <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
-                          </div>
-                        </div>
-                        <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                          {item.value} <span className="text-slate-500 dark:text-slate-400 text-[10px]">({item.percentage}%)</span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Columna 3 (Derecha): Tarjetas KPI (Última Sincronización, Tiempo de Ciclo y Lead Time Promedio) */}
-            <div className="flex flex-col gap-3 justify-between">
-              
-              {/* Tarjeta 1: Última Sincronización (Ubicada ARRIBA) */}
-              <div className="p-3.5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group">
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-                      <RefreshCw size={13} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
-                      <span className="text-slate-700 dark:text-slate-300 font-extrabold">ÚLTIMA SINCRONIZACIÓN</span>
-                    </div>
-                    <InfoTooltip align="right" text="Fecha, hora y usuario responsable de la última actualización de datos desde Jira Cloud." />
-                  </div>
-
-                  <div className="mt-2.5 flex flex-col gap-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-slate-900 dark:text-white">
-                        10 Ago 2026, 10:45 AM
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full animate-pulse ${isGreen ? '' : blockColor}`}
+                          style={isGreen ? dotStyle : {}}
+                        />
+                        {proj.status}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
-                        Exitosa
-                      </span>
+                      <h3 className="text-sm font-extrabold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors duration-300">
+                        {proj.name}
+                      </h3>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400 font-medium pt-0.5">
-                      <User size={12} className="text-indigo-400 shrink-0" />
-                      <span className="truncate">{user?.nombre || user?.email ? (user.nombre || user.email) : 'Valentina Hoyos'}</span>
+
+                    {/* MEDIDOR ANILLO SVG DE SALUD */}
+                    <div className="relative w-12 h-12 flex items-center justify-center shrink-0">
+                      <svg
+                        className="w-12 h-12 transform -rotate-90"
+                        style={{ filter: isHovered ? `drop-shadow(0 0 6px ${ringColor})` : 'none', transition: 'filter 0.25s ease' }}
+                      >
+                        <circle cx="24" cy="24" r="19" stroke={isGreen ? '#e2e8f0' : '#334155'} strokeWidth="3.5" fill="transparent" />
+                        <circle
+                          cx="24"
+                          cy="24"
+                          r="19"
+                          stroke={ringColor}
+                          strokeWidth={isHovered ? 4.5 : 3.5}
+                          fill="transparent"
+                          strokeDasharray={119}
+                          strokeDashoffset={119 - (119 * proj.health) / 100}
+                          strokeLinecap="round"
+                          style={{ transition: 'stroke-width 0.25s ease' }}
+                        />
+                      </svg>
+                      <span className="absolute font-black text-xs text-slate-900 dark:text-white">{proj.health}%</span>
                     </div>
                   </div>
-                </div>
-              </div>
 
-              {/* KPI 2: Tiempo de Ciclo */}
-              {(() => {
-                const cycleTimeNum = kpis && kpis.length > 0 ? parseFloat(kpis[kpis.length - 1].cycle_time_promedio_dias) : 4.2;
-                let colorClass = "text-emerald-500 dark:text-emerald-400";
-                let bgBtnClass = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20";
-                let borderClass = "border-emerald-200 dark:border-emerald-500/50";
-                let shadowClass = "shadow-sm dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)]";
-                let statusText = "Óptimo";
-
-                if (cycleTimeNum > 14) {
-                  colorClass = "text-rose-500 dark:text-rose-400";
-                  bgBtnClass = "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20 hover:bg-rose-500/20";
-                  borderClass = "border-rose-200 dark:border-rose-500/50";
-                  shadowClass = "shadow-sm dark:shadow-[0_4px_20px_rgba(244,63,94,0.15)]";
-                  statusText = "Crítico";
-                } else if (cycleTimeNum > 7) {
-                  colorClass = "text-amber-500 dark:text-amber-400";
-                  bgBtnClass = "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20 hover:bg-amber-500/20";
-                  borderClass = "border-amber-200 dark:border-amber-500/50";
-                  shadowClass = "shadow-sm dark:shadow-[0_4px_20px_rgba(245,158,11,0.15)]";
-                  statusText = "En Riesgo";
-                }
-
-                return (
-                  <div 
-                    onClick={() => openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time')}
-                    className={`p-3.5 rounded-2xl bg-white dark:bg-[#191c3d] border ${borderClass} ${shadowClass} transition-all duration-200 flex flex-col justify-between relative group cursor-pointer hover:shadow-md`}
-                  >
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-                          <Clock size={13} className={`${colorClass} shrink-0`} />
-                          <span className="text-slate-700 dark:text-slate-300 font-extrabold">TIEMPO DE CICLO</span>
-                          <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white dark:bg-[#191c3d] border ${borderClass} ${colorClass}`}>{statusText}</span>
-                        </div>
-                        <InfoTooltip align="right" text="Días promedio que tarda el equipo en terminar una tarea desde que empieza a trabajar en ella. Haz clic para ver el detalle." />
-                      </div>
-
-                      <div className="flex items-baseline justify-between mt-2.5">
-                        <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                            {cycleTimeNum}
-                          </span>
-                          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
-                        </div>
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border transition-all flex items-center gap-1 ${bgBtnClass}`}>
-                          Ver detalle
-                        </span>
+                  {/* BARRA DE PROGRESO ÚNICA CON DEGRADADO */}
+                  <div className="pt-1">
+                    <div className="relative h-2 w-full rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+                      <div
+                        className="h-full rounded-full relative overflow-hidden"
+                        style={{
+                          width: `${proj.health}%`,
+                          background: isGreen
+                            ? 'linear-gradient(90deg, #06b6d4 0%, #14b8a6 50%, #34d399 100%)'
+                            : isAmber
+                            ? 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 60%, #fcd34d 100%)'
+                            : 'linear-gradient(90deg, #f43f5e 0%, #fb7185 60%, #fda4af 100%)',
+                          transition: 'width 1s ease-out',
+                          boxShadow: isHovered ? `0 0 8px 1px ${ringColor}` : 'none'
+                        }}
+                      >
+                        {/* Shimmer overlay — más rápido en hover */}
+                        <span
+                          className="absolute inset-0 opacity-40"
+                          style={{
+                            background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.6) 50%, transparent 100%)',
+                            animation: `shimmer ${isHovered ? '0.8s' : '1.8s'} infinite`,
+                            backgroundSize: '200% 100%'
+                          }}
+                        />
                       </div>
                     </div>
                   </div>
-                );
-              })()}
 
-              {/* KPI 3: Lead Time Promedio */}
-              <div 
-                onClick={() => openDrillDown('Lead Time Promedio', 'lead_time')}
-                className="p-3.5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] hover:border-cyan-500/60 dark:hover:border-cyan-500/60 shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] hover:shadow-md transition-all duration-200 flex flex-col justify-between relative group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wide">
-                      <Clock size={13} className="text-cyan-500 dark:text-cyan-400 shrink-0" />
-                      <span className="text-slate-700 dark:text-slate-300 font-extrabold">LEAD TIME PROMEDIO</span>
-                    </div>
-                    <InfoTooltip align="right" text="Días promedio que transcurren desde que se solicita o crea una tarea hasta su resolución final. Haz clic para ver el detalle." />
-                  </div>
-
-                  <div className="flex items-baseline justify-between mt-2.5">
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                        {kpis && kpis.length > 0 ? kpis[kpis.length - 1].lead_time_promedio_dias : 6.8}
-                      </span>
-                      <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">días</span>
-                    </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 hover:bg-cyan-500/20 transition-all flex items-center gap-1">
-                      Ver detalle
-                    </span>
+                  {/* PIE DE TARJETA CON ISSUES Y SPRINT */}
+                  <div className="flex items-center justify-between text-[11px] font-bold text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200/60 dark:border-slate-800/60">
+                    <span>{proj.issues} issues</span>
+                    <span>{proj.sprint}</span>
                   </div>
                 </div>
-              </div>
+              );
+            })}
+          </div>
 
-            </div>
-          </>
-        )}
+          {/* BOTÓN DESPLAZAR FLECHA DER */}
+          <button
+            type="button"
+            onClick={handleScrollCarouselRight}
+            className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-slate-900/90 dark:bg-slate-800 text-white flex items-center justify-center shadow-lg border border-slate-700 hover:scale-110 transition-all cursor-pointer z-10"
+            title="Siguiente proyecto"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
 
       </div>
 
-      {/* 3. SECCIÓN INFERIOR SEGÚN BOCETO: 2 COLUMNAS (VELOCIDAD POR SPRINT Y PROGRESO DE TAREAS) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* ============================================================================ */}
+      {/* SECCIÓN 2: TENDENCIA GENERAL (IZQ 7 COLS) Y ESTADO GENERAL (DER 5 COLS) */}
+      {/* ============================================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
         
-        {/* Velocidad por Sprint */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
-          <div>
+        {/* COLUMNA 1 (7 COLS): TENDENCIA GENERAL CON GRÁFICO DE ÁREA DE GRADIENTE */}
+        <div className="lg:col-span-7 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
+          
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span>Tendencia general</span>
+              <InfoTooltip text="Evolución histórica del volumen de incidencias completadas a lo largo de los últimos meses." />
+            </h2>
+
+            {/* SELECTORES DE FILTRO Y TIEMPO */}
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
-              <InfoTooltip text="Muestra cuánto trabajo ha entregado el equipo en cada período para ver si el ritmo aumenta o se mantiene." />
+              <select 
+                value={trendMetric}
+                onChange={(e) => setTrendMetric(e.target.value)}
+                className="bg-slate-100 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:border-indigo-400 transition-colors"
+              >
+                <option value="completed">Issues completadas</option>
+                <option value="created">Issues creadas</option>
+              </select>
+
+              <select 
+                value={trendTimeframe}
+                onChange={(e) => setTrendTimeframe(e.target.value)}
+                className="bg-slate-100 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:border-indigo-400 transition-colors"
+              >
+                <option value="6m">Últimos 6 meses</option>
+                <option value="3m">Últimos 3 meses</option>
+                <option value="30d">Últimos 30 días</option>
+              </select>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución del rendimiento en story points</p>
           </div>
 
-          <div className="h-84 w-full pt-2">
+          {/* GRÁFICO DE ÁREA CON GRADIENTE */}
+          <div className="w-full h-[230px]">
             <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={mockSprintVelocity} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
-                <XAxis dataKey="sprint" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} />
-                <RechartsTooltip contentStyle={tooltipStyle} />
-                <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Story Points" barSize={36} />
-                <Line type="monotone" dataKey="promedio" stroke="#10b981" strokeWidth={3} dot={false} name="Promedio histórico" />
-              </ComposedChart>
+              <AreaChart data={tendenciaData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorCompletadas" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={trendMetric === 'created' ? '#06b6d4' : '#6366f1'} stopOpacity={0.5}/>
+                    <stop offset="95%" stopColor={trendMetric === 'created' ? '#06b6d4' : '#6366f1'} stopOpacity={0.0}/>
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
+                <YAxis stroke="#64748b" fontSize={11} tickLine={false} domain={[0, 'auto']} />
+                <RechartsTooltip 
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff', fontSize: '12px' }}
+                  formatter={(val) => [`${val} issues`, trendMetric === 'created' ? 'Creadas' : 'Completadas']}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="valor" 
+                  stroke={trendMetric === 'created' ? '#06b6d4' : '#818cf8'} 
+                  strokeWidth={3} 
+                  fillOpacity={1} 
+                  fill="url(#colorCompletadas)" 
+                  dot={{ r: 4, fill: trendMetric === 'created' ? '#06b6d4' : '#818cf8', stroke: '#ffffff', strokeWidth: 2 }}
+                />
+              </AreaChart>
             </ResponsiveContainer>
+          </div>
+
+        </div>
+
+        {/* COLUMNA 2 (5 COLS): SINCRONIZACIÓN + ESTADO GENERAL APILADOS */}
+        <div className="lg:col-span-5 flex flex-col gap-4">
+
+          {/* TARJETA: ÚLTIMA SINCRONIZACIÓN */}
+          <div
+            onClick={() => setActiveTab && setActiveTab('sincronizacion')}
+            className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4 rounded-2xl shadow-sm dark:shadow-xl cursor-pointer hover:border-indigo-400 transition-all group"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                <RefreshCw size={11} className="text-emerald-500" />
+                Última sincronización
+              </span>
+              <InfoTooltip text="Fecha, hora y usuario de la última sincronización ejecutada con Jira Cloud." align="right" />
+            </div>
+
+            <div className="flex items-end justify-between">
+              <div>
+                <p className="text-lg font-black text-slate-900 dark:text-white leading-tight">
+                  {lastSyncInfo.dateText}
+                </p>
+                <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  <User size={12} className="shrink-0" />
+                  <span>{lastSyncInfo.user}</span>
+                </p>
+              </div>
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-extrabold border border-emerald-500/20 shrink-0">
+                {lastSyncInfo.status}
+              </span>
+            </div>
+          </div>
+
+          {/* TARJETA: ESTADO GENERAL */}
+          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4 rounded-2xl shadow-sm dark:shadow-xl flex-1 flex flex-col justify-between">
+            
+            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mb-3">
+              <span>Estado general</span>
+              <InfoTooltip text="Proporción global de proyectos según su nivel de salud operativa." />
+            </h2>
+
+            <div className="flex items-center gap-5">
+              
+              {/* DONUT — tamaño medio */}
+              <div className="h-[110px] w-[110px] relative flex items-center justify-center shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={estadoDonutData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={34}
+                      outerRadius={52}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                      {estadoDonutData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip
+                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#334155', borderRadius: '0.75rem', color: '#fff', fontSize: '12px' }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white leading-none">{totalProjectsCount}</span>
+                  <span className="text-[9px] font-extrabold text-slate-500 dark:text-slate-400 uppercase mt-0.5">Proyectos</span>
+                </div>
+              </div>
+
+              {/* LEYENDA — icono · count · nombre · % */}
+              <div className="flex-1 space-y-2.5">
+                {estadoDonutData.map((item, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-base font-black text-slate-900 dark:text-white leading-none">{item.value}</span>
+                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 flex-1 truncate">{item.name}</span>
+                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 shrink-0">{item.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* ============================================================================ */}
+      {/* SECCIÓN 3: RENDIMIENTO GLOBAL PROMEDIO (REUBICADO Y PROMINENTE EN LA PARTE INFERIOR) */}
+      {/* ============================================================================ */}
+      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4">
+        
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <span>Rendimiento global <span className="text-xs text-slate-500 font-normal">(promedio)</span></span>
+            <InfoTooltip text="Métricas agregadas promedio del equipo: velocidad, throughput, cycle time y lead time." />
+          </h2>
+          <div className="relative">
+            <select
+              value={rendimientoTimeFilter}
+              onChange={(e) => setRendimientoTimeFilter(e.target.value)}
+              className="appearance-none bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-lg px-3 py-1.5 pr-8 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 cursor-pointer transition-colors"
+            >
+              <option value="7d">Últimos 7 días</option>
+              <option value="30d">Último mes</option>
+              <option value="90d">Últimos 3 meses</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-slate-500">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
           </div>
         </div>
 
-        {/* Progreso de tareas (Burndown) */}
-        <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burndown)</h3>
-              <InfoTooltip text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal de entrega." />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          
+          {/* SPARKLINE 1: VELOCITY */}
+          <div 
+            onClick={() => openDrillDown('Velocity Promedio', 'velocity')}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-purple-400 transition-all cursor-pointer space-y-2"
+          >
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Velocity</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{animVelocity}</span>
+              <span className="text-xs font-bold text-slate-500">SP</span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Esfuerzo restante en story points vs. ideal</p>
+            <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
+              {rd.velocity.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.velocity.trend}
+            </span>
+            <div className="h-10 w-full pt-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={rd.velocity.sparkline}>
+                  <Line type="monotone" dataKey="v" stroke="#a855f7" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <div className="h-80 w-full pt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockBurndownData} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
-                <XAxis dataKey="day" stroke="var(--text-muted)" fontSize={12} tickLine={false} />
-                <YAxis stroke="var(--text-muted)" fontSize={12} tickLine={false} />
-                <RechartsTooltip contentStyle={tooltipStyle} />
-                <Line type="monotone" dataKey="real" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5, fill: '#8b5cf6' }} name="REAL" />
-                <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
-              </LineChart>
-            </ResponsiveContainer>
+          {/* SPARKLINE 2: THROUGHPUT */}
+          <div 
+            onClick={() => openDrillDown('Throughput Promedio', 'throughput')}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-blue-400 transition-all cursor-pointer space-y-2"
+          >
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Throughput</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{animThroughput}</span>
+              <span className="text-xs font-bold text-slate-500">issues</span>
+            </div>
+            <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
+              {rd.throughput.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.throughput.trend}
+            </span>
+            <div className="h-10 w-full pt-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={rd.throughput.sparkline}>
+                  <Line type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
-          <p className="text-[11px] text-teal-600 dark:text-teal-400 font-medium pt-1 flex items-center gap-1.5">
-            ✨ Avance óptimo. El ritmo real de quemado coincide casi a la perfección con la línea ideal de entrega.
-          </p>
+          {/* SPARKLINE 3: CYCLE TIME */}
+          <div 
+            onClick={() => openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time')}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-cyan-400 transition-all cursor-pointer space-y-2"
+          >
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Cycle Time</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{animCycle}</span>
+              <span className="text-xs font-bold text-slate-500">días</span>
+            </div>
+            <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
+              {rd.cycle.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.cycle.trend}
+            </span>
+            <div className="h-10 w-full pt-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={rd.cycle.sparkline}>
+                  <Line type="monotone" dataKey="v" stroke="#06b6d4" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* SPARKLINE 4: LEAD TIME */}
+          <div 
+            onClick={() => openDrillDown('Lead Time Promedio', 'lead_time')}
+            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-purple-400 transition-all cursor-pointer space-y-2"
+          >
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Lead Time</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">{animLead}</span>
+              <span className="text-xs font-bold text-slate-500">días</span>
+            </div>
+            <span className="text-xs font-extrabold text-amber-500 flex items-center gap-1">
+              {rd.lead.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.lead.trend}
+            </span>
+            <div className="h-10 w-full pt-1">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={rd.lead.sparkline}>
+                  <Line type="monotone" dataKey="v" stroke="#8b5cf6" strokeWidth={2.5} dot={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
         </div>
 
       </div>

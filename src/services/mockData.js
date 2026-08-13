@@ -179,8 +179,20 @@ export const mockJiraService = {
   },
   // Simula la llamada POST /api/jira/sync
   async triggerSync() {
-    await delay(400);
-    return { message: "Sincronización simulada iniciada" };
+    await delay(600);
+    const nowIso = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const newLog = {
+      id_log: mockSyncLogs.length + 101,
+      fecha_ejecucion: nowIso,
+      tipo_sincronizacion: 'MANUAL',
+      issues_procesados: Math.floor(Math.random() * 15) + 38,
+      tiempo_ejecucion_segundos: Math.floor(Math.random() * 4) + 6,
+      resultado: 'SUCCESS',
+      ejecutado_por: 'Valka Hoyos',
+      detalle_error: null
+    };
+    mockSyncLogs.unshift(newLog);
+    return { status: "SUCCESS", message: "Sincronización con Atlassian Jira finalizada correctamente", log: newLog };
   },
   // Simula la llamada GET /api/jira/sync/logs
   async getSyncLogs() {

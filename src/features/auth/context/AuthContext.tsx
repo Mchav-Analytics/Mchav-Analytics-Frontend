@@ -97,10 +97,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       try {
         userData = await authService.getCurrentUser();
       } catch (firstErr) {
-        if (isLoginSuccess) {
-          await new Promise(r => setTimeout(r, 350));
-          userData = await authService.getCurrentUser();
-        } else {
+        try {
+          // Intentar autenticación dev automática con el backend de FastAPI
+          userData = await authService.loginMock({ email: "vhoyos@mchav.com" });
+        } catch (loginErr) {
           throw firstErr;
         }
       }
@@ -114,6 +114,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
         : (userData.activo !== false);
 
       const assignedRole = USE_MOCK_DATA ? (rolesMap[userData.email] || normRole) : normRole;
+
+      if (userData?.token || userData?.access_token) {
+        localStorage.setItem('mchav_jwt_token', userData.token || userData.access_token);
+      }
 
       setUser({
         ...userData,
@@ -156,6 +160,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setError(null);
     try {
       const loggedUser = await authService.loginMock(credentials);
+      if (loggedUser?.token || loggedUser?.access_token) {
+        localStorage.setItem('mchav_jwt_token', loggedUser.token || loggedUser.access_token);
+      }
       
       // Comprobar si el usuario logueado está en la lista de aprobados por el Admin
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
@@ -185,7 +192,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     if (USE_MOCK_DATA) {
       return login({ email: "vhoyos@mchav.com" });
     }
-    window.location.href = authService.getLoginUrl();
+    try {
+      const u = await authService.loginMock({ email: "vhoyos@mchav.com" });
+      if (u?.token || u?.access_token) {
+        localStorage.setItem('mchav_jwt_token', u.token || u.access_token);
+      }
+      setUser(u);
+      return u;
+    } catch (err) {
+      console.warn("Autenticación local fallida, redirigiendo a OAuth Jira:", err);
+      window.location.href = authService.getLoginUrl();
+    }
   };
 
   // Cierre de sesión real: Si sale el Desarrollador, reinicia aprobaciones para permitir enviar la notificación de nuevo

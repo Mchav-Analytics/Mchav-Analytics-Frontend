@@ -11,6 +11,8 @@ import {
   UserPlus,
   UserCheck,
   UserX,
+  Power,
+  PowerOff,
   X,
   Sliders,
   CheckCircle2,
@@ -21,6 +23,8 @@ import {
   Sparkles,
   Activity
 } from 'lucide-react';
+
+import { useAuth } from '../../auth/context/AuthContext';
 
 export interface ManagementUser {
   id: string;
@@ -87,9 +91,12 @@ type AdminUsuariosViewProps = {
 };
 
 export default function AdminUsuariosView({
-  approveUserPermission,
-  approvedUsers = [],
+  approveUserPermission: propApproveUserPermission,
+  approvedUsers: propApprovedUsers,
 }: AdminUsuariosViewProps) {
+  const { approveUserPermission: authApprove, approvedUsers: authApproved } = useAuth();
+  const approveUserPermission = propApproveUserPermission || authApprove;
+  const approvedUsers = (propApprovedUsers && propApprovedUsers.length > 0) ? propApprovedUsers : authApproved;
   const [users, setUsers] = useState<ManagementUser[]>(INITIAL_USERS);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
@@ -509,8 +516,8 @@ export default function AdminUsuariosView({
                         : 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/20'
                         }`}
                     >
-                      {u.status === 'ACTIVE' ? <UserX size={13} /> : <UserCheck size={13} />}
-                      {u.status === 'ACTIVE' ? 'Suspender' : 'Activar'}
+                      {u.status === 'ACTIVE' ? <PowerOff size={13} /> : <CheckCircle2 size={13} />}
+                      {u.status === 'ACTIVE' ? 'Desactivar' : 'Activar'}
                     </button>
                   </div>
                 </div>

@@ -6,6 +6,8 @@
 
 import React, { useMemo, useState, useEffect } from 'react';
 import { projectService } from '../../../services/api';
+import { useAuth } from '../../auth/context/AuthContext';
+import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 import {
   FolderKanban,
   ChevronDown,
@@ -18,9 +20,14 @@ import {
   UserPlus,
   Edit3,
   Trash2,
+  Power,
+  PowerOff,
+  Ban,
   AlertTriangle,
   RotateCcw,
   Check,
+  CheckCircle2,
+  Trophy,
   TrendingUp,
   Bug,
   Activity,
@@ -39,6 +46,8 @@ import {
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
+  AreaChart,
+  Area,
   PieChart,
   Pie,
   Cell
@@ -226,7 +235,8 @@ function isAdminRole(rol) {
 }
 
 export default function ProyectosDashboardView({ userProfile = null }) {
-  const isAdmin = isAdminRole(userProfile?.rol);
+  const { user } = useAuth();
+  const isAdmin = isAdminRole(userProfile?.rol || user?.rol);
 
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [expandedProjectId, setExpandedProjectId] = useState(null);
@@ -548,7 +558,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     setShowConfirmModal(false);
   };
 
-  const [statusTab, setStatusTab] = useState('ACTIVE'); // 'ACTIVE' | 'INACTIVE' | 'ALL'
+  const [statusTab, setStatusTab] = useState('ACTIVE'); // 'ACTIVE' | 'COMPLETED' | 'INACTIVE' | 'ALL'
   const [projectToDeactivate, setProjectToDeactivate] = useState(null);
 
   const handleOpenDeactivateModal = (project) => {
@@ -574,12 +584,38 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     showToast(`⚡ Proyecto '${project.name}' reactivado con éxito.`);
   };
 
+  const handleToggleDeliveredProject = (project) => {
+    setProjects(prev => prev.map(p => {
+      if (p.id === project.id) {
+        const isCurrentlyCompleted = p.status === 'COMPLETED' || p.status === 'DELIVERED';
+        const newStatus = isCurrentlyCompleted ? 'ACTIVE' : 'COMPLETED';
+        const newStatusLabel = isCurrentlyCompleted ? 'Sprint 1 Activo' : 'Entregado / Concluido';
+        const newProgress = isCurrentlyCompleted ? 85 : 100;
+        
+        if (isCurrentlyCompleted) {
+          showToast(`🔄 Proyecto '${p.name}' reabierto como Activo.`);
+        } else {
+          showToast(`🏆 ¡Proyecto '${p.name}' marcado como Entregado!`);
+        }
+
+        return {
+          ...p,
+          status: newStatus,
+          statusLabel: newStatusLabel,
+          progress: newProgress
+        };
+      }
+      return p;
+    }));
+  };
+
   const filteredProjects = projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.key.toLowerCase().includes(searchTerm.toLowerCase());
     if (!matchesSearch) return false;
 
-    if (statusTab === 'ACTIVE') return p.status !== 'INACTIVE';
+    if (statusTab === 'ACTIVE') return p.status !== 'INACTIVE' && p.status !== 'COMPLETED' && p.status !== 'DELIVERED';
+    if (statusTab === 'COMPLETED') return p.status === 'COMPLETED' || p.status === 'DELIVERED';
     if (statusTab === 'INACTIVE') return p.status === 'INACTIVE';
     return true; // 'ALL'
   });
@@ -958,9 +994,9 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       {projectToDeactivate && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 dark:bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-150">
           <div className="relative w-full max-w-[520px] sm:max-w-[560px] bg-white dark:bg-[#0c0f1d] border border-slate-200 dark:border-slate-800 rounded-[32px] px-6 py-8 sm:px-10 sm:py-12 text-center flex flex-col items-center space-y-5 sm:space-y-6 shadow-2xl shadow-purple-500/10 dark:shadow-purple-950/60 animate-in zoom-in-95 duration-150">
-            {/* Ícono de Bote de Basura dentro de Círculo Violeta */}
+            {/* Ícono de Desactivar dentro de Círculo Violeta */}
             <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-purple-50 dark:bg-[#1d1738] border border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 flex items-center justify-center mx-auto shadow-lg shadow-purple-200/50 dark:shadow-purple-900/30 shrink-0">
-              <Trash2 size={28} className="text-purple-600 dark:text-purple-400" />
+              <PowerOff size={28} className="text-purple-600 dark:text-purple-400" />
             </div>
 
             {/* Título y Mensaje Explicativo Centrados */}
@@ -1014,228 +1050,282 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      <section className="bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-2xl px-5 py-4 sm:px-7 sm:py-4 shadow-sm">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          {/* Botón Asignar + Buscador al lado (Izquierda) */}
-          <div className="flex flex-wrap items-center gap-3">
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={handleOpenCreateModal}
-                className="group relative shrink-0 h-[38px] rounded-xl text-[11px] font-black text-white overflow-hidden inline-flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/30 active:scale-[0.98]"
-                style={{
-                  paddingLeft: 16,
-                  paddingRight: 16,
-                  background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)',
-                  backgroundSize: '200% 200%',
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundPosition = '100% 50%'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundPosition = '0% 50%'; }}
-              >
-                <span
-                  className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-                  style={{ transition: 'transform 0.7s ease, opacity 0.3s ease' }}
-                />
-                <UserPlus size={13} className="relative z-10 transition-transform duration-300 group-hover:rotate-12" />
-                <span className="relative z-10">+ Asignar Nuevo Proyecto</span>
-              </button>
-            )}
-
-            {/* Barra de Búsqueda Dinámica y Expansible Adaptada a Modo Claro y Modo Oscuro (por jubayer-10) */}
-            <div
-              className={`h-[38px] p-2 overflow-hidden transition-all duration-300 rounded-full flex group items-center shadow-md border 
-              bg-white border-slate-200 hover:border-indigo-400 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 
-              dark:bg-gradient-to-r dark:from-[#0b132b] dark:via-[#0f233a] dark:to-[#0a2e38] dark:border-[#38bdf8]/35 dark:hover:border-[#38bdf8]/60 dark:focus-within:border-[#38bdf8] dark:focus-within:ring-[#38bdf8]/25 ${
-                searchTerm ? 'w-64 sm:w-72 border-indigo-400 dark:border-[#38bdf8]/55' : 'w-[38px] hover:w-64 sm:hover:w-72 focus-within:w-64 sm:focus-within:w-72'
-              }`}
-            >
-              <div className="flex items-center justify-center shrink-0 w-6 h-6">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  id="Isolation_Mode"
-                  data-name="Isolation Mode"
-                  viewBox="0 0 24 24"
-                  width="16"
-                  height="16"
-                  className="fill-slate-500 group-hover:fill-indigo-600 dark:fill-[#38bdf8] dark:group-hover:fill-[#38bdf8] transition-all duration-300 group-hover:scale-110"
-                >
-                  <path
-                    d="M18.9,16.776A10.539,10.539,0,1,0,16.776,18.9l5.1,5.1L24,21.88ZM10.5,18A7.5,7.5,0,1,1,18,10.5,7.507,7.507,0,0,1,10.5,18Z"
-                  ></path>
-                </svg>
-              </div>
-              <input
-                type="text"
-                placeholder="Buscar proyecto..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="outline-none text-xs bg-transparent w-full text-slate-800 placeholder-slate-400 dark:text-[#38bdf8] dark:placeholder-[#38bdf8]/55 font-bold px-2.5"
-              />
-            </div>
+      {/* BANNER DE MÉTRICAS EJECUTIVAS SUPERIORES (KPIS DE PROYECTOS Y EQUIPOS) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div 
+          onClick={() => setStatusTab('ACTIVE')}
+          className={`bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left cursor-pointer transition-all hover:scale-[1.01] ${
+            statusTab === 'ACTIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-200 dark:border-[#33376b]'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider">Proyectos Activos</span>
+            <FolderKanban size={18} className="text-emerald-500" />
           </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
+              {projects.filter(p => p.status === 'ACTIVE' || p.status === 'STABLE' || !p.status).length}
+            </span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              En Ejecución
+            </span>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Equipos de desarrollo asignados.</p>
+        </div>
 
-          {/* Pestañas de Filtro en Contenedores Separados e Independientes */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 flex-wrap">
+        <div 
+          onClick={() => setStatusTab('COMPLETED')}
+          className={`bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left cursor-pointer transition-all hover:scale-[1.01] ${
+            statusTab === 'COMPLETED' ? 'border-indigo-500 ring-2 ring-indigo-500/30' : 'border-slate-200 dark:border-[#33376b]'
+          }`}
+        >
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider">Entregados / Concluidos</span>
+            <CheckCircle2 size={18} className="text-indigo-500" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+              {projects.filter(p => p.status === 'COMPLETED' || p.status === 'DELIVERED').length}
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Finalizados</span>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Proyectos concluidos con éxito.</p>
+        </div>
+
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider">Devs Asignados</span>
+            <Users size={18} className="text-cyan-500" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-slate-900 dark:text-white">
+              {projects.reduce((acc, p) => acc + (p.developers?.length || 0), 0)}
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Desarrolladores</span>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Capacidad técnica desplegada.</p>
+        </div>
+
+        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+            <span className="text-[11px] font-extrabold uppercase tracking-wider">Salud Operativa Promedio</span>
+            <Zap size={18} className="text-amber-500" />
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-amber-500">86.5%</span>
+            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">Estable</span>
+          </div>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400">Predictibilidad global de entregas.</p>
+        </div>
+      </div>
+
+      {/* BARRA DE ACCIÓN Y BÚSQUEDA */}
+      <div className="flex items-center justify-between gap-3 w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-2.5 rounded-2xl shadow-sm my-2">
+        <div className="flex items-center gap-3 flex-1">
+          {isAdmin && (
             <button
               type="button"
-              onClick={() => setStatusTab('ACTIVE')}
-              className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'ACTIVE'
-                  ? 'bg-indigo-50 dark:bg-indigo-500/15 border-indigo-200 dark:border-indigo-500/40 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                  : 'bg-white dark:bg-[#12142e] border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
+              onClick={handleOpenCreateModal}
+              className="group relative shrink-0 h-[38px] rounded-xl text-[11px] font-black text-white overflow-hidden inline-flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/30 active:scale-[0.98]"
+              style={{
+                paddingLeft: 16,
+                paddingRight: 16,
+                background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)',
+                backgroundSize: '200% 200%',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.backgroundPosition = '100% 50%'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.backgroundPosition = '0% 50%'; }}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-              Activos ({projects.filter(p => p.status !== 'INACTIVE').length})
+              <span
+                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                style={{ transition: 'transform 0.7s ease, opacity 0.3s ease' }}
+              />
+              <UserPlus size={13} className="relative z-10 transition-transform duration-300 group-hover:rotate-12" />
+              <span className="relative z-10">+ Asignar Nuevo Proyecto</span>
             </button>
-
-            <button
-              type="button"
-              onClick={() => setStatusTab('INACTIVE')}
-              className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'INACTIVE'
-                  ? 'bg-rose-50 dark:bg-rose-500/15 border-rose-200 dark:border-rose-500/40 text-rose-600 dark:text-rose-400 shadow-sm'
-                  : 'bg-white dark:bg-[#12142e] border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
-              Desactivados ({projects.filter(p => p.status === 'INACTIVE').length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setStatusTab('ALL')}
-              className={`h-[36px] px-3.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${statusTab === 'ALL'
-                  ? 'bg-purple-50 dark:bg-purple-500/15 border-purple-200 dark:border-purple-500/40 text-purple-600 dark:text-purple-400 shadow-sm'
-                  : 'bg-white dark:bg-[#12142e] border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-200'
-                }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
-              Todos ({projects.length})
-            </button>
+          )}
+          
+          <div className="relative flex-1 max-w-xs">
+            <input 
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar proyectos..."
+              className="w-full h-[38px] pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#12142e] text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-all duration-300 focus:shadow-md"
+            />
+            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           </div>
         </div>
-      </section>
 
-      <div className="relative grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 px-1 sm:px-2 pt-1">
-        {filteredProjects.map((proj, idx) => {
-          const isExpanded = expandedProjectId === proj.id;
-          const isPurple = idx % 3 === 1;
-          const isEmerald = idx % 3 === 2;
+        <LiderNotificationBell />
+      </div>
 
-          const colorClasses = isPurple
-            ? {
-              borderActive: 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/20',
-              borderInactive: 'border-purple-200 dark:border-[#33376b] hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15',
-              iconBox: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 ring-purple-500/20',
-              subtitle: 'text-purple-700 dark:text-purple-300/80',
-              button: 'bg-purple-100 dark:bg-purple-500/25 border-purple-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-200 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/40'
-            }
-            : isEmerald
+
+
+      <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 px-1 sm:px-2 pt-1">
+        {filteredProjects.length === 0 ? (
+          <div className="col-span-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-8 sm:p-12 rounded-3xl text-center flex flex-col items-center justify-center space-y-3 shadow-sm">
+            <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30">
+              <FolderKanban size={28} />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">No se encontraron proyectos</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md">
+              {statusTab === 'COMPLETED'
+                ? 'No hay proyectos marcados como entregados o finalizados en esta vista aún.'
+                : statusTab === 'INACTIVE'
+                ? 'No hay proyectos desactivados.'
+                : 'No se encontraron proyectos activos con el filtro de búsqueda ingresado.'}
+            </p>
+          </div>
+        ) : (
+          filteredProjects.map((proj, idx) => {
+            const isExpanded = expandedProjectId === proj.id;
+            const isCompleted = proj.status === 'COMPLETED' || proj.status === 'DELIVERED';
+            const isInactive = proj.status === 'INACTIVE';
+            const isPurple = idx % 3 === 1;
+            const isEmerald = idx % 3 === 2;
+
+            const colorClasses = isCompleted
               ? {
-                borderActive: 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20',
-                borderInactive: 'border-emerald-200 dark:border-[#33376b] hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15',
-                iconBox: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20',
-                subtitle: 'text-emerald-700 dark:text-emerald-300/80',
-                button: 'bg-emerald-100 dark:bg-emerald-500/25 border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-200 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/40'
-              }
-              : {
                 borderActive: 'border-indigo-500 ring-2 ring-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-lg shadow-indigo-500/20',
-                borderInactive: 'border-indigo-200 dark:border-[#33376b] hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-indigo-500/15',
+                borderInactive: 'border-indigo-200 dark:border-[#33376b] hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl',
                 iconBox: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 ring-indigo-500/20',
                 subtitle: 'text-indigo-700 dark:text-indigo-300/80',
                 button: 'bg-indigo-100 dark:bg-indigo-500/25 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-200 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/40'
-              };
+              }
+              : isPurple
+                ? {
+                  borderActive: 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/20',
+                  borderInactive: 'border-purple-200 dark:border-[#33376b] hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15',
+                  iconBox: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 ring-purple-500/20',
+                  subtitle: 'text-purple-700 dark:text-purple-300/80',
+                  button: 'bg-purple-100 dark:bg-purple-500/25 border-purple-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-200 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/40'
+                }
+                : isEmerald
+                  ? {
+                    borderActive: 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20',
+                    borderInactive: 'border-emerald-200 dark:border-[#33376b] hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15',
+                    iconBox: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20',
+                    subtitle: 'text-emerald-700 dark:text-emerald-300/80',
+                    button: 'bg-emerald-100 dark:bg-emerald-500/25 border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-200 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/40'
+                  }
+                  : {
+                    borderActive: 'border-indigo-500 ring-2 ring-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-lg shadow-indigo-500/20',
+                    borderInactive: 'border-indigo-200 dark:border-[#33376b] hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-indigo-500/15',
+                    iconBox: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 ring-indigo-500/20',
+                    subtitle: 'text-indigo-700 dark:text-indigo-300/80',
+                    button: 'bg-indigo-100 dark:bg-indigo-500/25 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-200 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/40'
+                  };
 
-          return (
-            <div
-              key={proj.id}
-              onClick={() => toggleExpand(proj.id)}
-              className={`group relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex flex-col justify-between ${isExpanded ? colorClasses.borderActive : colorClasses.borderInactive
-                }`}
-            >
-              <div className="flex items-center justify-between gap-4 min-w-0">
-                <div className="flex items-center gap-4 min-w-0">
-                  <div className={`w-20 h-20 rounded-2xl border flex items-center justify-center shrink-0 shadow-inner ring-1 group-hover:scale-110 group-hover:rotate-6 transition-transform duration-300 ${colorClasses.iconBox}`}>
-                    <FolderKanban size={36} />
-                  </div>
+            return (
+              <div
+                key={proj.id}
+                onClick={() => toggleExpand(proj.id)}
+                className={`group relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.01] cursor-pointer flex flex-col justify-between ${isExpanded ? colorClasses.borderActive : colorClasses.borderInactive
+                  }`}
+              >
+                <div className="flex items-start justify-between gap-4 min-w-0">
+                  <div className="flex items-center gap-3.5 min-w-0">
+                    <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 shadow-inner ring-1 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 ${colorClasses.iconBox}`}>
+                      <FolderKanban size={26} />
+                    </div>
 
-                  <div className="space-y-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight truncate">
-                      {proj.name}
-                    </h3>
-                    <p className={`text-xs font-semibold ${colorClasses.subtitle}`}>
-                      {proj.key} • {proj.statusLabel}
-                    </p>
+                    <div className="space-y-1 min-w-0 text-left">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
+                          isCompleted
+                            ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40'
+                            : isInactive
+                            ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                            : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
+                        }`}>
+                          {isCompleted ? 'Entregado' : isInactive ? 'Desactivado' : 'Activo'}
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">{proj.key}</span>
+                      </div>
+                      <h3 className="text-base font-black text-slate-900 dark:text-slate-100 tracking-tight truncate">
+                        {proj.name}
+                      </h3>
 
-                    <div className="flex items-center gap-1 pt-1">
-                      {proj.leader && (
-                        <div title={`Líder: ${proj.leader.name}`} className="w-5 h-5 rounded-full bg-purple-600 border border-white dark:border-slate-900 text-[9px] font-black text-white flex items-center justify-center shadow-md">
-                          {proj.leader.avatar}
-                        </div>
-                      )}
-                      {proj.developers?.map(dev => (
-                        <div key={dev.id} title={`Dev: ${dev.name}`} className="w-5 h-5 rounded-full bg-blue-600 border border-white dark:border-slate-900 text-[9px] font-black text-white flex items-center justify-center shadow-md">
-                          {dev.avatar}
-                        </div>
-                      ))}
+                      <div className="flex items-center gap-1.5 pt-1">
+                        {proj.leader && (
+                          <div title={`Líder: ${proj.leader.name}`} className="w-5 h-5 rounded-full bg-purple-600 border border-white dark:border-slate-900 text-[9px] font-black text-white flex items-center justify-center shadow-md">
+                            {proj.leader.avatar}
+                          </div>
+                        )}
+                        {proj.developers?.map(dev => (
+                          <div key={dev.id} title={`Dev: ${dev.name}`} className="w-5 h-5 rounded-full bg-blue-600 border border-white dark:border-slate-900 text-[9px] font-black text-white flex items-center justify-center shadow-md">
+                            {dev.avatar}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex flex-col items-center shrink-0" style={{ gap: 12 }}>
-                  {isAdmin ? (
+                  <div className="flex flex-col items-center shrink-0" style={{ gap: 8 }}>
                     <div className="flex items-center gap-1">
-                      {proj.status === 'INACTIVE' ? (
-                        <button
-                          type="button"
-                          title="Reactivar proyecto"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleReactivateProject(proj);
-                          }}
-                          className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-transparent hover:border-emerald-200 dark:hover:border-emerald-500/30 transition-colors cursor-pointer"
-                        >
-                          <RotateCcw size={14} />
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          title="Desactivar proyecto"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenDeactivateModal(proj);
-                          }}
-                          className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-transparent hover:border-rose-200 dark:hover:border-rose-500/30 transition-colors cursor-pointer"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      {/* BOTÓN MARCAR COMO ENTREGADO / REABRIR (Habilitado para Líder Técnico y Admin) */}
+                      <button
+                        type="button"
+                        title={isCompleted ? "Reabrir proyecto a Activo" : "Marcar proyecto como Entregado / Finalizado"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleDeliveredProject(proj);
+                        }}
+                        className={`w-8 h-8 rounded-xl inline-flex items-center justify-center transition-all cursor-pointer border ${
+                          isCompleted
+                            ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/30'
+                            : 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30'
+                        }`}
+                      >
+                        {isCompleted ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
+                      </button>
+
+                      {/* BOTÓN DESACTIVAR (Restringido EXCLUSIVAMENTE al Administrador — Invisible para Líder Técnico) */}
+                      {isAdmin && (
+                        isInactive ? (
+                          <button
+                            type="button"
+                            title="Reactivar proyecto"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleReactivateProject(proj);
+                            }}
+                            className="w-8 h-8 rounded-xl inline-flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 transition-colors cursor-pointer"
+                          >
+                            <RotateCcw size={14} />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            title="Desactivar proyecto (Solo Admin)"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenDeactivateModal(proj);
+                            }}
+                            className="w-8 h-8 rounded-xl inline-flex items-center justify-center text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 transition-colors cursor-pointer"
+                          >
+                            <PowerOff size={14} />
+                          </button>
+                        )
                       )}
+
+
                     </div>
-                  ) : (
+
                     <button
                       type="button"
-                      title="Confirmar líder"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleOpenConfirmModal(proj);
+                        toggleExpand(proj.id);
                       }}
-                      className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 border border-transparent hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors cursor-pointer"
+                      className={`px-3 py-2 rounded-xl border text-xs font-black flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300 cursor-pointer ${colorClasses.button}`}
                     >
-                      <ShieldCheck size={14} />
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                     </button>
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleExpand(proj.id);
-                    }}
-                    className={`px-3 py-3 rounded-2xl border text-sm font-black flex items-center justify-center shadow-sm group-hover:scale-110 transition-all duration-300 cursor-pointer ${colorClasses.button}`}
-                  >
-                    {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
+                  </div>
                 </div>
-              </div>
 
               {isExpanded && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 animate-in slide-in-from-top-2 duration-200 text-left">
@@ -1288,7 +1378,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               )}
             </div>
           );
-        })}
+        })
+        )}
       </div>
 
       {activeProject && activeMetrics && (
@@ -1335,9 +1426,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 </button>
               </div>
               
-              <button type="button" onClick={() => setExpandedProjectId(null)} className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-bold flex items-center gap-2 cursor-pointer text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700">
-                <X size={15} /> Ocultar
-              </button>
+
             </div>
           </div>
 
@@ -1418,19 +1507,39 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               <div>
                 <div className="flex items-center gap-2">
                   <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
-                  <MetricInfoTooltip align="left" text="Muestra cuánto trabajo ha entregado el equipo en cada período para ver si el ritmo aumenta o se mantiene." />
+                  <MetricInfoTooltip align="left" text="Muestra la cantidad de trabajo que el equipo ha logrado terminar en cada ciclo reciente para ver si el ritmo mejora o se mantiene." />
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución del rendimiento en story points</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución de la cantidad de tareas o unidades terminadas</p>
               </div>
 
               <div className="h-64 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
-                    <XAxis dataKey="sprint" stroke="#64748b" fontSize={12} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
-                    <RechartsTooltip contentStyle={tooltipStyle} />
-                    <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Story Points" barSize={36} />
-                    <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia" />
+                  <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: 15, bottom: 20 }}>
+                    <XAxis 
+                      dataKey="sprint" 
+                      stroke="#64748b" 
+                      fontSize={11} 
+                      tickLine={false}
+                      tickFormatter={(val) => String(val).replace(/\D/g, '')}
+                      label={{ value: 'Número de Sprint (Ciclo de trabajo)', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11 }}
+                    />
+                    <YAxis 
+                      stroke="#64748b" 
+                      fontSize={11} 
+                      tickLine={false} 
+                      width={35}
+                      label={{ value: 'Trabajo Entregado', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={tooltipStyle}
+                      formatter={(value, name) => [
+                        `${value} unidades completadas`,
+                        name === 'Trabajo Finalizado' ? 'Total Entregado' : 'Tendencia General'
+                      ]}
+                      labelFormatter={(label) => `Período (Sprint): ${String(label).replace(/\D/g, '')}`}
+                    />
+                    <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Trabajo Finalizado" barSize={36} />
+                    <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia General" />
                   </ComposedChart>
                 </ResponsiveContainer>
               </div>
@@ -1440,21 +1549,47 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burndown)</h3>
-                  <MetricInfoTooltip align="left" text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal de entrega." />
+                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas</h3>
+                  <MetricInfoTooltip align="left" text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal." />
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Esfuerzo restante en story points vs. ideal</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Compara el trabajo que aún falta por hacer contra el ritmo ideal de entrega.</p>
               </div>
 
               <div className="h-64 w-full pt-2">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={activeMetrics.burndown} margin={{ top: 15, right: 15, left: -15, bottom: 5 }}>
-                    <XAxis dataKey="day" stroke="#64748b" fontSize={12} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
-                    <RechartsTooltip contentStyle={tooltipStyle} />
-                    <Line type="monotone" dataKey="real" stroke="#8b5cf6" strokeWidth={3} dot={{ r: 5, fill: '#8b5cf6' }} name="REAL" />
+                  <ComposedChart data={activeMetrics.burndown} margin={{ top: 15, right: 15, left: 15, bottom: 5 }}>
+                    <defs>
+                      <linearGradient id="colorBurndownReal" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.5}/>
+                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0}/>
+                      </linearGradient>
+                    </defs>
+                    <XAxis 
+                      dataKey="day" 
+                      stroke="#64748b" 
+                      fontSize={11} 
+                      tickLine={false} 
+                      tickFormatter={(val) => String(val).replace('D', 'Día ')}
+                    />
+                    <YAxis 
+                      stroke="#64748b" 
+                      fontSize={11} 
+                      tickLine={false} 
+                      tickFormatter={(val) => val}
+                      width={35}
+                      label={{ value: 'Esfuerzo (Unidades)', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={tooltipStyle} 
+                      formatter={(value, name) => [
+                        `${value} unidades de trabajo`,
+                        name === 'real' || name === 'REAL' ? 'Lo que realmente falta por hacer' : 'Lo que debería faltar hoy'
+                      ]}
+                      labelFormatter={(label) => `Progreso - Día ${String(label).replace('D', '')}`}
+                    />
+                    <Area type="monotone" dataKey="real" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorBurndownReal)" dot={{ r: 4, fill: '#818cf8', stroke: '#ffffff', strokeWidth: 2 }} name="REAL" />
                     <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
-                  </LineChart>
+                  </ComposedChart>
                 </ResponsiveContainer>
               </div>
             </div>

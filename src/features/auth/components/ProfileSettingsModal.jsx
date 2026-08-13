@@ -21,8 +21,13 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
   const { logout } = useAuth(); // Hook de autenticación global para cerrar sesión
   const dropdownRef = useRef(null);
 
+  const [shouldRender, setShouldRender] = useState(isOpen);
+  const [isClosing, setIsClosing] = useState(false);
+
   useEffect(() => {
     if (isOpen) {
+      setShouldRender(true);
+      setIsClosing(false);
       authService.getJiraCredentials()
         .then((data) => {
           if (data) {
@@ -32,10 +37,16 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
           }
         })
         .catch(err => console.error("Error fetching Jira credentials in profile menu:", err));
+    } else if (shouldRender) {
+      setIsClosing(true);
+      const timer = setTimeout(() => {
+        setShouldRender(false);
+      }, 300);
+      return () => clearTimeout(timer);
     }
   }, [isOpen, userProfile?.email]);
 
-  if (!isOpen) return null;
+  if (!shouldRender) return null;
 
   // Extraer el primer nombre para el saludo estilo Google ("¡Hola, Valka!")
   const firstName = userProfile?.nombre ? userProfile.nombre.trim().split(" ")[0] : "Usuario";
@@ -87,8 +98,13 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
   };
 
   return (
-    <div className="absolute right-0 mt-3 w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl z-50 p-5 space-y-4 text-left animate-in fade-in zoom-in-95 duration-150">
-      
+    <div className={`fixed inset-0 z-[100] flex justify-start p-0 bg-slate-900/40 backdrop-blur-[2px] ${isClosing ? 'animate-out fade-out duration-300' : 'animate-in fade-in duration-300'}`} onClick={onClose}>
+      <div 
+        className={`relative w-full max-w-sm h-full bg-white/70 dark:bg-[#18181b]/70 backdrop-blur-3xl border-r border-slate-200/50 dark:border-white/10 rounded-none sm:rounded-r-[2rem] shadow-2xl p-6 sm:p-8 space-y-4 text-left overflow-y-auto no-scrollbar ${isClosing ? 'animate-out slide-out-to-left duration-300' : 'animate-in slide-in-from-left duration-300'}`} 
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Elemento Decorativo (Glow Blob) */}
+        <div className="absolute top-[15%] left-0 w-[300px] h-[300px] bg-gradient-to-br from-fuchsia-500/30 via-purple-500/20 to-orange-400/20 rounded-full blur-[60px] -z-10 pointer-events-none animate-float" />
       {/* 1. BARRA SUPERIOR: CORREO DEL USUARIO Y BOTÓN DE CIERRE (X) */}
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-2">
@@ -169,7 +185,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
             </span>
           </div>
           <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20">
-            {userProfile?.rol || 'ADMIN'}
+            {userProfile?.rol === 'MANAGER' ? 'LÍDER TÉCNICO' : (userProfile?.rol || 'ADMIN')}
           </span>
         </div>
 
@@ -249,21 +265,34 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
               onChange={(e) => setJiraTokenInput(e.target.value)}
               className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-2 text-xs text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500/50"
             />
+            {/* Botón de Guardar / Testear Credenciales con efecto */}
+            <button
+              type="submit"
+              disabled={isTestingCredentials}
+              className={`w-full py-3 rounded-xl font-black text-sm flex items-center justify-center gap-2 transition-all duration-300 shadow-md transform hover:-translate-y-0.5 active:scale-95 ${
+                credentialsSuccessMsg
+                  ? 'bg-emerald-500 text-white shadow-emerald-500/40 ring-2 ring-emerald-400 ring-offset-1 dark:ring-offset-slate-900 animate-in zoom-in'
+                  : 'bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white shadow-indigo-500/30'
+              }`}
+            >
+              {isTestingCredentials ? (
+                <>
+                  <RefreshCcw size={16} className="animate-spin" />
+                  Verificando...
+                </>
+              ) : credentialsSuccessMsg ? (
+                <>
+                  <CheckCircle2 size={16} className="animate-bounce" />
+                  ¡Guardado y Vinculado!
+                </>
+              ) : (
+                <>
+                  <Lock size={16} />
+                  Guardar y Vincular API
+                </>
+              )}
+            </button>
           </div>
-
-          <button
-            type="submit"
-            disabled={isTestingCredentials}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 shadow-sm mt-1"
-          >
-            {isTestingCredentials ? (
-              <>
-                <RefreshCcw size={14} className="animate-spin" /> Verificando...
-              </>
-            ) : (
-              'Verificar y Guardar Credenciales'
-            )}
-          </button>
         </form>
       </div>
 
@@ -278,6 +307,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
         </button>
       </div>
 
+      </div>
     </div>
   );
 }

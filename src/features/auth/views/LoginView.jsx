@@ -86,7 +86,7 @@ function LoginView() {
         .bg-overlay-tint {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at 75% 50%, rgba(3, 7, 18, 0.4) 0%, rgba(3, 7, 18, 0.78) 100%);
+          background: linear-gradient(90deg, rgba(3, 7, 18, 0.45) 0%, rgba(3, 7, 18, 0.05) 40%, rgba(3, 7, 18, 0.15) 100%);
           pointer-events: none;
         }
 
@@ -117,24 +117,24 @@ function LoginView() {
           }
         }
 
-        /* CONTENEDOR SECCIÓN MASCOTA (LADO DERECHO, ADAPTATIVO A PANTALLAS GRANDES Y PC) */
+        /* CONTENEDOR SECCIÓN MASCOTA (APOYADA EN LA ACERA AL PIE DE LA PANTALLA) */
         .login-mascot-section {
           position: absolute;
-          top: 0;
-          right: 0;
+          bottom: 0;
+          right: clamp(1.5rem, 6vw, 10vw);
           width: auto;
-          height: 100vh;
+          height: auto;
           display: flex;
-          align-items: center;
+          align-items: flex-end;
           justify-content: flex-end;
-          padding-right: clamp(3rem, 10vw, 15vw);
-          z-index: 10;
+          z-index: 20;
           pointer-events: none;
+          padding-bottom: 0;
         }
 
         @media (min-width: 1536px) {
           .login-mascot-section {
-            padding-right: clamp(4rem, 12vw, 16vw);
+            right: clamp(2.5rem, 8vw, 12vw);
           }
         }
 
@@ -329,6 +329,92 @@ function LoginView() {
         .animate-float-mascot {
           animation: floatSlow 4s ease-in-out infinite;
         }
+
+        /* ===================================================================
+           ZONAS DE LUZ INTERACTIVAS SOBRE LAS FAROLAS REALES DEL FONDO
+           =================================================================== */
+        .real-streetlamp-target {
+          position: absolute;
+          width: 70px;
+          height: 70px;
+          transform: translate(-50%, -50%);
+          cursor: pointer;
+          pointer-events: auto;
+          z-index: 30;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+
+        /* Resplandor neón radiante que se enciende sobre el farol de la foto al hacer hover */
+        .real-streetlamp-target .lamp-light-bloom {
+          position: absolute;
+          width: 65px;
+          height: 65px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(255, 255, 255, 1) 0%, var(--lamp-glow, #c084fc) 40%, transparent 80%);
+          opacity: 0;
+          transform: scale(0.4);
+          transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+          pointer-events: none;
+        }
+
+        /* Pulsación sutil de farola interactiva en reposo */
+        .real-streetlamp-target .lamp-beacon-pulse {
+          position: absolute;
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background-color: #ffffff;
+          box-shadow: 0 0 12px var(--lamp-glow, #c084fc), 0 0 24px var(--lamp-glow, #c084fc);
+          animation: beaconPulse 2.5s ease-in-out infinite;
+          pointer-events: none;
+          opacity: 0.85;
+          transition: opacity 0.3s ease;
+        }
+
+        @keyframes beaconPulse {
+          0%, 100% { transform: scale(1); opacity: 0.7; }
+          50% { transform: scale(1.4); opacity: 1; filter: drop-shadow(0 0 10px var(--lamp-glow, #c084fc)); }
+        }
+
+        /* ESTADO HOVER */
+        .real-streetlamp-target:hover .lamp-light-bloom {
+          opacity: 1;
+          transform: scale(2.4);
+          filter: drop-shadow(0 0 25px #ffffff) drop-shadow(0 0 50px var(--lamp-glow, #c084fc));
+        }
+
+        .real-streetlamp-target:hover .lamp-beacon-pulse {
+          opacity: 0;
+        }
+
+        /* Tarjeta de información desplegable al hacer hover */
+        .real-streetlamp-target .lamp-tooltip-card {
+          position: absolute;
+          left: 108%;
+          top: 50%;
+          transform: translateY(-50%) scale(0.9);
+          width: 240px;
+          padding: 15px;
+          border-radius: 16px;
+          background-color: rgba(6, 11, 23, 0.96);
+          backdrop-filter: blur(24px);
+          -webkit-backdrop-filter: blur(24px);
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.95), 0 0 35px var(--lamp-glow, #c084fc);
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.3s ease;
+          pointer-events: none;
+          z-index: 40;
+        }
+
+        .real-streetlamp-target:hover .lamp-tooltip-card {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(-50%) scale(1);
+          pointer-events: auto;
+        }
       `}</style>
 
       {/* Capa de Sombra sobre la Imagen de Fondo */}
@@ -425,30 +511,94 @@ function LoginView() {
         </div>
       </div>
 
-      {/* LADO DERECHO: MASCOTA BÚHO ADAPTATIVA A PANTALLAS DE PC Y MONITORES GRANDES */}
-      <div className="login-mascot-section">
-        <div className="hidden lg:flex flex-col items-center justify-center relative z-10 max-w-md xl:max-w-lg 2xl:max-w-xl pointer-events-none select-none animate-float-mascot">
+       {/* HILERA DE FAROLAS REALES DEL FONDO FOTOGRÁFICO CON RESPLANDOR NEÓN INTERACTIVO */}
+      <div className="hidden xl:block absolute inset-0 pointer-events-none z-20">
 
-          {/* Bocadillo de Diálogo (Speech Bubble Escalable) */}
-          <div className="relative mb-6 p-5 xl:p-6 2xl:p-7 rounded-2xl bg-slate-950/85 backdrop-blur-xl border border-indigo-500/40 shadow-[0_15px_35px_rgba(0,0,0,0.7),0_0_25px_rgba(6,182,212,0.25)] max-w-xs xl:max-w-sm 2xl:max-w-md transition-all duration-300">
-            <h3 className="text-xl xl:text-2xl 2xl:text-3xl font-black text-white mb-2 flex items-center gap-2">
-              ¡Hola! <span className="w-2.5 h-2.5 xl:w-3 xl:h-3 rounded-full bg-cyan-400 animate-ping inline-block" />
-            </h3>
-            <p className="text-sm xl:text-base 2xl:text-lg text-slate-200 font-medium leading-relaxed">
-              Estoy aquí para ayudarte a <span className="text-cyan-400 font-bold">conectar tu equipo</span> con lo que importa.
+        {/* Farola 1: Sincronización (Farol Lejano Izquierdo junto a la tarjeta) */}
+        <div
+          className="real-streetlamp-target left-[34.6%] top-[49.5%]"
+          style={{ '--lamp-glow': '#06b6d4' }}
+        >
+          <div className="lamp-beacon-pulse" />
+          <div className="lamp-light-bloom" />
+          <div className="lamp-tooltip-card border border-cyan-500/40 shadow-[0_12px_30px_rgba(0,0,0,0.85),0_0_20px_rgba(6,182,212,0.35)]">
+            <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs mb-1.5">
+              <svg className="w-4 h-4 text-cyan-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+              <span>Sincronización</span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-snug font-normal">
+              Sincroniza datos automáticamente y mantén tus métricas siempre actualizadas.
             </p>
-            <div className="w-10 xl:w-14 h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mt-3 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+          </div>
+        </div>
 
-            {/* Flecha del Bocadillo apuntando al búho */}
-            <div className="absolute -bottom-3 right-14 xl:right-16 2xl:right-20 w-0 h-0 border-l-[10px] xl:border-l-[12px] border-l-transparent border-r-[10px] xl:border-r-[12px] border-r-transparent border-t-[12px] xl:border-t-[14px] border-t-slate-950/90" />
+        {/* Farola 2: Integración Segura (Farol Centro Medio en la imagen de fondo) */}
+        <div
+          className="real-streetlamp-target left-[38.6%] top-[36.8%]"
+          style={{ '--lamp-glow': '#a855f7' }}
+        >
+          <div className="lamp-beacon-pulse" />
+          <div className="lamp-light-bloom" />
+          <div className="lamp-tooltip-card border border-purple-500/40 shadow-[0_12px_30px_rgba(0,0,0,0.85),0_0_20px_rgba(168,85,247,0.35)]">
+            <div className="flex items-center gap-2 text-purple-400 font-bold text-xs mb-1.5">
+              <svg className="w-4 h-4 text-purple-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M9 12l2 2 4-4"/>
+              </svg>
+              <span>Integración Segura</span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-snug font-normal">
+              Conéctate de forma segura con Jira Cloud mediante OAuth 2.0 y protege tus datos.
+            </p>
+          </div>
+        </div>
+
+        {/* Farola 3: Métricas y KPIs (Farol Alto Centro-Derecha en la imagen de fondo) */}
+        <div
+          className="real-streetlamp-target left-[55.6%] top-[26.5%]"
+          style={{ '--lamp-glow': '#c084fc' }}
+        >
+          <div className="lamp-beacon-pulse" />
+          <div className="lamp-light-bloom" />
+          <div className="lamp-tooltip-card border border-purple-500/40 shadow-[0_12px_30px_rgba(0,0,0,0.85),0_0_20px_rgba(192,132,252,0.35)]">
+            <div className="flex items-center gap-2 text-purple-300 font-bold text-xs mb-1.5">
+              <svg className="w-4 h-4 text-purple-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+                <polyline points="16 7 22 7 22 13" />
+              </svg>
+              <span>Métricas y KPIs</span>
+            </div>
+            <p className="text-[11px] text-slate-300 leading-snug font-normal">
+              Calcula y monitorea KPIs ágiles para medir el rendimiento de tu equipo y proyectos.
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      {/* LADO DERECHO: MASCOTA BÚHO CON FRASE DESTACADA ENCIMA */}
+      <div className="login-mascot-section">
+        <div className="hidden lg:flex flex-col items-center justify-end relative z-10 pointer-events-none select-none">
+          
+          {/* Globito de Diálogo Tipo Chat (Mensaje de Conversación) */}
+          <div className="relative mb-3 p-4 xl:p-5 rounded-2xl rounded-bl-xs bg-slate-950/90 backdrop-blur-xl border border-cyan-500/45 shadow-[0_15px_35px_rgba(0,0,0,0.85),0_0_25px_rgba(6,182,212,0.25)] max-w-[270px] xl:max-w-[300px] 2xl:max-w-[330px] transition-all duration-300 pointer-events-auto">
+            <p className="text-xs xl:text-sm text-slate-100 font-semibold leading-relaxed">
+              “No buscamos mostrar más datos. Buscamos <span className="text-cyan-400 font-bold">transformar datos en decisiones</span>.”
+            </p>
+            <div className="w-10 xl:w-12 h-1 rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 mt-2.5 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+
+            {/* Cola del Globito de Conversación apuntando a la mascota */}
+            <div className="absolute -bottom-3.5 left-6 w-0 h-0 border-r-[12px] border-r-transparent border-l-[2px] border-l-transparent border-t-[14px] border-t-slate-950/95" />
           </div>
 
-          {/* Imagen de la Mascota Búho (Escalado Proporcional para PC: de 320px a 420px y 480px) */}
-          <div className="relative w-80 h-96 xl:w-[420px] xl:h-[500px] 2xl:w-[480px] 2xl:h-[570px] flex items-center justify-center transition-all duration-300">
+          {/* Imagen de la Mascota Búho (Volteada horizontalmente mirando a la izquierda) */}
+          <div className="relative w-[280px] h-[340px] xl:w-[360px] xl:h-[430px] 2xl:w-[420px] 2xl:h-[490px] flex items-end justify-center transition-all duration-300">
             <img
               src={owlMascotImg}
               alt="Mascota Búho MCHAV Analytics"
-              className="w-full h-full object-contain filter drop-shadow-[0_0_40px_rgba(6,182,212,0.55)] transition-transform duration-500"
+              className="w-full h-full object-contain -scale-x-100 filter drop-shadow-[0_15px_30px_rgba(0,0,0,0.9)] transition-transform duration-500"
             />
           </div>
 

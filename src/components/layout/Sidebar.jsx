@@ -2,10 +2,12 @@
 // SIDEBAR — MERAKI UI CON PROYECTOS INTERACTIVOS Y BOTÓN DE CERRAR SESIÓN
 // ============================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
+import { Settings } from 'lucide-react';
+import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 
 function Sidebar({
   activeTab,
@@ -19,6 +21,7 @@ function Sidebar({
   setSelectedProjectId
 }) {
   const { logout, user, switchViewRole, isRealAdmin } = useAuth();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -122,11 +125,12 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
-        { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
+        { id: 'dashboard', label: 'Panel Operativo Líder', icon: icons.dashboard },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-        { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
+        { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
+        { id: 'alerts_center', label: 'Alertas & Solicitudes', icon: icons.alert },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
-        { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+        { id: 'sincronizacion', label: 'Sincronización JQL', icon: icons.sync },
       ];
     }
 
@@ -137,7 +141,6 @@ function Sidebar({
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.tasks },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
-      { id: 'health', label: 'Monitoreo & Salud', icon: icons.target },
     ];
   }, [userRole]);
 
@@ -152,7 +155,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col h-screen py-8 overflow-y-auto bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative ${
+      className={`flex flex-col h-screen py-4 overflow-y-auto bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative ${
         isCollapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-5'
       }`}
       style={{ flexShrink: 0 }}
@@ -185,14 +188,14 @@ function Sidebar({
         </label>
       </div>
 
-      <div className="flex flex-col justify-between flex-1 mt-6">
+      <div className="flex flex-col justify-between flex-1 mt-1.5">
 
         {/* ── SELECTOR DE MODOS DE VISTA DE ROL (PARA EL ADMINISTRADOR) ── */}
         {isRealAdmin && !isCollapsed && (
-          <div className="mb-4 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs">
+          <div className="mb-1.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs">
             <div className="flex items-center justify-between mb-2 px-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                👁️ Vista de Rol
+                Vista de Rol
               </span>
               {user?.isSimulated && (
                 <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600 dark:text-amber-400 animate-pulse">
@@ -211,7 +214,7 @@ function Sidebar({
                 }`}
                 title="Ver plataforma como Administrador"
               >
-                👑 Admin
+                Admin
               </button>
               <button
                 type="button"
@@ -223,7 +226,7 @@ function Sidebar({
                 }`}
                 title="Ver plataforma como Líder Técnico"
               >
-                👔 Líder
+                Líder
               </button>
               <button
                 type="button"
@@ -235,7 +238,7 @@ function Sidebar({
                 }`}
                 title="Ver plataforma como Desarrollador"
               >
-                💻 Dev
+                Dev
               </button>
             </div>
           </div>
@@ -250,11 +253,17 @@ function Sidebar({
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
-                title={isCollapsed ? item.label : undefined}
+                className={`group relative uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
               >
                 {item.icon}
                 {!isCollapsed && <span>{item.label}</span>}
+                
+                {isCollapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-1.5 rounded-md bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 text-xs font-bold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:ml-3 transition-all duration-300 z-50 shadow-xl border border-slate-700 dark:border-slate-300 flex items-center">
+                    {item.label}
+                    <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-800 dark:bg-slate-200 rotate-45 border-b border-l border-slate-700 dark:border-slate-300 rounded-bl-[2px]"></div>
+                  </div>
+                )}
               </button>
             );
           })}
@@ -270,32 +279,62 @@ function Sidebar({
             <ThemeToggleSwitch isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
           </div>
 
-          {/* Fila de Perfil de Usuario y Botón Cerrar Sesión */}
+          {/* Fila de Perfil de Usuario y Botones de Configuración + Cerrar Sesión */}
           {!isCollapsed ? (
             <div className="flex items-center justify-between pt-2 px-1">
-              <div className="flex items-center gap-x-2.5 overflow-hidden">
+              <div 
+                onClick={() => setIsSettingsOpen(true)}
+                className="flex items-center gap-x-2.5 overflow-hidden cursor-pointer hover:opacity-85 transition-opacity"
+                title="Ver Ajustes de Perfil"
+              >
                 <div className="w-8 h-8 rounded-full bg-gradient-to-r from-indigo-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold shrink-0 shadow-sm">
                   {userInitials}
                 </div>
                 <div className="flex flex-col text-left overflow-hidden">
                   <span className="text-xs font-semibold text-gray-800 dark:text-white truncate">{user?.nombre || 'Usuario'}</span>
-                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">{userRole}</span>
+                  <span className="text-[10px] text-gray-500 dark:text-gray-400 truncate">
+                    {userRole === 'MANAGER' ? 'LÍDER TÉCNICO' : userRole}
+                  </span>
                 </div>
               </div>
 
-              {/* BOTÓN CERRAR SESIÓN */}
-              <button
-                onClick={handleLogout}
-                className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
-                title="Cerrar Sesión"
-                style={{ border: 'none', background: 'transparent' }}
-              >
-                {icons.logout}
-              </button>
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* BOTÓN CONFIGURACIÓN / SETTINGS */}
+                <button
+                  type="button"
+                  onClick={() => setIsSettingsOpen(true)}
+                  className="p-1.5 text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 rounded-lg transition-all cursor-pointer border border-indigo-200 dark:border-indigo-800/50"
+                  title="Configuración de Perfil (Ajustes)"
+                >
+                  <Settings size={16} />
+                </button>
+
+                {/* BOTÓN CERRAR SESIÓN */}
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="p-1.5 text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                  title="Cerrar Sesión"
+                  style={{ border: 'none', background: 'transparent' }}
+                >
+                  {icons.logout}
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="flex justify-center pt-2">
+            <div className="flex flex-col items-center gap-2 pt-2">
               <button
+                type="button"
+                onClick={() => setIsSettingsOpen(true)}
+                className="p-2 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors cursor-pointer"
+                title="Configuración de Perfil"
+                style={{ border: 'none', background: 'transparent' }}
+              >
+                <Settings size={17} />
+              </button>
+
+              <button
+                type="button"
                 onClick={handleLogout}
                 className="p-2 text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
                 title="Cerrar Sesión"
@@ -305,6 +344,13 @@ function Sidebar({
               </button>
             </div>
           )}
+
+          {/* MODAL CONFIGURACIÓN DE PERFIL */}
+          <ProfileSettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            userProfile={user}
+          />
 
         </div>
 

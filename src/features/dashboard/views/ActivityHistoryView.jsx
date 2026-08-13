@@ -156,16 +156,16 @@ export default function ActivityHistoryView({ selectedProjectId = 'PROJ-01' }) {
                 <div className="flex-1 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <span className="font-mono font-bold text-indigo-400 text-sm">{item.key}</span>
-                      <span className="text-sm font-semibold text-slate-200">{item.action}</span>
+                      <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400 text-sm">{item.key}</span>
+                      <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">{item.action}</span>
                     </div>
-                    <span className="text-xs text-slate-400 block">{item.time}</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block">{item.time}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-bold px-3 py-1 bg-slate-800 text-slate-300 border border-slate-700 rounded-lg">
+                    <span className="text-xs font-bold px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-lg">
                       {item.points}
                     </span>
-                    <span className="text-xs font-bold px-3 py-1 bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 rounded-lg">
+                    <span className="text-xs font-bold px-3 py-1 bg-indigo-50 dark:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 rounded-lg">
                       {item.type}
                     </span>
                   </div>

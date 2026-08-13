@@ -9,6 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
+import LiderTecnicoDashboardView from './features/dashboard/views/LiderTecnicoDashboardView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
 import DailyFocusView from './features/dashboard/views/DailyFocusView';
 import DevAlertsView from './features/dashboard/views/DevAlertsView';
@@ -26,8 +27,43 @@ import { jiraService, projectService } from './services/api';
 
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
-  const [activeTab, setActiveTab] = useState('dashboard');           // Pestaña activa actual (por defecto Dashboard principal)
-  const [isDarkMode, setIsDarkMode] = useState(true);              // Estado de tema claro / oscuro
+
+  // Persistir pestaña activa actual en localStorage para no volver al inicio al hacer Refresh
+  const [activeTab, setActiveTabState] = useState(() => {
+    try {
+      const savedTab = localStorage.getItem('mchav_active_tab');
+      return savedTab || 'dashboard';
+    } catch (e) {
+      return 'dashboard';
+    }
+  });
+
+  const setActiveTab = (tab) => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('mchav_active_tab', tab);
+    } catch (e) {}
+  };
+
+  // Persistir estado de Modo Blanco / Oscuro en localStorage para que se mantenga al recargar
+  const [isDarkMode, setIsDarkModeState] = useState(() => {
+    try {
+      const savedTheme = localStorage.getItem('mchav_is_dark_mode');
+      return savedTheme !== null ? JSON.parse(savedTheme) : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const setIsDarkMode = (valOrFn) => {
+    setIsDarkModeState((prev) => {
+      const nextVal = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
+      try {
+        localStorage.setItem('mchav_is_dark_mode', JSON.stringify(nextVal));
+      } catch (e) {}
+      return nextVal;
+    });
+  };
 
   // Filtro de rango de fechas activo
   const [dateFilter, setDateFilter] = useState({ label: 'Todos los tiempos', key: 'all' });
@@ -38,9 +74,23 @@ function MainAppContent() {
   const [metricsError, setMetricsError] = useState(null);
   const [syncSuccessMsg, setSyncSuccessMsg] = useState('');
 
-  // Estados para Proyectos, Sprints y KPIs
+  // Estados para Proyectos, Sprints y KPIs (con persistencia de proyecto seleccionado)
   const [projects, setProjects] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [selectedProjectId, setSelectedProjectIdState] = useState(() => {
+    try {
+      return localStorage.getItem('mchav_selected_project_id') || null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const setSelectedProjectId = (projId) => {
+    setSelectedProjectIdState(projId);
+    try {
+      if (projId) localStorage.setItem('mchav_selected_project_id', projId);
+    } catch (e) {}
+  };
+
   const [sprints, setSprints] = useState([]);
   const [kpis, setKpis] = useState(null);
   const [kpisLoading, setKpisLoading] = useState(false);
@@ -49,14 +99,12 @@ function MainAppContent() {
   const [alerts, setAlerts] = useState([]); // Almacena la lista de alertas activas del sistema
 
 
-  // Inicializar o redirigir pestaña según el rol al autenticar (sin bucle de re-render)
+  // Inicializar o redirigir pestaña según el rol al autenticar (respetando la pestaña guardada)
   useEffect(() => {
     if (!user?.rol) return;
     const role = normalizeRole(user.rol);
     if (role === 'DEVELOPER' && !['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
       setActiveTab('developer');
-    } else if ((role === 'MANAGER' || role === 'ADMIN') && ['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
-      setActiveTab('dashboard');
     }
   }, [user?.rol]);
 
@@ -244,17 +292,18 @@ function MainAppContent() {
           title: "Auditoría de ETL y Schedulers ",
           subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
         };
-      case 'health':
-        return {
-          title: "Monitoreo & Salud del Sistema ",
-          subtitle: "Telemetría en tiempo real, rendimiento de API y pruebas de carga."
-        };
+
       case 'dashboard':
       default:
-        return {
-          title: "Resumen",
-          subtitle: "Aquí tienes un panorama general de tus proyectos."
-        };
+        return normalizeRole(user?.rol) === 'MANAGER'
+          ? {
+            title: "Panel Operativo del Líder Técnico ",
+            subtitle: "Predictibilidad del sprint, velocidad del equipo y resolución de bloqueos."
+          }
+          : {
+            title: "Panel Ejecutivo de Gobernanza ",
+            subtitle: "Resumen de usuarios activos, salud de integraciones y estado del sistema."
+          };
     }
   };
 
@@ -285,7 +334,7 @@ function MainAppContent() {
       selectedProjectId={selectedProjectId}
       setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
-      handleSyncNow={activeTab === 'dashboard' && user?.rol !== 'DEVELOPER' ? handleSyncNow : null}
+      handleSyncNow={handleSyncNow}
       topbarTitle={headerDetails.title}
       topbarSubtitle={headerDetails.subtitle}
       dateFilter={dateFilter}
@@ -294,16 +343,24 @@ function MainAppContent() {
       setAlerts={setAlerts}
     >
       {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
-        <DashboardView
-          metrics={metrics}
-          metricsLoading={metricsLoading}
-          metricsError={metricsError}
-          syncSuccessMsg={syncSuccessMsg}
-          kpis={filteredKpis}
-          selectedProjectId={selectedProjectId}
-          setActiveTab={setActiveTab}
-          subTab={activeTab}
-        />
+        normalizeRole(user?.rol) === 'MANAGER' ? (
+          <LiderTecnicoDashboardView
+            selectedProjectId={selectedProjectId}
+            setActiveTab={setActiveTab}
+            isDarkMode={isDarkMode}
+          />
+        ) : (
+          <DashboardView
+            metrics={metrics}
+            metricsLoading={metricsLoading}
+            metricsError={metricsError}
+            syncSuccessMsg={syncSuccessMsg}
+            kpis={filteredKpis}
+            selectedProjectId={selectedProjectId}
+            setActiveTab={setActiveTab}
+            subTab={activeTab}
+          />
+        )
       )}
 
       {activeTab === 'developer' && (
@@ -344,6 +401,7 @@ function MainAppContent() {
       {activeTab === 'team_matrix' && (
         <TeamMatrixView
           selectedProjectId={selectedProjectId}
+          isDarkMode={isDarkMode}
           onSelectDevForScorecard={(assigneeId) => {
             setActiveTab('team_devs');
           }}
@@ -356,6 +414,7 @@ function MainAppContent() {
       {activeTab === 'sprint_health' && (
         <SprintHealthView
           selectedProjectId={selectedProjectId}
+          isDarkMode={isDarkMode}
           onNavigateToMatrix={() => setActiveTab('team_matrix')}
           onNavigateToScorecards={() => setActiveTab('team_devs')}
         />
@@ -371,9 +430,6 @@ function MainAppContent() {
         <SystemSyncTab />
       )}
 
-      {activeTab === 'health' && (
-        <SystemSyncTab />
-      )}
 
       {activeTab === 'proyectos' && (
         <ProyectosDashboardView />

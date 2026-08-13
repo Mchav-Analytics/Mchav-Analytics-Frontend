@@ -9,11 +9,23 @@ import {
   ClipboardList, 
   Zap, 
   Info, 
-  UserCheck
+  UserCheck,
+  User,
+  Bug,
+  FileText
 } from 'lucide-react';
-import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
+import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, Tooltip as RechartsTooltip } from 'recharts';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { developerService } from '../../../services/api';
+
+const tooltipStyle = {
+  backgroundColor: '#0f172a',
+  border: '1px solid #334155',
+  borderRadius: '0.75rem',
+  color: '#f8fafc',
+  fontSize: '12px',
+  boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5)'
+};
 
 const MetricInfoTooltip = ({ text, align = "auto" }) => {
   const alignClass = 
@@ -53,10 +65,13 @@ const SparklineMini = ({ color = "#10b981" }) => {
 export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01', onNavigateToAlerts }) {
   const { user, approveUserPermission } = useAuth();
   const [scorecard, setScorecard] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   const isPending = user?.status === 'PENDING';
 
   useEffect(() => {
+    setCurrentPage(1);
     developerService.getMyScorecard(selectedProjectId)
       .then(data => setScorecard(data))
       .catch(err => console.warn("Error cargando scorecard:", err));
@@ -290,42 +305,78 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
 
       </div>
 
-      {/* SECCIÓN DISTRIBUCIÓN DEL TRABAJO */}
-      <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300 space-y-6">
-        <div className="relative z-10 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <h2 className="text-base font-bold text-slate-800 dark:text-white uppercase tracking-wider">
-                Distribución del Trabajo
-              </h2>
-              <MetricInfoTooltip text="Distribución del Trabajo: Proporción del esfuerzo dedicado a desarrollo de Historias, Bugs y Tareas de Deuda Técnica." />
-            </div>
-            <div className="flex items-center gap-6 text-xs font-semibold">
-              <span className="flex items-center gap-2 text-sky-600 dark:text-sky-400"><span className="w-3 h-3 rounded-full bg-sky-400"></span> Historias ({workDist.pct_historias}%)</span>
-              <span className="flex items-center gap-2 text-rose-600 dark:text-rose-400"><span className="w-3 h-3 rounded-full bg-rose-500"></span> Bugs ({workDist.pct_bugs}%)</span>
-              <span className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400"><span className="w-3 h-3 rounded-full bg-emerald-400"></span> Tareas ({workDist.pct_tareas}%)</span>
+      {/* SECCIÓN DISTRIBUCIÓN DEL TRABAJO — GRÁFICA CIRCULAR DE DONA IDÉNTICA A VISTA ADMIN */}
+      <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-6 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300 flex flex-col justify-start gap-3">
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              Distribución del trabajo
+            </h3>
+            <MetricInfoTooltip text="Muestra en qué porcentaje se dividió el tiempo entre crear nuevas funciones, arreglar fallos o hacer mejoras técnicas." />
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6 mt-1">
+          {/* GRÁFICA DE DONA RECHARTS CON TEXTO EN EL CENTRO */}
+          <div className="h-48 w-full relative flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Historias de Usuario', value: Math.round((workDist.pct_historias / 100) * (assignedIssuesList.length || 14)), percentage: workDist.pct_historias, color: '#8b5cf6', icon: User },
+                    { name: 'Bugs y Defectos', value: Math.round((workDist.pct_bugs / 100) * (assignedIssuesList.length || 14)), percentage: workDist.pct_bugs, color: '#ec4899', icon: Bug },
+                    { name: 'Tareas / Deuda Técnica', value: Math.round((workDist.pct_tareas / 100) * (assignedIssuesList.length || 14)), percentage: workDist.pct_tareas, color: '#10b981', icon: FileText }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={75}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {[
+                    { color: '#8b5cf6' },
+                    { color: '#ec4899' },
+                    { color: '#10b981' }
+                  ].map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <RechartsTooltip contentStyle={tooltipStyle} />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">
+                {assignedIssuesList.length || 14}
+              </span>
+              <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase">Total Incidencias</span>
             </div>
           </div>
 
-          <div className="w-full bg-slate-100 dark:bg-slate-900 h-10 rounded-xl overflow-hidden flex border border-slate-200 dark:border-slate-800 p-1">
-            <div 
-              style={{ width: `${workDist.pct_historias}%` }} 
-              className="bg-sky-500 text-white font-bold text-xs flex items-center justify-center rounded-l-lg transition-all"
-            >
-              {workDist.pct_historias}% Historias
-            </div>
-            <div 
-              style={{ width: `${workDist.pct_bugs}%` }} 
-              className="bg-rose-500 text-white font-bold text-xs flex items-center justify-center transition-all"
-            >
-              {workDist.pct_bugs}% Bugs
-            </div>
-            <div 
-              style={{ width: `${workDist.pct_tareas}%` }} 
-              className="bg-emerald-500 text-white font-bold text-xs flex items-center justify-center rounded-r-lg transition-all"
-            >
-              {workDist.pct_tareas}% Tareas
-            </div>
+          {/* LEYENDA Y TARJETAS DE INCIDENCIAS */}
+          <div className="space-y-2.5">
+            {[
+              { name: 'Historias de Usuario', value: Math.round((workDist.pct_historias / 100) * (assignedIssuesList.length || 14)), percentage: workDist.pct_historias, color: '#8b5cf6', icon: User },
+              { name: 'Bugs y Defectos', value: Math.round((workDist.pct_bugs / 100) * (assignedIssuesList.length || 14)), percentage: workDist.pct_bugs, color: '#ec4899', icon: Bug },
+              { name: 'Tareas / Deuda Técnica', value: Math.round((workDist.pct_tareas / 100) * (assignedIssuesList.length || 14)), percentage: workDist.pct_tareas, color: '#10b981', icon: FileText }
+            ].map((item, idx) => {
+              const IconComponent = item.icon;
+              return (
+                <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <div className="flex items-center gap-1.5">
+                      <IconComponent size={14} className="text-slate-500 dark:text-slate-400" />
+                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
+                    </div>
+                  </div>
+                  <span className="text-xs font-extrabold text-slate-900 dark:text-white">
+                    {item.value} <span className="text-slate-500 dark:text-slate-400 text-[10px] font-semibold ml-0.5">({item.percentage}%)</span>
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -364,38 +415,69 @@ export default function DeveloperView({ kpis = [], selectedProjectId = 'PROJ-01'
                     </td>
                   </tr>
                 ) : (
-                  assignedIssuesList.map((issue, idx) => (
-                    <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
-                      <td className="px-5 py-4 font-mono font-bold text-indigo-400 text-sm">
-                        {issue.key_issue}
-                      </td>
-                      <td className="px-5 py-4 font-semibold text-slate-200 hover:text-indigo-300 transition-colors cursor-pointer max-w-md truncate">
-                        {issue.summary}
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
-                          issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
-                            ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                            : issue.status_actual?.toUpperCase().includes('REVISI')
-                            ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
-                            : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                        }`}>
-                          {issue.status_actual}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right font-bold text-slate-200 text-sm">
-                        {issue.story_points}
-                      </td>
-                      <td className="px-5 py-4 text-right font-semibold text-teal-400 flex items-center justify-end gap-3">
-                        <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
-                        <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
-                      </td>
-                    </tr>
-                  ))
+                  (() => {
+                    const indexOfLastItem = currentPage * itemsPerPage;
+                    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+                    const currentIssues = assignedIssuesList.slice(indexOfFirstItem, indexOfLastItem);
+
+                    return currentIssues.map((issue, idx) => (
+                      <tr key={idx} className="hover:bg-slate-900/60 transition-colors">
+                        <td className="px-5 py-4 font-mono font-bold text-indigo-400 text-sm">
+                          {issue.key_issue}
+                        </td>
+                        <td className="px-5 py-4 font-semibold text-slate-200 hover:text-indigo-300 transition-colors cursor-pointer max-w-md truncate">
+                          {issue.summary}
+                        </td>
+                        <td className="px-5 py-4 text-center">
+                          <span className={`px-3 py-1 rounded-full text-xs font-extrabold tracking-wide uppercase border ${
+                            issue.status_actual?.toUpperCase().includes('LISTO') || issue.status_actual?.toUpperCase().includes('DONE')
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                              : issue.status_actual?.toUpperCase().includes('REVISI')
+                              ? 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+                              : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                          }`}>
+                            {issue.status_actual}
+                          </span>
+                        </td>
+                        <td className="px-5 py-4 text-right font-bold text-slate-200 text-sm">
+                          {issue.story_points}
+                        </td>
+                        <td className="px-5 py-4 text-right font-semibold text-teal-400 flex items-center justify-end gap-3">
+                          <span className="text-sm">{issue.cycle_time_days > 0 ? `${issue.cycle_time_days}d` : '-'}</span>
+                          <SparklineMini color={issue.cycle_time_days > 3.5 ? "#f43f5e" : "#10b981"} />
+                        </td>
+                      </tr>
+                    ));
+                  })()
                 )}
               </tbody>
             </table>
           </div>
+
+          {/* CONTROLES DE PAGINACIÓN DE INCIDENCIAS ASIGNADAS */}
+          {assignedIssuesList.length > itemsPerPage && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Página {currentPage} de {Math.ceil(assignedIssuesList.length / itemsPerPage)} ({assignedIssuesList.length} incidencias asignadas)
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  className="px-3.5 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-xs"
+                >
+                  Anterior
+                </button>
+                <button
+                  disabled={currentPage >= Math.ceil(assignedIssuesList.length / itemsPerPage)}
+                  onClick={() => setCurrentPage(p => Math.min(Math.ceil(assignedIssuesList.length / itemsPerPage), p + 1))}
+                  className="px-3.5 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 rounded-xl disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-xs"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

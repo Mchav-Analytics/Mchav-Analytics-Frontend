@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { developerService } from '../../../services/api';
+import LiderNotificationBell from '../components/LiderNotificationBell';
 
 const MetricInfoTooltip = ({ text, align = "auto" }) => {
   return (
@@ -63,7 +64,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
   const [loadingCard, setLoadingCard] = useState(false);
   const [searchFilter, setSearchFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 4;
 
   // 1. Cargar la lista de desarrolladores del proyecto activo
   useEffect(() => {
@@ -135,23 +136,21 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
             onClick={onNavigateToMatrix}
             className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
           >
-            <Users size={14} />
             <span>Matriz 4 Cuadrantes</span>
           </button>
           <button 
             onClick={onNavigateToHealth}
             className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
           >
-            <Zap size={14} className="text-amber-500 dark:text-amber-400" />
             <span>Salud del Sprint & Flow</span>
           </button>
           <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
-            <Target size={14} className="text-cyan-400" />
-            <span>Scorecards Devs</span>
+            <span>Scorecards Desarrolladores</span>
           </button>
         </div>
 
         <div className="flex items-center gap-3 text-xs text-slate-400 shrink-0">
+          <LiderNotificationBell />
           <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
             ETL Sync Activa
@@ -502,23 +501,23 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
               </div>
 
               {/* Controles de paginación */}
-              {assignedIssuesList.length > itemsPerPage && (
-                <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+              {assignedIssuesList.length > 0 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-200 dark:border-slate-800">
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                    Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, assignedIssuesList.length)} a {Math.min(currentPage * itemsPerPage, assignedIssuesList.length)} de {assignedIssuesList.length} tareas
+                    Mostrando {Math.min((currentPage - 1) * itemsPerPage + 1, assignedIssuesList.length)} a {Math.min(currentPage * itemsPerPage, assignedIssuesList.length)} de {assignedIssuesList.length} tareas (Página {currentPage} de {Math.ceil(assignedIssuesList.length / itemsPerPage) || 1})
                   </span>
                   <div className="flex gap-2">
                     <button 
                       onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                       disabled={currentPage === 1}
-                      className="px-3 py-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                      className="px-3.5 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-xs"
                     >
                       Anterior
                     </button>
                     <button 
                       onClick={() => setCurrentPage(p => Math.min(Math.ceil(assignedIssuesList.length / itemsPerPage), p + 1))}
-                      disabled={currentPage === Math.ceil(assignedIssuesList.length / itemsPerPage)}
-                      className="px-3 py-1 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg disabled:opacity-50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                      disabled={currentPage >= Math.ceil(assignedIssuesList.length / itemsPerPage)}
+                      className="px-3.5 py-1.5 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl border border-slate-200 dark:border-slate-700 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer shadow-xs"
                     >
                       Siguiente
                     </button>
