@@ -34,7 +34,8 @@ import {
   Search,
   Info,
   Save,
-  Users
+  Users,
+  FileDown
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -241,7 +242,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // Cargar proyectos reales del backend para que tengan el ID correcto al consultar percentiles
   React.useEffect(() => {
     projectService.getProjects()
@@ -261,7 +262,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       })
       .catch(err => console.error("Error al cargar proyectos reales:", err));
   }, []);
-  
+
   // Estados para HU-014 Análisis de Tiempos
   const [activeProjectTab, setActiveProjectTab] = useState('RESUMEN');
   const [percentilesData, setPercentilesData] = useState(null);
@@ -422,7 +423,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     } else {
       setExpandedProjectId(projectId);
       setActiveProjectTab('RESUMEN');
-      
+
       // HU-014: Cargar datos de percentiles en paralelo
       setLoadingPercentiles(true);
       projectService.getPercentiles(projectId)
@@ -591,7 +592,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         const newStatus = isCurrentlyCompleted ? 'ACTIVE' : 'COMPLETED';
         const newStatusLabel = isCurrentlyCompleted ? 'Sprint 1 Activo' : 'Entregado / Concluido';
         const newProgress = isCurrentlyCompleted ? 85 : 100;
-        
+
         if (isCurrentlyCompleted) {
           showToast(`🔄 Proyecto '${p.name}' reabierto como Activo.`);
         } else {
@@ -624,7 +625,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const activeMetrics = activeProject ? (realProjectMetrics[activeProject.id] || getProjectMetrics(activeProject.id)) : null;
 
   return (
-    <div className="w-full min-h-[calc(100vh-80px)] flex flex-col justify-start gap-6 sm:gap-8 px-4 sm:px-8 pt-6 pb-12 text-left animate-in fade-in duration-300 no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-500/50 text-emerald-700 dark:text-emerald-300 px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <Sparkles className="w-5 h-5 text-emerald-500" />
@@ -710,9 +711,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                             value={formKey}
                             onChange={e => { if (editingProjectId) { setFormKey(e.target.value); setAssignmentReady(false); } }}
                             readOnly={!editingProjectId}
-                            className={`w-full min-h-[42px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold uppercase text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${
-                              !editingProjectId ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-500/30 cursor-default' : ''
-                            }`}
+                            className={`w-full min-h-[42px] px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm font-semibold uppercase text-slate-800 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 ${!editingProjectId ? 'bg-indigo-50 dark:bg-indigo-950/30 border-indigo-200 dark:border-indigo-500/30 cursor-default' : ''
+                              }`}
                           />
                           {!editingProjectId && (
                             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-black uppercase bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-200 dark:border-indigo-500/30">
@@ -1050,115 +1050,157 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      {/* BANNER DE MÉTRICAS EJECUTIVAS SUPERIORES (KPIS DE PROYECTOS Y EQUIPOS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div 
-          onClick={() => setStatusTab('ACTIVE')}
-          className={`bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left cursor-pointer transition-all hover:scale-[1.01] ${
-            statusTab === 'ACTIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-200 dark:border-[#33376b]'
-          }`}
-        >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Proyectos Activos</span>
-            <FolderKanban size={18} className="text-emerald-500" />
+      {/* BARRA SUPERIOR DE CONTROL DE PROYECTOS (ESTILO ADMIN RESUMEN) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
+
+        {/* Lado Izquierdo: Ícono en Gradiente + Insignia + Título "Control de Proyectos" */}
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
+            <FolderKanban size={24} />
           </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
-              {projects.filter(p => p.status === 'ACTIVE' || p.status === 'STABLE' || !p.status).length}
-            </span>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              En Ejecución
-            </span>
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                Supervisión Ejecutiva
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">10000</strong>
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Control de Proyectos
+            </h1>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Equipos de desarrollo asignados.</p>
         </div>
 
-        <div 
-          onClick={() => setStatusTab('COMPLETED')}
-          className={`bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left cursor-pointer transition-all hover:scale-[1.01] ${
-            statusTab === 'COMPLETED' ? 'border-indigo-500 ring-2 ring-indigo-500/30' : 'border-slate-200 dark:border-[#33376b]'
-          }`}
-        >
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Entregados / Concluidos</span>
-            <CheckCircle2 size={18} className="text-indigo-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
-              {projects.filter(p => p.status === 'COMPLETED' || p.status === 'DELIVERED').length}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Finalizados</span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Proyectos concluidos con éxito.</p>
+        {/* Lado Derecho: Bell Popup + Exportar PDF */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <LiderNotificationBell />
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
+            title="Exportar reporte consolidado en PDF"
+          >
+            <FileDown size={15} />
+            <span>Exportar PDF</span>
+          </button>
         </div>
 
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Devs Asignados</span>
-            <Users size={18} className="text-cyan-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
-              {projects.reduce((acc, p) => acc + (p.developers?.length || 0), 0)}
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Desarrolladores</span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Capacidad técnica desplegada.</p>
-        </div>
-
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl shadow-sm space-y-1.5 text-left">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <span className="text-[11px] font-extrabold uppercase tracking-wider">Salud Operativa Promedio</span>
-            <Zap size={18} className="text-amber-500" />
-          </div>
-          <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-black text-amber-500">86.5%</span>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">Estable</span>
-          </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">Predictibilidad global de entregas.</p>
-        </div>
       </div>
 
-      {/* BARRA DE ACCIÓN Y BÚSQUEDA */}
-      <div className="flex items-center justify-between gap-3 w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-2.5 rounded-2xl shadow-sm my-2">
-        <div className="flex items-center gap-3 flex-1">
-          {isAdmin && (
-            <button
-              type="button"
-              onClick={handleOpenCreateModal}
-              className="group relative shrink-0 h-[38px] rounded-xl text-[11px] font-black text-white overflow-hidden inline-flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/30 active:scale-[0.98]"
-              style={{
-                paddingLeft: 16,
-                paddingRight: 16,
-                background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)',
-                backgroundSize: '200% 200%',
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.backgroundPosition = '100% 50%'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.backgroundPosition = '0% 50%'; }}
-            >
-              <span
-                className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
-                style={{ transition: 'transform 0.7s ease, opacity 0.3s ease' }}
+      {/* CONTENEDOR UNIFICADO: BARRA DE BÚSQUEDA Y ACCIÓN + MÉTRICAS KPIS */}
+      <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] p-5 sm:p-6 rounded-3xl shadow-sm dark:shadow-2xl space-y-5">
+
+        {/* FILA 1: BARRA DE ACCIÓN (NUEVO PROYECTO + BUSCADOR - AHORA ARRIBA) */}
+        <div className="flex items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3 flex-1">
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={handleOpenCreateModal}
+                className="group relative shrink-0 h-[38px] rounded-xl text-[11px] font-black text-white overflow-hidden inline-flex items-center justify-center gap-1.5 shadow-md shadow-sky-600/20 transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:shadow-lg hover:shadow-sky-500/30 active:scale-[0.98]"
+                style={{
+                  paddingLeft: 16,
+                  paddingRight: 16,
+                  background: 'linear-gradient(135deg, #0284c7 0%, #2563eb 50%, #4f46e5 100%)',
+                  backgroundSize: '200% 200%',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundPosition = '100% 50%'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundPosition = '0% 50%'; }}
+              >
+                <span
+                  className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 bg-gradient-to-r from-white/0 via-white/20 to-white/0"
+                  style={{ transition: 'transform 0.7s ease, opacity 0.3s ease' }}
+                />
+                <UserPlus size={13} className="relative z-10 transition-transform duration-300 group-hover:rotate-12" />
+                <span className="relative z-10">+ Asignar Nuevo Proyecto</span>
+              </button>
+            )}
+
+            <div className="relative flex-1 max-w-xs">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar proyectos..."
+                className="w-full h-[38px] pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-[#12142e] text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-all duration-300 focus:shadow-md"
               />
-              <UserPlus size={13} className="relative z-10 transition-transform duration-300 group-hover:rotate-12" />
-              <span className="relative z-10">+ Asignar Nuevo Proyecto</span>
-            </button>
-          )}
-          
-          <div className="relative flex-1 max-w-xs">
-            <input 
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar proyectos..."
-              className="w-full h-[38px] pl-10 pr-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-[#12142e] text-xs font-semibold text-slate-700 dark:text-slate-200 outline-none focus:border-indigo-500 dark:focus:border-indigo-500 transition-all duration-300 focus:shadow-md"
-            />
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
           </div>
         </div>
 
-        <LiderNotificationBell />
+        {/* FILA 2: TARJETAS DE KPIS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            onClick={() => setStatusTab('ACTIVE')}
+            className={`bg-slate-50/70 dark:bg-[#191c3d] border p-4.5 rounded-2xl space-y-1.5 text-left cursor-pointer transition-all hover:scale-[1.01] ${statusTab === 'ACTIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-200 dark:border-[#33376b]'
+              }`}
+          >
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider">Proyectos Activos</span>
+              <FolderKanban size={18} className="text-emerald-500" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">
+                {projects.filter(p => p.status === 'ACTIVE' || p.status === 'STABLE' || !p.status).length}
+              </span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                En Ejecución
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Equipos de desarrollo asignados.</p>
+          </div>
+
+          <div
+            onClick={() => setStatusTab('COMPLETED')}
+            className={`bg-slate-50/70 dark:bg-[#191c3d] border p-4.5 rounded-2xl space-y-1.5 text-left cursor-pointer transition-all hover:scale-[1.01] ${statusTab === 'COMPLETED' ? 'border-indigo-500 ring-2 ring-indigo-500/30' : 'border-slate-200 dark:border-[#33376b]'
+              }`}
+          >
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider">Entregados / Concluidos</span>
+              <CheckCircle2 size={18} className="text-indigo-500" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                {projects.filter(p => p.status === 'COMPLETED' || p.status === 'DELIVERED').length}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Finalizados</span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Proyectos concluidos con éxito.</p>
+          </div>
+
+          <div className="bg-slate-50/70 dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl space-y-1.5 text-left">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider">Devs Asignados</span>
+              <Users size={18} className="text-cyan-500" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-slate-900 dark:text-white">
+                {projects.reduce((acc, p) => acc + (p.developers?.length || 0), 0)}
+              </span>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Desarrolladores</span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Capacidad técnica desplegada.</p>
+          </div>
+
+          <div className="bg-slate-50/70 dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl space-y-1.5 text-left">
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider">Salud Operativa Promedio</span>
+              <Zap size={18} className="text-amber-500" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black text-amber-500">86.5%</span>
+              <span className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">Estable</span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">Predictibilidad global de entregas.</p>
+          </div>
+        </div>
+
       </div>
 
 
@@ -1174,8 +1216,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               {statusTab === 'COMPLETED'
                 ? 'No hay proyectos marcados como entregados o finalizados en esta vista aún.'
                 : statusTab === 'INACTIVE'
-                ? 'No hay proyectos desactivados.'
-                : 'No se encontraron proyectos activos con el filtro de búsqueda ingresado.'}
+                  ? 'No hay proyectos desactivados.'
+                  : 'No se encontraron proyectos activos con el filtro de búsqueda ingresado.'}
             </p>
           </div>
         ) : (
@@ -1233,13 +1275,12 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
                     <div className="space-y-1 min-w-0 text-left">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${
-                          isCompleted
+                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${isCompleted
                             ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40'
                             : isInactive
-                            ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
-                            : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
-                        }`}>
+                              ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
+                              : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
+                          }`}>
                           {isCompleted ? 'Entregado' : isInactive ? 'Desactivado' : 'Activo'}
                         </span>
                         <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">{proj.key}</span>
@@ -1273,11 +1314,10 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                           e.stopPropagation();
                           handleToggleDeliveredProject(proj);
                         }}
-                        className={`w-8 h-8 rounded-xl inline-flex items-center justify-center transition-all cursor-pointer border ${
-                          isCompleted
+                        className={`w-8 h-8 rounded-xl inline-flex items-center justify-center transition-all cursor-pointer border ${isCompleted
                             ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/30'
                             : 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30'
-                        }`}
+                          }`}
                       >
                         {isCompleted ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
                       </button>
@@ -1327,58 +1367,58 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   </div>
                 </div>
 
-              {isExpanded && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 animate-in slide-in-from-top-2 duration-200 text-left">
-                  {/* Columna Izquierda: Líder Técnico */}
-                  <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between">
-                    <span className="block text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2.5">
-                      Líder Técnico
-                    </span>
+                {isExpanded && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 animate-in slide-in-from-top-2 duration-200 text-left">
+                    {/* Columna Izquierda: Líder Técnico */}
+                    <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between">
+                      <span className="block text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2.5">
+                        Líder Técnico
+                      </span>
 
-                    {proj.leader ? (
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0">
-                          {proj.leader.avatar}
-                        </div>
-                        <div className="min-w-0 flex flex-col gap-0.5">
-                          <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
-                            {proj.leader.name}
-                          </h4>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                            {proj.leader.email}
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-xs italic text-slate-400">Sin Líder Asignado</p>
-                    )}
-                  </div>
-
-                  {/* Columna Derecha: Desarrolladores */}
-                  <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between space-y-2">
-                    <span className="block text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
-                      Desarrolladores ({proj.developers?.length || 0})
-                    </span>
-
-                    <div className="space-y-1.5 max-h-[95px] overflow-y-auto no-scrollbar pr-0.5">
-                      {proj.developers?.map(dev => (
-                        <div key={dev.id} className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <div className="w-6 h-6 rounded-md bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
-                              {dev.avatar}
-                            </div>
-                            <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{dev.name}</span>
+                      {proj.leader ? (
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0">
+                            {proj.leader.avatar}
                           </div>
-                          <span className="text-[10px] text-slate-400 font-medium shrink-0">{dev.tasksCount || 3} tareas</span>
+                          <div className="min-w-0 flex flex-col gap-0.5">
+                            <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
+                              {proj.leader.name}
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                              {proj.leader.email}
+                            </p>
+                          </div>
                         </div>
-                      ))}
+                      ) : (
+                        <p className="text-xs italic text-slate-400">Sin Líder Asignado</p>
+                      )}
+                    </div>
+
+                    {/* Columna Derecha: Desarrolladores */}
+                    <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between space-y-2">
+                      <span className="block text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                        Desarrolladores ({proj.developers?.length || 0})
+                      </span>
+
+                      <div className="space-y-1.5 max-h-[95px] overflow-y-auto no-scrollbar pr-0.5">
+                        {proj.developers?.map(dev => (
+                          <div key={dev.id} className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-6 h-6 rounded-md bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
+                                {dev.avatar}
+                              </div>
+                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{dev.name}</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-medium shrink-0">{dev.tasksCount || 3} tareas</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          );
-        })
+                )}
+              </div>
+            );
+          })
         )}
       </div>
 
@@ -1405,27 +1445,25 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 <button
                   type="button"
                   onClick={() => setActiveProjectTab('RESUMEN')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                    activeProjectTab === 'RESUMEN' 
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-sm' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                  }`}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeProjectTab === 'RESUMEN'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
                 >
                   Resumen General
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveProjectTab('TIEMPOS')}
-                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-                    activeProjectTab === 'TIEMPOS' 
-                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-sm' 
-                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
-                  }`}
+                  className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${activeProjectTab === 'TIEMPOS'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-50 shadow-sm'
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                    }`}
                 >
                   Análisis de Tiempos
                 </button>
               </div>
-              
+
 
             </div>
           </div>
@@ -1433,222 +1471,222 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           {activeProjectTab === 'RESUMEN' ? (
             <>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
-              <div className="absolute top-3 right-3">
-                <MetricInfoTooltip align="left" text="Cuántos puntos de trabajo termina el equipo en cada sprint. Entre más alto, más productivo es el equipo." />
-              </div>
-              <Zap size={20} className="text-amber-500 shrink-0" />
-              <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Velocidad SP</span>
-                <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.velocitySp} SP / sprint</p>
-              </div>
-            </div>
-            <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
-              <div className="absolute top-3 right-3">
-                <MetricInfoTooltip align="right" text="Porcentaje de tareas entregadas a tiempo. Si es alto, el equipo cumple bien con los plazos." />
-              </div>
-              <TrendingUp size={20} className="text-emerald-500 shrink-0" />
-              <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Salud Entregas</span>
-                <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.deliveryHealth}</p>
-              </div>
-            </div>
-            {(() => {
-              const cycleTimeNum = parseFloat(activeMetrics.kpis.cycleTimeDays) || 0;
-              let colorClass = "text-emerald-600 dark:text-emerald-500";
-              let borderClass = "border-emerald-500/30 dark:border-emerald-500/50";
-              let shadowClass = "shadow-[0_4px_20px_rgba(16,185,129,0.1)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)]";
-              let statusText = "Óptimo";
-
-              if (cycleTimeNum > 14) {
-                colorClass = "text-rose-600 dark:text-rose-500";
-                borderClass = "border-rose-500/30 dark:border-rose-500/50";
-                shadowClass = "shadow-[0_4px_20px_rgba(244,63,94,0.1)] dark:shadow-[0_4px_20px_rgba(244,63,94,0.15)]";
-                statusText = "Crítico";
-              } else if (cycleTimeNum > 7) {
-                colorClass = "text-amber-600 dark:text-amber-500";
-                borderClass = "border-amber-500/30 dark:border-amber-500/50";
-                shadowClass = "shadow-[0_4px_20px_rgba(245,158,11,0.1)] dark:shadow-[0_4px_20px_rgba(245,158,11,0.15)]";
-                statusText = "En Riesgo";
-              }
-
-              return (
-                <div className={`relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border ${borderClass} ${shadowClass} flex items-center gap-3 transition-colors`}>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+                <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
                   <div className="absolute top-3 right-3">
-                    <MetricInfoTooltip align="right" text="Cuántos días tarda en promedio una tarea desde que se empieza hasta que se termina. Menos días es mejor." />
+                    <MetricInfoTooltip align="left" text="Cuántos puntos de trabajo termina el equipo en cada sprint. Entre más alto, más productivo es el equipo." />
                   </div>
-                  <Clock size={20} className={`${colorClass} shrink-0`} />
+                  <Zap size={20} className="text-amber-500 shrink-0" />
                   <div>
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                      <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Tiempo Ciclo</span>
-                      <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white dark:bg-[#191c3d] border ${borderClass} ${colorClass}`}>{statusText}</span>
-                    </div>
-                    <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.cycleTimeDays}</p>
+                    <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Velocidad SP</span>
+                    <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.velocitySp} SP / sprint</p>
                   </div>
                 </div>
-              );
-            })()}
-            <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
-              <div className="absolute top-3 right-3">
-                <MetricInfoTooltip align="right" text="Errores graves que siguen sin resolver. Necesitan arreglarse lo antes posible." />
-              </div>
-              <Bug size={20} className="text-rose-500 shrink-0" />
-              <div>
-                <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Bugs Críticos</span>
-                <p className="text-lg font-black text-rose-500 dark:text-rose-400">{activeMetrics.kpis.criticalBugs} Activos</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-5">
-            {/* Velocidad por Sprint */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
-                  <MetricInfoTooltip align="left" text="Muestra la cantidad de trabajo que el equipo ha logrado terminar en cada ciclo reciente para ver si el ritmo mejora o se mantiene." />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución de la cantidad de tareas o unidades terminadas</p>
-              </div>
-
-              <div className="h-64 w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: 15, bottom: 20 }}>
-                    <XAxis 
-                      dataKey="sprint" 
-                      stroke="#64748b" 
-                      fontSize={11} 
-                      tickLine={false}
-                      tickFormatter={(val) => String(val).replace(/\D/g, '')}
-                      label={{ value: 'Número de Sprint (Ciclo de trabajo)', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11 }}
-                    />
-                    <YAxis 
-                      stroke="#64748b" 
-                      fontSize={11} 
-                      tickLine={false} 
-                      width={35}
-                      label={{ value: 'Trabajo Entregado', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
-                    />
-                    <RechartsTooltip 
-                      contentStyle={tooltipStyle}
-                      formatter={(value, name) => [
-                        `${value} unidades completadas`,
-                        name === 'Trabajo Finalizado' ? 'Total Entregado' : 'Tendencia General'
-                      ]}
-                      labelFormatter={(label) => `Período (Sprint): ${String(label).replace(/\D/g, '')}`}
-                    />
-                    <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Trabajo Finalizado" barSize={36} />
-                    <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia General" />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Progreso de tareas (Burndown) */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas</h3>
-                  <MetricInfoTooltip align="left" text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal." />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Compara el trabajo que aún falta por hacer contra el ritmo ideal de entrega.</p>
-              </div>
-
-              <div className="h-64 w-full pt-2">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={activeMetrics.burndown} margin={{ top: 15, right: 15, left: 15, bottom: 5 }}>
-                    <defs>
-                      <linearGradient id="colorBurndownReal" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.5}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0}/>
-                      </linearGradient>
-                    </defs>
-                    <XAxis 
-                      dataKey="day" 
-                      stroke="#64748b" 
-                      fontSize={11} 
-                      tickLine={false} 
-                      tickFormatter={(val) => String(val).replace('D', 'Día ')}
-                    />
-                    <YAxis 
-                      stroke="#64748b" 
-                      fontSize={11} 
-                      tickLine={false} 
-                      tickFormatter={(val) => val}
-                      width={35}
-                      label={{ value: 'Esfuerzo (Unidades)', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
-                    />
-                    <RechartsTooltip 
-                      contentStyle={tooltipStyle} 
-                      formatter={(value, name) => [
-                        `${value} unidades de trabajo`,
-                        name === 'real' || name === 'REAL' ? 'Lo que realmente falta por hacer' : 'Lo que debería faltar hoy'
-                      ]}
-                      labelFormatter={(label) => `Progreso - Día ${String(label).replace('D', '')}`}
-                    />
-                    <Area type="monotone" dataKey="real" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorBurndownReal)" dot={{ r: 4, fill: '#818cf8', stroke: '#ffffff', strokeWidth: 2 }} name="REAL" />
-                    <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
-                  </ComposedChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            
-            {/* Distribución del trabajo */}
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] lg:col-span-2 flex flex-col gap-4">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
-                  <MetricInfoTooltip text="Muestra en qué porcentaje se dividió el tiempo entre crear nuevas funciones, arreglar fallos o hacer mejoras técnicas." />
-                </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 mt-2 h-64">
-                <div className="h-full w-full relative flex items-center justify-center">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={activeMetrics.distribution}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={70}
-                        outerRadius={100}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {activeMetrics.distribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
-                        ))}
-                      </Pie>
-                      <RechartsTooltip contentStyle={tooltipStyle} />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                    <span className="text-3xl font-black text-slate-900 dark:text-white">
-                      {activeMetrics.distribution.reduce((acc, curr) => acc + curr.value, 0)}
-                    </span>
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mt-1">Total Incidencias</span>
+                <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
+                  <div className="absolute top-3 right-3">
+                    <MetricInfoTooltip align="right" text="Porcentaje de tareas entregadas a tiempo. Si es alto, el equipo cumple bien con los plazos." />
+                  </div>
+                  <TrendingUp size={20} className="text-emerald-500 shrink-0" />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Salud Entregas</span>
+                    <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.deliveryHealth}</p>
                   </div>
                 </div>
+                {(() => {
+                  const cycleTimeNum = parseFloat(activeMetrics.kpis.cycleTimeDays) || 0;
+                  let colorClass = "text-emerald-600 dark:text-emerald-500";
+                  let borderClass = "border-emerald-500/30 dark:border-emerald-500/50";
+                  let shadowClass = "shadow-[0_4px_20px_rgba(16,185,129,0.1)] dark:shadow-[0_4px_20px_rgba(16,185,129,0.15)]";
+                  let statusText = "Óptimo";
 
-                <div className="space-y-3">
-                  {activeMetrics.distribution.map((item, idx) => (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                        <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
+                  if (cycleTimeNum > 14) {
+                    colorClass = "text-rose-600 dark:text-rose-500";
+                    borderClass = "border-rose-500/30 dark:border-rose-500/50";
+                    shadowClass = "shadow-[0_4px_20px_rgba(244,63,94,0.1)] dark:shadow-[0_4px_20px_rgba(244,63,94,0.15)]";
+                    statusText = "Crítico";
+                  } else if (cycleTimeNum > 7) {
+                    colorClass = "text-amber-600 dark:text-amber-500";
+                    borderClass = "border-amber-500/30 dark:border-amber-500/50";
+                    shadowClass = "shadow-[0_4px_20px_rgba(245,158,11,0.1)] dark:shadow-[0_4px_20px_rgba(245,158,11,0.15)]";
+                    statusText = "En Riesgo";
+                  }
+
+                  return (
+                    <div className={`relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border ${borderClass} ${shadowClass} flex items-center gap-3 transition-colors`}>
+                      <div className="absolute top-3 right-3">
+                        <MetricInfoTooltip align="right" text="Cuántos días tarda en promedio una tarea desde que se empieza hasta que se termina. Menos días es mejor." />
                       </div>
-                      <span className="text-sm font-extrabold text-slate-900 dark:text-white">
-                        {item.value} <span className="text-slate-500 dark:text-slate-400 text-xs font-semibold ml-1">({item.percentage}%)</span>
-                      </span>
+                      <Clock size={20} className={`${colorClass} shrink-0`} />
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Tiempo Ciclo</span>
+                          <span className={`text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-white dark:bg-[#191c3d] border ${borderClass} ${colorClass}`}>{statusText}</span>
+                        </div>
+                        <p className="text-lg font-black text-slate-900 dark:text-white">{activeMetrics.kpis.cycleTimeDays}</p>
+                      </div>
                     </div>
-                  ))}
+                  );
+                })()}
+                <div className="relative p-4 sm:p-5 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm flex items-center gap-3">
+                  <div className="absolute top-3 right-3">
+                    <MetricInfoTooltip align="right" text="Errores graves que siguen sin resolver. Necesitan arreglarse lo antes posible." />
+                  </div>
+                  <Bug size={20} className="text-rose-500 shrink-0" />
+                  <div>
+                    <span className="text-[10px] font-bold uppercase text-slate-500 dark:text-slate-300">Bugs Críticos</span>
+                    <p className="text-lg font-black text-rose-500 dark:text-rose-400">{activeMetrics.kpis.criticalBugs} Activos</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-          </>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-5">
+                {/* Velocidad por Sprint */}
+                <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
+                      <MetricInfoTooltip align="left" text="Muestra la cantidad de trabajo que el equipo ha logrado terminar en cada ciclo reciente para ver si el ritmo mejora o se mantiene." />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución de la cantidad de tareas o unidades terminadas</p>
+                  </div>
+
+                  <div className="h-64 w-full pt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: 15, bottom: 20 }}>
+                        <XAxis
+                          dataKey="sprint"
+                          stroke="#64748b"
+                          fontSize={11}
+                          tickLine={false}
+                          tickFormatter={(val) => String(val).replace(/\D/g, '')}
+                          label={{ value: 'Número de Sprint (Ciclo de trabajo)', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11 }}
+                        />
+                        <YAxis
+                          stroke="#64748b"
+                          fontSize={11}
+                          tickLine={false}
+                          width={35}
+                          label={{ value: 'Trabajo Entregado', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
+                        />
+                        <RechartsTooltip
+                          contentStyle={tooltipStyle}
+                          formatter={(value, name) => [
+                            `${value} unidades completadas`,
+                            name === 'Trabajo Finalizado' ? 'Total Entregado' : 'Tendencia General'
+                          ]}
+                          labelFormatter={(label) => `Período (Sprint): ${String(label).replace(/\D/g, '')}`}
+                        />
+                        <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Trabajo Finalizado" barSize={36} />
+                        <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia General" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Progreso de tareas (Burndown) */}
+                <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas</h3>
+                      <MetricInfoTooltip align="left" text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal." />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Compara el trabajo que aún falta por hacer contra el ritmo ideal de entrega.</p>
+                  </div>
+
+                  <div className="h-64 w-full pt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={activeMetrics.burndown} margin={{ top: 15, right: 15, left: 15, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="colorBurndownReal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.5} />
+                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                          </linearGradient>
+                        </defs>
+                        <XAxis
+                          dataKey="day"
+                          stroke="#64748b"
+                          fontSize={11}
+                          tickLine={false}
+                          tickFormatter={(val) => String(val).replace('D', 'Día ')}
+                        />
+                        <YAxis
+                          stroke="#64748b"
+                          fontSize={11}
+                          tickLine={false}
+                          tickFormatter={(val) => val}
+                          width={35}
+                          label={{ value: 'Esfuerzo (Unidades)', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
+                        />
+                        <RechartsTooltip
+                          contentStyle={tooltipStyle}
+                          formatter={(value, name) => [
+                            `${value} unidades de trabajo`,
+                            name === 'real' || name === 'REAL' ? 'Lo que realmente falta por hacer' : 'Lo que debería faltar hoy'
+                          ]}
+                          labelFormatter={(label) => `Progreso - Día ${String(label).replace('D', '')}`}
+                        />
+                        <Area type="monotone" dataKey="real" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorBurndownReal)" dot={{ r: 4, fill: '#818cf8', stroke: '#ffffff', strokeWidth: 2 }} name="REAL" />
+                        <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Distribución del trabajo */}
+                <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] lg:col-span-2 flex flex-col gap-4">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
+                      <MetricInfoTooltip text="Muestra en qué porcentaje se dividió el tiempo entre crear nuevas funciones, arreglar fallos o hacer mejoras técnicas." />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Por tipo de incidencia, sprint actual</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-8 mt-2 h-64">
+                    <div className="h-full w-full relative flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie
+                            data={activeMetrics.distribution}
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={70}
+                            outerRadius={100}
+                            paddingAngle={5}
+                            dataKey="value"
+                          >
+                            {activeMetrics.distribution.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={entry.color} />
+                            ))}
+                          </Pie>
+                          <RechartsTooltip contentStyle={tooltipStyle} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                      <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                        <span className="text-3xl font-black text-slate-900 dark:text-white">
+                          {activeMetrics.distribution.reduce((acc, curr) => acc + curr.value, 0)}
+                        </span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mt-1">Total Incidencias</span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3">
+                      {activeMetrics.distribution.map((item, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/60">
+                          <div className="flex items-center gap-3">
+                            <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                            <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
+                          </div>
+                          <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+                            {item.value} <span className="text-slate-500 dark:text-slate-400 text-xs font-semibold ml-1">({item.percentage}%)</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             /* Pestaña de Análisis de Tiempos (Percentiles) HU-014 */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
@@ -1661,10 +1699,10 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   const colors = ['indigo', 'emerald', 'rose', 'sky', 'amber'];
                   return (
                     <div key={data.issue_type} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow">
-                      <PercentilesChart 
-                        title={`Análisis de ${data.issue_type}`} 
-                        data={data} 
-                        colorTheme={colors[idx % colors.length]} 
+                      <PercentilesChart
+                        title={`Análisis de ${data.issue_type}`}
+                        data={data}
+                        colorTheme={colors[idx % colors.length]}
                       />
                     </div>
                   );

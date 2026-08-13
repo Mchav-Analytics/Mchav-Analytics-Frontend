@@ -21,10 +21,12 @@ import {
   Filter,
   Clock,
   Sparkles,
-  Activity
+  Activity,
+  FileDown
 } from 'lucide-react';
 
 import { useAuth } from '../../auth/context/AuthContext';
+import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 
 export interface ManagementUser {
   id: string;
@@ -245,7 +247,7 @@ export default function AdminUsuariosView({
   );
 
   return (
-    <div className="w-full flex flex-col gap-6 sm:gap-8 px-2 sm:px-4 py-4 text-left animate-in fade-in duration-300">
+    <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-200 px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-200">
           <Sparkles className="w-5 h-5 text-emerald-500 dark:text-emerald-400 animate-spin" />
@@ -256,12 +258,51 @@ export default function AdminUsuariosView({
         </div>
       )}
 
+      {/* 1. BARRA SUPERIOR DE CONTROL DE USUARIOS (ESTILO ADMIN RESUMEN) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        {/* Lado Izquierdo: Ícono en Gradiente + Insignia + Título "Directorio de Usuarios" */}
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
+            <Users size={24} />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                Supervisión Ejecutiva
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">10000</strong>
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Directorio de Usuarios
+            </h1>
+          </div>
+        </div>
+
+        {/* Lado Derecho: Bell Popup + Exportar PDF */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <LiderNotificationBell />
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
+            title="Exportar reporte consolidado en PDF"
+          >
+            <FileDown size={15} />
+            <span>Exportar PDF</span>
+          </button>
+        </div>
+
+      </div>
+
       {/* CONTENEDOR 1 — Resumen RBAC y roles */}
-      <section className="relative overflow-hidden bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 sm:p-7 lg:p-8 shadow-sm dark:shadow-2xl space-y-4">
+      <section className="relative overflow-hidden bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-2xl space-y-4">
         <div className="pointer-events-none absolute -top-24 -right-16 h-56 w-56 rounded-full bg-purple-400/20 dark:bg-purple-500/15 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-10 h-48 w-48 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
-
-
 
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 px-1 sm:px-2 pt-1">
           {/* TARJETA 1: ADMINISTRADOR */}
@@ -365,74 +406,59 @@ export default function AdminUsuariosView({
         </div>
       </section>
 
-      {/* CONTENEDOR 2 — Cabecera del directorio + botones "Todos" / "Inactivos" + búsqueda */}
-      <section className="relative overflow-hidden bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 sm:p-7 shadow-sm dark:shadow-2xl">
-        <div className="pointer-events-none absolute -top-16 right-0 h-36 w-36 rounded-full bg-indigo-400/15 dark:bg-indigo-500/10 blur-3xl" />
-        <div className="relative flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="space-y-1.5 min-w-0 pl-2 sm:pl-3">
-            <h3 className="text-lg sm:text-xl font-black text-slate-900 dark:text-slate-50 tracking-tight flex items-center gap-3">
-              <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 dark:bg-indigo-500/15 border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-300 shrink-0">
-                <Users size={18} />
-              </span>
-              Directorio de usuarios
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
-              Busca, filtra y administra cuentas, roles y auditoría.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
-            {/* Botones Todos e Inactivos a la derecha */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  roleFilter === 'ALL' && statusFilter === 'ALL'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                }`}
-              >
-                Todos ({users.length})
-              </button>
-              <button
-                onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
-                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  statusFilter === 'INACTIVE'
-                    ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-                    : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-900/40'
-                }`}
-              >
-                Inactivos ({pendingRequests.length})
-              </button>
-            </div>
-
-            <label className="relative flex items-center w-full sm:w-[300px] shrink-0 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
-              <span className="flex items-center justify-center w-11 shrink-0 text-indigo-500 dark:text-indigo-400 pointer-events-none">
-                <Search size={16} />
-              </span>
-              <input
-                type="text"
-                placeholder="Buscar por nombre o correo..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full min-h-[44px] bg-transparent border-0 py-2.5 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
-              />
-              {searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => setSearchTerm('')}
-                  className="pr-3.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
-                >
-                  <X size={15} />
-                </button>
-              )}
-            </label>
-          </div>
+      {/* CONTENEDOR 2 — SUB-BARRA COMPACTA CON BOTONES "TODOS / INACTIVOS" Y BUSCADOR */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
+        
+        {/* Botones de Filtro Todos / Inactivos */}
+        <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+          <button
+            onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              roleFilter === 'ALL' && statusFilter === 'ALL'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+            }`}
+          >
+            Todos ({users.length})
+          </button>
+          <button
+            onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              statusFilter === 'INACTIVE'
+                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+                : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-900/40'
+            }`}
+          >
+            Inactivos ({pendingRequests.length})
+          </button>
         </div>
-      </section>
+
+        {/* Buscador de Nombre o Correo */}
+        <label className="relative flex items-center w-full sm:w-[320px] shrink-0 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950/80 shadow-inner focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all">
+          <span className="flex items-center justify-center w-10 shrink-0 text-indigo-500 dark:text-indigo-400 pointer-events-none">
+            <Search size={15} />
+          </span>
+          <input
+            type="text"
+            placeholder="Buscar por nombre o correo..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full min-h-[38px] bg-transparent border-0 py-2 pr-3 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 outline-none"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="pr-3 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 shrink-0"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </label>
+      </div>
 
       {/* CONTENEDOR 4 — Listado de usuarios */}
-      <section className="relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-sm dark:shadow-2xl space-y-4">
+      <section className="relative bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-2xl space-y-4">
         <div className="flex items-center justify-between gap-3 pb-1">
           <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">
             Listado de cuentas

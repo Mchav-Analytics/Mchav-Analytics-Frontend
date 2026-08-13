@@ -19,7 +19,9 @@ import {
   Download,
   ShieldAlert,
   ArrowRight,
-  AlertTriangle
+  AlertTriangle,
+  ShieldCheck,
+  FileDown
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
 import { developerService } from '../../../services/api';
@@ -129,7 +131,46 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-8 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
-      {/* BARRA SUPERIOR DE ACCESO RÁPIDO Y NAVEGACIÓN */}
+      {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR (ESTILO ADMIN RESUMEN) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        {/* Lado Izquierdo: Ícono en Gradiente + Insignia + Título */}
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
+            <UserCheck size={24} />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                Supervisión Ejecutiva
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">10000</strong>
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Scorecards Desarrolladores
+            </h1>
+          </div>
+        </div>
+
+        {/* Lado Derecho: Exportar PDF */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
+            title="Exportar reporte de desarrolladores"
+          >
+            <FileDown size={15} />
+            <span>Exportar Reporte Dev</span>
+          </button>
+        </div>
+
+      </div>
+
+      {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO (AHORA ABAJO DEL ENCABEZADO) */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <button 
@@ -157,35 +198,6 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
           </span>
           <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
           <span className="font-semibold text-slate-800 dark:text-slate-300">Proyecto: {selectedProjectId}</span>
-        </div>
-      </div>
-
-      {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
-      <div className="relative rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-teal-500 text-white font-extrabold shadow-xl shadow-indigo-500/25">
-              <UserCheck size={28} />
-            </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                Rendimiento Individual por Desarrollador
-                <span className="flex items-center gap-2 rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
-                  <span className="h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400 animate-pulse"></span>
-                  Fase 5 Administrator View
-                </span>
-              </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Supervisación y auditoría de velocidad, capacidad WIP y entregas por integrante del equipo.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 rounded-xl bg-slate-100 dark:bg-[#12142e] px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#33376b] transition-all hover:bg-slate-200 dark:hover:bg-slate-700 cursor-pointer">
-              <Download size={15} /> Exportar Reporte Dev
-            </button>
-          </div>
         </div>
       </div>
 

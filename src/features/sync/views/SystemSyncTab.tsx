@@ -24,7 +24,9 @@ import {
   Search,
   Copy,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  FileDown
 } from 'lucide-react';
 import { jiraService, authService, jqlService } from '../../../services/api';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
@@ -424,13 +426,45 @@ export default function SystemSyncTab() {
         </div>
       )}
 
-      {/* BARRA SUPERIOR DE NOTIFICACIONES Y ESTADO DE ETLS */}
-      <div className="flex items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-2xl shadow-sm mb-4">
-        <div className="flex items-center gap-2">
-          <Zap className="text-teal-500" size={18} />
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white">Motor de Sincronización ETL & Consola JQL</h2>
+      {/* BARRA SUPERIOR DE SINCRONIZACIÓN DEL SISTEMA (ESTILO ADMIN RESUMEN) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        
+        {/* Lado Izquierdo: Ícono en Gradiente + Insignia + Título */}
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
+            <RefreshCcw size={24} />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                Supervisión Ejecutiva
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Motor de Sincronización Jira ETL & Consola JQL
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Sincronización del Sistema
+            </h1>
+          </div>
         </div>
-        <LiderNotificationBell />
+
+        {/* Lado Derecho: Bell Popup + Exportar PDF */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <LiderNotificationBell />
+
+          <button
+            type="button"
+            onClick={() => window.print()}
+            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
+            title="Exportar reporte de sincronización"
+          >
+            <FileDown size={15} />
+            <span>Exportar Reporte</span>
+          </button>
+        </div>
+
       </div>
 
       {/* SECCIÓN SUPERIOR: GRID DE CONFIGURACIÓN Y CONSOLA JQL */}

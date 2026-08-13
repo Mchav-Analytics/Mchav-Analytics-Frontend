@@ -33,13 +33,16 @@ export default function ActivityHistoryView({ selectedProjectId = 'PROJ-01' }) {
       });
   }, [selectedProjectId]);
 
-  const activityFeed = historyData?.activity_feed || [
+  const customLogs = JSON.parse(localStorage.getItem('mchav_user_activity_log') || '[]');
+  const defaultFeed = [
     { time: 'Hoy 09:30 AM', key: 'MCHAV-101', action: 'Pasaste a En Desarrollo (In Progress)', points: '8 SP', type: 'Story' },
     { time: 'Ayer 04:15 PM', key: 'MCHAV-105', action: 'Resolviste e hiciste entrega a QA (Done)', points: '5 SP', type: 'Bug' },
     { time: 'Hace 2 días', key: 'MCHAV-112', action: 'Enviaste a Code Review de Pares', points: '13 SP', type: 'Story' },
     { time: 'Hace 3 días', key: 'MCHAV-118', action: 'Completaste optimización de consultas SQL (Done)', points: '7 SP', type: 'Task' },
     { time: 'Hace 4 días', key: 'MCHAV-120', action: 'Completaste pruebas de integración (Done)', points: '8 SP', type: 'Task' }
   ];
+
+  const activityFeed = [...customLogs, ...(historyData?.activity_feed || defaultFeed)];
 
   const badges = historyData?.badges || [
     { id: "zero-defect", title: "Zero Defect Delivery", description: "2 Sprints consecutivos completados sin re-apertura de bugs en QA.", status: "UNLOCKED" },

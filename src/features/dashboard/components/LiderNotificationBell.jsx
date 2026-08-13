@@ -16,6 +16,12 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { jiraService } from '../../../services/api';
+import {
+  getReadNotificationIds,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  subscribeToNotificationUpdates
+} from '../../../services/notificationStore';
 
 // Configuración de notificaciones separadas POR ROL
 const roleNotifications = {
@@ -150,14 +156,28 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
   const activeRole = rawRole.includes('DEV') ? 'DEVELOPER' : rawRole.includes('ADMIN') ? 'ADMIN' : 'MANAGER';
 
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(() => roleNotifications[activeRole] || roleNotifications.MANAGER);
   const [syncingId, setSyncingId] = useState(null);
   const [syncMsg, setSyncMsg] = useState('');
   const popoverRef = useRef(null);
 
-  // Sincronizar notificaciones según el rol cuando el usuario cambia
+  const getMergedNotifications = (role) => {
+    const base = roleNotifications[role] || roleNotifications.MANAGER;
+    const readIds = getReadNotificationIds();
+    return base.map(n => ({
+      ...n,
+      isRead: n.isRead || readIds.includes(n.id)
+    }));
+  };
+
+  const [notifications, setNotifications] = useState(() => getMergedNotifications(activeRole));
+
+  // Sincronizar notificaciones según el rol y suscribirse a cambios globales en tiempo real
   useEffect(() => {
-    setNotifications(roleNotifications[activeRole] || roleNotifications.MANAGER);
+    setNotifications(getMergedNotifications(activeRole));
+    const unsubscribe = subscribeToNotificationUpdates(() => {
+      setNotifications(getMergedNotifications(activeRole));
+    });
+    return unsubscribe;
   }, [activeRole]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -177,16 +197,19 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
   }, [isOpen]);
 
   const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    const ids = notifications.map(n => n.id);
+    markAllNotificationsAsRead(ids);
   };
 
   const handleMarkSingleRead = (id) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+    markNotificationAsRead(id);
   };
 
   const handleGoToHub = () => {
     setIsOpen(false);
-    if (onNavigateToHub) {
+    if (onNavigateTab) {
+      onNavigateTab('alerts_center');
+    } else if (onNavigateToHub) {
       onNavigateToHub('alerts_center');
     }
   };
@@ -205,7 +228,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
     jiraService.triggerSync()
       .then(() => {
         setSyncMsg('✨ Sincronización reintentada con éxito');
-        setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+        markNotificationAsRead(id);
         setTimeout(() => setSyncMsg(''), 3000);
       })
       .catch((err) => {

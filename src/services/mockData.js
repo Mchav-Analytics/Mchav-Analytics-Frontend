@@ -53,9 +53,7 @@ export const mockGeneralMetrics = {
 
 // 4. Lista de proyectos disponibles para el selector desplegable (ProjectPicker)
 export const mockProjects = [
-  { id_proyecto: "PROJ-01", nombre: "MCHAV Analytics SPA", clave: "MCHAV" }, // Proyecto Principal
-  { id_proyecto: "PROJ-02", nombre: "Portal CRM Clientes", clave: "CRM" },    // Proyecto Secundario 1
-  { id_proyecto: "PROJ-03", nombre: "API Gateway Microservicios", clave: "GW" } // Proyecto Secundario 2
+  { id_proyecto: "PROJ-01", nombre: "MCHAV Analytics SPA", clave: "MCHAV" }
 ];
 
 // 5. Lista de Sprints simulados para filtrar KPIs en el Dashboard

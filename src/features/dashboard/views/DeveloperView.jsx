@@ -3,12 +3,12 @@
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
-import { 
-  Clock, 
-  CheckCircle, 
-  ClipboardList, 
-  Zap, 
-  Info, 
+import {
+  Clock,
+  CheckCircle,
+  ClipboardList,
+  Zap,
+  Info,
   User,
   Bug,
   FileText,
@@ -24,11 +24,16 @@ import {
   ExternalLink,
   CheckCircle2,
   ListTodo,
-  PieChart as PieChartIcon
+  PieChart as PieChartIcon,
+  Sparkles,
+  TrendingUp,
+  ShieldCheck
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, Tooltip as RechartsTooltip } from 'recharts';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { developerService, jiraService } from '../../../services/api';
+import owlMascotImg from '../../../assets/owl_mascot.png';
+import LiderNotificationBell from '../components/LiderNotificationBell';
 
 const tooltipStyle = {
   backgroundColor: '#0f172a',
@@ -40,10 +45,10 @@ const tooltipStyle = {
 };
 
 const MetricInfoTooltip = ({ text, align = "auto" }) => {
-  const alignClass = 
+  const alignClass =
     align === "left" ? "left-0 md:left-0 md:translate-x-0" :
-    align === "right" ? "right-0 md:right-0 md:translate-x-0" :
-    "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
+      align === "right" ? "right-0 md:right-0 md:translate-x-0" :
+        "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
 
   return (
     <div className="group/tooltip relative inline-flex items-center cursor-help ml-1.5 shrink-0 z-[100]" title={text}>
@@ -65,8 +70,8 @@ const SparklineMini = ({ color = "#00f5d4" }) => {
         <AreaChart data={data} margin={{ top: 1, right: 1, left: 1, bottom: 1 }}>
           <defs>
             <linearGradient id={`grad_${color.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor={color} stopOpacity={0.6}/>
-              <stop offset="100%" stopColor={color} stopOpacity={0.0}/>
+              <stop offset="0%" stopColor={color} stopOpacity={0.6} />
+              <stop offset="100%" stopColor={color} stopOpacity={0.0} />
             </linearGradient>
           </defs>
           <Area type="monotone" dataKey="v" stroke={color} strokeWidth={2.5} fill={`url(#grad_${color.replace('#', '')})`} isAnimationActive={false} />
@@ -87,17 +92,19 @@ const DEFAULT_ASSIGNED_ISSUES = [
   { key_issue: 'MCHAV-124', summary: 'Refactorizar hooks personalizados en Frontend', status_actual: 'EN PROGRESO', story_points: 5, cycle_time_days: 1.8, tipo: 'Tarea / Deuda Técnica', prioridad: 'Media', fecha_creacion: '2026-08-10', fecha_actualizacion: '2026-08-12', descripcion: 'Desacoplamiento de lógica de renderizado en React.' }
 ];
 
-export default function DeveloperView({ 
-  kpis = [], 
-  selectedProjectId = 'PROJ-01', 
+export default function DeveloperView({
+  kpis = [],
+  selectedProjectId = 'PROJ-01',
   alerts = [],
   onNavigateToAlerts,
-  onNavigateTab 
+  onNavigateTab
 }) {
   const { user } = useAuth();
   const [scorecard, setScorecard] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [taskFilter, setTaskFilter] = useState('ALL'); // 'ALL' | 'IN_PROGRESS' | 'PENDING' | 'BLOCKED' | 'COMPLETED'
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 5;
 
   // Modales interactivos
   const [selectedIssueModal, setSelectedIssueModal] = useState(null);
@@ -193,6 +200,36 @@ export default function DeveloperView({
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
+  // CAMBIO DE ESTADO EN TIEMPO REAL & REGISTRO EN EL HISTORIAL DE ACTIVIDAD
+  const handleUpdateTaskStatus = (issueKey, newStatus, storyPoints = 5, summary = '') => {
+    setAssignedIssuesList(prev => prev.map(t => {
+      if (t.key_issue === issueKey) {
+        return { ...t, status_actual: newStatus };
+      }
+      return t;
+    }));
+
+    if (newStatus === 'LISTO' || newStatus === 'COMPLETADA') {
+      const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const newLog = {
+        time: `Hoy ${nowStr}`,
+        key: issueKey,
+        action: `Resolviste e hiciste entrega a QA / Producción (Done)`,
+        points: `${storyPoints} SP`,
+        type: (summary || '').toLowerCase().includes('bug') ? 'Bug' : 'Story'
+      };
+      const existingLogs = JSON.parse(localStorage.getItem('mchav_user_activity_log') || '[]');
+      localStorage.setItem('mchav_user_activity_log', JSON.stringify([newLog, ...existingLogs]));
+      showNotificationToast(`✨ Tarea ${issueKey} marcada como LISTO y registrada en tu Historial`);
+    } else {
+      showNotificationToast(`✨ Estado de ${issueKey} actualizado a "${newStatus}"`);
+    }
+
+    if (selectedIssueModal && selectedIssueModal.key_issue === issueKey) {
+      setSelectedIssueModal(prev => prev ? { ...prev, status_actual: newStatus } : null);
+    }
+  };
+
   const handlePrintPDF = () => {
     window.print();
   };
@@ -255,7 +292,7 @@ export default function DeveloperView({
   };
 
   const assignedIssuesList = (scorecard?.assigned_issues && scorecard.assigned_issues.length > 0)
-    ? scorecard.assigned_issues 
+    ? scorecard.assigned_issues
     : DEFAULT_ASSIGNED_ISSUES;
 
   const filteredTasks = assignedIssuesList.filter(issue => {
@@ -280,7 +317,7 @@ export default function DeveloperView({
 
   return (
     <div className="w-full flex-1 h-full flex flex-col space-y-6 pb-12 overflow-y-auto text-left font-sans transition-colors duration-300 relative">
-      
+
       {/* TOAST DE RESPUESTA ENVIADA */}
       {toastMsg && (
         <div className="fixed top-6 right-6 z-50 bg-emerald-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl shadow-2xl animate-in fade-in slide-in-from-top-4 flex items-center gap-2">
@@ -310,18 +347,8 @@ export default function DeveloperView({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap shrink-0">
-          <span className="px-3 py-1 text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-            🟢 Sincronizado hace 5 min
-          </span>
-
-          <button
-            onClick={() => setAlertsModalOpen(true)}
-            className="px-3.5 py-2 text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all"
-          >
-            <Bell size={14} className="text-amber-400 fill-amber-400" />
-            <span>Alertas & Solicitudes</span>
-          </button>
+          {/* CAMPANITA DE NOTIFICACIONES CON PREVIA EMERGENTE & ENLACE AL CENTRO DE ACTIVIDAD */}
+          <LiderNotificationBell onNavigateTab={onNavigateTab} />
 
           <button
             onClick={handlePrintPDF}
@@ -333,17 +360,17 @@ export default function DeveloperView({
 
           <button
             onClick={handleReloadData}
-            className="p-2 text-slate-400 hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer"
+            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer"
             title="Actualizar datos"
           >
-            <RotateCcw size={15} className={isRefreshing ? "animate-spin text-indigo-400" : ""} />
+            <RotateCcw size={15} className={isRefreshing ? "animate-spin text-indigo-500" : ""} />
           </button>
         </div>
       </div>
 
       {/* 2. KPIS PERSONALES (DEL DESARROLLADOR) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        
+
         {/* CYCLE TIME */}
         <div className="flex flex-col rounded-2xl bg-white dark:bg-[#141738] p-5 shadow-sm dark:shadow-xl border border-slate-200 dark:border-[#272b5c] justify-between transition-all duration-300 hover:border-emerald-500/60 min-h-[150px]">
           <div className="flex items-center justify-between">
@@ -414,7 +441,7 @@ export default function DeveloperView({
             </div>
             <div className="w-16 h-7">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={[{v:2},{v:3},{v:1},{v:4},{v:4}]}>
+                <BarChart data={[{ v: 2 }, { v: 3 }, { v: 1 }, { v: 4 }, { v: 4 }]}>
                   <Bar dataKey="v" fill="#00c2ff" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -452,281 +479,263 @@ export default function DeveloperView({
 
       </div>
 
-      {/* 3. NUEVA SECCIÓN PRINCIPAL: "REQUIERE MI ATENCIÓN" */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
-          <div className="space-y-0.5">
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <Bell size={18} className="text-amber-500 animate-bounce" />
-              Requiere mi atención
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Actividades, bloqueos y solicitudes que necesitan una acción inmediata.
-            </p>
-          </div>
-          <span className="px-3 py-1 text-xs font-bold rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20">
-            {attentionItems.length} pendientes
+
+
+
+
+      {/* 3. AI DEV COACH (MASCOTA BÚHO Y BOCADILLO DE DIÁLOGO NATIVO EN MI TRABAJO) */}
+      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 px-1 py-1">
+        {/* MASCOTA BÚHO */}
+        <div className="relative shrink-0 flex flex-col items-center group/mascot">
+          <img
+            src={owlMascotImg}
+            alt="Mascota Búho AI Dev Coach"
+            className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl transition-transform duration-300 group-hover/mascot:scale-105"
+          />
+          <span className="mt-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs">
+            🦉 AI Coach
           </span>
         </div>
 
-        {/* TARJETAS COMPACTAS DE ATENCIÓN */}
-        <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-          {attentionItems.map((item) => (
-            <div key={item.id} className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group transition-colors hover:bg-slate-50/50 dark:hover:bg-slate-900/30 px-2 rounded-xl">
-              <div className="flex items-start gap-3">
-                <div className={`p-2 rounded-xl shrink-0 mt-0.5 ${
-                  item.type === 'BLOCK' ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30' :
-                  item.type === 'REQUEST' ? 'bg-purple-500/15 text-purple-400 border border-purple-500/30' :
-                  item.type === 'REVIEW' ? 'bg-amber-500/15 text-amber-400 border border-amber-500/30' :
-                  'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30'
-                }`}>
-                  {item.type === 'BLOCK' ? <ShieldAlert size={16} /> :
-                   item.type === 'REQUEST' ? <MessageSquare size={16} /> :
-                   item.type === 'REVIEW' ? <Clock size={16} /> :
-                   <AlertTriangle size={16} />}
-                </div>
+        {/* BOCADILLO DE DIÁLOGO MODO CLARO & OSCURO */}
+        <div className="relative flex-1 rounded-3xl bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-white dark:from-[#191c3d] dark:via-[#241e54] dark:to-[#191c3d] p-6 shadow-sm dark:shadow-2xl border border-indigo-200/80 dark:border-indigo-500/30 space-y-4 group transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-400/50">
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-5 dark:opacity-20 blur-md transition-opacity duration-300 group-hover:opacity-15 pointer-events-none"></div>
 
-                <div className="space-y-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 rounded border border-slate-200 dark:border-slate-700">
-                      {item.key_issue}
-                    </span>
-                    <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                      {item.title}
-                    </h3>
-                    <span className="text-[10px] text-slate-400 shrink-0">{item.time}</span>
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                    {item.detail}
-                  </p>
-                </div>
-              </div>
+          {/* Flecha del bocadillo hacia la mascota (izquierda) */}
+          <div className="hidden sm:block absolute top-1/2 -left-3 -translate-y-1/2 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-r-[14px] border-r-indigo-50/90 dark:border-r-[#191c3d]"></div>
 
-              <div className="flex items-center justify-end gap-2 shrink-0">
-                {item.type === 'REQUEST' ? (
-                  <button
-                    onClick={() => handleOpenReply(item)}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <MessageSquare size={13} />
-                    <span>Responder</span>
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => {
-                      const targetTask = DEFAULT_ASSIGNED_ISSUES.find(t => t.key_issue === item.key_issue);
-                      if (targetTask) setSelectedIssueModal(targetTask);
-                    }}
-                    className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-300 transition-all flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <span>{item.actionText}</span>
-                    <ArrowRight size={13} />
-                  </button>
-                )}
+          <div className="relative z-10 space-y-3.5 text-left">
+            <div className="flex items-center gap-3 text-indigo-700 dark:text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
+              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+                <Sparkles size={16} />
               </div>
+              <span>Asistente Inteligente — AI Dev Coach</span>
             </div>
-          ))}
-        </div>
-      </div>
 
-      {/* 4. AI DEV COACH (BÚHO DE RECOMENDACIÓN INTELIGENTE) */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-950/80 via-slate-900 to-purple-950/80 border border-indigo-500/30 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-start gap-3.5">
-          <div className="p-2.5 rounded-2xl bg-indigo-600/30 text-indigo-300 border border-indigo-500/40 shrink-0 shadow-md">
-            <span className="text-2xl">🦉</span>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-black uppercase text-indigo-400 tracking-wider">AI DEV COACH</span>
-              <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-500/20 text-indigo-300 rounded-full border border-indigo-500/30">
-                Prioridad Recomendada
+            <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
+              💡 <strong>Diagnóstico del Sprint:</strong> <em>"Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101."</em>
+            </p>
+
+            <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-3 border-t border-indigo-200/60 dark:border-slate-700/60">
+              <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
+                <TrendingUp size={16} /> Ritmo: +14% Eficiencia
+              </span>
+              <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold">
+                <ShieldCheck size={16} /> Calidad: 100% Entregas Limpias
               </span>
             </div>
-            <p className="text-xs text-slate-200 leading-relaxed max-w-3xl">
-              Tienes una incidencia bloqueada desde hace 2 días (<strong className="text-rose-400">MCHAV-105</strong>) y una solicitud pendiente de respuesta. Te recomendamos atender primero MCHAV-105 porque es crítica y está deteniendo las pruebas de QA.
-            </p>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={() => {
-              const target = DEFAULT_ASSIGNED_ISSUES.find(t => t.key_issue === 'MCHAV-105');
-              if (target) setSelectedIssueModal(target);
-            }}
-            className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow cursor-pointer"
-          >
-            Ver MCHAV-105
-          </button>
-          <button
-            onClick={() => setAlertsModalOpen(true)}
-            className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700 cursor-pointer"
-          >
-            Ver solicitudes
-          </button>
         </div>
       </div>
 
-      {/* 5. DISTRIBUCIÓN DE MI TRABAJO (ÚNICA GRÁFICA LIMPIA) */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
-          <div className="space-y-0.5">
-            <h2 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-              <PieChartIcon size={16} className="text-indigo-400" />
-              Distribución de mi trabajo
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Proporción de tiempo y esfuerzo asignado por tipo de incidencia personal.
-            </p>
-          </div>
-          <span className="text-xs font-bold text-slate-400">Total: {totalCount} incidencias</span>
-        </div>
+      {/* 4. SECCIÓN GRID SIDE-BY-SIDE EQUILIBRADA: DISTRIBUCIÓN DE MI TRABAJO & MIS TAREAS ASIGNADAS CON PAGINACIÓN */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 items-center gap-6">
-          <div className="h-44 w-full relative flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={donutData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={45}
-                  outerRadius={65}
-                  paddingAngle={5}
-                  dataKey="pct"
-                >
-                  {donutData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <RechartsTooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{totalCount}</span>
-              <span className="text-[9px] font-bold text-slate-400 uppercase">Mis Tareas</span>
+        {/* TARJETA IZQUIERDA (5 COLUMNAS): DISTRIBUCIÓN DE MI TRABAJO CON GRÁFICA Y LEYENDAS LADO A LADO */}
+        <div className="xl:col-span-5 p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
+            <div className="space-y-0.5">
+              <h2 className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+                <PieChartIcon size={16} className="text-indigo-400" />
+                Distribución de mi trabajo
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Proporción de tiempo y esfuerzo asignado por tipo de incidencia personal.
+              </p>
+            </div>
+            <span className="text-xs font-bold text-slate-400 shrink-0 ml-2">Total: {totalCount} incidencias</span>
+          </div>
+
+          {/* CONTENIDO CENTRADO Y NATIVO LADO A LADO */}
+          <div className="flex-1 flex flex-col justify-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 items-center gap-4 py-2">
+
+              {/* GRÁFICA CIRCULAR DE DONA */}
+              <div className="h-44 w-full relative flex items-center justify-center shrink-0">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={45}
+                      outerRadius={65}
+                      paddingAngle={5}
+                      dataKey="pct"
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip contentStyle={tooltipStyle} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                  <span className="text-2xl font-black text-slate-900 dark:text-white">{totalCount}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase">Mis Tareas</span>
+                </div>
+              </div>
+
+              {/* LEYENDAS LADO A LADO */}
+              <div className="space-y-2.5">
+                {donutData.map((item, idx) => {
+                  const ItemIcon = item.icon;
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                        <ItemIcon size={14} className="text-slate-400 shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{item.name}</span>
+                      </div>
+                      <span className="text-xs font-black text-slate-900 dark:text-white shrink-0 ml-1">
+                        {item.count} <span className="text-slate-400 text-[10px]">({item.pct}%)</span>
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
             </div>
           </div>
+        </div>
 
-          <div className="space-y-2.5">
-            {donutData.map((item, idx) => {
-              const ItemIcon = item.icon;
-              return (
-                <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                    <ItemIcon size={14} className="text-slate-400" />
-                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{item.name}</span>
-                  </div>
-                  <span className="text-xs font-black text-slate-900 dark:text-white">
-                    {item.count} <span className="text-slate-400 text-[10px] ml-0.5">({item.pct}%)</span>
-                  </span>
+        {/* TARJETA DERECHA (7 COLUMNAS): MIS TAREAS ASIGNADAS CON PAGINACIÓN */}
+        {(() => {
+          const totalPages = Math.ceil(filteredTasks.length / ITEMS_PER_PAGE) || 1;
+          const paginatedTasks = filteredTasks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+          return (
+            <div className="xl:col-span-7 p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                <div className="space-y-0.5">
+                  <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <ListTodo size={18} className="text-indigo-400" />
+                    Mis Tareas Asignadas
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Listado completo de tus tareas asignadas con estado y esfuerzo.
+                  </p>
                 </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
 
-      {/* 6. REEMPLAZO: SECCIÓN "MIS TAREAS" CON FILTROS */}
-      <div className="p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-          <div className="space-y-0.5">
-            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-              <ListTodo size={18} className="text-indigo-400" />
-              Mis Tareas Asignadas
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Listado completo de tus tareas asignadas con estado y esfuerzo estimado.
-            </p>
-          </div>
-
-          {/* FILTROS DE ESTADO */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
-            {[
-              { key: 'ALL', label: 'Todas' },
-              { key: 'IN_PROGRESS', label: 'En progreso' },
-              { key: 'PENDING', label: 'Pendientes' },
-              { key: 'BLOCKED', label: 'Bloqueadas' },
-              { key: 'COMPLETED', label: 'Completadas' }
-            ].map((f) => (
-              <button
-                key={f.key}
-                onClick={() => setTaskFilter(f.key)}
-                className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all cursor-pointer shrink-0 ${
-                  taskFilter === f.key
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* TABLA DE TAREAS ASIGNADAS */}
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase text-slate-400">
-                <th className="py-3 px-3">Clave</th>
-                <th className="py-3 px-3">Resumen</th>
-                <th className="py-3 px-3">Prioridad</th>
-                <th className="py-3 px-3">Estado</th>
-                <th className="py-3 px-3 text-center">Story Points</th>
-                <th className="py-3 px-3 text-center">Cycle Time</th>
-                <th className="py-3 px-3 text-right">Acción</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
-              {filteredTasks.map((t) => (
-                <tr key={t.key_issue} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                  <td className="py-3.5 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-300">
-                    {t.key_issue}
-                  </td>
-                  <td className="py-3.5 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
-                    {t.summary}
-                  </td>
-                  <td className="py-3.5 px-3">
-                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${
-                      t.prioridad === 'Crítica' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                      t.prioridad === 'Alta' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                      'bg-slate-800 text-slate-300 border border-slate-700'
-                    }`}>
-                      {t.prioridad}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-3">
-                    <span className={`px-2.5 py-1 text-[11px] font-extrabold rounded-lg ${
-                      t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                      t.status_actual === 'EN PROGRESO' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
-                      t.status_actual === 'EN REVISIÓN' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                      t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
-                      'bg-slate-800 text-slate-300'
-                    }`}>
-                      {t.status_actual}
-                    </span>
-                  </td>
-                  <td className="py-3.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
-                    {t.story_points} SP
-                  </td>
-                  <td className="py-3.5 px-3 text-center font-semibold text-slate-400">
-                    {t.cycle_time_days > 0 ? `${t.cycle_time_days}d` : '--'}
-                  </td>
-                  <td className="py-3.5 px-3 text-right">
+                {/* FILTROS DE ESTADO */}
+                <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
+                  {[
+                    { key: 'ALL', label: 'Todas' },
+                    { key: 'IN_PROGRESS', label: 'En progreso' },
+                    { key: 'PENDING', label: 'Pendientes' },
+                    { key: 'BLOCKED', label: 'Bloqueadas' },
+                    { key: 'COMPLETED', label: 'Completadas' }
+                  ].map((f) => (
                     <button
-                      onClick={() => setSelectedIssueModal(t)}
-                      className="px-3 py-1 text-[11px] font-extrabold rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                      key={f.key}
+                      onClick={() => {
+                        setTaskFilter(f.key);
+                        setCurrentPage(1);
+                      }}
+                      className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all cursor-pointer shrink-0 ${taskFilter === f.key
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
                     >
-                      Ver
+                      {f.label}
                     </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* TABLA DE TAREAS ASIGNADAS */}
+              <div className="overflow-x-auto flex-1 min-h-[220px]">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-200 dark:border-slate-800 text-[10px] font-extrabold uppercase text-slate-400">
+                      <th className="py-2.5 px-3">Clave</th>
+                      <th className="py-2.5 px-3">Resumen</th>
+                      <th className="py-2.5 px-3">Estado</th>
+                      <th className="py-2.5 px-3 text-center">SP</th>
+                      <th className="py-2.5 px-3 text-center">Cycle</th>
+                      <th className="py-2.5 px-3 text-right">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+                    {paginatedTasks.length > 0 ? (
+                      paginatedTasks.map((t) => (
+                        <tr key={t.key_issue} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                          <td className="py-2.5 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-300">
+                            {t.key_issue}
+                          </td>
+                          <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
+                            {t.summary}
+                          </td>
+                          <td className="py-2.5 px-3">
+                            <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-lg ${t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                              t.status_actual === 'EN PROGRESO' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
+                                t.status_actual === 'EN REVISIÓN' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+                                  t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                                    'bg-slate-800 text-slate-300'
+                              }`}>
+                              {t.status_actual}
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
+                            {t.story_points} SP
+                          </td>
+                          <td className="py-2.5 px-3 text-center font-semibold text-slate-400 text-[11px]">
+                            {t.cycle_time_days > 0 ? `${t.cycle_time_days}d` : '--'}
+                          </td>
+                          <td className="py-2.5 px-3 text-right">
+                            <button
+                              onClick={() => setSelectedIssueModal(t)}
+                              className="px-3 py-1 text-[11px] font-extrabold rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                            >
+                              Ver
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={6} className="py-8 text-center text-xs text-slate-400">
+                          No hay tareas que coincidan con este filtro.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* CONTROLES DE PAGINACIÓN */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800/80 text-xs">
+                <span className="text-slate-400 font-medium">
+                  Mostrando {filteredTasks.length === 0 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredTasks.length)} de {filteredTasks.length} tareas
+                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                  >
+                    Anterior
+                  </button>
+
+                  <span className="text-slate-400 font-bold text-xs px-1">
+                    {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    disabled={currentPage >= totalPages}
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    className="px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                  >
+                    Siguiente
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          );
+        })()}
+
       </div>
 
       {/* MODAL RÁPIDO DE RESPUESTA EN LUGAR DE REDIRECCIÓN */}
@@ -843,6 +852,34 @@ export default function DeveloperView({
                   <strong className="text-white font-bold">{selectedIssueModal.story_points} SP</strong>
                 </div>
               </div>
+
+              {/* CONTROLES DE CAMBIO DE ESTADO (EN PROGRESO / REVISIÓN / BLOQUEADA / LISTO) */}
+              <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-[#1a1d40] border border-indigo-200 dark:border-[#33376b] space-y-2 text-left">
+                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 block">
+                  Cambiar Estado de la Incidencia:
+                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  {[
+                    { key: 'EN PROGRESO', label: 'En Progreso' },
+                    { key: 'EN REVISIÓN', label: 'En Revisión' },
+                    { key: 'BLOQUEADA', label: 'Bloqueada' },
+                    { key: 'LISTO', label: '✅ Marcar como LISTO (Done)' }
+                  ].map((st) => (
+                    <button
+                      key={st.key}
+                      type="button"
+                      onClick={() => handleUpdateTaskStatus(selectedIssueModal.key_issue, st.key, selectedIssueModal.story_points, selectedIssueModal.summary)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
+                        selectedIssueModal.status_actual === st.key
+                          ? 'bg-emerald-600 text-white shadow-md'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white'
+                      }`}
+                    >
+                      {st.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between pt-3 border-t border-slate-800">
@@ -888,31 +925,28 @@ export default function DeveloperView({
             <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
               <button
                 onClick={() => setAlertsTab('request_form')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  alertsTab === 'request_form'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${alertsTab === 'request_form'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 + Nueva Solicitud
               </button>
               <button
                 onClick={() => setAlertsTab('sent_requests')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  alertsTab === 'sent_requests'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${alertsTab === 'sent_requests'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Mis Solicitudes ({submittedHelpRequests.length})
               </button>
               <button
                 onClick={() => setAlertsTab('alerts')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
-                  alertsTab === 'alerts'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-slate-400 hover:text-white'
-                }`}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${alertsTab === 'alerts'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-slate-400 hover:text-white'
+                  }`}
               >
                 Mis Alertas (3)
               </button>

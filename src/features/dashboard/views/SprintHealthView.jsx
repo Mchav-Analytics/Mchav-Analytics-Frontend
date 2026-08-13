@@ -16,7 +16,8 @@ import {
   Layers,
   ArrowRight,
   ShieldAlert,
-  Info
+  Info,
+  ShieldCheck
 } from 'lucide-react';
 import {
   BarChart,
@@ -197,8 +198,62 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
   return (
     <div className="space-y-6 pb-12 font-sans text-left">
 
-      {/* BARRA SUPERIOR DE ACCESO RÁPIDO Y NAVEGACIÓN CON SELECTOR DE SPRINT */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
+      {/* 1. CABECERA PRINCIPAL DE SALUD DEL SPRINT (ESTILO ADMIN RESUMEN) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        {/* Lado Izquierdo: Ícono en Gradiente + Insignia + Título */}
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
+            <Activity size={24} />
+          </div>
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                Predictability Engine
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Proyecto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{selectedProjectId}</strong>
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Salud del Sprint & Eficiencia de Flujo
+            </h1>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 shrink-0">
+          <div className={`flex items-center gap-3 p-2.5 px-4 rounded-2xl border shadow-md ${scoreTheme.bg} ${scoreTheme.border}`}>
+            <div className="relative w-11 h-11 flex items-center justify-center">
+              <svg className="w-11 h-11 transform -rotate-90">
+                <circle cx="22" cy="22" r="17" stroke="#cbd5e1" strokeWidth="3.5" fill="transparent" />
+                <circle
+                  cx="22"
+                  cy="22"
+                  r="17"
+                  stroke={scoreTheme.stroke}
+                  strokeWidth="3.5"
+                  fill="transparent"
+                  strokeDasharray={107}
+                  strokeDashoffset={107 - (107 * Math.min(healthScore, 100)) / 100}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span className={`absolute font-extrabold text-xs ${scoreTheme.text}`}>{healthScore}</span>
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-[9px] uppercase font-black tracking-wider text-slate-400">Sprint Health Score</span>
+              <span className={`text-xs font-black ${scoreTheme.text}`}>
+                {healthScore >= 80 ? 'Saludable' : healthScore >= 60 ? 'Atención' : 'Riesgo Alto'}
+              </span>
+            </div>
+          </div>
+
+          <LiderNotificationBell />
+        </div>
+      </div>
+
+      {/* 2. BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO CON SELECTOR DE SPRINT (AHORA ABAJO) */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
         <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
           <button 
             onClick={onNavigateToMatrix}
@@ -238,55 +293,10 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
             )}
           </div>
 
-          <LiderNotificationBell />
-
           <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             ETL Sync Activa
           </span>
-        </div>
-      </div>
-      
-      {/* CABECERA DE LA VISTA */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#191c3d] p-6 rounded-2xl border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-xl">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 text-xs font-bold bg-indigo-50 dark:bg-indigo-600/30 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/40 rounded-full">
-              FASE 7 — PREDICTABILITY ENGINE
-            </span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">Proyecto: {selectedProjectId}</span>
-          </div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">
-            Salud del Sprint & Eficiencia de Flujo
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-2xl">
-            Evaluación de predictibilidad, compromiso inicial, scope creep y cuellos de botella en el tiempo de entrega.
-          </p>
-        </div>
-
-        <div className={`flex items-center gap-4 p-4 rounded-xl border shadow-lg ${scoreTheme.bg} ${scoreTheme.border}`}>
-          <div className="relative w-14 h-14 flex items-center justify-center">
-            <svg className="w-14 h-14 transform -rotate-90">
-              <circle cx="28" cy="28" r="22" stroke="#cbd5e1" strokeWidth="4" fill="transparent" />
-              <circle
-                cx="28"
-                cy="28"
-                r="22"
-                stroke={scoreTheme.stroke}
-                strokeWidth="4"
-                fill="transparent"
-                strokeDasharray={138}
-                strokeDashoffset={138 - (138 * Math.min(healthScore, 100)) / 100}
-                strokeLinecap="round"
-              />
-            </svg>
-            <span className={`absolute font-extrabold text-sm ${scoreTheme.text}`}>{healthScore}</span>
-          </div>
-
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">Sprint Health Score</span>
-            <span className={`text-sm font-bold ${scoreTheme.text}`}>{healthData?.diagnostico_label}</span>
-          </div>
         </div>
       </div>
 

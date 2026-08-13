@@ -29,10 +29,14 @@ import {
   RotateCcw,
   Sparkles,
   FileDown,
-  Bell
+  Bell,
+  ShieldCheck,
+  Calculator,
+  BarChart3
 } from 'lucide-react';
 import { useAuth } from '../../auth/context/AuthContext';
 import KpiDetailModal from '../components/KpiDetailModal';
+import LiderNotificationBell from '../components/LiderNotificationBell';
 import { jiraService, projectService, reportService } from '../../../services/api';
 import { 
   ResponsiveContainer, 
@@ -50,23 +54,17 @@ import {
 
 // --- MOCK DATA PARA LOS PANORAMAS Y GRÁFICOS BASE ---
 const mockProjectsHealthList = [
-  { id: '10000', key: 'SCRUM', name: 'MCHAV Analytics', health: 82, status: 'Saludable', statusColor: 'teal', issues: 32, sprint: 'Sprint 04', segments: [1, 1, 1, 1, 1, 1, 1] },
-  { id: 'PA-01', key: 'PA',   name: 'Proyecto Alpha',  health: 71, status: 'Saludable', statusColor: 'teal', issues: 27, sprint: 'Sprint 08', segments: [1, 1, 1, 1, 1, 1, 0] },
-  { id: 'PB-01', key: 'PB',   name: 'Proyecto Beta',   health: 54, status: 'Atención',  statusColor: 'amber', issues: 41, sprint: 'Sprint 12', segments: [1, 1, 1, 1, 0, 0, 0] },
-  { id: 'PG-01', key: 'PG',   name: 'Proyecto Gamma',  health: 68, status: 'Saludable', statusColor: 'teal', issues: 29, sprint: 'Sprint 06', segments: [1, 1, 1, 1, 1, 0, 0] },
-  { id: 'PD-01', key: 'PD',   name: 'Proyecto Delta',  health: 48, status: 'Con problemas', statusColor: 'rose', issues: 35, sprint: 'Sprint 03', segments: [1, 1, 1, 0, 0, 0, 0] }
+  { id: '10000', key: 'MCHAV', name: 'MCHAV Analytics', health: 88, status: 'Saludable', statusColor: 'teal', issues: 32, sprint: 'Sprint 04', segments: [1, 1, 1, 1, 1, 1, 1] }
 ];
 
 const mockEstadoDonutData = [
-  { name: 'Saludables',        value: 6, percentage: 75,   color: '#00c896' },
-  { name: 'Requiere atención', value: 1, percentage: 12.5, color: '#f59e0b' },
-  { name: 'Con problemas',     value: 1, percentage: 12.5, color: '#f43f5e' }
+  { name: 'Saludables',        value: 1, percentage: 100, color: '#00c896' },
+  { name: 'Requiere atención', value: 0, percentage: 0,   color: '#f59e0b' },
+  { name: 'Con problemas',     value: 0, percentage: 0,   color: '#f43f5e' }
 ];
 
 const mockPrincipalesAlertas = [
-  { id: 'alt-1', project: 'Proyecto Beta', message: '3 bugs críticos', type: 'danger' },
-  { id: 'alt-2', project: 'Proyecto Gamma', message: 'Cycle Time ↑ 18%', type: 'warning' },
-  { id: 'alt-3', project: 'Proyecto Delta', message: 'Sin sincronización hace 2 h', type: 'warning' }
+  { id: 'alt-1', project: 'MCHAV Analytics', message: 'Sincronización Jira activa (426 issues)', type: 'info' }
 ];
 
 // Sparklines micro data para Rendimiento Global Promedio (NUEVO FORMATO DINAMICO)
@@ -282,53 +280,45 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
       
-      {/* 1. CABECERA CON INSIGNIA DE SINCRONIZACIÓN EN EL EXTREMO SUPERIOR DERECHO */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-indigo-600/20 text-indigo-500 dark:text-indigo-400 font-extrabold flex items-center justify-center text-base border border-indigo-500/30 shadow-sm">
-            M
+      {/* 1. BARRA SUPERIOR ADAPTADA A SUPERVISIÓN EJECUTIVA (ADMIN RESUMEN) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
+        
+        {/* Lado Izquierdo: Ícono en Gradiente + Insignia + Título */}
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
+            <BarChart3 size={24} />
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-              Histórico general
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">Rendimiento consolidado del sprint actual</p>
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                Supervisión Ejecutiva
+              </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">{selectedProjectId || 'SCRUM'}</strong>
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Histórico General
+            </h1>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          
-          {/* Botón Exportar PDF */}
+        {/* Lado Derecho: Bell Popup + Exportar PDF */}
+        <div className="flex items-center gap-2.5 shrink-0">
+          <LiderNotificationBell onNavigateTab={setActiveTab} />
+
           <button
             type="button"
             onClick={handleExportPDF}
-            className="h-9 px-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-md shadow-indigo-600/20"
+            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
             title="Exportar reporte consolidado en PDF"
           >
             <FileDown size={15} />
             <span>Exportar PDF</span>
           </button>
-
-          {/* Botón Campana de Notificaciones */}
-          <button
-            type="button"
-            onClick={() => setActiveTab && setActiveTab('alerts_center')}
-            className="h-9 w-9 rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center relative"
-            title="Centro de alertas y notificaciones"
-          >
-            <Bell size={15} />
-          </button>
-
-          {/* Botón de Refrescar Datos */}
-          <button
-            type="button"
-            onClick={handleRefresh}
-            className="h-9 w-9 rounded-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer shadow-sm flex items-center justify-center"
-            title="Actualizar datos del sprint"
-          >
-            <RefreshCw size={15} className={isRefreshing ? 'animate-spin text-indigo-500' : ''} />
-          </button>
         </div>
+
       </div>
 
 

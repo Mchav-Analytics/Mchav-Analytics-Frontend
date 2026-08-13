@@ -4,10 +4,10 @@ import { mockAuthService, mockJiraService, mockProjectService, mockAutomationSer
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;
 
-// INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
-// true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
-// false = Modo Real (Conectado a FastAPI en http://localhost:8000)
-export const USE_MOCK_DATA = true;
+// INTERRUPTOR DE CONEXIÓN DE BACKEND:
+// false = Modo Real (Conectado a FastAPI en http://localhost:8000 -> PostgreSQL / Jira API)
+// true  = Modo Mock (Desconectado de FastAPI)
+export const USE_MOCK_DATA = false;
 
 export const BACKEND_URL = 'http://localhost:8000';
 

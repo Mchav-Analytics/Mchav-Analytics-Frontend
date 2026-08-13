@@ -1,31 +1,18 @@
 // ============================================================================
-// SUB-VISTA: PLAN DE TRABAJO Y GESTIÓN DE TAREAS (CON PAGINACIÓN Y MÓDULOS AVANZADOS)
+// SUB-VISTA: PLAN DE TRABAJO Y GESTIÓN DE TAREAS (CON PAGINACIÓN Y MÓDULOS AVANZADOS - MODO CLARO & OSCURO)
 // ============================================================================
 
 import React, { useState, useEffect } from 'react';
 import { 
   Layers, 
   Clock, 
-  AlertTriangle, 
-  CheckCircle2, 
   Search, 
-  Info, 
-  User, 
   RotateCcw,
-  Zap,
-  ShieldCheck,
   X,
   Activity,
-  Filter,
-  CheckCircle,
-  FileText,
-  Bug,
-  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Plus,
-  Printer,
-  ArrowUpDown,
   Sparkles,
   ListTodo
 } from 'lucide-react';
@@ -51,7 +38,7 @@ const DEFAULT_WORKLOAD_LIST = [
 
 export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
   const { user } = useAuth();
-  const [scorecard, setScorecard] = useState(null);
+  const [, setScorecard] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('TODOS'); // 'TODOS' | 'PROGRESO' | 'PENDIENTES' | 'BLOQUEADAS' | 'LISTO'
@@ -134,10 +121,6 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
     setCurrentPage(1);
   };
 
-  const handlePrintPDF = () => {
-    window.print();
-  };
-
   // Filtrado y Ordenamiento
   const filteredTasks = tasksList.filter(task => {
     const matchesSearch = 
@@ -176,26 +159,26 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
   const capacityPct = Math.min(100, Math.round(((countProgreso + countPendientes + countBloqueadas) / 10) * 100));
 
   return (
-    <div className="w-full max-w-full flex-1 flex flex-col justify-between space-y-4 text-left font-sans transition-colors duration-300 text-slate-100">
+    <div className="w-full max-w-full flex-1 flex flex-col justify-between space-y-4 text-left font-sans transition-colors duration-300 text-slate-800 dark:text-slate-100">
 
       {/* 1. CABECERA AL ESTILO DIRECTORIO DE USUARIOS CON ACCIONES AVANZADAS */}
-      <div className="relative rounded-2xl bg-[#141738] p-5 shadow-2xl border border-[#272b5c] shrink-0">
+      <div className="relative rounded-2xl bg-white dark:bg-[#141738] p-5 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] shrink-0">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Título e Identidad */}
           <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold shadow-md shadow-indigo-900/40 shrink-0">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold shadow-md shrink-0">
               <Layers size={22} />
             </div>
             <div className="space-y-0.5">
-              <h1 className="text-xl font-extrabold text-white flex items-center gap-2.5 flex-wrap">
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap">
                 Plan de Trabajo: {devName}
-                <span className="flex items-center gap-1.5 rounded-full bg-[#00f5d4]/20 px-2.5 py-0.5 text-[11px] font-bold text-[#00f5d4] border border-[#00f5d4]/30">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#00f5d4] animate-pulse"></span>
+                <span className="flex items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-[#00f5d4]/20 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-[#00f5d4] border border-indigo-200 dark:border-[#00f5d4]/30">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-[#00f5d4] animate-pulse"></span>
                   {user?.rol || 'DEVELOPER'}
                 </span>
               </h1>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Planificación estratégica de tareas pendientes, entregas en progreso y capacidad del sprint.
               </p>
             </div>
@@ -205,7 +188,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setNewTaskModalOpen(true)}
-              className="px-3.5 py-2 text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-md shadow-purple-900/40 border border-purple-400/30 flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
+              className="px-3.5 py-2 text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-md border border-purple-400/30 flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
             >
               <Plus size={15} />
               <span>Nueva Tarea</span>
@@ -213,34 +196,34 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
             <button
               onClick={handleReload}
-              className="p-2 text-slate-400 hover:text-white bg-[#0b0e22] hover:bg-[#181b42] border border-[#232752] rounded-xl transition-all cursor-pointer"
+              className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-[#0b0e22] hover:bg-slate-200 dark:hover:bg-[#181b42] border border-slate-200 dark:border-[#232752] rounded-xl transition-all cursor-pointer"
               title="Actualizar datos"
             >
-              <RotateCcw size={15} className={isRefreshing ? "animate-spin text-indigo-400" : ""} />
+              <RotateCcw size={15} className={isRefreshing ? "animate-spin text-indigo-500" : ""} />
             </button>
           </div>
 
         </div>
 
-        {/* BANDA DE SALUD Y CAPACIDAD DEL SPRINT (NUEVA MEJORA) */}
-        <div className="mt-4 pt-3 border-t border-[#232752] flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+        {/* BANDA DE SALUD Y CAPACIDAD DEL SPRINT */}
+        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#232752] flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-4 flex-wrap text-[11px] font-semibold">
-            <span className="text-slate-300 flex items-center gap-1.5">
-              <Sparkles size={13} className="text-amber-400" />
-              <span>Capacidad Utilizada: <strong className="text-indigo-400 font-extrabold">{capacityPct}%</strong></span>
+            <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+              <Sparkles size={13} className="text-amber-500" />
+              <span>Capacidad Utilizada: <strong className="text-indigo-600 dark:text-indigo-400 font-extrabold">{capacityPct}%</strong></span>
             </span>
             <span className="text-slate-400">·</span>
-            <span className="text-purple-300 font-bold">SP Completados: {totalSPBurned} / {totalSPAssigned} SP</span>
+            <span className="text-purple-600 dark:text-purple-300 font-bold">SP Completados: {totalSPBurned} / {totalSPAssigned} SP</span>
             <span className="text-slate-400">·</span>
-            <span className="text-emerald-400 font-bold">{countListo} Listas</span>
-            <span className="text-purple-400 font-bold">{countProgreso} En Progreso</span>
-            <span className="text-amber-400 font-bold">{countPendientes} Pendientes</span>
-            <span className="text-rose-400 font-bold">{countBloqueadas} Bloqueadas</span>
+            <span className="text-emerald-600 dark:text-emerald-400 font-bold">{countListo} Listas</span>
+            <span className="text-purple-600 dark:text-purple-400 font-bold">{countProgreso} En Progreso</span>
+            <span className="text-amber-600 dark:text-amber-400 font-bold">{countPendientes} Pendientes</span>
+            <span className="text-rose-600 dark:text-rose-400 font-bold">{countBloqueadas} Bloqueadas</span>
           </div>
 
-          <div className="w-full md:w-48 bg-[#0c0e21] h-2 rounded-full overflow-hidden border border-[#232752]">
+          <div className="w-full md:w-48 bg-slate-100 dark:bg-[#0c0e21] h-2 rounded-full overflow-hidden border border-slate-200 dark:border-[#232752]">
             <div 
-              className="bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-400 h-full rounded-full transition-all duration-500"
+              className="bg-gradient-to-r from-purple-500 via-indigo-500 to-emerald-500 dark:to-emerald-400 h-full rounded-full transition-all duration-500"
               style={{ width: `${capacityPct}%` }}
             ></div>
           </div>
@@ -249,17 +232,17 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
       </div>
 
       {/* 2. CONTENEDOR PRINCIPAL CON TABLA Y FILTROS */}
-      <div className="relative rounded-2xl bg-[#141738] p-5 shadow-2xl border border-[#272b5c] space-y-4 flex-1 flex flex-col justify-between overflow-hidden">
+      <div className="relative rounded-2xl bg-white dark:bg-[#141738] p-5 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 flex-1 flex flex-col justify-between overflow-hidden">
         
         {/* FILTROS Y ORDENAMIENTO */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-[#232752] shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-[#232752] shrink-0">
           
           {/* Pestañas de Filtro */}
-          <div className="flex items-center gap-1.5 p-1 bg-[#0b0e22] rounded-xl border border-[#232752] overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#0b0e22] rounded-xl border border-slate-200 dark:border-[#232752] overflow-x-auto">
             <button
               onClick={() => { setActiveFilter('TODOS'); setCurrentPage(1); }}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer shrink-0 ${
-                activeFilter === 'TODOS' ? 'bg-[#5b36f5] text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeFilter === 'TODOS' ? 'bg-[#5b36f5] text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Todos ({countTotal})
@@ -267,7 +250,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             <button
               onClick={() => { setActiveFilter('PROGRESO'); setCurrentPage(1); }}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer shrink-0 ${
-                activeFilter === 'PROGRESO' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeFilter === 'PROGRESO' ? 'bg-purple-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               En Progreso ({countProgreso})
@@ -275,7 +258,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             <button
               onClick={() => { setActiveFilter('PENDIENTES'); setCurrentPage(1); }}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer shrink-0 ${
-                activeFilter === 'PENDIENTES' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeFilter === 'PENDIENTES' ? 'bg-amber-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Pendientes ({countPendientes})
@@ -283,7 +266,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             <button
               onClick={() => { setActiveFilter('BLOQUEADAS'); setCurrentPage(1); }}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer shrink-0 ${
-                activeFilter === 'BLOQUEADAS' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeFilter === 'BLOQUEADAS' ? 'bg-rose-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Bloqueadas ({countBloqueadas})
@@ -291,7 +274,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             <button
               onClick={() => { setActiveFilter('LISTO'); setCurrentPage(1); }}
               className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer shrink-0 ${
-                activeFilter === 'LISTO' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
+                activeFilter === 'LISTO' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Listas ({countListo})
@@ -307,14 +290,14 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                 value={searchQuery}
                 onChange={(e) => { setSearchQuery(e.target.value); setCurrentPage(1); }}
                 placeholder="Buscar por clave o resumen..."
-                className="pl-9 pr-4 py-1.5 bg-[#0c0e21] text-xs text-white placeholder-slate-400 rounded-xl border border-[#232752] focus:outline-none focus:border-indigo-500 w-48 sm:w-56"
+                className="pl-9 pr-4 py-1.5 bg-slate-50 dark:bg-[#0c0e21] text-xs text-slate-900 dark:text-white placeholder-slate-400 rounded-xl border border-slate-200 dark:border-[#232752] focus:outline-none focus:border-indigo-500 w-48 sm:w-56 font-semibold"
               />
             </div>
 
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-1.5 bg-[#0c0e21] text-xs text-indigo-300 font-bold rounded-xl border border-[#232752] focus:outline-none focus:border-indigo-500 cursor-pointer"
+              className="px-3 py-1.5 bg-slate-50 dark:bg-[#0c0e21] text-xs text-indigo-700 dark:text-indigo-300 font-bold rounded-xl border border-slate-200 dark:border-[#232752] focus:outline-none focus:border-indigo-500 cursor-pointer"
             >
               <option value="PRIORIDAD">Ordenar: Prioridad</option>
               <option value="SP">Ordenar: Story Points</option>
@@ -334,7 +317,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
         </div>
 
         {/* LISTADO DE TAREAS (FILAS EN TARJETAS DE ALTO CONTRASTE) */}
-        <div className="flex-1 overflow-y-auto no-scrollbar space-y-2.5 pr-1">
+        <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
           {paginatedTasks.length > 0 ? (
             paginatedTasks.map((task, idx) => {
               const isProgreso = task.status === 'EN PROGRESO';
@@ -344,7 +327,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
               return (
                 <div 
                   key={idx}
-                  className="group rounded-2xl bg-[#0e112a] border border-[#232752] hover:border-indigo-500/60 p-3.5 transition-all duration-200 flex flex-col md:grid md:grid-cols-12 items-center gap-4 shadow-md"
+                  className="group rounded-2xl bg-slate-50/80 dark:bg-[#0e112a] border border-slate-200/80 dark:border-[#232752] hover:border-indigo-500/60 p-3.5 transition-all duration-200 flex flex-col md:grid md:grid-cols-12 items-center gap-4 shadow-xs"
                 >
                   
                   {/* COL 1: AVATAR + RESUMEN & CLAVE (4 COLS) */}
@@ -354,12 +337,12 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                     </div>
                     <div className="space-y-0.5 min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-mono font-extrabold text-indigo-400 text-xs">{task.key_issue}</span>
-                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-800 text-slate-300">
+                        <span className="font-mono font-extrabold text-indigo-600 dark:text-indigo-400 text-xs">{task.key_issue}</span>
+                        <span className="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {task.asignado}
                         </span>
                       </div>
-                      <h3 className="text-xs font-bold text-white truncate leading-snug">
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white truncate leading-snug">
                         {task.summary}
                       </h3>
                     </div>
@@ -367,13 +350,13 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
                   {/* COL 2: TIPO & PRIORIDAD (3 COLS) */}
                   <div className="md:col-span-3 flex items-center gap-2 w-full">
-                    <span className="px-2.5 py-1 rounded-xl text-xs font-bold bg-[#181c45] text-indigo-300 border border-indigo-500/30 truncate">
+                    <span className="px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-[#181c45] text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 truncate">
                       {task.tipo}
                     </span>
                     <span className={`px-2 py-0.5 rounded-xl text-[10px] font-extrabold border ${
-                      task.prioridad === 'Crítica' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
-                      task.prioridad === 'Alta' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                      'bg-slate-800 text-slate-300 border-slate-700'
+                      task.prioridad === 'Crítica' ? 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-300 border-rose-200 dark:border-rose-500/40' :
+                      task.prioridad === 'Alta' ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-300 border-amber-200 dark:border-amber-500/40' :
+                      'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                     }`}>
                       {task.prioridad}
                     </span>
@@ -386,12 +369,12 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                       onChange={(e) => handleUpdateStatus(task.key_issue, e.target.value)}
                       className={`w-full max-w-[130px] appearance-none px-2.5 py-1 rounded-xl text-xs font-extrabold cursor-pointer text-center focus:outline-none transition-all border ${
                         isListo
-                          ? 'bg-[#064e3b] text-[#00f5d4] border-[#00f5d4]/40'
+                          ? 'bg-emerald-50 dark:bg-[#064e3b] text-emerald-700 dark:text-[#00f5d4] border-emerald-200 dark:border-[#00f5d4]/40'
                           : isProgreso
-                          ? 'bg-[#1e1b4b] text-purple-300 border-purple-500/50'
+                          ? 'bg-purple-50 dark:bg-[#1e1b4b] text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/50'
                           : isBloqueada
-                          ? 'bg-[#4c0519] text-rose-300 border-rose-500/50'
-                          : 'bg-slate-800 text-amber-300 border-slate-700'
+                          ? 'bg-rose-50 dark:bg-[#4c0519] text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/50'
+                          : 'bg-slate-100 dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-slate-200 dark:border-slate-700'
                       }`}
                     >
                       <option value="PENDIENTE">⚫ Pendiente</option>
@@ -403,11 +386,11 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
                   {/* COL 4: CYCLE TIME / SP (2 COLS) */}
                   <div className="md:col-span-2 text-right w-full font-semibold text-xs space-y-0.5">
-                    <div className="flex items-center justify-end gap-1 text-slate-200">
+                    <div className="flex items-center justify-end gap-1 text-slate-700 dark:text-slate-200">
                       <Clock size={12} className="text-slate-400" />
                       <span className="font-bold">{task.fecha}</span>
                     </div>
-                    <div className="text-[11px] text-purple-400 font-extrabold">
+                    <div className="text-[11px] text-purple-600 dark:text-purple-400 font-extrabold">
                       {task.story_points} Story Points
                     </div>
                   </div>
@@ -416,7 +399,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                   <div className="md:col-span-1 flex items-center justify-end w-full">
                     <button
                       onClick={() => setSelectedTaskModal(task)}
-                      className="px-3 py-1.5 text-xs font-extrabold bg-[#181c45] hover:bg-indigo-600 text-indigo-300 hover:text-white rounded-xl border border-indigo-500/40 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-sm"
+                      className="px-3 py-1.5 text-xs font-extrabold bg-slate-100 dark:bg-[#181c45] hover:bg-indigo-600 text-indigo-600 dark:text-indigo-300 hover:text-white rounded-xl border border-indigo-200 dark:border-indigo-500/40 transition-all flex items-center gap-1.5 cursor-pointer shrink-0 shadow-xs"
                       title="Ver detalle completo de la tarea"
                     >
                       <Activity size={13} />
@@ -428,33 +411,33 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
               );
             })
           ) : (
-            <div className="p-8 text-center text-slate-400 text-xs">
+            <div className="p-8 text-center text-slate-500 dark:text-slate-400 text-xs">
               No se encontraron tareas con el filtro aplicado.
             </div>
           )}
         </div>
 
-        {/* CONTROLES DE PAGINACIÓN Y RESUMEN INFERIOR (PÁGINA 1 DE N) */}
-        <div className="pt-3 border-t border-[#232752] flex flex-col sm:flex-row items-center justify-between text-xs text-slate-400 font-semibold gap-2 shrink-0">
+        {/* CONTROLES DE PAGINACIÓN Y RESUMEN INFERIOR */}
+        <div className="pt-3 border-t border-slate-100 dark:border-[#232752] flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold gap-2 shrink-0">
           <div className="flex items-center gap-3 text-[11px]">
             <span className="flex items-center gap-1.5">
-              <ListTodo size={13} className="text-indigo-400" />
+              <ListTodo size={13} className="text-indigo-500" />
               <span>Mostrando {paginatedTasks.length} de {filteredTasks.length} tareas</span>
             </span>
-            <span className="text-purple-400">{countProgreso} en progreso</span>
-            <span className="text-[#00f5d4]">{countListo} completadas</span>
+            <span className="text-purple-600 dark:text-purple-400">{countProgreso} en progreso</span>
+            <span className="text-emerald-600 dark:text-[#00f5d4]">{countListo} completadas</span>
           </div>
 
           {/* BARRA DE PAGINACIÓN */}
           <div className="flex items-center gap-2">
-            <span className="text-[10px] text-slate-400 font-bold">
+            <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold">
               Pág {currentPage} de {totalPages}
             </span>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#0c0e21] text-slate-300 hover:bg-indigo-600 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-0.5 border border-[#232752]"
+                className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 dark:bg-[#0c0e21] text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-0.5 border border-slate-200 dark:border-[#232752]"
               >
                 <ChevronLeft size={13} /> Anterior
               </button>
@@ -465,7 +448,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                   className={`w-6 h-6 text-[10px] font-extrabold rounded-lg transition-colors cursor-pointer ${
                     currentPage === pNum
                       ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-[#0c0e21] text-slate-400 hover:text-white border border-[#232752]'
+                      : 'bg-slate-100 dark:bg-[#0c0e21] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-[#232752]'
                   }`}
                 >
                   {pNum}
@@ -474,7 +457,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
               <button
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
-                className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-[#0c0e21] text-slate-300 hover:bg-indigo-600 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-0.5 border border-[#232752]"
+                className="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 dark:bg-[#0c0e21] text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer flex items-center gap-0.5 border border-slate-200 dark:border-[#232752]"
               >
                 Siguiente <ChevronRight size={13} />
               </button>
@@ -486,21 +469,21 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
       {/* MODAL 1: REGISTRAR NUEVA TAREA PERSONAL */}
       {newTaskModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <form onSubmit={handleCreateNewTask} className="relative w-full max-w-md rounded-2xl bg-[#141738] p-6 shadow-2xl border border-[#272b5c] space-y-4 text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-[#232752]">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <form onSubmit={handleCreateNewTask} className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 text-left">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#232752]">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-purple-500/20 text-purple-400 rounded-xl border border-purple-500/30">
+                <div className="p-2 bg-purple-50 dark:bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl border border-purple-200 dark:border-purple-500/30">
                   <Plus size={18} />
                 </div>
-                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider">
+                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
                   REGISTRAR NUEVA TAREA PERSONAL
                 </h3>
               </div>
               <button 
                 type="button"
                 onClick={() => setNewTaskModalOpen(false)} 
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -508,35 +491,35 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
             <div className="space-y-3 text-xs">
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-300 block">Clave de Incidencia:</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">Clave de Incidencia:</label>
                 <input
                   type="text"
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
-                  className="w-full p-2.5 bg-[#0c0e21] border border-[#232752] rounded-xl font-mono text-indigo-400 font-extrabold focus:outline-none"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-[#0c0e21] border border-slate-200 dark:border-[#232752] rounded-xl font-mono text-indigo-600 dark:text-indigo-400 font-extrabold focus:outline-none"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-300 block">Título / Resumen de la Tarea:</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">Título / Resumen de la Tarea:</label>
                 <input
                   type="text"
                   value={newSummary}
                   onChange={(e) => setNewSummary(e.target.value)}
                   placeholder="Ej: Refactorizar servicios de autenticación..."
-                  className="w-full p-2.5 bg-[#0c0e21] border border-[#232752] rounded-xl text-white font-semibold focus:outline-none"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-[#0c0e21] border border-slate-200 dark:border-[#232752] rounded-xl text-slate-900 dark:text-white font-semibold focus:outline-none"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-3 gap-2">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-300 block">Tipo:</label>
+                  <label className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block">Tipo:</label>
                   <select
                     value={newTipo}
                     onChange={(e) => setNewTipo(e.target.value)}
-                    className="w-full p-2 bg-[#0c0e21] border border-[#232752] rounded-xl text-white text-[11px] font-bold focus:outline-none"
+                    className="w-full p-2 bg-slate-50 dark:bg-[#0c0e21] border border-slate-200 dark:border-[#232752] rounded-xl text-slate-900 dark:text-white text-[11px] font-bold focus:outline-none"
                   >
                     <option value="Historia de Usuario">Historia</option>
                     <option value="Bug / Defecto">Bug</option>
@@ -546,11 +529,11 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-300 block">Prioridad:</label>
+                  <label className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block">Prioridad:</label>
                   <select
                     value={newPrioridad}
                     onChange={(e) => setNewPrioridad(e.target.value)}
-                    className="w-full p-2 bg-[#0c0e21] border border-[#232752] rounded-xl text-white text-[11px] font-bold focus:outline-none"
+                    className="w-full p-2 bg-slate-50 dark:bg-[#0c0e21] border border-slate-200 dark:border-[#232752] rounded-xl text-slate-900 dark:text-white text-[11px] font-bold focus:outline-none"
                   >
                     <option value="Crítica">Crítica</option>
                     <option value="Alta">Alta</option>
@@ -560,35 +543,35 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-300 block">SP Estimados:</label>
+                  <label className="text-[10px] font-bold text-slate-700 dark:text-slate-300 block">SP Estimados:</label>
                   <input
                     type="number"
                     min={1}
                     max={21}
                     value={newSp}
                     onChange={(e) => setNewSp(e.target.value)}
-                    className="w-full p-2 bg-[#0c0e21] border border-[#232752] rounded-xl text-white text-[11px] font-extrabold focus:outline-none"
+                    className="w-full p-2 bg-slate-50 dark:bg-[#0c0e21] border border-slate-200 dark:border-[#232752] rounded-xl text-slate-900 dark:text-white text-[11px] font-extrabold focus:outline-none"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-300 block">Descripción:</label>
+                <label className="text-[11px] font-bold text-slate-700 dark:text-slate-300 block">Descripción:</label>
                 <textarea
                   rows={2}
                   value={newDescripcion}
                   onChange={(e) => setNewDescripcion(e.target.value)}
                   placeholder="Detalles sobre lo que contempla esta tarea..."
-                  className="w-full p-2.5 bg-[#0c0e21] border border-[#232752] rounded-xl text-white text-xs focus:outline-none"
+                  className="w-full p-2.5 bg-slate-50 dark:bg-[#0c0e21] border border-slate-200 dark:border-[#232752] rounded-xl text-slate-900 dark:text-white text-xs focus:outline-none"
                 />
               </div>
             </div>
 
-            <div className="pt-3 border-t border-[#232752] flex items-center justify-end gap-2">
+            <div className="pt-3 border-t border-slate-100 dark:border-[#232752] flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setNewTaskModalOpen(false)}
-                className="px-4 py-2 text-xs font-bold bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
+                className="px-4 py-2 text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
               >
                 Cancelar
               </button>
@@ -605,51 +588,51 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
       {/* MODAL 2: VER LOG Y AUDITORÍA DE TAREA */}
       {selectedTaskModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-2xl bg-[#141738] p-6 shadow-2xl border border-[#272b5c] space-y-4 text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-[#232752]">
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 text-left">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#232752]">
               <div className="flex items-center gap-2.5">
-                <span className="font-mono font-black text-sm px-3 py-1 bg-indigo-500/20 text-indigo-400 rounded-lg border border-indigo-500/30">
+                <span className="font-mono font-black text-sm px-3 py-1 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/30">
                   {selectedTaskModal.key_issue}
                 </span>
                 <span className="text-xs font-bold text-slate-400 uppercase">Detalle y Log de Auditoría</span>
               </div>
               <button 
                 onClick={() => setSelectedTaskModal(null)} 
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+                className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
             <div className="space-y-3 text-xs">
-              <h3 className="text-sm font-bold text-white leading-snug">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
                 {selectedTaskModal.summary}
               </h3>
-              <p className="text-slate-300 text-xs leading-relaxed p-3 bg-[#0c0e21] rounded-xl border border-[#232752]">
+              <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed p-3 bg-slate-50 dark:bg-[#0c0e21] rounded-xl border border-slate-200 dark:border-[#232752]">
                 {selectedTaskModal.descripcion}
               </p>
 
-              <div className="grid grid-cols-2 gap-2 text-slate-200">
-                <div className="p-2.5 bg-[#0c0e21] rounded-lg border border-[#232752]">
-                  <span className="text-[10px] text-slate-400 block font-bold">PUNTOS DE HISTORIA</span>
-                  <span className="font-extrabold text-purple-400">{selectedTaskModal.story_points} SP</span>
+              <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-200">
+                <div className="p-2.5 bg-slate-50 dark:bg-[#0c0e21] rounded-lg border border-slate-200 dark:border-[#232752]">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold">PUNTOS DE HISTORIA</span>
+                  <span className="font-extrabold text-purple-600 dark:text-purple-400">{selectedTaskModal.story_points} SP</span>
                 </div>
-                <div className="p-2.5 bg-[#0c0e21] rounded-lg border border-[#232752]">
-                  <span className="text-[10px] text-slate-400 block font-bold">ESTADO ACTUAL</span>
-                  <span className="font-extrabold text-indigo-400">{selectedTaskModal.status}</span>
+                <div className="p-2.5 bg-slate-50 dark:bg-[#0c0e21] rounded-lg border border-slate-200 dark:border-[#232752]">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block font-bold">ESTADO ACTUAL</span>
+                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400">{selectedTaskModal.status}</span>
                 </div>
               </div>
 
               {selectedTaskModal.status_motif && (
-                <div className="p-3 bg-rose-500/10 text-rose-300 rounded-xl border border-rose-500/30 text-xs leading-relaxed">
+                <div className="p-3 bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300 rounded-xl border border-rose-200 dark:border-rose-500/30 text-xs leading-relaxed">
                   <strong>Motivo de Bloqueo:</strong> {selectedTaskModal.status_motif}
                 </div>
               )}
             </div>
 
-            <div className="pt-3 border-t border-[#232752] flex items-center justify-between">
-              <span className="text-[11px] text-slate-400 font-semibold">Asignado a: {selectedTaskModal.asignado}</span>
+            <div className="pt-3 border-t border-slate-100 dark:border-[#232752] flex items-center justify-between">
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">Asignado a: {selectedTaskModal.asignado}</span>
               <button 
                 onClick={() => setSelectedTaskModal(null)} 
                 className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow cursor-pointer"

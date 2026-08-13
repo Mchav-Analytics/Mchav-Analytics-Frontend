@@ -42,7 +42,7 @@ function MainAppContent() {
     setActiveTabState(tab);
     try {
       localStorage.setItem('mchav_active_tab', tab);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   // Persistir estado de Modo Blanco / Oscuro en localStorage para que se mantenga al recargar
@@ -60,7 +60,7 @@ function MainAppContent() {
       const nextVal = typeof valOrFn === 'function' ? valOrFn(prev) : valOrFn;
       try {
         localStorage.setItem('mchav_is_dark_mode', JSON.stringify(nextVal));
-      } catch (e) {}
+      } catch (e) { }
       return nextVal;
     });
   };
@@ -95,7 +95,7 @@ function MainAppContent() {
     setSelectedProjectIdState(projId);
     try {
       if (projId) localStorage.setItem('mchav_selected_project_id', projId);
-    } catch (e) {}
+    } catch (e) { }
   };
 
   const [sprints, setSprints] = useState([]);

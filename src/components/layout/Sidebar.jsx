@@ -156,8 +156,8 @@ function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col h-screen py-4 overflow-y-auto bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative ${
-        isCollapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-5'
+      className={`flex flex-col h-screen py-4 bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative z-50 ${
+        isCollapsed ? 'w-[72px] px-3 items-center overflow-visible' : 'w-64 px-5 overflow-y-auto'
       }`}
       style={{ flexShrink: 0 }}
     >
@@ -246,7 +246,7 @@ function Sidebar({
         )}
 
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}
-        <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2' : ''}`}>
+        <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
           {navItems.map((item) => {
             const isActive = activeTab === item.id;
 
@@ -260,9 +260,10 @@ function Sidebar({
                 {!isCollapsed && <span>{item.label}</span>}
                 
                 {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 px-3 py-1.5 rounded-md bg-slate-800 text-white dark:bg-slate-200 dark:text-slate-900 text-xs font-bold whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:ml-3 transition-all duration-300 z-50 shadow-xl border border-slate-700 dark:border-slate-300 flex items-center">
-                    {item.label}
-                    <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-800 dark:bg-slate-200 rotate-45 border-b border-l border-slate-700 dark:border-slate-300 rounded-bl-[2px]"></div>
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
+                    <span>{item.label}</span>
+                    <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
                   </div>
                 )}
               </button>
@@ -327,21 +328,31 @@ function Sidebar({
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors cursor-pointer"
+                className="group relative p-2 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors cursor-pointer"
                 title="Configuración de Perfil"
                 style={{ border: 'none', background: 'transparent' }}
               >
                 <Settings size={17} />
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
+                  <span>Ajustes de Perfil</span>
+                  <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+                </div>
               </button>
 
               <button
                 type="button"
                 onClick={handleLogout}
-                className="p-2 text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                className="group relative p-2 text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
                 title="Cerrar Sesión"
                 style={{ border: 'none', background: 'transparent' }}
               >
                 {icons.logout}
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-rose-950 dark:bg-[#2e1065]/90 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-rose-500/15 border border-rose-200/90 dark:border-rose-400/40 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                  <span>Cerrar Sesión</span>
+                  <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#2e1065]/90 rotate-45 border-b border-l border-rose-200/90 dark:border-rose-400/40 rounded-bl-[2px]"></div>
+                </div>
               </button>
             </div>
           )}
