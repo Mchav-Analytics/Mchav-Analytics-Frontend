@@ -11,6 +11,7 @@ import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
 import DailyFocusView from './features/dashboard/views/DailyFocusView';
+import DevWorkloadView from './features/dashboard/views/DevWorkloadView';
 import DevAlertsView from './features/dashboard/views/DevAlertsView';
 import ActivityHistoryView from './features/dashboard/views/ActivityHistoryView';
 import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsView';
@@ -26,8 +27,17 @@ import { jiraService, projectService } from './services/api';
 
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
-  const [activeTab, setActiveTab] = useState('dashboard');           // Pestaña activa actual (por defecto Dashboard principal)
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('mchav_active_tab') || 'developer';
+  });           // Pestaña activa actual
   const [isDarkMode, setIsDarkMode] = useState(true);              // Estado de tema claro / oscuro
+
+  // Guardar pestaña activa en localStorage al cambiar
+  useEffect(() => {
+    if (activeTab) {
+      localStorage.setItem('mchav_active_tab', activeTab);
+    }
+  }, [activeTab]);
 
   // Filtro de rango de fechas activo
   const [dateFilter, setDateFilter] = useState({ label: 'Todos los tiempos', key: 'all' });
@@ -53,10 +63,19 @@ function MainAppContent() {
   useEffect(() => {
     if (!user?.rol) return;
     const role = normalizeRole(user.rol);
-    if (role === 'DEVELOPER' && !['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
-      setActiveTab('developer');
-    } else if ((role === 'MANAGER' || role === 'ADMIN') && ['developer', 'daily_focus', 'dev_alerts', 'activity_history'].includes(activeTab)) {
-      setActiveTab('dashboard');
+    const savedTab = localStorage.getItem('mchav_active_tab');
+
+    if (role === 'DEVELOPER') {
+      const devTabs = ['developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'alerts_center', 'activity_history'];
+      if (!devTabs.includes(activeTab)) {
+        const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
+        setActiveTab(nextTab);
+      }
+    } else if (role === 'MANAGER' || role === 'ADMIN') {
+      const devTabs = ['developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history'];
+      if (devTabs.includes(activeTab)) {
+        setActiveTab('dashboard');
+      }
     }
   }, [user?.rol]);
 
@@ -191,13 +210,18 @@ function MainAppContent() {
         };
       case 'developer':
         return {
-          title: "Espacio de Trabajo del Desarrollador ",
-          subtitle: "Dashboard principal de métricas personales y entregas asignadas."
+          title: "Mi Trabajo ",
+          subtitle: "Consola interactiva de trabajo individual y métricas de carga de trabajo."
         };
       case 'daily_focus':
         return {
-          title: "Enfoque y Prioridades de Hoy ",
-          subtitle: "Jerarquización de atención diaria y Asistente Inteligente AI Dev Coach."
+          title: "Mi Agenda de Hoy",
+          subtitle: "Lista de tareas, prioridades y metas personales planificadas para tu jornada de hoy."
+        };
+      case 'dev_workload':
+        return {
+          title: "Plan de Trabajo",
+          subtitle: "Planificación estratégica de tareas pendientes, entregas en progreso y capacidad del sprint."
         };
       case 'dev_alerts':
         return {
@@ -310,12 +334,20 @@ function MainAppContent() {
         <DeveloperView
           kpis={filteredKpis}
           selectedProjectId={selectedProjectId}
+          alerts={alerts}
           onNavigateToAlerts={() => setActiveTab('alerts_center')}
+          onNavigateTab={(tab) => setActiveTab(tab)}
         />
       )}
 
       {activeTab === 'daily_focus' && (
         <DailyFocusView
+          selectedProjectId={selectedProjectId}
+        />
+      )}
+
+      {activeTab === 'dev_workload' && (
+        <DevWorkloadView
           selectedProjectId={selectedProjectId}
         />
       )}
@@ -362,9 +394,11 @@ function MainAppContent() {
       )}
 
       {activeTab === 'alerts_center' && (
-        <AlertsCenterView
-          selectedProjectId={selectedProjectId}
-        />
+        normalizeRole(user?.rol) === 'DEVELOPER' ? (
+          <DevAlertsView selectedProjectId={selectedProjectId} />
+        ) : (
+          <AlertsCenterView selectedProjectId={selectedProjectId} />
+        )
       )}
 
       {activeTab === 'sincronizacion' && (
