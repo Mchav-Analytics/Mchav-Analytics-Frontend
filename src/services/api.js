@@ -7,7 +7,7 @@ axios.defaults.withCredentials = true;
 // INTERRUPTOR DE DESCONEXIÓN DE BACKEND:
 // true  = Modo Mock (Desconectado de FastAPI, desarrollo exclusivo en Frontend)
 // false = Modo Real (Conectado a FastAPI en http://localhost:8000)
-export const USE_MOCK_DATA = false;
+export const USE_MOCK_DATA = true;
 
 export const BACKEND_URL = 'http://localhost:8000';
 
@@ -32,6 +32,10 @@ export const authService = {
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
     return api.get('/api/v1/auth/me').then(res => res.data);
+  },
+  loginMock(credentials) {
+    if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
   },
   logout() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();

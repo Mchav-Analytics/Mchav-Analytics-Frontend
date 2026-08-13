@@ -114,7 +114,8 @@ function Sidebar({
     if (userRole === 'DEVELOPER') {
       return [
         { id: 'developer', label: 'Mi Trabajo', icon: icons.home },
-        { id: 'daily_focus', label: 'Enfoque Diario', icon: icons.target },
+        { id: 'daily_focus', label: 'Mi Agenda de Hoy', icon: icons.target },
+        { id: 'dev_workload', label: 'Plan de Trabajo', icon: icons.projects },
         { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
         { id: 'activity_history', label: 'Historial', icon: icons.history },
       ];
