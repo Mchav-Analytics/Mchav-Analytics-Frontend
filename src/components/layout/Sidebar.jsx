@@ -119,7 +119,7 @@ function Sidebar({
         { id: 'developer', label: 'Mi Trabajo', icon: icons.home },
         { id: 'daily_focus', label: 'Mi Agenda de Hoy', icon: icons.target },
         { id: 'dev_workload', label: 'Plan de Trabajo', icon: icons.projects },
-        { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
+        { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'activity_history', label: 'Historial', icon: icons.history },
       ];
     }
@@ -129,7 +129,7 @@ function Sidebar({
         { id: 'dashboard', label: 'Panel Operativo Líder', icon: icons.dashboard },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
         { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
-        { id: 'alerts_center', label: 'Alertas & Solicitudes', icon: icons.alert },
+        { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'sincronizacion', label: 'Sincronización JQL', icon: icons.sync },
       ];
@@ -138,7 +138,7 @@ function Sidebar({
     return [
       { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-      { id: 'alerts_center', label: 'Alertas y Solicitudes', icon: icons.alert },
+      { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.tasks },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },

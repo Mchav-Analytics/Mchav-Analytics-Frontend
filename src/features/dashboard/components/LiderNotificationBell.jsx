@@ -1,59 +1,45 @@
-// ============================================================================
-// COMPONENTE: BOTÓN Y POPUP EMERGENTE DE NOTIFICACIONES DEL LÍDER TÉCNICO
-// ============================================================================
-// Botón reutilizable de campana de notificaciones con menú emergente (Popover)
-// para ser integrado en todas las sub-vistas del Líder Técnico sin redirección.
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Bell, X, AlertTriangle, Activity, CheckCircle2, Check } from 'lucide-react';
+import { Bell, X, AlertTriangle, Activity, CheckCircle2, MessageSquare, ExternalLink, ArrowRight } from 'lucide-react';
 
 const initialNotifications = [
   {
     id: 'notif-1',
-    type: 'ALERT',
+    type: 'HELP',
     priority: 'HIGH',
-    title: 'Incidencia Estancada en In Progress',
-    description: 'SCRUM-104 (Clara Gómez - 5 SP) lleva más de 3.5 días sin registro de avances.',
+    title: '💬 Solicitud de Actualización de Sprint',
+    description: 'Carlos Pérez solicita confirmación sobre la entrega de SSO (MCHAV-128).',
     time: 'Hace 15 min',
-    isRead: false
+    isRead: false,
+    issueKey: 'MCHAV-128'
   },
   {
     id: 'notif-2',
-    type: 'SCOPE',
-    priority: 'MEDIUM',
-    title: 'Cambio de Alcance Detectado (+4 SP)',
-    description: 'Se agregaron 2 nuevas historias al Sprint 3 (Activo) sin re-estimación.',
-    time: 'Hace 1 hora',
-    isRead: false
+    type: 'BUG',
+    priority: 'HIGH',
+    title: '🐞 3 Bugs Críticos Detectados en QA',
+    description: 'Proyecto MCHAV Analytics reportó fallos devueltos por pruebas.',
+    time: 'Hace 45 min',
+    isRead: false,
+    issueKey: 'MCHAV-105'
   },
   {
     id: 'notif-3',
-    type: 'HELP',
-    priority: 'HIGH',
-    title: 'Solicitud de Ayuda de Desarrollador',
-    description: 'Andrés Torres solicitó revisión técnica urgente para la tarea SCRUM-112.',
+    type: 'METRIC',
+    priority: 'MEDIUM',
+    title: '⚠️ Cycle Time Elevado (> 3.5 días)',
+    description: 'Proyecto MCHAV Analytics supera el umbral configurado de ciclo de entrega.',
     time: 'Hace 2 horas',
     isRead: false
-  },
-  {
-    id: 'notif-4',
-    type: 'SUCCESS',
-    priority: 'LOW',
-    title: 'Tarea Crítica Completada',
-    description: 'Valka Hoyos marcó como RESUELTA la incidencia SCRUM-108 (3 SP).',
-    time: 'Hace 4 horas',
-    isRead: true
   }
 ];
 
-export default function LiderNotificationBell({ className = "" }) {
+export default function LiderNotificationBell({ className = "", onNavigateToHub }) {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(initialNotifications);
   const popoverRef = useRef(null);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
-  // Cerrar al hacer clic fuera del popup emergente
   useEffect(() => {
     function handleClickOutside(event) {
       if (popoverRef.current && !popoverRef.current.contains(event.target)) {
@@ -76,6 +62,13 @@ export default function LiderNotificationBell({ className = "" }) {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
+  const handleGoToHub = () => {
+    setIsOpen(false);
+    if (onNavigateToHub) {
+      onNavigateToHub('alerts_center');
+    }
+  };
+
   return (
     <div className={`relative inline-block ${className}`} ref={popoverRef}>
       {/* BOTÓN DE CAMPANA */}
@@ -83,7 +76,7 @@ export default function LiderNotificationBell({ className = "" }) {
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 transition-all cursor-pointer relative flex items-center justify-center shadow-xs"
-        title="Notificaciones Operativas del Líder Técnico"
+        title="Centro de Actividad y Notificaciones"
       >
         <Bell size={16} className="text-slate-700 dark:text-slate-200" />
         {unreadCount > 0 && (
@@ -93,7 +86,7 @@ export default function LiderNotificationBell({ className = "" }) {
         )}
       </button>
 
-      {/* POPUP EMERGENTE DE NOTIFICACIONES */}
+      {/* POPUP EMERGENTE DEL CENTRO DE ACTIVIDAD */}
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 p-4 space-y-3 animate-in fade-in zoom-in-95 duration-150 text-left">
           {/* CABECERA POPUP */}
@@ -101,11 +94,11 @@ export default function LiderNotificationBell({ className = "" }) {
             <div className="flex items-center gap-2">
               <Bell size={16} className="text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                Notificaciones del Líder
+                Centro de Actividad
               </h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 font-bold text-[10px]">
-                  {unreadCount} nuevas
+                  {unreadCount} activas
                 </span>
               )}
             </div>
@@ -129,43 +122,84 @@ export default function LiderNotificationBell({ className = "" }) {
             </div>
           </div>
 
-          {/* LISTA DE NOTIFICACIONES */}
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 pr-1 space-y-1">
+          {/* LISTA DE TARJETAS DE ACTIVIDAD */}
+          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 pr-1 space-y-2">
             {notifications.map((notif) => (
               <div
                 key={notif.id}
                 onClick={() => handleMarkSingleRead(notif.id)}
-                className={`p-2.5 rounded-xl transition-all cursor-pointer flex items-start gap-2.5 ${
+                className={`p-3 rounded-xl transition-all flex flex-col gap-2 ${
                   !notif.isRead 
                     ? 'bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/40' 
-                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-75'
+                    : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-85'
                 }`}
               >
-                <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
-                  notif.priority === 'HIGH' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
-                  notif.type === 'SCOPE' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
-                  'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                }`}>
-                  {notif.priority === 'HIGH' ? <AlertTriangle size={14} /> :
-                   notif.type === 'SCOPE' ? <Activity size={14} /> :
-                   <CheckCircle2 size={14} />}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-1">
-                    <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
-                      {notif.title}
-                    </h4>
-                    <span className="text-[10px] text-slate-400 shrink-0">{notif.time}</span>
+                <div className="flex items-start gap-2.5">
+                  <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                    notif.type === 'HELP' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' :
+                    notif.type === 'BUG' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
+                    'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                  }`}>
+                    {notif.type === 'HELP' ? <MessageSquare size={14} /> :
+                     notif.type === 'BUG' ? <AlertTriangle size={14} /> :
+                     <Activity size={14} />}
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
-                    {notif.description}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-1">
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-slate-100 truncate">
+                        {notif.title}
+                      </h4>
+                      <span className="text-[10px] text-slate-400 shrink-0">{notif.time}</span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug mt-0.5">
+                      {notif.description}
+                    </p>
+                  </div>
+                </div>
+
+                {/* BOTONES DE ACCIÓN RÁPIDA DE LA TARJETA */}
+                <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                  {notif.type === 'HELP' ? (
+                    <>
+                      <button
+                        onClick={handleGoToHub}
+                        className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <MessageSquare size={11} /> Responder
+                      </button>
+                      <button
+                        onClick={handleGoToHub}
+                        className="px-2 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 hover:text-indigo-400 transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        Ver en Centro <ExternalLink size={11} />
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={handleGoToHub}
+                      className="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      Ver detalle <ArrowRight size={11} />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
+          </div>
+
+          {/* PIE DE PANEL EMERGENTE CON ACCESO DIRECTO AL CENTRO DE ACTIVIDAD */}
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+            <button
+              onClick={handleGoToHub}
+              className="w-full py-1.5 px-3 text-center text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>Ver todo en Centro de Actividad</span>
+              <ArrowRight size={13} />
+            </button>
           </div>
         </div>
       )}
     </div>
   );
 }
+

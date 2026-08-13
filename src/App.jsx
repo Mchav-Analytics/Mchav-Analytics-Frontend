@@ -270,6 +270,11 @@ function MainAppContent() {
           title: "Mis Bloqueos y Alertas ",
           subtitle: "Detector automático de inactividad, multitarea excesiva y cuellos de botella."
         };
+      case 'alerts_center':
+        return {
+          title: "Centro de Actividad ",
+          subtitle: "Consola centralizada de notificaciones, solicitudes de equipo y seguimiento de incidencias."
+        };
       case 'activity_history':
         return {
           title: "Historial de Actividad y Logros ",
