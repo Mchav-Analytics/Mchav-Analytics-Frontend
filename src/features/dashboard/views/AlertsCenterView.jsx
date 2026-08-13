@@ -35,6 +35,7 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
   const [activeThread, setActiveThread] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [sendingReply, setSendingReply] = useState(false);
+  const [toastMsg, setToastMsg] = useState('');
 
   // Modal Nueva Solicitud
   const [showModal, setShowModal] = useState(false);
@@ -83,6 +84,25 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
     setReplyText('');
   };
 
+  // Cambio de estado manual desde la conversacion
+  const handleChangeStatus = (newStatus) => {
+    if (!activeThread) return;
+    
+    setHelpRequests(prev => prev.map(r => 
+      r.id_solicitud === activeThread.id_solicitud 
+        ? { ...r, estado: newStatus } 
+        : r
+    ));
+
+    setActiveThread(prev => ({
+      ...prev,
+      estado: newStatus
+    }));
+
+    setToastMsg(`✨ Estado actualizado a "${newStatus}"`);
+    setTimeout(() => setToastMsg(''), 3000);
+  };
+
   // Enviar respuesta en la conversación (Publicación real en Jira)
   const handleSendReply = (e) => {
     e.preventDefault();
@@ -90,7 +110,7 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
 
     setSendingReply(true);
 
-    // Si tiene un ticket de Jira real, intentar publicar comentario
+    // Si tiene un ticket de Jira real, publicar comentario en la API de Jira
     const issueKey = activeThread.key_issue || 'MCHAV-128';
     
     jiraService.addComment(issueKey, replyText)
@@ -103,24 +123,28 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
           hora: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
 
-        // Actualizar estado a En Conversación
+        // Actualizar automáticamente a EN_CONVERSACION
+        const nextStatus = activeThread.estado === 'NUEVA' ? 'EN_CONVERSACION' : activeThread.estado;
+
         setHelpRequests(prev => prev.map(r => 
           r.id_solicitud === activeThread.id_solicitud 
-            ? { ...r, estado: 'EN_ATENCION', mensajes: [...(r.mensajes || []), newMsg] } 
+            ? { ...r, estado: nextStatus, mensajes: [...(r.mensajes || []), newMsg] } 
             : r
         ));
 
         setActiveThread(prev => ({
           ...prev,
-          estado: 'EN_ATENCION',
+          estado: nextStatus,
           mensajes: [...(prev.mensajes || []), newMsg]
         }));
 
         setReplyText('');
         setSendingReply(false);
+        setToastMsg('💬 Comentario publicado en Jira real y sincronizado');
+        setTimeout(() => setToastMsg(''), 3000);
       })
       .catch(err => {
-        console.log("Comentario registrado localmente:", err);
+        console.log("Error al publicar en Jira:", err);
         setSendingReply(false);
       });
   };
@@ -137,8 +161,15 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
   }
 
   return (
-    <div className="space-y-6 pb-12 font-sans text-left">
+    <div className="space-y-6 pb-12 font-sans text-left relative">
       
+      {/* TOAST MESSAGE DE NOTIFICACIÓN */}
+      {toastMsg && (
+        <div className="fixed top-6 right-6 z-50 bg-indigo-600 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl shadow-2xl animate-in fade-in slide-in-from-top-4 flex items-center gap-2">
+          <span>{toastMsg}</span>
+        </div>
+      )}
+
       {/* CABECERA BANNER Y ACCIONES */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#191c3d] p-6 rounded-2xl border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-xl">
         <div className="space-y-1">
@@ -338,12 +369,26 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
                   {activeThread.titulo}
                 </h2>
               </div>
-              <button
-                onClick={() => setActiveThread(null)}
-                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <select
+                  value={activeThread.estado || 'NUEVA'}
+                  onChange={(e) => handleChangeStatus(e.target.value)}
+                  className="px-2.5 py-1 text-xs font-extrabold rounded-xl bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-700 outline-none cursor-pointer"
+                >
+                  <option value="NUEVA">🟣 Nueva</option>
+                  <option value="EN_REVISION">🔵 En revisión</option>
+                  <option value="EN_CONVERSACION">🟡 En conversación</option>
+                  <option value="RESUELTA">🟢 Resuelta</option>
+                </select>
+
+                <button
+                  onClick={() => setActiveThread(null)}
+                  className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 cursor-pointer"
+                >
+                  <X size={18} />
+                </button>
+              </div>
             </div>
 
             {/* MENSAJES DEL HILO DE CONVERSACIÓN */}
