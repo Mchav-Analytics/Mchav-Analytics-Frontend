@@ -401,7 +401,7 @@ export default function SystemSyncTab() {
   const paginatedLogs = filteredLogs.slice((logPage - 1) * logsPerPage, logPage * logsPerPage);
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full space-y-6 font-sans text-left">
 
       {/* Alertas */}
       {showSuccessAlert && (
