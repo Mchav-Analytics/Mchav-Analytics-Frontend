@@ -261,7 +261,7 @@ export default function LiderTecnicoDashboardView({
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black font-display text-slate-900 dark:text-white tracking-tight">
               Panel Operativo del Sprint Activo
             </h1>
           </div>
