@@ -201,6 +201,12 @@ export default function DeveloperView({
   const tareasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Tarea')).length;
   const totalCount = assignedIssuesList.length || 1;
 
+  const workDist = scorecard?.work_distribution || {
+    pct_historias: Math.round((historiasCount / totalCount) * 100) || 45,
+    pct_bugs: Math.round((bugsCount / totalCount) * 100) || 15,
+    pct_tareas: Math.round((tareasCount / totalCount) * 100) || 40
+  };
+
   const donutWorkDistribution = [
     { name: 'Historias de Usuario', count: historiasCount, pct: Math.round((historiasCount / totalCount) * 100), color: '#8b5cf6', icon: User },
     { name: 'Bugs y Defectos', count: bugsCount, pct: Math.round((bugsCount / totalCount) * 100), color: '#ec4899', icon: Bug },
