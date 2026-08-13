@@ -277,7 +277,7 @@ export default function AdminUsuariosView({
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Directorio de Usuarios
+              Usuarios y Roles
             </h1>
           </div>
         </div>

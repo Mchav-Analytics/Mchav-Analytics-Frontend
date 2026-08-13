@@ -504,26 +504,19 @@ export default function AlertsCenterView({ selectedProjectId = 'PROJ-01', onNavi
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white font-extrabold shadow-md shrink-0">
               <Bell size={24} />
             </div>
-            <div className="space-y-0.5">
+            <div className="space-y-0.5 text-left">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-                  {isDev ? 'Mi Actividad' : isManager ? 'Actividad de Mis Proyectos' : 'Centro de Actividad Global'}
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
-                  {filteredFeed.length} elementos
-                </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                   {roleBadgeLabel}
+                </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  • <strong className="text-slate-800 dark:text-slate-200 font-bold">{filteredFeed.length}</strong> elementos en feed
                 </span>
               </div>
 
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {isDev
-                  ? 'Centro de alertas, asignaciones de tareas y canal directo de conversación con tu Líder Técnico.'
-                  : isManager
-                    ? 'Gestión de solicitudes de desarrolladores, bloqueos de sprint, revisiones y estado de proyectos.'
-                    : 'Supervisión ejecutiva, sincronizaciones de la plataforma y alertas críticas consolidadas de Jira.'}
-              </p>
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Centro de Actividad
+              </h1>
             </div>
           </div>
 

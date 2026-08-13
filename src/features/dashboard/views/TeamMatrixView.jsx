@@ -80,7 +80,7 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Matriz Comparativa de Equipo & Performance Score
+              Matriz de Rendimiento
             </h1>
           </div>
         </div>

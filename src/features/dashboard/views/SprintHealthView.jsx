@@ -216,7 +216,7 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Salud del Sprint & Eficiencia de Flujo
+              Salud del Sprint
             </h1>
           </div>
         </div>
