@@ -16,19 +16,14 @@ import {
   Bell,
   X,
   Printer,
-  ChevronLeft,
-  ChevronRight,
   Send,
   MessageSquare,
   AlertTriangle,
   ShieldAlert,
   ArrowRight,
   ExternalLink,
-  Bot,
   CheckCircle2,
   ListTodo,
-  Layers,
-  Sparkles,
   PieChart as PieChartIcon
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, Tooltip as RechartsTooltip } from 'recharts';
@@ -111,6 +106,26 @@ export default function DeveloperView({
   const [quickReplyText, setQuickReplyText] = useState('');
   const [sendingQuickReply, setSendingQuickReply] = useState(false);
   const [toastMsg, setToastMsg] = useState('');
+
+  // Centro de Alertas y Ayuda
+  const [alertsModalOpen, setAlertsModalOpen] = useState(false);
+  const [alertsTab, setAlertsTab] = useState('request_form'); // 'request_form' | 'sent_requests' | 'alerts'
+  const [helpIssueKey, setHelpIssueKey] = useState('MCHAV-105');
+  const [helpType, setHelpType] = useState('Bloqueo Técnico');
+  const [helpUrgency, setHelpUrgency] = useState('Alta');
+  const [helpMessage, setHelpMessage] = useState('');
+  const [submittedHelpRequests, setSubmittedHelpRequests] = useState([
+    {
+      id: 'SOL-801',
+      issueKey: 'MCHAV-105',
+      type: 'Bloqueo Técnico',
+      urgency: 'Alta',
+      message: 'Requiero apoyo en la configuración del servicio de pagos para QA.',
+      status: 'EN REVISIÓN LÍDER',
+      date: '2026-08-12 11:30'
+    }
+  ]);
+  const [showHelpSuccessToast, setShowHelpSuccessToast] = useState(false);
 
   // Elementos "Requiere mi atención"
   const [attentionItems, setAttentionItems] = useState([
@@ -215,6 +230,30 @@ export default function DeveloperView({
       });
   };
 
+  // Enviar solicitud de ayuda al líder
+  const handleSubmitHelpRequest = (e) => {
+    e.preventDefault();
+    if (!helpMessage.trim()) return;
+
+    const newRequest = {
+      id: `SOL-${Math.floor(800 + Math.random() * 100)}`,
+      issueKey: helpIssueKey,
+      type: helpType,
+      urgency: helpUrgency,
+      message: helpMessage,
+      status: 'ENVIADA A LÍDER',
+      date: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    };
+
+    setSubmittedHelpRequests(prev => [newRequest, ...prev]);
+    setHelpMessage('');
+    setShowHelpSuccessToast(true);
+    setTimeout(() => {
+      setShowHelpSuccessToast(false);
+      setAlertsTab('sent_requests');
+    }, 1200);
+  };
+
   const assignedIssuesList = (scorecard?.assigned_issues && scorecard.assigned_issues.length > 0)
     ? scorecard.assigned_issues 
     : DEFAULT_ASSIGNED_ISSUES;
@@ -275,6 +314,14 @@ export default function DeveloperView({
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
             🟢 Sincronizado hace 5 min
           </span>
+
+          <button
+            onClick={() => setAlertsModalOpen(true)}
+            className="px-3.5 py-2 text-xs font-bold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 rounded-xl flex items-center gap-1.5 cursor-pointer transition-all"
+          >
+            <Bell size={14} className="text-amber-400 fill-amber-400" />
+            <span>Alertas & Solicitudes</span>
+          </button>
 
           <button
             onClick={handlePrintPDF}
@@ -512,7 +559,7 @@ export default function DeveloperView({
             Ver MCHAV-105
           </button>
           <button
-            onClick={() => onNavigateToAlerts && onNavigateToAlerts()}
+            onClick={() => setAlertsModalOpen(true)}
             className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all border border-slate-700 cursor-pointer"
           >
             Ver solicitudes
@@ -581,823 +628,431 @@ export default function DeveloperView({
         </div>
       </div>
 
-
-
-      {/* ==================================================================== */}
-      {/* MODAL 0: DETALLE DE INCIDENCIAS POR CATEGORÍA SELECCIONADA */}
-      {/* ==================================================================== */}
-      {categoryModalOpen && selectedCategoryFilter && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#232752]">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
-                  <Layers size={18} />
-                </div>
-                <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                  INCIDENCIAS: {selectedCategoryFilter.toUpperCase()}
-                </h3>
-              </div>
-              <button 
-                onClick={() => setCategoryModalOpen(false)} 
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              {filteredIssues.length > 0 ? (
-                filteredIssues.map((issue, idx) => (
-                  <div 
-                    key={idx}
-                    onClick={() => {
-                      setCategoryModalOpen(false);
-                      setSelectedIssueModal(issue);
-                    }}
-                    className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] hover:border-indigo-400 transition-all cursor-pointer flex items-center justify-between"
-                  >
-                    <div className="space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-extrabold text-indigo-400 text-xs">{issue.key_issue}</span>
-                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">
-                          {issue.status_actual}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">
-                        {issue.summary}
-                      </h4>
-                    </div>
-                    <span className="text-xs font-extrabold text-purple-400 shrink-0 ml-2">
-                      {issue.story_points} SP
-                    </span>
-                  </div>
-                ))
-              ) : (
-                <p className="text-xs text-slate-400 text-center py-4">No hay incidencias para esta categoría.</p>
-              )}
-            </div>
-
-            <div className="pt-3 border-t border-slate-200 dark:border-[#232752] flex items-center justify-between">
-              <span className="text-xs text-slate-400 font-medium">{filteredIssues.length} tareas encontradas</span>
-              <button 
-                onClick={() => setCategoryModalOpen(false)} 
-                className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow transition-colors cursor-pointer"
-              >
-                Aceptar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================================================================== */}
-      {/* MODAL 1: INFORMACIÓN DE KPIs (AL HACER CLIC EN UN KPI) */}
-      {/* ==================================================================== */}
-      {selectedKpiModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#232752]">
-              <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-                {selectedKpiModal === 'cycle_time' && <Clock className="text-emerald-400" size={18} />}
-                {selectedKpiModal === 'wip' && <ClipboardList className="text-purple-400" size={18} />}
-                {selectedKpiModal === 'throughput' && <CheckCircle className="text-cyan-400" size={18} />}
-                {selectedKpiModal === 'story_points' && <Zap className="text-pink-400" size={18} />}
-                <span>Información Contextual de {selectedKpiModal.replace('_', ' ').toUpperCase()}</span>
-              </h3>
-              <button 
-                onClick={() => setSelectedKpiModal(null)} 
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {selectedKpiModal === 'cycle_time' && (
-              <div className="space-y-3.5 text-xs text-left">
-                <div className="p-3.5 bg-emerald-500/10 rounded-xl border border-emerald-500/30 flex justify-between items-center">
-                  <div>
-                    <span className="text-slate-200 font-bold block text-xs">Cycle Time Personal (Tiempo de Entrega):</span>
-                    <span className="text-[11px] text-slate-400">Promedio desde "In Progress" hasta "Done"</span>
-                  </div>
-                  <span className="text-emerald-400 font-black text-base bg-emerald-500/20 px-3 py-1 rounded-lg border border-emerald-500/40">
-                    3.2 Días
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
-                  <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase block">Promedio Sprint Previo</span>
-                    <span className="text-sm font-black text-slate-100 mt-0.5 block">3.5 Días</span>
-                  </div>
-                  <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                    <span className="text-[10px] font-extrabold text-slate-400 uppercase block">Mejor Resultado Personal</span>
-                    <span className="text-sm font-black text-emerald-400 mt-0.5 block">2.1 Días</span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-1 text-slate-200">
-                  <div className="flex items-center justify-between text-xs font-bold">
-                    <span>Tendencia vs Sprint Anterior:</span>
-                    <span className="text-emerald-400 font-extrabold">-0.3 Días (Más rápido ⚡)</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Métrica calculada dinámicamente a partir de tus 14 incidencias en este sprint.
-                  </p>
-                </div>
-
-                <div className="p-3.5 bg-emerald-500/10 text-emerald-300 rounded-xl border border-emerald-500/30 leading-relaxed text-xs space-y-1">
-                  <p className="font-extrabold flex items-center gap-1.5 text-emerald-400">
-                    💡 ¿Qué es Cycle Time y qué significa para ti?
-                  </p>
-                  <p className="text-[11px] text-slate-300">
-                    <strong>Cycle Time (Tiempo de Ciclo)</strong> es el tiempo promedio en días que tardas en completar una tarea desde que la mueves a "En Progreso" hasta que queda "Listo". <strong>Un valor menor indica mayor agilidad y rapidez en la resolución de tareas.</strong>
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {selectedKpiModal === 'wip' && (
-              <div className="space-y-3.5 text-xs text-left">
-                <div className="p-3.5 bg-purple-500/10 rounded-xl border border-purple-500/30 flex justify-between items-center">
-                  <div>
-                    <span className="text-slate-200 font-bold block text-xs">Total Tickets en Trabajo Activo (WIP):</span>
-                    <span className="text-[11px] text-slate-400">Trabajo en Proceso sin finalizar</span>
-                  </div>
-                  <span className="text-purple-400 font-black text-base bg-purple-500/20 px-3 py-1 rounded-lg border border-purple-500/40">
-                    7 Tickets
-                  </span>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-2">
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs border-b border-slate-200 dark:border-slate-700/60 pb-1.5">
-                    Desglose por Estado Actual:
-                  </h4>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">En Progreso (Desarrollo Activo):</span>
-                    <span className="font-extrabold text-sky-600 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20">4 tareas</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">En Revisión (Code Review):</span>
-                    <span className="font-extrabold text-purple-600 dark:text-purple-300 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">2 tareas</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">En QA (Pruebas de Calidad):</span>
-                    <span className="font-extrabold text-amber-600 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">1 tarea</span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-amber-500/10 text-amber-800 dark:text-amber-200 rounded-xl border border-amber-500/30 leading-relaxed text-xs space-y-1">
-                  <p className="font-extrabold flex items-center gap-1.5 text-amber-400">
-                    💡 ¿Qué significa WIP y por qué es importante?
-                  </p>
-                  <p className="text-[11px] text-slate-300">
-                    <strong>WIP (Work In Progress / Trabajo en Proceso)</strong> es el número de tareas que tienes abiertas simultáneamente. Se recomienda mantener un <strong>WIP ≤ 3</strong> para enfocarte en terminar tareas antes de abrir nuevas, evitando la multitarea y cuellos de botella.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {selectedKpiModal === 'throughput' && (
-              <div className="space-y-3.5 text-xs text-left">
-                <div className="p-3.5 bg-cyan-500/10 rounded-xl border border-cyan-500/30 flex justify-between items-center">
-                  <div>
-                    <span className="text-slate-200 font-bold block text-xs">Throughput (Volumen de Entregas):</span>
-                    <span className="text-[11px] text-slate-400">Total de tareas finalizadas en el sprint</span>
-                  </div>
-                  <span className="text-cyan-400 font-black text-base bg-cyan-500/20 px-3 py-1 rounded-lg border border-cyan-500/40">
-                    14 Tickets
-                  </span>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-2">
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs border-b border-slate-200 dark:border-slate-700/60 pb-1.5">
-                    Entregas Diarias en la Semana (Promedio: 2.3/día):
-                  </h4>
-                  <div className="grid grid-cols-5 gap-1.5 text-center font-bold">
-                    <div className="p-2 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Lunes</span>
-                      <span className="text-cyan-400 text-xs font-black">2</span>
-                    </div>
-                    <div className="p-2 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Martes</span>
-                      <span className="text-cyan-400 text-xs font-black">3</span>
-                    </div>
-                    <div className="p-2 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Miércoles</span>
-                      <span className="text-cyan-400 text-xs font-black">1</span>
-                    </div>
-                    <div className="p-2 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Jueves</span>
-                      <span className="text-cyan-400 text-xs font-black">4</span>
-                    </div>
-                    <div className="p-2 bg-slate-800/80 rounded-lg border border-slate-700">
-                      <span className="text-[10px] text-slate-400 block font-semibold">Viernes</span>
-                      <span className="text-cyan-400 text-xs font-black">4</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-cyan-500/10 text-cyan-300 rounded-xl border border-cyan-500/30 leading-relaxed text-xs space-y-1">
-                  <p className="font-extrabold flex items-center gap-1.5 text-cyan-400">
-                    💡 ¿Qué es Throughput y por qué es útil?
-                  </p>
-                  <p className="text-[11px] text-slate-300">
-                    <strong>Throughput (Rendimiento/Velocidad de Salida)</strong> mide la cantidad neta de tareas finalizadas con éxito en un período de tiempo. Un Throughput estable demuestra constancia y capacidad de entrega continua.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {selectedKpiModal === 'story_points' && (
-              <div className="space-y-3.5 text-xs text-left">
-                <div className="p-3.5 bg-pink-500/10 rounded-xl border border-pink-500/30 flex justify-between items-center">
-                  <div>
-                    <span className="text-slate-200 font-bold block text-xs">Puntos Quemados (Story Points):</span>
-                    <span className="text-[11px] text-slate-400">Suma del esfuerzo total entregado</span>
-                  </div>
-                  <span className="text-pink-400 font-black text-base bg-pink-500/20 px-3 py-1 rounded-lg border border-pink-500/40">
-                    65 / 80 SP
-                  </span>
-                </div>
-
-                <div className="p-3.5 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-2">
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-xs border-b border-slate-200 dark:border-slate-700/60 pb-1.5">
-                    Desglose por Nivel de Complejidad:
-                  </h4>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Complejidad Alta (8-13 SP):</span>
-                    <span className="font-extrabold text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">24 SP</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Complejidad Media (5 SP):</span>
-                    <span className="font-extrabold text-pink-400 bg-pink-500/10 px-2 py-0.5 rounded border border-pink-500/20">26 SP</span>
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Complejidad Baja (1-3 SP):</span>
-                    <span className="font-extrabold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">15 SP</span>
-                  </div>
-                </div>
-
-                <div className="p-3.5 bg-pink-500/10 text-pink-300 rounded-xl border border-pink-500/30 leading-relaxed text-xs space-y-1">
-                  <p className="font-extrabold flex items-center gap-1.5 text-pink-400">
-                    💡 ¿Qué son Story Points y para qué sirven?
-                  </p>
-                  <p className="text-[11px] text-slate-300">
-                    <strong>Story Points (Puntos de Historia)</strong> representan la estimación del esfuerzo, complejidad y riesgo de cada tarea. Actualmente has completado el <strong>81% de la meta estimada del sprint</strong> (65 de 80 SP).
-                  </p>
-                </div>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-slate-200 dark:border-[#232752] text-right">
-              <button 
-                onClick={() => setSelectedKpiModal(null)} 
-                className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================================================================== */}
-      {/* MODAL 2: DETALLE COMPLETO DE INCIDENCIA (AL HACER CLIC EN FILA DE TABLA) */}
-      {/* ==================================================================== */}
-      {selectedIssueModal && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-5 text-left">
-            
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#232752]">
-              <div className="flex items-center gap-3">
-                <span className="font-mono font-black text-sm px-3 py-1 bg-indigo-500/10 text-indigo-400 rounded-lg border border-indigo-500/20">
-                  {selectedIssueModal.key_issue}
-                </span>
-                <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Detalle de Incidencia
-                </span>
-              </div>
-              <button
-                onClick={() => setSelectedIssueModal(null)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-base font-bold text-slate-900 dark:text-white leading-snug">
-                  {selectedIssueModal.summary}
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {selectedIssueModal.descripcion || 'Sin descripción adicional.'}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 pt-2">
-                <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">ESTADO ACTUAL</span>
-                  <div className="mt-1 font-bold text-xs text-indigo-400">
-                    {selectedIssueModal.status_actual}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">STORY POINTS</span>
-                  <div className="mt-1 font-bold text-xs text-purple-400">
-                    {selectedIssueModal.story_points} SP
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">CYCLE TIME</span>
-                  <div className="mt-1 font-bold text-xs text-emerald-400">
-                    {selectedIssueModal.cycle_time_days} días
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">TIPO</span>
-                  <div className="mt-1 font-bold text-xs text-slate-200">
-                    {selectedIssueModal.tipo}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">PRIORIDAD</span>
-                  <div className="mt-1 font-bold text-xs text-rose-400">
-                    {selectedIssueModal.prioridad}
-                  </div>
-                </div>
-
-                <div className="p-3 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63]">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">CREACIÓN</span>
-                  <div className="mt-1 font-bold text-xs text-cyan-400">
-                    {selectedIssueModal.fecha_creacion}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-end pt-3 border-t border-slate-200 dark:border-[#232752]">
-              <button
-                onClick={() => setSelectedIssueModal(null)}
-                className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {/* ==================================================================== */}
-      {/* MODAL 3: CENTRO INTERACTIVO DE ALERTAS Y SOLICITUD DE AYUDA */}
-      {/* ==================================================================== */}
-      {alertsModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-xl rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 text-left">
-            
-            {/* Header del Modal */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#232752]">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-br from-rose-500 to-amber-500 text-white rounded-xl shadow-md">
-                  <Bell size={18} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">
-                    CENTRO DE AYUDA Y SOLICITUDES
-                  </h3>
-                  <p className="text-xs text-slate-400">Solicita asistencia técnica a tu Líder o revisa tus alertas</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setAlertsModalOpen(false)} 
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* PESTAÑAS NAVEGABLES DEL CENTRO DE AYUDA */}
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#181b40] rounded-xl border border-slate-200 dark:border-[#272b5c]">
-              <button
-                type="button"
-                onClick={() => setAlertsTab('request_form')}
-                className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  alertsTab === 'request_form'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Send size={13} />
-                <span>Solicitar Ayuda al Líder</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAlertsTab('sent_requests')}
-                className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  alertsTab === 'sent_requests'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <MessageSquare size={13} />
-                <span>Mis Solicitudes ({submittedHelpRequests.length})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setAlertsTab('alerts')}
-                className={`flex-1 py-2 text-xs font-extrabold rounded-lg transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                  alertsTab === 'alerts'
-                    ? 'bg-indigo-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Bell size={13} />
-                <span>Alertas ({devAlertsList.length})</span>
-              </button>
-            </div>
-
-            {/* TAB 1: FORMULARIO PARA SOLICITAR AYUDA */}
-            {alertsTab === 'request_form' && (
-              <form onSubmit={handleSubmitHelpRequest} className="space-y-3.5">
-                
-                {showHelpSuccessToast && (
-                  <div className="p-3 bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 rounded-xl text-xs font-bold flex items-center gap-2 animate-bounce">
-                    <CheckCircle size={16} className="text-emerald-400 shrink-0" />
-                    <span>¡Solicitud enviada con éxito al Líder de Equipo!</span>
-                  </div>
-                )}
-
-                {/* Selección de Incidencia */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 block">
-                    Incidencia o Tarea con Dificultad:
-                  </label>
-                  <select
-                    value={helpIssueKey}
-                    onChange={(e) => setHelpIssueKey(e.target.value)}
-                    className="w-full p-2.5 bg-slate-50 dark:bg-[#191c3d] border border-slate-200 dark:border-[#2a2e63] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
-                  >
-                    {assignedIssuesList.map((issue, idx) => (
-                      <option key={idx} value={issue.key_issue}>
-                        {issue.key_issue}: {issue.summary}
-                      </option>
-                    ))}
-                    <option value="CONSULTA_GENERAL">Consulta General / Dificultad de Entorno</option>
-                  </select>
-                </div>
-
-                {/* Tipo de Asistencia y Urgencia */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 block">
-                      Tipo de Bloqueo:
-                    </label>
-                    <select
-                      value={helpType}
-                      onChange={(e) => setHelpType(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-[#191c3d] border border-slate-200 dark:border-[#2a2e63] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
-                    >
-                      <option value="Bloqueo Técnico">🛑 Bloqueo Técnico / Error</option>
-                      <option value="Code Review Urgente">🔄 Code Review Urgente</option>
-                      <option value="Duda de Requerimiento">📋 Clarificación Product Owner</option>
-                      <option value="Accesos y Credenciales">🔑 Credenciales / Accesos API</option>
-                    </select>
-                  </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 block">
-                      Urgencia:
-                    </label>
-                    <select
-                      value={helpUrgency}
-                      onChange={(e) => setHelpUrgency(e.target.value)}
-                      className="w-full p-2.5 bg-slate-50 dark:bg-[#191c3d] border border-slate-200 dark:border-[#2a2e63] rounded-xl text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
-                    >
-                      <option value="Alta">🔴 Alta (Detiene mi trabajo)</option>
-                      <option value="Media">🟨 Media (Puedo avanzar en otra)</option>
-                      <option value="Baja">🟢 Baja (Consulta general)</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Mensaje de Detalle */}
-                <div className="space-y-1">
-                  <label className="text-[11px] font-extrabold uppercase text-slate-700 dark:text-slate-300 block">
-                    Mensaje / Explicación para el Líder:
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={helpMessage}
-                    onChange={(e) => setHelpMessage(e.target.value)}
-                    placeholder="Escribe aquí en qué problema estás atascado o qué apoyo necesitas del líder técnico..."
-                    required
-                    className="w-full p-3 bg-slate-50 dark:bg-[#191c3d] border border-slate-200 dark:border-[#2a2e63] rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
-                  />
-                </div>
-
-                {/* Acciones */}
-                <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-200 dark:border-[#232752]">
-                  <button
-                    type="button"
-                    onClick={() => setAlertsModalOpen(false)}
-                    className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-5 py-2 text-xs font-extrabold bg-gradient-to-r from-rose-600 via-orange-500 to-amber-500 hover:from-rose-500 hover:to-amber-400 text-white rounded-xl shadow-md shadow-rose-900/30 flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
-                  >
-                    <Send size={14} />
-                    <span>Enviar Solicitud al Líder</span>
-                  </button>
-                </div>
-
-              </form>
-            )}
-
-            {/* TAB 2: MIS SOLICITUDES ENVIADAS */}
-            {alertsTab === 'sent_requests' && (
-              <div className="space-y-3">
-                <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                  {submittedHelpRequests.map((req, idx) => (
-                    <div key={idx} className="p-3.5 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-black text-indigo-400">{req.id}</span>
-                          <span className="font-bold text-slate-900 dark:text-white">[{req.issueKey}]</span>
-                        </div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[9px] font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase">
-                          {req.status}
-                        </span>
-                      </div>
-                      <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-                        "{req.message}"
-                      </p>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-bold pt-1.5 border-t border-slate-200 dark:border-slate-800">
-                        <span>Tipo: {req.type}</span>
-                        <span>Urgencia: {req.urgency} | {req.date}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-3 border-t border-slate-200 dark:border-[#232752] flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => setAlertsTab('request_form')}
-                    className="px-3 py-1.5 text-xs font-bold text-indigo-400 hover:text-indigo-300 underline cursor-pointer"
-                  >
-                    + Crear nueva solicitud
-                  </button>
-                  <button 
-                    type="button"
-                    onClick={() => setAlertsModalOpen(false)} 
-                    className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow transition-colors cursor-pointer"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: ALERTAS AUTOMÁTICAS DEL SISTEMA */}
-            {alertsTab === 'alerts' && (
-              <div className="space-y-3">
-                <div className="space-y-2.5 max-h-[50vh] overflow-y-auto pr-1">
-                  {devAlertsList.map((alertItem, idx) => (
-                    <div key={idx} className="p-3.5 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-2">
-                      <div className="flex items-center justify-between text-xs font-bold">
-                        <span className={alertItem.type === 'critical' ? 'text-rose-400' : alertItem.type === 'warning' ? 'text-amber-400' : 'text-cyan-400'}>
-                          {alertItem.type === 'critical' ? '🔴 ALERTA CRÍTICA' : alertItem.type === 'warning' ? '⚠️ ADVERTENCIA' : 'ℹ️ INFORMACIÓN'}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setHelpIssueKey('MCHAV-101');
-                            setHelpMessage(`Solicitud de ayuda para solucionar: ${alertItem.text}`);
-                            setAlertsTab('request_form');
-                          }}
-                          className="px-2.5 py-1 text-[10px] font-extrabold bg-rose-600 hover:bg-rose-500 text-white rounded-lg cursor-pointer flex items-center gap-1"
-                        >
-                          <Send size={10} /> Pedir Ayuda
-                        </button>
-                      </div>
-                      <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
-                        {alertItem.text}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="pt-3 border-t border-slate-200 dark:border-[#232752] text-right">
-                  <button 
-                    type="button"
-                    onClick={() => setAlertsModalOpen(false)} 
-                    className="px-4 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow transition-colors cursor-pointer"
-                  >
-                    Cerrar
-                  </button>
-                </div>
-              </div>
-            )}
-
-          </div>
-        </div>
-      )}
-
-      {/* ==================================================================== */}
-      {/* MODAL 4: INFORMACIÓN COMPLEMENTARIA DEL HISTÓRICO GENERAL */}
-      {/* ==================================================================== */}
-      {historyModalOpen && (
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-          <div className="relative w-full max-w-2xl rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-5 text-left">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#232752]">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-indigo-500/10 text-indigo-400 rounded-xl border border-indigo-500/20">
-                  <Activity size={18} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-extrabold text-slate-900 dark:text-white uppercase tracking-wider">
-                    DETALLE DEL HISTÓRICO GENERAL
-                  </h3>
-                  <p className="text-xs text-slate-400">Rendimiento consolidado por sprint</p>
-                </div>
-              </div>
-              <button 
-                onClick={() => setHistoryModalOpen(false)} 
-                className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 cursor-pointer"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="p-4 bg-slate-50 dark:bg-[#191c3d] rounded-xl border border-slate-200 dark:border-[#2a2e63] space-y-3 text-xs">
-              <div className="grid grid-cols-5 gap-2 font-bold text-slate-400 pb-2 border-b border-slate-200 dark:border-[#2a2e63]">
-                <span>SPRINT</span>
-                <span className="text-right">CYCLE TIME</span>
-                <span className="text-right">THROUGHPUT</span>
-                <span className="text-right">STORY POINTS</span>
-                <span className="text-right">WIP AVG</span>
-              </div>
-              <div className="grid grid-cols-5 gap-2 text-slate-200 font-semibold py-1">
-                <span className="font-bold text-indigo-400">Sprint 24 (Actual)</span>
-                <span className="text-right text-emerald-400">3.2 días</span>
-                <span className="text-right text-cyan-400">14 tickets</span>
-                <span className="text-right text-purple-400">65 SP</span>
-                <span className="text-right">5.5</span>
-              </div>
-              <div className="grid grid-cols-5 gap-2 text-slate-400 py-1">
-                <span className="font-bold text-slate-300">Sprint 23</span>
-                <span className="text-right">3.5 días</span>
-                <span className="text-right">12 tickets</span>
-                <span className="text-right">58 SP</span>
-                <span className="text-right">6.0</span>
-              </div>
-              <div className="grid grid-cols-5 gap-2 text-slate-400 py-1">
-                <span className="font-bold text-slate-300">Sprint 22</span>
-                <span className="text-right">4.1 días</span>
-                <span className="text-right">10 tickets</span>
-                <span className="text-right">50 SP</span>
-                <span className="text-right">7.2</span>
-              </div>
-            </div>
-
-            <div className="pt-3 border-t border-slate-200 dark:border-[#232752] text-right">
-              <button 
-                onClick={() => setHistoryModalOpen(false)} 
-                className="px-4 py-2 text-xs font-bold bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ==================================================================== */}
-      {/* PLANTILLA EXCLUSIVA PARA IMPRESIÓN Y EXPORTACIÓN A PDF (A4) */}
-      {/* ==================================================================== */}
-      <div className="hidden print:block w-full text-slate-900 bg-white p-8 space-y-6 font-sans leading-normal">
-        
-        {/* Encabezado Principal del Reporte */}
-        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-black tracking-widest text-indigo-900">MCHAV ANALYTICS</span>
-              <span className="text-xs px-2 py-0.5 bg-indigo-900 text-white font-bold rounded">REPORTE OFICIAL</span>
-            </div>
-            <h1 className="text-lg font-bold text-slate-800">
-              Consola Ejecutiva de Rendimiento del Desarrollador
-            </h1>
-            <p className="text-xs text-slate-500">
-              Métricas de velocidad, carga de trabajo e incidencias asignadas en tiempo real.
+      {/* 6. REEMPLAZO: SECCIÓN "MIS TAREAS" CON FILTROS */}
+      <div className="p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+          <div className="space-y-0.5">
+            <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <ListTodo size={18} className="text-indigo-400" />
+              Mis Tareas Asignadas
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Listado completo de tus tareas asignadas con estado y esfuerzo estimado.
             </p>
           </div>
-          <div className="text-right text-xs space-y-1 font-medium text-slate-600">
-            <p><strong>Fecha de Generación:</strong> {new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
-            <p><strong>Desarrollador:</strong> {devName} (DEVELOPER)</p>
-            <p><strong>Proyecto ID:</strong> {selectedProjectId} — Sprint 24</p>
+
+          {/* FILTROS DE ESTADO */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 overflow-x-auto">
+            {[
+              { key: 'ALL', label: 'Todas' },
+              { key: 'IN_PROGRESS', label: 'En progreso' },
+              { key: 'PENDING', label: 'Pendientes' },
+              { key: 'BLOCKED', label: 'Bloqueadas' },
+              { key: 'COMPLETED', label: 'Completadas' }
+            ].map((f) => (
+              <button
+                key={f.key}
+                onClick={() => setTaskFilter(f.key)}
+                className={`px-3 py-1 text-xs font-extrabold rounded-lg transition-all cursor-pointer shrink-0 ${
+                  taskFilter === f.key
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* 1. KPIs de Rendimiento Individual */}
-        <div className="space-y-2">
-          <h2 className="text-xs font-black uppercase text-slate-800 border-b border-slate-300 pb-1 tracking-wider">
-            1. RESUMEN DE MÉTRICAS CLAVE (KPIS)
-          </h2>
-          <div className="grid grid-cols-4 gap-3 text-center">
-            <div className="p-3 border border-slate-300 rounded-lg bg-slate-50">
-              <span className="text-[10px] font-bold text-slate-500 block uppercase">CYCLE TIME</span>
-              <span className="text-xl font-black text-emerald-700">3.2 Días</span>
-              <span className="text-[9px] text-slate-600 block mt-0.5">Avg Sprint Previo: 3.5d</span>
-            </div>
-            <div className="p-3 border border-slate-300 rounded-lg bg-slate-50">
-              <span className="text-[10px] font-bold text-slate-500 block uppercase">TICKETS WIP</span>
-              <span className="text-xl font-black text-purple-700">7 Activos</span>
-              <span className="text-[9px] text-slate-600 block mt-0.5">Capacidad Máxima: 10</span>
-            </div>
-            <div className="p-3 border border-slate-300 rounded-lg bg-slate-50">
-              <span className="text-[10px] font-bold text-slate-500 block uppercase">THROUGHPUT</span>
-              <span className="text-xl font-black text-cyan-700">14 Tickets</span>
-              <span className="text-[9px] text-slate-600 block mt-0.5">Promedio: 2.3/día</span>
-            </div>
-            <div className="p-3 border border-slate-300 rounded-lg bg-slate-50">
-              <span className="text-[10px] font-bold text-slate-500 block uppercase">STORY POINTS</span>
-              <span className="text-xl font-black text-pink-700">65 / 80 SP</span>
-              <span className="text-[9px] text-slate-600 block mt-0.5">81% Meta Completada</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Distribución del Trabajo */}
-        <div className="space-y-2">
-          <h2 className="text-xs font-black uppercase text-slate-800 border-b border-slate-300 pb-1 tracking-wider">
-            2. DISTRIBUCIÓN DEL TRABAJO POR CATEGORÍA
-          </h2>
-          <div className="grid grid-cols-3 gap-3 text-xs">
-            <div className="p-3 border border-slate-200 rounded-lg bg-purple-50/50 flex justify-between items-center">
-              <span className="font-bold text-purple-900">Historias de Usuario:</span>
-              <span className="font-black text-purple-700">{historiasCount} tareas ({donutWorkDistribution[0].pct}%)</span>
-            </div>
-            <div className="p-3 border border-slate-200 rounded-lg bg-pink-50/50 flex justify-between items-center">
-              <span className="font-bold text-pink-900">Bugs y Defectos:</span>
-              <span className="font-black text-pink-700">{bugsCount} tareas ({donutWorkDistribution[1].pct}%)</span>
-            </div>
-            <div className="p-3 border border-slate-200 rounded-lg bg-teal-50/50 flex justify-between items-center">
-              <span className="font-bold text-teal-900">Tareas / Deuda Técnica:</span>
-              <span className="font-black text-teal-700">{tareasCount} tareas ({donutWorkDistribution[2].pct}%)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Listado Completo de 14 Incidencias */}
-        <div className="space-y-2">
-          <h2 className="text-xs font-black uppercase text-slate-800 border-b border-slate-300 pb-1 tracking-wider">
-            3. LISTADO COMPLETO DE INCIDENCIAS ASIGNADAS ({assignedIssuesList.length} TAREAS TOTALES)
-          </h2>
-          <table className="w-full text-xs text-left border-collapse border border-slate-300">
-            <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-300 uppercase tracking-wider text-[10px]">
-              <tr>
-                <th className="p-2 border-r border-slate-300">Clave</th>
-                <th className="p-2 border-r border-slate-300">Resumen</th>
-                <th className="p-2 border-r border-slate-300">Tipo</th>
-                <th className="p-2 border-r border-slate-300">Prioridad</th>
-                <th className="p-2 border-r border-slate-300 text-center">Estado</th>
-                <th className="p-2 border-r border-slate-300 text-right">SP</th>
-                <th className="p-2 text-right">Cycle Time</th>
+        {/* TABLA DE TAREAS ASIGNADAS */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-[11px] font-extrabold uppercase text-slate-400">
+                <th className="py-3 px-3">Clave</th>
+                <th className="py-3 px-3">Resumen</th>
+                <th className="py-3 px-3">Prioridad</th>
+                <th className="py-3 px-3">Estado</th>
+                <th className="py-3 px-3 text-center">Story Points</th>
+                <th className="py-3 px-3 text-center">Cycle Time</th>
+                <th className="py-3 px-3 text-right">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 text-[11px]">
-              {assignedIssuesList.map((issue, idx) => (
-                <tr key={idx} className={idx % 2 === 0 ? "bg-white" : "bg-slate-50"}>
-                  <td className="p-2 font-mono font-bold text-indigo-900 border-r border-slate-200">{issue.key_issue}</td>
-                  <td className="p-2 font-semibold text-slate-800 border-r border-slate-200">{issue.summary}</td>
-                  <td className="p-2 text-slate-700 border-r border-slate-200">{issue.tipo}</td>
-                  <td className="p-2 text-slate-700 border-r border-slate-200">{issue.prioridad}</td>
-                  <td className="p-2 text-center font-bold border-r border-slate-200 text-[10px] uppercase">{issue.status_actual}</td>
-                  <td className="p-2 text-right font-bold border-r border-slate-200">{issue.story_points}</td>
-                  <td className="p-2 text-right font-bold text-emerald-800">{issue.cycle_time_days}d</td>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+              {filteredTasks.map((t) => (
+                <tr key={t.key_issue} className="hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
+                  <td className="py-3.5 px-3 font-mono font-bold text-indigo-600 dark:text-indigo-300">
+                    {t.key_issue}
+                  </td>
+                  <td className="py-3.5 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
+                    {t.summary}
+                  </td>
+                  <td className="py-3.5 px-3">
+                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded ${
+                      t.prioridad === 'Crítica' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                      t.prioridad === 'Alta' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+                      'bg-slate-800 text-slate-300 border border-slate-700'
+                    }`}>
+                      {t.prioridad}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-3">
+                    <span className={`px-2.5 py-1 text-[11px] font-extrabold rounded-lg ${
+                      t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
+                      t.status_actual === 'EN PROGRESO' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
+                      t.status_actual === 'EN REVISIÓN' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
+                      t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
+                      'bg-slate-800 text-slate-300'
+                    }`}>
+                      {t.status_actual}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
+                    {t.story_points} SP
+                  </td>
+                  <td className="py-3.5 px-3 text-center font-semibold text-slate-400">
+                    {t.cycle_time_days > 0 ? `${t.cycle_time_days}d` : '--'}
+                  </td>
+                  <td className="py-3.5 px-3 text-right">
+                    <button
+                      onClick={() => setSelectedIssueModal(t)}
+                      className="px-3 py-1 text-[11px] font-extrabold rounded-lg bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                    >
+                      Ver
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </div>
 
-        {/* Pie de Página de Validación */}
-        <div className="pt-6 border-t border-slate-300 flex items-center justify-between text-[10px] text-slate-500 font-medium">
-          <p>Documento generado automáticamente por Mchav Analytics Platform. Uso exclusivo e interno.</p>
-          <p>Firmado digitalmente: <strong>Valka Hoyos (DEVELOPER)</strong></p>
+      {/* MODAL RÁPIDO DE RESPUESTA EN LUGAR DE REDIRECCIÓN */}
+      {replyModalOpen && activeReplyIssue && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div>
+                <span className="text-xs font-mono font-bold text-indigo-400">
+                  {activeReplyIssue.key_issue || 'MCHAV-128'}
+                </span>
+                <h3 className="text-base font-bold text-slate-900 dark:text-white mt-0.5">
+                  Responder solicitud
+                </h3>
+              </div>
+              <button
+                onClick={() => setReplyModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-900/70 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
+                <span>Carlos Pérez</span>
+                <span className="text-[10px] text-slate-400">Hace 15m</span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed italic">
+                "{activeReplyIssue.message || activeReplyIssue.detail}"
+              </p>
+            </div>
+
+            <form onSubmit={handleSendQuickReply} className="space-y-3">
+              <textarea
+                required
+                rows={3}
+                value={quickReplyText}
+                onChange={(e) => setQuickReplyText(e.target.value)}
+                placeholder="Escribe tu respuesta..."
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-medium"
+              />
+
+              <div className="flex items-center justify-between pt-1">
+                <a
+                  href={`https://jira.empresa.com/browse/${activeReplyIssue.key_issue || 'MCHAV-128'}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-xs font-bold text-indigo-400 hover:underline flex items-center gap-1"
+                >
+                  <span>Abrir en Jira</span>
+                  <ExternalLink size={12} />
+                </a>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setReplyModalOpen(false)}
+                    className="px-3 py-1.5 text-xs font-semibold text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={sendingQuickReply}
+                    className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5"
+                  >
+                    <Send size={13} />
+                    <span>{sendingQuickReply ? 'Enviando...' : 'Enviar respuesta'}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE DETALLE DE TAREA */}
+      {selectedIssueModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-indigo-400 border border-slate-700 rounded">
+                  {selectedIssueModal.key_issue}
+                </span>
+                <span className="px-2 py-0.5 text-xs font-bold bg-purple-500/20 text-purple-300 border border-purple-500/40 rounded">
+                  {selectedIssueModal.status_actual}
+                </span>
+              </div>
+              <button
+                onClick={() => setSelectedIssueModal(null)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                {selectedIssueModal.summary}
+              </h3>
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-800">
+                {selectedIssueModal.descripcion || 'Sin descripción detallada de Jira.'}
+              </p>
+
+              <div className="grid grid-cols-2 gap-3 text-xs pt-2">
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block">Prioridad</span>
+                  <strong className="text-white font-bold">{selectedIssueModal.prioridad}</strong>
+                </div>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-800">
+                  <span className="text-slate-400 font-semibold block">Story Points</span>
+                  <strong className="text-white font-bold">{selectedIssueModal.story_points} SP</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+              <a
+                href={`https://jira.empresa.com/browse/${selectedIssueModal.key_issue}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs font-bold text-indigo-400 hover:underline flex items-center gap-1"
+              >
+                <span>Abrir en Jira ↗</span>
+              </a>
+              <button
+                onClick={() => setSelectedIssueModal(null)}
+                className="px-4 py-1.5 text-xs font-bold bg-slate-800 hover:bg-slate-700 text-white rounded-xl cursor-pointer"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE ALERTAS Y SOLICITAR AYUDA DEL DESARROLLADOR */}
+      {alertsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-xl rounded-2xl shadow-2xl p-6 space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-2">
+                <Bell className="text-amber-400 fill-amber-400" size={18} />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  Centro de Alertas & Solicitar Ayuda (Dev Workspace)
+                </h3>
+              </div>
+              <button
+                onClick={() => setAlertsModalOpen(false)}
+                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* PESTAÑAS DEL MODAL */}
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+              <button
+                onClick={() => setAlertsTab('request_form')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  alertsTab === 'request_form'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                + Nueva Solicitud
+              </button>
+              <button
+                onClick={() => setAlertsTab('sent_requests')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  alertsTab === 'sent_requests'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Mis Solicitudes ({submittedHelpRequests.length})
+              </button>
+              <button
+                onClick={() => setAlertsTab('alerts')}
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${
+                  alertsTab === 'alerts'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Mis Alertas (3)
+              </button>
+            </div>
+
+            {showHelpSuccessToast && (
+              <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-bold text-center animate-in fade-in">
+                ✨ Solicitud enviada exitosamente al Líder Técnico.
+              </div>
+            )}
+
+            {/* CONTENIDO PESTAÑA 1: FORMULARIO NUEVA SOLICITUD */}
+            {alertsTab === 'request_form' && (
+              <form onSubmit={handleSubmitHelpRequest} className="space-y-3.5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">Incidencia Relacionada</label>
+                    <select
+                      value={helpIssueKey}
+                      onChange={(e) => setHelpIssueKey(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                      {DEFAULT_ASSIGNED_ISSUES.map(i => (
+                        <option key={i.key_issue} value={i.key_issue}>{i.key_issue} - {i.summary.substring(0, 25)}...</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-semibold text-slate-300">Tipo de Apoyo Requerido</label>
+                    <select
+                      value={helpType}
+                      onChange={(e) => setHelpType(e.target.value)}
+                      className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer"
+                    >
+                      <option value="Bloqueo Técnico">Bloqueo Técnico</option>
+                      <option value="Aprobación de Pull Request">Aprobación de Pull Request</option>
+                      <option value="Aclaración de Requerimiento">Aclaración de Requerimiento</option>
+                      <option value="Problemas de Ambiente / Credenciales">Problemas de Ambiente / Credenciales</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-slate-300">Mensaje Detallado para el Líder</label>
+                  <textarea
+                    rows={3}
+                    required
+                    value={helpMessage}
+                    onChange={(e) => setHelpMessage(e.target.value)}
+                    placeholder="Describe el bloqueo o duda técnica requerida..."
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-xs text-white outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setAlertsModalOpen(false)}
+                    className="px-3.5 py-1.5 text-xs font-semibold text-slate-400 hover:text-white cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-1.5 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow cursor-pointer transition-all flex items-center gap-1.5"
+                  >
+                    <Send size={13} />
+                    <span>Enviar a Líder</span>
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* CONTENIDO PESTAÑA 2: SOLICITUDES ENVIADAS */}
+            {alertsTab === 'sent_requests' && (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {submittedHelpRequests.map(r => (
+                  <div key={r.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 space-y-1">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-indigo-400 font-mono">{r.issueKey} ({r.type})</span>
+                      <span className="px-2 py-0.5 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded">
+                        {r.status}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 italic">"{r.message}"</p>
+                    <span className="text-[10px] text-slate-500 block">{r.date}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* CONTENIDO PESTAÑA 3: MIS ALERTAS */}
+            {alertsTab === 'alerts' && (
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {[
+                  { id: 1, type: 'critical', text: 'MCHAV-105 en inactividad (2 días en bloqueo). Se sugiere solicitar apoyo.' },
+                  { id: 2, type: 'warning', text: 'WIP en 7 tareas abiertas. Mantener WIP ≤ 3 mejora la velocidad de entrega.' },
+                  { id: 3, type: 'info', text: 'Sprint activo. 81% de Story Points completados.' }
+                ].map(a => (
+                  <div key={a.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
+                    <AlertTriangle size={15} className="text-amber-400 shrink-0 mt-0.5" />
+                    <p className="text-xs text-slate-300 leading-relaxed">{a.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* PLANTILLA EXCLUSIVA PARA IMPRESIÓN Y EXPORTACIÓN A PDF (A4) */}
+      <div className="hidden print:block w-full text-slate-900 bg-white p-8 space-y-6 font-sans leading-normal">
+        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black tracking-widest text-indigo-900">MCHAV ANALYTICS</span>
+              <span className="text-xs px-2 py-0.5 bg-indigo-900 text-white font-bold rounded">REPORTE DE DESARROLLADOR</span>
+            </div>
+            <h1 className="text-lg font-bold text-slate-800">
+              Consola Ejecutiva de Trabajo Individual
+            </h1>
+          </div>
+          <div className="text-right text-xs space-y-1 font-medium text-slate-600">
+            <p><strong>Fecha:</strong> {new Date().toLocaleDateString('es-ES')}</p>
+            <p><strong>Desarrollador:</strong> {devName} (DEVELOPER)</p>
+          </div>
         </div>
 
+        <div className="space-y-2">
+          <h2 className="text-xs font-black uppercase text-slate-800 border-b border-slate-300 pb-1 tracking-wider">
+            MÉTRICAS CLAVE
+          </h2>
+          <div className="grid grid-cols-4 gap-3 text-center text-xs">
+            <div className="p-3 border border-slate-300 rounded-lg">Cycle Time: 3.2d</div>
+            <div className="p-3 border border-slate-300 rounded-lg">WIP: 7 Tickets</div>
+            <div className="p-3 border border-slate-300 rounded-lg">Throughput: 14 Tickets</div>
+            <div className="p-3 border border-slate-300 rounded-lg">Story Points: 65 SP</div>
+          </div>
+        </div>
       </div>
 
     </div>
