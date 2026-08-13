@@ -299,7 +299,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Resumen
+              Histórico General
             </h1>
           </div>
         </div>
