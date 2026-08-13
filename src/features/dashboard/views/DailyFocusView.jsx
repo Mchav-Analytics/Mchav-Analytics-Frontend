@@ -19,7 +19,10 @@ import {
   Tag,
   Play,
   ArrowRight,
-  X
+  X,
+  TrendingUp,
+  ShieldCheck,
+  AlertOctagon
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { developerService } from '../../../services/api';
