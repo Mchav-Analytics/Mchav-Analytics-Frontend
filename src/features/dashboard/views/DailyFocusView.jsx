@@ -40,8 +40,15 @@ const DEFAULT_NOTES = [
   { id: 103, text: '📌 Revisar credenciales del entorno Sandbox para la próxima integración.' }
 ];
 
-export default function DailyFocusView() {
+export default function DailyFocusView({ data: propData }) {
   const { user } = useAuth();
+
+  const data = propData || {
+    ai_coach_tip: "Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101.",
+    efficiency_gain_pct: 14,
+    clean_deliveries_pct: 100
+  };
+
   const [items, setItems] = useState(DEFAULT_AGENDA_ITEMS);
   const [notes, setNotes] = useState(DEFAULT_NOTES);
   const [newText, setNewText] = useState('');
