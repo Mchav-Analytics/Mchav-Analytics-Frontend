@@ -326,44 +326,47 @@ export default function DeveloperView({
         </div>
       )}
 
-      {/* 1. ENCABEZADO CONSOLE DE TRABAJO INDIVIDUAL */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#141738] p-5 rounded-2xl border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl">
+      {/* 1. ENCABEZADO CONSOLE DE TRABAJO INDIVIDUAL (ESTILO DESIGN SYSTEM) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white font-black text-xl shadow-md shadow-purple-900/40 shrink-0">
-            {devName.substring(0, 1).toUpperCase()}
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold shadow-md shrink-0">
+            <User size={24} />
           </div>
-          <div className="space-y-0.5">
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap">
-              Mi Trabajo: {devName}
-              <span className="flex items-center gap-1.5 rounded-full bg-indigo-500/10 dark:bg-[#00f5d4]/20 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:text-[#00f5d4] border border-indigo-500/20 dark:border-[#00f5d4]/30">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-[#00f5d4] animate-pulse"></span>
-                DEVELOPER
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 flex items-center gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                DEVELOPER WORKSPACE
               </span>
+              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                • Desarrollador: <strong className="text-slate-800 dark:text-slate-200 font-bold">{devName}</strong>
+              </span>
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Mi Trabajo: {devName}
             </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Consola interactiva de trabajo individual y métricas de carga de trabajo.
-            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap shrink-0">
+        <div className="flex items-center gap-2.5 shrink-0">
           {/* CAMPANITA DE NOTIFICACIONES CON PREVIA EMERGENTE & ENLACE AL CENTRO DE ACTIVIDAD */}
           <LiderNotificationBell onNavigateTab={onNavigateTab} />
 
           <button
             onClick={handlePrintPDF}
-            className="px-3.5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl shadow-md border border-indigo-400/30 flex items-center gap-1.5 cursor-pointer transition-all hover:scale-[1.02]"
+            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
           >
-            <Printer size={14} />
+            <Printer size={15} />
             <span>Exportar PDF</span>
           </button>
 
           <button
             onClick={handleReloadData}
-            className="p-2 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl transition-all cursor-pointer"
+            className="p-2.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl transition-all cursor-pointer shadow-xs"
             title="Actualizar datos"
           >
-            <RotateCcw size={15} className={isRefreshing ? "animate-spin text-indigo-500" : ""} />
+            <RotateCcw size={16} className={isRefreshing ? "animate-spin text-indigo-500" : ""} />
           </button>
         </div>
       </div>
