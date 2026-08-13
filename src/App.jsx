@@ -452,11 +452,7 @@ function MainAppContent() {
       )}
 
       {activeTab === 'alerts_center' && (
-        normalizeRole(user?.rol) === 'DEVELOPER' ? (
-          <DevAlertsView selectedProjectId={selectedProjectId} />
-        ) : (
-          <AlertsCenterView selectedProjectId={selectedProjectId} />
-        )
+        <AlertsCenterView selectedProjectId={selectedProjectId} />
       )}
 
       {activeTab === 'sincronizacion' && (

@@ -379,16 +379,24 @@ function AlertsCenterView({ selectedProjectId = 'PROJ-01' }) {
               </div>
 
               <div className="flex items-center gap-2">
-                <select
-                  value={activeThread.estado || 'NUEVA'}
-                  onChange={(e) => handleChangeStatus(e.target.value)}
-                  className="px-2.5 py-1 text-xs font-extrabold rounded-xl bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-700 outline-none cursor-pointer"
-                >
-                  <option value="NUEVA">🟣 Nueva</option>
-                  <option value="EN_REVISION">🔵 En revisión</option>
-                  <option value="EN_CONVERSACION">🟡 En conversación</option>
-                  <option value="RESUELTA">🟢 Resuelta</option>
-                </select>
+                {!isDev ? (
+                  <select
+                    value={activeThread.estado || 'NUEVA'}
+                    onChange={(e) => handleChangeStatus(e.target.value)}
+                    className="px-2.5 py-1 text-xs font-extrabold rounded-xl bg-slate-100 dark:bg-slate-800 text-indigo-600 dark:text-indigo-300 border border-slate-200 dark:border-slate-700 outline-none cursor-pointer"
+                  >
+                    <option value="NUEVA">🟣 Nueva</option>
+                    <option value="EN_REVISION">🔵 En revisión</option>
+                    <option value="EN_CONVERSACION">🟡 En conversación</option>
+                    <option value="RESUELTA">🟢 Resuelta</option>
+                  </select>
+                ) : (
+                  <span className="px-2.5 py-1 text-xs font-extrabold rounded-xl bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                    {activeThread.estado === 'NUEVA' ? '🟣 Nueva' :
+                     activeThread.estado === 'EN_REVISION' ? '🔵 En revisión' :
+                     activeThread.estado === 'RESUELTA' ? '🟢 Resuelta' : '🟡 En conversación'}
+                  </span>
+                )}
 
                 <button
                   onClick={() => setActiveThread(null)}
