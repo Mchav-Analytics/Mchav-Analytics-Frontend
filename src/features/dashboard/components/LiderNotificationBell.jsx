@@ -9,66 +9,156 @@ import {
   Bug,
   ExternalLink,
   ArrowRight,
-  CheckCircle2
+  CheckCircle2,
+  UserCheck,
+  CheckSquare,
+  ShieldAlert
 } from 'lucide-react';
+import { useAuth } from '../../../features/auth/context/AuthContext';
 import { jiraService } from '../../../services/api';
 
-const initialNotifications = [
-  {
-    id: 'notif-1',
-    type: 'SOLICITUD',
-    title: '💬 Solicitud de Actualización',
-    description: 'Carlos Pérez solicita confirmación sobre la entrega del módulo SSO (MCHAV-128).',
-    tagline: 'Necesita interacción humana.',
-    time: 'Hace 15 min',
-    isRead: false,
-    issueKey: 'MCHAV-128'
-  },
-  {
-    id: 'notif-2',
-    type: 'BUG',
-    title: '🐞 Bug Crítico Detectado',
-    description: 'Fallos devueltos en QA para MCHAV Analytics (MCHAV-105).',
-    tagline: 'No necesariamente necesita respuesta.',
-    time: 'Hace 45 min',
-    isRead: false,
-    issueKey: 'MCHAV-105'
-  },
-  {
-    id: 'notif-3',
-    type: 'ALERTA',
-    title: '⚠️ Inactividad Prolongada (>48h)',
-    description: 'MCHAV-104 lleva más de 3 días sin registro de avances.',
-    tagline: 'Normalmente necesita acción.',
-    time: 'Hace 2 horas',
-    isRead: false
-  },
-  {
-    id: 'notif-4',
-    type: 'SYNC_FAIL',
-    title: '🔄 Sincronización Fallida',
-    description: 'Fallo de conexión en el motor de ingesta de Jira Cloud API.',
-    tagline: 'Acción técnica.',
-    time: 'Hace 3 horas',
-    isRead: false
-  },
-  {
-    id: 'notif-5',
-    type: 'REPORT',
-    title: '📊 Informe Generado',
-    description: 'Resumen semanal de velocidad y salud del Sprint 04 disponible.',
-    tagline: 'No necesita respuesta.',
-    time: 'Hace 5 horas',
-    isRead: true
-  }
-];
+// Configuración de notificaciones separadas POR ROL
+const roleNotifications = {
+  DEVELOPER: [
+    {
+      id: 'dev-1',
+      type: 'TASK_ASSIGNED',
+      title: '📌 Nueva Tarea Asignada',
+      description: 'Te han asignado la incidencia MCHAV-142 (3 SP) en Sprint 04.',
+      tagline: 'Asignación personal.',
+      time: 'Hace 10 min',
+      isRead: false,
+      issueKey: 'MCHAV-142'
+    },
+    {
+      id: 'dev-2',
+      type: 'SOLICITUD',
+      title: '💬 Respuesta de tu Líder Técnico',
+      description: 'Michael Salamanca respondió a tu duda sobre SSO (MCHAV-128).',
+      tagline: 'Necesita tu revisión.',
+      time: 'Hace 25 min',
+      isRead: false,
+      issueKey: 'MCHAV-128'
+    },
+    {
+      id: 'dev-3',
+      type: 'BUG',
+      title: '🐞 Bug Devuelto en QA',
+      description: 'Tu tarea MCHAV-105 fue devuelta por QA con 2 observaciones.',
+      tagline: 'Requiere corrección.',
+      time: 'Hace 1 hora',
+      isRead: false,
+      issueKey: 'MCHAV-105'
+    },
+    {
+      id: 'dev-4',
+      type: 'ALERTA',
+      title: '⚠️ Alerta de Inactividad Personal',
+      description: 'Llevas >48h sin registrar avances en MCHAV-104.',
+      tagline: 'Normalmente necesita acción.',
+      time: 'Hace 3 horas',
+      isRead: false
+    }
+  ],
+
+  MANAGER: [
+    {
+      id: 'mgr-1',
+      type: 'SOLICITUD',
+      title: '💬 Solicitud de Actualización de Desarrollador',
+      description: 'Carlos Pérez solicita confirmación sobre la entrega del módulo SSO (MCHAV-128).',
+      tagline: 'Necesita interacción humana.',
+      time: 'Hace 15 min',
+      isRead: false,
+      issueKey: 'MCHAV-128'
+    },
+    {
+      id: 'mgr-2',
+      type: 'BUG',
+      title: '🐞 3 Bugs Críticos Detectados en Sprint',
+      description: 'QA reportó fallos bloqueantes devueltos en MCHAV Analytics (MCHAV-105).',
+      tagline: 'No necesariamente necesita respuesta.',
+      time: 'Hace 45 min',
+      isRead: false,
+      issueKey: 'MCHAV-105'
+    },
+    {
+      id: 'mgr-3',
+      type: 'ALERTA',
+      title: '⚠️ Cycle Time Elevado en Equipo (>3.5d)',
+      description: 'MCHAV-104 (Clara Gómez) supera el umbral máximo del sprint.',
+      tagline: 'Normalmente necesita acción.',
+      time: 'Hace 2 horas',
+      isRead: false
+    },
+    {
+      id: 'mgr-4',
+      type: 'REPORT',
+      title: '📊 Informe de Predictibilidad Generado',
+      description: 'Resumen semanal de velocidad y salud del Sprint 04 listo.',
+      tagline: 'No necesita respuesta.',
+      time: 'Hace 4 horas',
+      isRead: true
+    }
+  ],
+
+  ADMIN: [
+    {
+      id: 'adm-1',
+      type: 'SYNC_FAIL',
+      title: '🔄 Sincronización Fallida ETL',
+      description: 'Error de conexión HTTP 504 en la ingesta de datos de Jira Cloud API.',
+      tagline: 'Acción técnica requerida.',
+      time: 'Hace 5 min',
+      isRead: false
+    },
+    {
+      id: 'adm-2',
+      type: 'USER_REG',
+      title: '👤 Solicitud de Acceso / Rol Pendiente',
+      description: 'Nuevo integrante registrado solicitando asignación de rol.',
+      tagline: 'Necesita aprobación de gobierno.',
+      time: 'Hace 30 min',
+      isRead: false
+    },
+    {
+      id: 'adm-3',
+      type: 'ALERTA',
+      title: '⚠️ Alerta de Gobernanza y SLAs',
+      description: '2 proyectos superan el SLA global de resolución de bloqueos.',
+      tagline: 'Normalmente necesita acción.',
+      time: 'Hace 1 hora',
+      isRead: false
+    },
+    {
+      id: 'adm-4',
+      type: 'REPORT',
+      title: '📊 Auditoría de ETL & Cron Scheduler',
+      description: 'Informe de ejecución del pipeline nocturno completado.',
+      tagline: 'No necesita respuesta.',
+      time: 'Hace 3 horas',
+      isRead: true
+    }
+  ]
+};
 
 export default function LiderNotificationBell({ className = "", onNavigateToHub, onNavigateTab }) {
+  const { user } = useAuth();
+  
+  // Detectar rol exacto del usuario activo
+  const rawRole = (user?.rol || 'MANAGER').toUpperCase();
+  const activeRole = rawRole.includes('DEV') ? 'DEVELOPER' : rawRole.includes('ADMIN') ? 'ADMIN' : 'MANAGER';
+
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [notifications, setNotifications] = useState(() => roleNotifications[activeRole] || roleNotifications.MANAGER);
   const [syncingId, setSyncingId] = useState(null);
   const [syncMsg, setSyncMsg] = useState('');
   const popoverRef = useRef(null);
+
+  // Sincronizar notificaciones según el rol cuando el usuario cambia
+  useEffect(() => {
+    setNotifications(roleNotifications[activeRole] || roleNotifications.MANAGER);
+  }, [activeRole]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -135,7 +225,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700/80 transition-all cursor-pointer relative flex items-center justify-center shadow-xs"
-        title="Centro de Actividad y Notificaciones"
+        title={`Notificaciones - Rol ${activeRole}`}
       >
         <Bell size={16} className="text-slate-700 dark:text-slate-200" />
         {unreadCount > 0 && (
@@ -153,7 +243,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
             <div className="flex items-center gap-2">
               <Bell size={16} className="text-indigo-600 dark:text-indigo-400" />
               <h3 className="font-extrabold text-xs text-slate-900 dark:text-white uppercase tracking-wider">
-                Notificaciones
+                Notificaciones ({activeRole})
               </h3>
               {unreadCount > 0 && (
                 <span className="px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 font-bold text-[10px]">
@@ -187,7 +277,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
             </div>
           )}
 
-          {/* LISTA DE NOTIFICACIONES CATEGORIZADAS */}
+          {/* LISTA DE NOTIFICACIONES FILTRADAS POR ROL */}
           <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80 pr-1 space-y-2">
             {notifications.map((notif) => (
               <div
@@ -201,16 +291,20 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
               >
                 <div className="flex items-start gap-2.5">
                   <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
+                    notif.type === 'TASK_ASSIGNED' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400' :
                     notif.type === 'SOLICITUD' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
                     notif.type === 'BUG' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
                     notif.type === 'ALERTA' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
                     notif.type === 'SYNC_FAIL' ? 'bg-red-500/15 text-red-600 dark:text-red-400' :
+                    notif.type === 'USER_REG' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
                     'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                   }`}>
-                    {notif.type === 'SOLICITUD' ? <MessageSquare size={14} /> :
+                    {notif.type === 'TASK_ASSIGNED' ? <CheckSquare size={14} /> :
+                     notif.type === 'SOLICITUD' ? <MessageSquare size={14} /> :
                      notif.type === 'BUG' ? <Bug size={14} /> :
                      notif.type === 'ALERTA' ? <AlertTriangle size={14} /> :
                      notif.type === 'SYNC_FAIL' ? <RefreshCw size={14} /> :
+                     notif.type === 'USER_REG' ? <UserCheck size={14} /> :
                      <FileBarChart2 size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -231,8 +325,26 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
                   </div>
                 </div>
 
-                {/* BOTONES DE ACCIÓN RÁPIDA EXACTOS */}
+                {/* BOTONES DE ACCIÓN RÁPIDA SEGÚN TIPO Y ROL */}
                 <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
+                  {notif.type === 'TASK_ASSIGNED' && (
+                    <button
+                      onClick={() => handleNavigate('developer')}
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <CheckSquare size={11} /> Ver tarea
+                    </button>
+                  )}
+
+                  {notif.type === 'USER_REG' && (
+                    <button
+                      onClick={() => handleNavigate('usuarios')}
+                      className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-cyan-600 text-white hover:bg-cyan-500 transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <UserCheck size={11} /> Ver usuarios
+                    </button>
+                  )}
+
                   {notif.type === 'SOLICITUD' && (
                     <button
                       onClick={handleGoToHub}
