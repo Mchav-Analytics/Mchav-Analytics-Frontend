@@ -239,7 +239,10 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const { user } = useAuth();
   const isAdmin = isAdminRole(userProfile?.rol || user?.rol);
 
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState(() => {
+    const savedCustom = JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
+    return savedCustom.length > 0 ? [...savedCustom, ...INITIAL_PROJECTS] : INITIAL_PROJECTS;
+  });
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -248,16 +251,27 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     projectService.getProjects()
       .then(realProjects => {
         if (realProjects && realProjects.length > 0) {
+          const savedCustom = JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
           const mappedProjects = realProjects.map((rp, i) => {
             const baseMock = INITIAL_PROJECTS[i % INITIAL_PROJECTS.length];
             return {
               ...baseMock,
-              id: rp.key_proyecto, // Usamos la key real (Ej. MCHAV) para que el backend la encuentre
+              id: rp.key_proyecto || rp.id_proyecto,
               key: rp.key_proyecto,
               name: rp.nombre
             };
           });
-          setProjects(mappedProjects);
+          const combined = [...savedCustom, ...mappedProjects];
+          const unique = [];
+          const seen = new Set();
+          for (const p of combined) {
+            if (!seen.has(p.id) && !seen.has(p.key)) {
+              seen.add(p.id);
+              if (p.key) seen.add(p.key);
+              unique.push(p);
+            }
+          }
+          setProjects(unique);
         }
       })
       .catch(err => console.error("Error al cargar proyectos reales:", err));
@@ -522,9 +536,14 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     }
 
     if (editingProjectId) {
-      setProjects(prev => prev.map(p => (p.id === editingProjectId
-        ? { ...p, name: formName.trim(), key: formKey.trim().toUpperCase(), leader: selectedLeader, developers: selectedDevs }
-        : p)));
+      setProjects(prev => {
+        const updated = prev.map(p => (p.id === editingProjectId
+          ? { ...p, name: formName.trim(), key: formKey.trim().toUpperCase(), leader: selectedLeader, developers: selectedDevs }
+          : p));
+        const customOnly = updated.filter(p => p.id.startsWith('proj-') || p.id.includes('custom'));
+        localStorage.setItem('custom_user_projects', JSON.stringify(customOnly));
+        return updated;
+      });
       showToast(`Proyecto '${formName.trim()}' actualizado correctamente.`);
     } else {
       const newProject = {
@@ -538,7 +557,12 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         leader: selectedLeader,
         developers: selectedDevs
       };
-      setProjects(prev => [newProject, ...prev]);
+      setProjects(prev => {
+        const updated = [newProject, ...prev];
+        const customOnly = updated.filter(p => p.id.startsWith('proj-') || p.id.includes('custom'));
+        localStorage.setItem('custom_user_projects', JSON.stringify(customOnly));
+        return updated;
+      });
       setExpandedProjectId(newProject.id);
       showToast(`Proyecto '${formName.trim()}' asignado con éxito.`);
     }
