@@ -344,7 +344,7 @@ export default function DeveloperView({
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              Mi Trabajo: {devName}
+              Mi Trabajo
             </h1>
           </div>
         </div>

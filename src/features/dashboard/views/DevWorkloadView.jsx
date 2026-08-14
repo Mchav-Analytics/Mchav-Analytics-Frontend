@@ -170,17 +170,19 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold shadow-md shrink-0">
               <Layers size={22} />
             </div>
-            <div className="space-y-0.5">
-              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white flex items-center gap-2.5 flex-wrap">
-                Plan de Trabajo: {devName}
-                <span className="flex items-center gap-1.5 rounded-full bg-indigo-50 dark:bg-[#00f5d4]/20 px-2.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-[#00f5d4] border border-indigo-200 dark:border-[#00f5d4]/30">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-[#00f5d4] animate-pulse"></span>
-                  {user?.rol || 'DEVELOPER'}
+            <div className="space-y-0.5 text-left">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                  DEVELOPER WORKSPACE
                 </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  • Desarrollador: <strong className="text-slate-800 dark:text-slate-200 font-bold">{devName}</strong>
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Plan de Trabajo
               </h1>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Planificación estratégica de tareas pendientes, entregas en progreso y capacidad del sprint.
-              </p>
             </div>
           </div>
 

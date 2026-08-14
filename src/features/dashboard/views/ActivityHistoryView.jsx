@@ -53,25 +53,26 @@ export default function ActivityHistoryView({ selectedProjectId = 'PROJ-01' }) {
   return (
     <div className="w-full space-y-10 py-4 px-1 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
-      {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA */}
-      <div className="relative group rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 via-indigo-500/20 to-pink-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-5">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 via-indigo-500 to-pink-600 text-white font-extrabold shadow-xl shadow-purple-500/20">
-              <History size={26} />
+      {/* ENCABEZADO CONSOLE DE HISTORIAL (ESTILO DESIGN SYSTEM) */}
+      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 text-white font-extrabold shadow-md shrink-0">
+              <History size={24} />
             </div>
-            <div className="space-y-1">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
-                Historial de Actividad y Logros
-                <span className="flex items-center gap-2 rounded-full bg-purple-500/10 px-3.5 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20">
-                  <span className="h-2 w-2 rounded-full bg-purple-500 animate-pulse"></span>
+            <div className="space-y-0.5 text-left">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30">
                   {badges.length} Medallas Desbloqueadas
                 </span>
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  • Cronología de Trabajo Individual
+                </span>
+              </div>
+
+              <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+                Historial
               </h1>
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                Cronología de cambios para tus reuniones diarias (Standups) y reconocimientos de calidad.
-              </p>
             </div>
           </div>
         </div>
