@@ -105,6 +105,11 @@ function Sidebar({
         <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m0 13.5V21m8.966-8.966h-2.25m-13.5 0H3m15.364-6.364l-1.591 1.591M6.343 17.657l-1.591 1.591m12.728 0l-1.591-1.591M6.343 6.343L4.752 4.752M12 7.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9z" />
       </svg>
     ),
+    code: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+      </svg>
+    ),
     moon: (
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-4 h-4 text-indigo-400">
         <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
@@ -139,6 +144,7 @@ function Sidebar({
       { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+      { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },

@@ -22,6 +22,7 @@ import AlertsCenterView from './features/dashboard/views/AlertsCenterView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
+import JqlConsultasView from './features/jql/views/JqlConsultasView';
 import LoginView from './features/auth/views/LoginView';
 import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
@@ -310,6 +311,11 @@ function MainAppContent() {
           title: "Gestión de Usuarios y Roles (RBAC) ",
           subtitle: "Control de accesos y administración de roles del equipo."
         };
+      case 'jql_queries':
+        return {
+          title: "Consola de Consultas JQL & Sintaxis ",
+          subtitle: "Validador sintáctico en tiempo real, ejecutor de consultas JQL y diccionario de campos (Solo Admin)."
+        };
       case 'sincronizacion':
         return {
           title: "Auditoría de ETL y Schedulers ",
@@ -466,6 +472,10 @@ function MainAppContent() {
 
       {activeTab === 'usuarios' && (
         <AdminUsuariosView />
+      )}
+
+      {activeTab === 'jql_queries' && (
+        <JqlConsultasView />
       )}
     </MainLayout>
   );
