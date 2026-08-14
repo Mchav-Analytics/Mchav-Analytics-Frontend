@@ -1139,14 +1139,14 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           {/* Card 1: Proyectos Activos (Emerald Theme) */}
           <div
             onClick={() => setStatusTab('ACTIVE')}
-            className={`group relative overflow-hidden bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl text-left cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-xl ${statusTab === 'ACTIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/30' : 'border-slate-200 dark:border-[#33376b]'
+            className={`group relative overflow-hidden bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl text-left cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-xl ${statusTab === 'ACTIVE' ? 'border-emerald-500 ring-2 ring-emerald-500/40 dark:ring-emerald-400/50' : 'border-slate-200 dark:border-emerald-500/30 dark:hover:border-emerald-400/60'
               }`}
           >
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500/15 via-teal-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-emerald-500/20 via-teal-500/15 to-transparent dark:from-emerald-500/35 dark:via-teal-500/25 dark:to-emerald-900/20 opacity-90 dark:opacity-100 pointer-events-none transition-opacity group-hover:opacity-100"></div>
             <div className="relative z-10 space-y-1.5">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Proyectos Activos</span>
-                <FolderKanban size={18} className="text-emerald-500" />
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Proyectos Activos</span>
+                <FolderKanban size={18} className="text-emerald-500 dark:text-emerald-400" />
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-slate-900 dark:text-white">
@@ -1157,63 +1157,63 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   En Ejecución
                 </span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Equipos de desarrollo asignados.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">Equipos de desarrollo asignados.</p>
             </div>
           </div>
 
           {/* Card 2: Entregados / Concluidos (Indigo Theme) */}
           <div
             onClick={() => setStatusTab('COMPLETED')}
-            className={`group relative overflow-hidden bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl text-left cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-xl ${statusTab === 'COMPLETED' ? 'border-indigo-500 ring-2 ring-indigo-500/30' : 'border-slate-200 dark:border-[#33376b]'
+            className={`group relative overflow-hidden bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl text-left cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-xl ${statusTab === 'COMPLETED' ? 'border-indigo-500 ring-2 ring-indigo-500/40 dark:ring-indigo-400/50' : 'border-slate-200 dark:border-indigo-500/30 dark:hover:border-indigo-400/60'
               }`}
           >
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/15 via-purple-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-transparent dark:from-indigo-500/35 dark:via-purple-500/25 dark:to-indigo-900/20 opacity-90 dark:opacity-100 pointer-events-none transition-opacity group-hover:opacity-100"></div>
             <div className="relative z-10 space-y-1.5">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Entregados / Concluidos</span>
-                <CheckCircle2 size={18} className="text-indigo-500" />
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">Entregados / Concluidos</span>
+                <CheckCircle2 size={18} className="text-indigo-500 dark:text-indigo-400" />
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
+                <span className="text-2xl font-black text-indigo-600 dark:text-indigo-300">
                   {projects.filter(p => p.status === 'COMPLETED' || p.status === 'DELIVERED').length}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Finalizados</span>
+                <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold">Finalizados</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Proyectos concluidos con éxito.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">Proyectos concluidos con éxito.</p>
             </div>
           </div>
 
           {/* Card 3: Devs Asignados (Cyan Theme) */}
-          <div className="group relative overflow-hidden bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl text-left shadow-sm dark:shadow-xl">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/15 via-sky-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+          <div className="group relative overflow-hidden bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-cyan-500/30 dark:hover:border-cyan-400/60 p-4.5 rounded-2xl text-left shadow-sm dark:shadow-xl">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-sky-500/15 to-transparent dark:from-cyan-500/35 dark:via-sky-500/25 dark:to-cyan-900/20 opacity-90 dark:opacity-100 pointer-events-none transition-opacity group-hover:opacity-100"></div>
             <div className="relative z-10 space-y-1.5">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Devs Asignados</span>
-                <Users size={18} className="text-cyan-500" />
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">Devs Asignados</span>
+                <Users size={18} className="text-cyan-500 dark:text-cyan-400" />
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-slate-900 dark:text-white">
                   {projects.reduce((acc, p) => acc + (p.developers?.length || 0), 0)}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">Desarrolladores</span>
+                <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold">Desarrolladores</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Capacidad técnica desplegada.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">Capacidad técnica desplegada.</p>
             </div>
           </div>
 
           {/* Card 4: Salud Operativa Promedio (Amber Theme) */}
-          <div className="group relative overflow-hidden bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4.5 rounded-2xl text-left shadow-sm dark:shadow-xl">
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+          <div className="group relative overflow-hidden bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-amber-500/30 dark:hover:border-amber-400/60 p-4.5 rounded-2xl text-left shadow-sm dark:shadow-xl">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/15 to-transparent dark:from-amber-500/35 dark:via-orange-500/25 dark:to-amber-900/20 opacity-90 dark:opacity-100 pointer-events-none transition-opacity group-hover:opacity-100"></div>
             <div className="relative z-10 space-y-1.5">
-              <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider">Salud Operativa Promedio</span>
-                <Zap size={18} className="text-amber-500" />
+              <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-amber-700 dark:text-amber-300">Salud Operativa Promedio</span>
+                <Zap size={18} className="text-amber-500 dark:text-amber-400" />
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-amber-500">86.5%</span>
+                <span className="text-2xl font-black text-amber-500 dark:text-amber-300">86.5%</span>
                 <span className="text-xs text-emerald-600 dark:text-emerald-400 font-extrabold">Estable</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400">Predictibilidad global de entregas.</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">Predictibilidad global de entregas.</p>
             </div>
           </div>
         </div>
