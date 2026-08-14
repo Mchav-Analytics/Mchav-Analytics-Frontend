@@ -26,7 +26,6 @@ api.interceptors.request.use((config) => {
 
 export const authService = {
   getLoginUrl() {
-    if (USE_MOCK_DATA) return mockAuthService.getLoginUrl();
     return `${BACKEND_URL}/api/v1/auth/login`;
   },
   getCurrentUser() {

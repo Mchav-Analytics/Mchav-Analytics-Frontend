@@ -202,20 +202,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
   };
 
   const loginWithJira = async () => {
-    if (USE_MOCK_DATA) {
-      return login({ email: "vhoyos@mchav.com" });
-    }
-    try {
-      const u = await authService.loginMock({ email: "vhoyos@mchav.com" });
-      if (u?.token || u?.access_token) {
-        localStorage.setItem('mchav_jwt_token', u.token || u.access_token);
-      }
-      setUser(u);
-      return u;
-    } catch (err) {
-      console.warn("Autenticación local fallida, redirigiendo a OAuth Jira:", err);
-      window.location.href = authService.getLoginUrl();
-    }
+    const jiraUrl = authService.getLoginUrl();
+    window.location.href = jiraUrl;
   };
 
   // Cierre de sesión real: Si sale el Desarrollador, reinicia aprobaciones para permitir enviar la notificación de nuevo
