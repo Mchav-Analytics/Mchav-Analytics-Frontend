@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, Tooltip as RechartsTooltip } from 'recharts';
 import { useAuth } from '../../../features/auth/context/AuthContext';
-import { developerService, jiraService } from '../../../services/api';
+import { developerService, jiraService, jqlService, projectService } from '../../../services/api';
 import owlMascotImg from '../../../assets/owl_mascot.png';
 import LiderNotificationBell from '../components/LiderNotificationBell';
 
@@ -184,6 +184,36 @@ export default function DeveloperView({
   const loadScorecard = async () => {
     try {
       const data = await developerService.getMyScorecard(selectedProjectId);
+      
+      // Intentar cargar las incidencias reales desde la base de datos local
+      try {
+        const userEmail = user?.email || 'valentina1025m@gmail.com';
+        const userName = user?.nombre || 'Valentina Montalvo';
+        const projectId = selectedProjectId || '10000';
+        
+        // Importante: usamos la API para que consulte la tabla issues local, evitando problemas de JQL Cloud
+        const dbRes = await projectService.getKpiIssuesDetail(projectId, { assignee_email: userEmail, assignee_name: userName, limit: 50 });
+        
+        if (dbRes && dbRes.issues && dbRes.issues.length > 0) {
+          const realIssues = dbRes.issues.map(issue => ({
+             key_issue: issue.key_issue,
+             summary: issue.summary,
+             status_actual: issue.status_actual || 'PENDIENTE',
+             story_points: issue.story_points || 0,
+             cycle_time_days: issue.cycle_time_days || 0,
+             tipo: issue.issue_type || 'Tarea',
+             prioridad: issue.priority || 'Media',
+             fecha_creacion: issue.created_at
+          }));
+          data.assigned_issues = realIssues;
+        } else {
+          // Si no hay incidencias reales para este usuario
+          data.assigned_issues = [];
+        }
+      } catch (dbErr) {
+        console.warn("No se pudieron cargar las incidencias reales locales:", dbErr);
+      }
+
       setScorecard(data);
     } catch (err) {
       console.warn("Error cargando scorecard:", err);
@@ -291,9 +321,7 @@ export default function DeveloperView({
     }, 1200);
   };
 
-  const assignedIssuesList = (scorecard?.assigned_issues && scorecard.assigned_issues.length > 0)
-    ? scorecard.assigned_issues
-    : DEFAULT_ASSIGNED_ISSUES;
+  const assignedIssuesList = scorecard?.assigned_issues || [];
 
   const filteredTasks = assignedIssuesList.filter(issue => {
     const status = (issue.status_actual || '').toUpperCase();

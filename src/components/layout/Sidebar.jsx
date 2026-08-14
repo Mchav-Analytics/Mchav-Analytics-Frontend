@@ -191,8 +191,8 @@ function Sidebar({
 
       <div className="flex flex-col justify-between flex-1 mt-1.5">
 
-        {/* ── SELECTOR DE MODOS DE VISTA DE ROL (PARA EL ADMINISTRADOR) ── */}
-        {isRealAdmin && !isCollapsed && (
+        {/* ── SELECTOR DE MODOS DE VISTA DE ROL (PARA TODOS EN MODO DEMO) ── */}
+        {!isCollapsed && (
           <div className="mb-1.5 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800/80 shadow-xs">
             <div className="flex items-center justify-between mb-2 px-1">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">

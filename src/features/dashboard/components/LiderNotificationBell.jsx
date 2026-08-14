@@ -150,7 +150,7 @@ const roleNotifications = {
 
 export default function LiderNotificationBell({ className = "", onNavigateToHub, onNavigateTab }) {
   const { user } = useAuth();
-  
+
   // Detectar rol exacto del usuario activo
   const rawRole = (user?.rol || 'MANAGER').toUpperCase();
   const activeRole = rawRole.includes('DEV') ? 'DEVELOPER' : rawRole.includes('ADMIN') ? 'ADMIN' : 'MANAGER';
@@ -306,29 +306,27 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
               <div
                 key={notif.id}
                 onClick={() => handleMarkSingleRead(notif.id)}
-                className={`p-3 rounded-xl transition-all flex flex-col gap-2 ${
-                  !notif.isRead 
-                    ? 'bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/40' 
+                className={`p-3 rounded-xl transition-all flex flex-col gap-2 ${!notif.isRead
+                    ? 'bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-800/40'
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/40 opacity-85'
-                }`}
+                  }`}
               >
                 <div className="flex items-start gap-2.5">
-                  <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${
-                    notif.type === 'TASK_ASSIGNED' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400' :
-                    notif.type === 'SOLICITUD' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
-                    notif.type === 'BUG' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
-                    notif.type === 'ALERTA' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
-                    notif.type === 'SYNC_FAIL' ? 'bg-red-500/15 text-red-600 dark:text-red-400' :
-                    notif.type === 'USER_REG' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
-                    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                  }`}>
+                  <div className={`p-1.5 rounded-lg shrink-0 mt-0.5 ${notif.type === 'TASK_ASSIGNED' ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400' :
+                      notif.type === 'SOLICITUD' ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400' :
+                        notif.type === 'BUG' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
+                          notif.type === 'ALERTA' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
+                            notif.type === 'SYNC_FAIL' ? 'bg-red-500/15 text-red-600 dark:text-red-400' :
+                              notif.type === 'USER_REG' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
+                                'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                    }`}>
                     {notif.type === 'TASK_ASSIGNED' ? <CheckSquare size={14} /> :
-                     notif.type === 'SOLICITUD' ? <MessageSquare size={14} /> :
-                     notif.type === 'BUG' ? <Bug size={14} /> :
-                     notif.type === 'ALERTA' ? <AlertTriangle size={14} /> :
-                     notif.type === 'SYNC_FAIL' ? <RefreshCw size={14} /> :
-                     notif.type === 'USER_REG' ? <UserCheck size={14} /> :
-                     <FileBarChart2 size={14} />}
+                      notif.type === 'SOLICITUD' ? <MessageSquare size={14} /> :
+                        notif.type === 'BUG' ? <Bug size={14} /> :
+                          notif.type === 'ALERTA' ? <AlertTriangle size={14} /> :
+                            notif.type === 'SYNC_FAIL' ? <RefreshCw size={14} /> :
+                              notif.type === 'USER_REG' ? <UserCheck size={14} /> :
+                                <FileBarChart2 size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
@@ -434,5 +432,3 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub,
     </div>
   );
 }
-
-

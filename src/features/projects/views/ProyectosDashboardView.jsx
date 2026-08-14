@@ -246,37 +246,6 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Cargar proyectos reales del backend para que tengan el ID correcto al consultar percentiles
-  React.useEffect(() => {
-    projectService.getProjects()
-      .then(realProjects => {
-        if (realProjects && realProjects.length > 0) {
-          const savedCustom = JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
-          const mappedProjects = realProjects.map((rp, i) => {
-            const baseMock = INITIAL_PROJECTS[i % INITIAL_PROJECTS.length];
-            return {
-              ...baseMock,
-              id: rp.key_proyecto || rp.id_proyecto,
-              key: rp.key_proyecto,
-              name: rp.nombre
-            };
-          });
-          const combined = [...savedCustom, ...mappedProjects];
-          const unique = [];
-          const seen = new Set();
-          for (const p of combined) {
-            if (!seen.has(p.id) && !seen.has(p.key)) {
-              seen.add(p.id);
-              if (p.key) seen.add(p.key);
-              unique.push(p);
-            }
-          }
-          setProjects(unique);
-        }
-      })
-      .catch(err => console.error("Error al cargar proyectos reales:", err));
-  }, []);
-
   // Estados para HU-014 Análisis de Tiempos
   const [activeProjectTab, setActiveProjectTab] = useState('RESUMEN');
   const [percentilesData, setPercentilesData] = useState(null);
@@ -344,7 +313,22 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             leader: availableLeaders[idx % availableLeaders.length] || AVAILABLE_LEADERS[0],
             developers: availableDevelopers.slice(0, 3).length > 0 ? availableDevelopers.slice(0, 3) : AVAILABLE_DEVELOPERS.slice(0, 3)
           }));
-          setProjects(apiProjects);
+          
+          const savedCustom = JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
+          
+          // Combinar proyectos locales con los del API, priorizando los locales por ID/Key
+          const combined = [...savedCustom, ...apiProjects];
+          const unique = [];
+          const seen = new Set();
+          for (const p of combined) {
+            if (!seen.has(p.id) && !seen.has(p.key)) {
+              seen.add(p.id);
+              if (p.key) seen.add(p.key);
+              unique.push(p);
+            }
+          }
+          
+          setProjects(unique);
         }
       })
       .catch((err) => {

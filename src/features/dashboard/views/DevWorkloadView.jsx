@@ -17,7 +17,7 @@ import {
   ListTodo
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
-import { developerService } from '../../../services/api';
+import { developerService, projectService } from '../../../services/api';
 
 const DEFAULT_WORKLOAD_LIST = [
   { key_issue: 'MCHAV-101', summary: 'Implementar autenticación SSO y OAuth 2.0', status: 'EN PROGRESO', story_points: 8, cycle_time_days: 4.1, tipo: 'Historia de Usuario', prioridad: 'Alta', asignado: 'Valka Hoyos', avatar: '101', avatarBg: 'from-purple-600 to-indigo-600', fecha: 'Hace 3.2 días', descripcion: 'Integración completa con servicio de identidad Okta / Google OAuth para autenticación empresarial.' },
@@ -63,6 +63,29 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
     try {
       const data = await developerService.getMyScorecard(selectedProjectId);
       setScorecard(data);
+      
+      // Fetch real tasks from backend
+      const userEmail = user?.email || 'valentina1025m@gmail.com';
+      const userName = user?.nombre || 'Valentina Montalvo';
+      const dbRes = await projectService.getKpiIssuesDetail(selectedProjectId, { assignee_email: userEmail, assignee_name: userName, limit: 50 });
+      
+      if (dbRes && dbRes.issues && dbRes.issues.length > 0) {
+        const realTasks = dbRes.issues.map(issue => ({
+          key_issue: issue.key_issue,
+          summary: issue.summary,
+          status: issue.status_actual?.toUpperCase() || 'PENDIENTE',
+          story_points: issue.story_points || 0,
+          cycle_time_days: issue.cycle_time_days || 0,
+          tipo: issue.tipo || 'Historia',
+          prioridad: issue.prioridad || 'Media',
+          asignado: issue.assignee_name || userName,
+          avatar: issue.key_issue.split('-')[1] || '0',
+          avatarBg: 'from-indigo-600 to-purple-600',
+          fecha: new Date(issue.updated_at || Date.now()).toLocaleDateString(),
+          descripcion: issue.descripcion || 'Sin descripción'
+        }));
+        setTasksList(realTasks);
+      }
     } catch (err) {
       console.warn("Error cargando scorecard de carga:", err);
     }

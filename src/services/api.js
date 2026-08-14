@@ -127,6 +127,10 @@ export const projectService = {
     if (USE_MOCK_DATA) return mockProjectService.getProjects();
     return api.get('/api/v1/projects').then(res => res.data);
   },
+  createProject(projectData) {
+    if (USE_MOCK_DATA) return Promise.resolve(projectData);
+    return api.post('/api/v1/projects', projectData).then(res => res.data);
+  },
   getSprints(projectId) {
     if (USE_MOCK_DATA) return mockProjectService.getSprints(projectId);
     return api.get(`/api/v1/projects/${projectId}/sprints`).then(res => res.data);
