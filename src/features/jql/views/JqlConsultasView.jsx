@@ -21,7 +21,7 @@ import {
   FileCode2,
   Code2
 } from 'lucide-react';
-import { automationService } from '../../../services/api';
+import { automationService, jqlService } from '../../../services/api';
 
 // Diccionario explicativo de sintaxis JQL
 const JQL_DICTIONARY = [
@@ -69,7 +69,12 @@ export default function JqlConsultasView() {
     const startTime = performance.now();
 
     try {
-      const result = await automationService.executeJqlQuery(jqlQuery.trim());
+      let result;
+      if (jqlService && typeof jqlService.executeJql === 'function') {
+        result = await jqlService.executeJql(jqlQuery.trim());
+      } else {
+        result = await automationService.executeJqlQuery(jqlQuery.trim());
+      }
       const endTime = performance.now();
       const elapsed = Math.round(endTime - startTime);
 

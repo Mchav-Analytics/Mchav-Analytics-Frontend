@@ -467,486 +467,119 @@ export default function SystemSyncTab() {
 
       </div>
 
-      {/* SECCIÓN SUPERIOR: GRID DE CONFIGURACIÓN Y CONSOLA JQL */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* COLUMNA IZQUIERDA: CONFIGURACIÓN MANUAL DE CRON (1/3) */}
-        <div className="lg:col-span-1 space-y-6">
-          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center gap-2.5 pb-4 mb-5 border-b border-slate-100 dark:border-slate-800">
-              <Settings2 className="text-teal-600 dark:text-teal-500" size={20} />
+      {/* SECCIÓN SUPERIOR COMPLETA (100% ANCHO): PANEL DE SINCRONIZACIÓN AUTOMÁTICA Y PROGRAMADA */}
+      <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 shadow-sm dark:shadow-xl space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <Settings2 className="text-teal-600 dark:text-teal-500" size={22} />
+            <div>
               <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-                Configuración Manual de Cron
+                Sincronización Automática & Programación de Tareas (CRON)
               </h2>
-            </div>
-
-            <div className="space-y-6">
-              {/* Sincronización Automática */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <p className="text-sm font-bold text-slate-700 dark:text-slate-200 flex items-center gap-1">
-                    Sincronización Automática
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-400">
-                    Sincronización automática periódica.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsAutoSync(!isAutoSync)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isAutoSync ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'}`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoSync ? 'translate-x-6' : 'translate-x-1'}`} />
-                </button>
-              </div>
-
-              {/* Programación CRON */}
-              <div className="space-y-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                  Programación CRON
-                </label>
-                <select
-                  value={cronSchedule}
-                  onChange={(e) => setCronSchedule(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-sm text-slate-700 dark:text-slate-200 outline-none cursor-pointer focus:ring-2 focus:ring-teal-500/50"
-                >
-                  <option value="6h">Cada 6 Horas</option>
-                  <option value="12h">Cada 12 Horas</option>
-                  <option value="24h">Diario (Cada 24 Horas)</option>
-                </select>
-              </div>
-
-              {/* Horario de Ejecución */}
-              <div className="space-y-2 pt-2">
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                  Horario de Ejecución Diaria
-                </label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="time"
-                    value={cronTime}
-                    onChange={handleCronTimeChange}
-                    disabled={isSavingCron}
-                    className="flex-1 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl p-2.5 text-sm text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-teal-500/50"
-                  />
-                  <button
-                    onClick={handleSaveCronTime}
-                    disabled={isSavingCron || cronTime === savedCronTime}
-                    className="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:opacity-50"
-                  >
-                    {isSavingCron ? 'Guardando...' : 'Guardar'}
-                  </button>
-                </div>
-              </div>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Control de actualización periódica de métricas de Jira Cloud e historial de ejecuciones.
+              </p>
             </div>
           </div>
 
-          {/* DICCIONARIO DE CONSULTAS JQL (UBICADO EN LA COLUMNA IZQUIERDA PARA OCUPAR EL ESPACIO JUNTO A LOS RESULTADOS) */}
-          {showDictionaryTable && (
-            <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 shadow-sm animate-in fade-in zoom-in-95 duration-200">
-              <div className="pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    <Database size={16} className="text-indigo-500" />
-                    Diccionario de Consultas JQL
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setShowDictionaryTable(false)}
-                    className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 cursor-pointer"
-                    title="Cerrar Diccionario"
-                  >
-                    ✕
-                  </button>
-                </div>
-                <p className="text-[11px] text-slate-400 mt-1">
-                  Catálogo de consultas predefinidas. Haz clic en "⚡ Cargar" para probar cualquier sintaxis.
-                </p>
-              </div>
-
-              {/* BUSCADOR */}
-              <div className="relative mb-3">
-                <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
-                <input
-                  type="text"
-                  value={dictionarySearch}
-                  onChange={(e) => setDictionarySearch(e.target.value)}
-                  placeholder="Buscar consulta..."
-                  className="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-xs outline-none focus:ring-1 focus:ring-indigo-500 text-slate-700 dark:text-slate-200"
-                />
-              </div>
-
-              {/* FILTROS POR CATEGORÍA */}
-              <div className="flex flex-wrap items-center gap-1.5 mb-4">
-                {['TODAS', 'Consultas Básicas', 'Control Operativo', 'Calidad y Bugs', 'Tiempos'].map((cat) => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedDictCategory(cat === 'Tiempos' ? 'Tiempos y Recientes' : cat)}
-                    className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors cursor-pointer ${
-                      (selectedDictCategory === cat || (cat === 'Tiempos' && selectedDictCategory === 'Tiempos y Recientes'))
-                        ? 'bg-indigo-600 text-white shadow-sm'
-                        : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* LISTA DE TARJETAS COMPACTAS (MAX ALTURA CON SCROLLBAR ELEGANTE) */}
-              <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-indigo-500/30">
-                {jqlDictionaryList
-                  .filter(item => {
-                    const matchesCategory = selectedDictCategory === 'TODAS' || item.category === selectedDictCategory;
-                    const matchesQuery = !dictionarySearch || 
-                      item.title.toLowerCase().includes(dictionarySearch.toLowerCase()) || 
-                      item.jql.toLowerCase().includes(dictionarySearch.toLowerCase()) ||
-                      item.description.toLowerCase().includes(dictionarySearch.toLowerCase());
-                    return matchesCategory && matchesQuery;
-                  })
-                  .map((item, idx) => (
-                    <div 
-                      key={idx} 
-                      className="p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/80 hover:border-indigo-500/50 dark:hover:border-indigo-500/50 transition-all duration-200 group"
-                    >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold border ${item.categoryBadge}`}>
-                          {item.category}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleCopyToClipboard(item.jql, idx)}
-                          className="p-1 rounded text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors cursor-pointer"
-                          title="Copiar JQL"
-                        >
-                          {copiedJqlIdx === idx ? (
-                            <span className="text-emerald-500 font-bold text-[9px] flex items-center gap-0.5">
-                              <CheckCircle2 size={11} /> ¡Copiado!
-                            </span>
-                          ) : (
-                            <Copy size={12} />
-                          )}
-                        </button>
-                      </div>
-
-                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                        {item.title}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 font-normal mt-0.5 line-clamp-2">
-                        {item.description}
-                      </p>
-
-                      <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-2">
-                        <code className="text-[10px] font-mono text-emerald-400 bg-slate-950 px-2 py-1 rounded border border-slate-800 truncate flex-1" title={item.jql}>
-                          {item.jql}
-                        </code>
-                        <button
-                          type="button"
-                          onClick={() => handleLoadIntoConsole(item.jql)}
-                          className="py-1 px-2.5 rounded-lg bg-indigo-600/10 hover:bg-indigo-600 text-indigo-600 hover:text-white dark:text-indigo-400 dark:hover:text-white border border-indigo-500/20 font-bold text-[10px] transition-all flex items-center gap-1 shrink-0 cursor-pointer"
-                        >
-                          <Terminal size={11} /> ⚡ Cargar
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={handleManualSync}
+            disabled={syncStatus.status === 'SYNCING'}
+            className="px-5 py-2.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold shadow-md flex items-center gap-2 transition-all cursor-pointer disabled:opacity-60"
+          >
+            {syncStatus.status === 'SYNCING' ? (
+              <>
+                <RefreshCcw size={15} className="animate-spin" />
+                <span>Sincronizando en segundo plano...</span>
+              </>
+            ) : (
+              <>
+                <Play size={15} fill="currentColor" />
+                <span>Sincronizar Manualmente Ahora</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {/* COLUMNA DERECHA: CONSOLA JQL REAL (2/3) */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-6 shadow-sm">
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <Terminal className="text-indigo-600 dark:text-indigo-400" size={20} />
-                <div>
-                  <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    Consola JQL Real con Validador Sintáctico (HU-009)
-                  </h2>
-                  <p className="text-xs text-slate-400">
-                    Valida sintaxis JQL (paréntesis, comillas y campos) con el backend de FastAPI antes de consultar Jira Cloud.
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
-                POST /api/v1/jql/execute
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Tarjeta 1: Estado de la Conexión */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+              Estado de la Integración Jira
+            </span>
+            <div className="flex items-center gap-2">
+              <span className={`h-3 w-3 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : (syncStatus.status === 'FAILED' ? 'bg-rose-500' : 'bg-emerald-500')}`} />
+              <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+                {syncStatus.status === 'SYNCING' ? 'Sincronizando...' : (syncStatus.status === 'FAILED' ? 'Atención Requerida' : 'Conectado a Jira Cloud')}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Última actualización: <strong>{syncStatus.lastSync}</strong>
+            </p>
+          </div>
+
+          {/* Tarjeta 2: Switch Automático */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Sincronización Automática
+              </span>
+              <button
+                onClick={() => setIsAutoSync(!isAutoSync)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isAutoSync ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoSync ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+            </div>
+            <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
+              {isAutoSync ? '🟢 Programador Automático Activo' : '⚪ Programación Pausada'}
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              Próxima ejecución: <strong>{syncStatus.nextScheduledSync}</strong>
+            </p>
+          </div>
+
+          {/* Tarjeta 3: Configuración CRON */}
+          <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                Frecuencia y Horario CRON
               </span>
             </div>
 
-            {/* DICCIONARIO DE CONSULTAS JQL RECOMENDADAS (PRESETS) */}
-            <div className="mb-4 text-left">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
-                Diccionario de Consultas Recomendadas (Presets)
-              </label>
-              <div className="flex flex-wrap gap-2">
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={cronSchedule}
+                onChange={(e) => setCronSchedule(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+              >
+                <option value="6h">Cada 6 Horas</option>
+                <option value="12h">Cada 12 Horas</option>
+                <option value="24h">Diario (24 Horas)</option>
+              </select>
+
+              <div className="flex items-center gap-1">
+                <input
+                  type="time"
+                  value={cronTime}
+                  onChange={handleCronTimeChange}
+                  disabled={isSavingCron}
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
+                />
                 <button
                   type="button"
-                  onClick={() => setJqlQuery('project = "10000"')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
+                  onClick={handleSaveCronTime}
+                  disabled={isSavingCron || cronTime === savedCronTime}
+                  className="bg-teal-600 text-white rounded-xl px-2 py-1.5 text-[10px] font-bold transition-all hover:bg-teal-700 disabled:opacity-40 cursor-pointer"
                 >
-                  Todas las Incidencias
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND status in ("In Progress", "En curso")')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  En Progreso
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND status in ("To Do", "Por hacer", "Pendiente")')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  Pendientes (To Do)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND status in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  Completadas (Done)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND priority in (High, Highest, Alta) AND status not in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
-                >
-                  Alta Prioridad
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND assignee is EMPTY AND status not in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
-                >
-                  Sin Asignar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND issuetype in (Bug, Error) AND status not in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 hover:bg-rose-100 transition-colors cursor-pointer"
-                >
-                  Bugs Activos
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND updated >= -7d ORDER BY updated DESC')}
-                  className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                >
-                  Actualizadas 7 días
+                  {isSavingCron ? '...' : 'Ok'}
                 </button>
               </div>
             </div>
-
-            <form onSubmit={handleExecuteJql} className="space-y-4 text-left">
-              <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
-                  Consulta JQL a Validar
-                </label>
-                <textarea
-                  id="jql-console-textarea"
-                  rows={3}
-                  value={jqlQuery}
-                  onChange={(e) => setJqlQuery(e.target.value)}
-                  placeholder='project = "MCHAV" AND assignee = currentUser() AND status = "In Progress"'
-                  className="w-full bg-slate-950 text-emerald-400 border border-slate-800 rounded-xl p-3 text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner"
-                />
-              </div>
-
-              {jqlSuccess && (
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 text-xs font-semibold flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={16} />
-                    <span>{jqlSuccess}</span>
-                  </div>
-                  {jqlIssues.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={exportJqlToCsv}
-                      className="px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition-all shadow cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Download size={12} /> Exportar CSV
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {jqlError && (
-                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
-                  <AlertTriangle size={16} className="shrink-0" />
-                  <span className="break-all">{jqlError}</span>
-                </div>
-              )}
-
-              <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
-                {/* BOTÓN DESPLEGAR DICCIONARIO DE CONSULTAS (A LA IZQUIERDA EN LA PARTE DE ABAJO) */}
-                <button
-                  type="button"
-                  onClick={() => setShowDictionaryTable(!showDictionaryTable)}
-                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 text-xs font-bold transition-all shadow-sm cursor-pointer"
-                >
-                  <Database size={15} />
-                  <span>{showDictionaryTable ? '📖 Ocultar Diccionario JQL' : '📖 Ver Diccionario de Consultas JQL'}</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isExecutingJql}
-                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2.5 text-xs rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
-                >
-                  {isExecutingJql ? (
-                    <>
-                      <RefreshCcw size={14} className="animate-spin" /> Validando Sintaxis...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={14} fill="currentColor" /> Validar y Ejecutar JQL
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-
-            {/* PREVISUALIZACION DE INCIDENCIAS EN TABLA CON PAGINACIÓN */}
-            {jqlSuccess && (() => {
-              const jqlTotalPages = Math.max(1, Math.ceil(jqlIssues.length / jqlPageSize));
-              const startIdx = (jqlCurrentPage - 1) * jqlPageSize;
-              const paginatedJqlIssues = jqlIssues.slice(startIdx, startIdx + jqlPageSize);
-              const startItem = jqlIssues.length > 0 ? startIdx + 1 : 0;
-              const endItem = Math.min(startIdx + jqlPageSize, jqlIssues.length);
-
-              return (
-                <div className="mt-6 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-900/50 transition-all duration-300 shadow-sm">
-                  <button
-                    type="button"
-                    onClick={() => setShowJqlTable(!showJqlTable)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Terminal size={14} className="text-indigo-500" /> Previsualización de Resultados
-                      <span className={`ml-2 px-2 py-0.5 rounded-full text-[10px] font-extrabold border ${jqlIssues.length > 0 ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/50' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'}`}>
-                        {jqlIssues.length} {jqlIssues.length === 1 ? 'incidencia' : 'incidencias'}
-                      </span>
-                    </span>
-                    <div className={`text-slate-400 transition-transform duration-300 ${showJqlTable ? 'rotate-180' : ''}`}>
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
-                    </div>
-                  </button>
-
-                  {showJqlTable && (
-                    <>
-                      <div className="overflow-x-hidden overflow-y-auto max-h-[350px] border-t border-slate-200 dark:border-slate-700/50">
-                        <table className="w-full text-left border-collapse">
-                          <thead className="sticky top-0 z-10">
-                            <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-bold tracking-wider shadow-sm">
-                              <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">Clave</th>
-                              <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">Tipo</th>
-                              <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">Resumen</th>
-                              <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">Estado</th>
-                              <th className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">Asignado a</th>
-                            </tr>
-                          </thead>
-                          <tbody className="text-xs text-slate-700 dark:text-slate-300">
-                            {paginatedJqlIssues.length === 0 ? (
-                              <tr>
-                                <td colSpan={5} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-                                  No se encontraron incidencias para esta consulta JQL.
-                                </td>
-                              </tr>
-                            ) : (
-                              paginatedJqlIssues.map((issue: any, idx: number) => {
-                                const issueKey = issue.key || issue.key_issue || 'N/A';
-                                const summary = issue.fields?.summary || issue.summary || 'Sin Resumen';
-                                const statusName = issue.fields?.status?.name || issue.status_actual || 'Desconocido';
-                                const assigneeName = issue.fields?.assignee?.displayName || issue.assignee || 'Sin asignar';
-                                const issueTypeName = issue.fields?.issuetype?.name || issue.issue_type || 'Issue';
-                                const iconUrl = issue.fields?.issuetype?.iconUrl;
-
-                                return (
-                                  <tr key={issue.id || issueKey || idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 last:border-0 transition-colors">
-                                    <td className="px-4 py-2.5 font-semibold text-indigo-600 dark:text-indigo-400 whitespace-nowrap">
-                                      {issueKey}
-                                    </td>
-                                    <td className="px-4 py-2.5 whitespace-nowrap flex items-center gap-2">
-                                      {iconUrl && (
-                                        <img src={iconUrl} alt="icon" className="w-3.5 h-3.5 rounded-sm" />
-                                      )}
-                                      <span>{issueTypeName}</span>
-                                    </td>
-                                    <td className="px-4 py-2.5 truncate max-w-[200px]" title={summary}>
-                                      {summary}
-                                    </td>
-                                    <td className="px-4 py-2.5 whitespace-nowrap">
-                                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                                        {statusName}
-                                      </span>
-                                    </td>
-                                    <td className="px-4 py-2.5 whitespace-nowrap text-slate-500 dark:text-slate-400">
-                                      {assigneeName}
-                                    </td>
-                                  </tr>
-                                )
-                              })
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* BARRA DE PAGINACIÓN INTERACTIVA */}
-                      <div className="px-4 py-3 bg-slate-50/80 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
-                        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400 text-[11px]">
-                          <span>Filas por página:</span>
-                          <select
-                            value={jqlPageSize}
-                            onChange={(e) => {
-                              setJqlPageSize(Number(e.target.value));
-                              setJqlCurrentPage(1);
-                            }}
-                            className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded px-2 py-1 text-slate-700 dark:text-slate-200 font-semibold focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-                          >
-                            <option value={5}>5</option>
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                          </select>
-                          <span className="ml-2 font-medium">
-                            {startItem}-{endItem} de {jqlIssues.length}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            disabled={jqlCurrentPage === 1}
-                            onClick={() => setJqlCurrentPage(prev => Math.max(prev - 1, 1))}
-                            className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium text-[11px]"
-                          >
-                            ◀ Anterior
-                          </button>
-
-                          <span className="px-3 py-1 font-bold text-[11px] text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/50 rounded border border-indigo-200 dark:border-indigo-800/60">
-                            {jqlCurrentPage} / {jqlTotalPages || 1}
-                          </span>
-
-                          <button
-                            type="button"
-                            disabled={jqlCurrentPage >= jqlTotalPages}
-                            onClick={() => setJqlCurrentPage(prev => Math.min(prev + 1, jqlTotalPages))}
-                            className="px-2.5 py-1 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-medium text-[11px]"
-                          >
-                            Siguiente ▶
-                          </button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              );
-            })()}
           </div>
-        </div>      </div>
+        </div>
+      </div>
 
       {/* SECCIÓN INFERIOR COMPLETA (100% ANCHO): TABLA DE HISTORIAL DE TAREAS (LOGS) */}
       <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-sm overflow-hidden">
