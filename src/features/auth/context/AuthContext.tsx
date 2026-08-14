@@ -93,16 +93,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
         window.history.replaceState({}, document.title, window.location.pathname);
       }
 
+      const existingToken = localStorage.getItem('mchav_jwt_token') || sessionStorage.getItem('mchav_app_session');
+      const storedSession = localStorage.getItem('mock_user_session');
+
+      if (!existingToken && !storedSession && !tokenParam) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       let userData;
       try {
-        userData = await authService.getCurrentUser();
-      } catch (firstErr) {
-        try {
-          // Intentar autenticación dev automática con el backend de FastAPI
-          userData = await authService.loginMock({ email: "vhoyos@mchav.com" });
-        } catch (loginErr) {
-          throw firstErr;
+        if (storedSession) {
+          userData = JSON.parse(storedSession);
+        } else {
+          userData = await authService.getCurrentUser();
         }
+      } catch (firstErr) {
+        localStorage.removeItem('mchav_jwt_token');
+        localStorage.removeItem('mock_user_session');
+        setUser(null);
+        setLoading(false);
+        return;
       }
       
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
@@ -177,6 +189,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         status: isApproved ? 'ACTIVE' : (loggedUser.rol === 'ADMIN' ? 'ACTIVE' : 'PENDING')
       };
       
+      localStorage.setItem('mock_user_session', JSON.stringify(userWithStatus));
       setUser(userWithStatus);
       return userWithStatus;
     } catch (err: any) {
@@ -221,6 +234,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       sessionStorage.removeItem('mchav_app_session');
       sessionStorage.removeItem('mchav_authenticated_tab');
+      localStorage.removeItem('mchav_jwt_token');
       localStorage.removeItem('mock_user_session');   // Eliminar datos de la sesión activa
       setUser(null);                                  // Limpiar estado de usuario en React
     }
