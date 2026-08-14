@@ -662,88 +662,100 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
           {/* SPARKLINE 1: VELOCITY */}
           <div 
             onClick={() => openDrillDown('Velocity Promedio', 'velocity')}
-            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-purple-400 transition-all cursor-pointer space-y-2"
+            className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-purple-400 transition-all cursor-pointer shadow-xs dark:shadow-lg"
           >
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Velocity</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{animVelocity}</span>
-              <span className="text-xs font-bold text-slate-500">SP</span>
-            </div>
-            <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
-              {rd.velocity.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.velocity.trend}
-            </span>
-            <div className="h-10 w-full pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rd.velocity.sparkline}>
-                  <Line type="monotone" dataKey="v" stroke="#a855f7" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/15 via-indigo-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Velocity</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-slate-900 dark:text-white">{animVelocity}</span>
+                <span className="text-xs font-bold text-slate-500">SP</span>
+              </div>
+              <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
+                {rd.velocity.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.velocity.trend}
+              </span>
+              <div className="h-10 w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rd.velocity.sparkline}>
+                    <Line type="monotone" dataKey="v" stroke="#a855f7" strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
           {/* SPARKLINE 2: THROUGHPUT */}
           <div 
             onClick={() => openDrillDown('Throughput Promedio', 'throughput')}
-            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-blue-400 transition-all cursor-pointer space-y-2"
+            className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-blue-400 transition-all cursor-pointer shadow-xs dark:shadow-lg"
           >
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Throughput</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{animThroughput}</span>
-              <span className="text-xs font-bold text-slate-500">issues</span>
-            </div>
-            <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
-              {rd.throughput.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.throughput.trend}
-            </span>
-            <div className="h-10 w-full pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rd.throughput.sparkline}>
-                  <Line type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/15 via-indigo-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Throughput</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-slate-900 dark:text-white">{animThroughput}</span>
+                <span className="text-xs font-bold text-slate-500">issues</span>
+              </div>
+              <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
+                {rd.throughput.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.throughput.trend}
+              </span>
+              <div className="h-10 w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rd.throughput.sparkline}>
+                    <Line type="monotone" dataKey="v" stroke="#3b82f6" strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
           {/* SPARKLINE 3: CYCLE TIME */}
           <div 
             onClick={() => openDrillDown('Tiempo de Ciclo Promedio', 'cycle_time')}
-            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-cyan-400 transition-all cursor-pointer space-y-2"
+            className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-cyan-400 transition-all cursor-pointer shadow-xs dark:shadow-lg"
           >
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Cycle Time</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{animCycle}</span>
-              <span className="text-xs font-bold text-slate-500">días</span>
-            </div>
-            <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
-              {rd.cycle.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.cycle.trend}
-            </span>
-            <div className="h-10 w-full pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rd.cycle.sparkline}>
-                  <Line type="monotone" dataKey="v" stroke="#06b6d4" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/15 via-teal-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Cycle Time</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-slate-900 dark:text-white">{animCycle}</span>
+                <span className="text-xs font-bold text-slate-500">días</span>
+              </div>
+              <span className="text-xs font-extrabold text-indigo-500 flex items-center gap-1">
+                {rd.cycle.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.cycle.trend}
+              </span>
+              <div className="h-10 w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rd.cycle.sparkline}>
+                    <Line type="monotone" dataKey="v" stroke="#06b6d4" strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
           {/* SPARKLINE 4: LEAD TIME */}
           <div 
             onClick={() => openDrillDown('Lead Time Promedio', 'lead_time')}
-            className="p-4 rounded-2xl bg-slate-50 dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-purple-400 transition-all cursor-pointer space-y-2"
+            className="group relative overflow-hidden p-4 rounded-2xl bg-white dark:bg-[#12142e] border border-slate-200 dark:border-slate-800 hover:border-purple-400 transition-all cursor-pointer shadow-xs dark:shadow-lg"
           >
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Lead Time</span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-black text-slate-900 dark:text-white">{animLead}</span>
-              <span className="text-xs font-bold text-slate-500">días</span>
-            </div>
-            <span className="text-xs font-extrabold text-amber-500 flex items-center gap-1">
-              {rd.lead.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.lead.trend}
-            </span>
-            <div className="h-10 w-full pt-1">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={rd.lead.sparkline}>
-                  <Line type="monotone" dataKey="v" stroke="#8b5cf6" strokeWidth={2.5} dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-500/15 via-pink-500/10 to-transparent opacity-80 pointer-events-none transition-opacity group-hover:opacity-100"></div>
+            <div className="relative z-10 space-y-2">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 block uppercase tracking-wide">Lead Time</span>
+              <div className="flex items-baseline gap-1">
+                <span className="text-2xl font-black text-slate-900 dark:text-white">{animLead}</span>
+                <span className="text-xs font-bold text-slate-500">días</span>
+              </div>
+              <span className="text-xs font-extrabold text-amber-500 flex items-center gap-1">
+                {rd.lead.trendIcon === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />} {rd.lead.trend}
+              </span>
+              <div className="h-10 w-full pt-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={rd.lead.sparkline}>
+                    <Line type="monotone" dataKey="v" stroke="#8b5cf6" strokeWidth={2.5} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
 
