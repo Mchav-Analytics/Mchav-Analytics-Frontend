@@ -148,7 +148,7 @@ const roleNotifications = {
   ]
 };
 
-export default function LiderNotificationBell({ className = "", onNavigateToHub, onNavigateTab }) {
+export default function LiderNotificationBell({ className = "", onNavigateToHub = undefined, onNavigateTab = undefined }) {
   const { user } = useAuth();
 
   // Detectar rol exacto del usuario activo
