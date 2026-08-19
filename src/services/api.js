@@ -516,4 +516,13 @@ export const automationService = {
   }
 };
 
+export const aiService = {
+  chat(message, projectId = 'PROJ-01', history = []) {
+    return api.post('/api/v1/ai/chat', { message, project_id: projectId, history }).then(res => res.data);
+  },
+  getSuggestedPrompts() {
+    return api.get('/api/v1/ai/prompts').then(res => res.data);
+  }
+};
+
 export default api;

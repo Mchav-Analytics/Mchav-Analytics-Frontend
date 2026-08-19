@@ -6,8 +6,9 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings } from 'lucide-react';
+import { Settings, Sparkles } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
+import AiChatModal from '../ui/AiChatModal';
 
 function Sidebar({
   activeTab,
@@ -22,6 +23,7 @@ function Sidebar({
 }) {
   const { logout, user, switchViewRole, isRealAdmin } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   const handleLogout = async (e) => {
     e.preventDefault();
@@ -251,6 +253,27 @@ function Sidebar({
           </div>
         )}
 
+        {/* ── BOTÓN DESTACADO DE CHAT IA CONVERSACIONAL (GEMINI ENGINE) ── */}
+        {!isCollapsed ? (
+          <button
+            type="button"
+            onClick={() => setIsAiChatOpen(true)}
+            className="mb-2 py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer group"
+          >
+            <Sparkles size={16} className="text-yellow-300 animate-pulse" />
+            <span>💬 Consultar a la IA (Gemini)</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setIsAiChatOpen(true)}
+            className="mb-2 p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-all"
+            title="Consultar a la IA (Gemini)"
+          >
+            <Sparkles size={18} className="text-yellow-300 animate-pulse" />
+          </button>
+        )}
+
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}
         <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
           {navItems.map((item) => {
@@ -368,6 +391,13 @@ function Sidebar({
             isOpen={isSettingsOpen}
             onClose={() => setIsSettingsOpen(false)}
             userProfile={user}
+          />
+
+          {/* MODAL CHAT CONVERSACIONAL DE IA (GOOGLE GEMINI) */}
+          <AiChatModal
+            isOpen={isAiChatOpen}
+            onClose={() => setIsAiChatOpen(false)}
+            selectedProjectId={selectedProjectId}
           />
 
         </div>
