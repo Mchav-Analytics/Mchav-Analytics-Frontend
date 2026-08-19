@@ -64,7 +64,7 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
   });
 
   const [showHistorySidebar, setShowHistorySidebar] = useState(true);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(true);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
