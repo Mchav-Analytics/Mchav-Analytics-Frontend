@@ -314,7 +314,7 @@ export const reportService = {
 export const developerService = {
   async getMyScorecard(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/developers/me/scorecard`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       console.warn("Fallback scorecard desarrollador...", err);
@@ -344,7 +344,7 @@ export const developerService = {
   },
   async getDevelopers(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/developers`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return [
@@ -356,7 +356,7 @@ export const developerService = {
   },
   async getDeveloperScorecard(assigneeId, projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return this.getMyScorecard(projectId);
@@ -364,7 +364,7 @@ export const developerService = {
   },
   async getDailyFocus(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return {
@@ -379,7 +379,7 @@ export const developerService = {
   },
   async getDevAlerts(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/developers/me/alerts`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return {
@@ -393,7 +393,7 @@ export const developerService = {
   },
   async performAlertAction(issueId, actionType = 'request_help') {
     try {
-      const response = await api.post(`/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
+      const response = await api.post(`/api/v1/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
       return response.data;
     } catch (err) {
       return { status: "SUCCESS", issue_id: issueId, action_type: actionType, message: `Acción '${actionType}' ejecutada exitosamente para el ticket #${issueId}.` };
@@ -401,7 +401,7 @@ export const developerService = {
   },
   async getActivityHistory(projectId = 'PROJ-01') {
     try {
-      const response = await api.get(`/developers/me/activity-history`, { params: { proyecto_id: projectId } });
+      const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
       return response.data;
     } catch (err) {
       return {
