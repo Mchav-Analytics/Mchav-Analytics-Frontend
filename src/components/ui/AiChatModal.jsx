@@ -23,7 +23,7 @@ import { aiService } from '../../services/api';
 const DEFAULT_WELCOME_MESSAGE = {
   id: 1,
   sender: 'ai',
-  text: '¡Hola! 🦉 Soy tu **AI Dev Coach & Senior Agile Data Scientist** impulsado por el motor de **Google Gemini**. ¿En qué puedo ayudarte hoy sobre el rendimiento, métricas o agilidad de tus proyectos?',
+  text: '¡Hola! 🦉 Soy **NubI IA**, tu asistente inteligente y analista de agilidad impulsado por el motor de **Google Gemini**. ¿En qué puedo ayudarte hoy sobre el rendimiento, métricas o desarrolladores de tus proyectos?',
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 };
 
@@ -485,7 +485,7 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
               <div className="relative">
                 <img
                   src={owlMascotImg}
-                  alt="Mascota Búho AI Coach"
+                  alt="Mascota Búho NubI IA"
                   className="w-10 h-10 object-contain drop-shadow-md"
                 />
                 <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
@@ -497,7 +497,7 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
               <div className="text-left space-y-0.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-extrabold text-sm text-white tracking-tight flex items-center gap-1.5">
-                    AI Dev Coach — Conversación Inteligente
+                    NubI IA — Conversación Inteligente
                   </h3>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-black uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
                     ⚡ Gemini Engine
@@ -575,7 +575,7 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
                 <div className="w-8 h-8 rounded-2xl bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300">
                   <Sparkles size={16} className="animate-spin" />
                 </div>
-                <span className="italic font-medium">AI Coach analizando datos reales con Gemini...</span>
+                <span className="italic font-medium">NubI IA analizando datos reales con Gemini...</span>
               </div>
             )}
 

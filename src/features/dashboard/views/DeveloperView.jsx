@@ -529,17 +529,17 @@ export default function DeveloperView({
 
 
 
-      {/* 3. AI DEV COACH (MASCOTA BÚHO Y BOCADILLO DE DIÁLOGO NATIVO EN MI TRABAJO) */}
+      {/* 3. NUBI IA (MASCOTA BÚHO Y BOCADILLO DE DIÁLOGO NATIVO EN MI TRABAJO) */}
       <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 px-1 py-1">
         {/* MASCOTA BÚHO */}
         <div className="relative shrink-0 flex flex-col items-center group/mascot">
           <img
             src={owlMascotImg}
-            alt="Mascota Búho AI Dev Coach"
+            alt="Mascota Búho NubI IA"
             className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl transition-transform duration-300 group-hover/mascot:scale-105"
           />
           <span className="mt-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs">
-            🦉 AI Coach
+            🦉 NubI IA
           </span>
         </div>
 
@@ -555,7 +555,7 @@ export default function DeveloperView({
               <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
                 <Sparkles size={16} />
               </div>
-              <span>Asistente Inteligente — AI Dev Coach</span>
+              <span>Asistente Inteligente — NubI IA</span>
             </div>
 
             <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">

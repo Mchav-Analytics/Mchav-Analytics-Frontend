@@ -253,7 +253,7 @@ function Sidebar({
           </div>
         )}
 
-        {/* ── BOTÓN DESTACADO DE CHAT IA CONVERSACIONAL (GEMINI ENGINE) ── */}
+        {/* ── BOTÓN DESTACADO DE CHAT IA CONVERSACIONAL (NUBI IA) ── */}
         {!isCollapsed ? (
           <button
             type="button"
@@ -261,14 +261,14 @@ function Sidebar({
             className="mb-2 py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer group"
           >
             <Sparkles size={16} className="text-yellow-300 animate-pulse" />
-            <span>💬 Consultar a la IA (Gemini)</span>
+            <span>💬 Consultar a NubI IA</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={() => setIsAiChatOpen(true)}
             className="mb-2 p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-all"
-            title="Consultar a la IA (Gemini)"
+            title="Consultar a NubI IA"
           >
             <Sparkles size={18} className="text-yellow-300 animate-pulse" />
           </button>
