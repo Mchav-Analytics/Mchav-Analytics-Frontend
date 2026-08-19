@@ -59,6 +59,18 @@ function LoginView() {
     }
   };
 
+  const handleLocalDevLogin = () => {
+    setIsSubmitting(true);
+    const userSession = {
+      email: 'admin@mchav.com',
+      rol: 'ADMIN',
+      name: 'Administrador MCHAV',
+      activo: true
+    };
+    localStorage.setItem('mock_user_session', JSON.stringify(userSession));
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div
       ref={containerRef}
@@ -486,7 +498,7 @@ function LoginView() {
                   )}
 
                   {/* BOTÓN ÚNICO DE AUTENTICACIÓN CON ATLASSIAN (JIRA) */}
-                  <div className="my-4 w-full">
+                  <div className="my-4 w-full flex flex-col gap-2.5">
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleJiraAuth(); }}
@@ -497,6 +509,15 @@ function LoginView() {
                         <polygon points="12 2 2 12 12 22 22 12" />
                       </svg>
                       <span>Continuar con Atlassian (Jira)</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); handleLocalDevLogin(); }}
+                      disabled={isSubmitting || authLoading}
+                      className="w-full h-11 xl:h-12 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-cyan-500/30 text-cyan-300 font-semibold text-xs xl:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md hover:border-cyan-400/60"
+                    >
+                      <span>🔑 Ingresar con Sesión Local (.env)</span>
                     </button>
                   </div>
 

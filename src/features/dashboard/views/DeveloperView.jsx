@@ -101,6 +101,7 @@ export default function DeveloperView({
 }) {
   const { user } = useAuth();
   const [scorecard, setScorecard] = useState(null);
+  const [aiCoachTip, setAiCoachTip] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [taskFilter, setTaskFilter] = useState('ALL'); // 'ALL' | 'IN_PROGRESS' | 'PENDING' | 'BLOCKED' | 'COMPLETED'
   const [currentPage, setCurrentPage] = useState(1);
@@ -184,6 +185,16 @@ export default function DeveloperView({
   const loadScorecard = async () => {
     try {
       const data = await developerService.getMyScorecard(selectedProjectId);
+      
+      // Intentar cargar el consejo del AI Dev Coach generado por Gemini
+      try {
+        const focusData = await developerService.getDailyFocus(selectedProjectId);
+        if (focusData?.ai_coach_tip) {
+          setAiCoachTip(focusData.ai_coach_tip);
+        }
+      } catch (fErr) {
+        console.warn("No se pudo cargar el consejo de Gemini DailyFocus:", fErr);
+      }
       
       // Intentar cargar las incidencias reales desde la base de datos local
       try {
@@ -544,7 +555,7 @@ export default function DeveloperView({
             </div>
 
             <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
-              💡 <strong>Diagnóstico del Sprint:</strong> <em>"Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101."</em>
+              💡 <strong>Diagnóstico del Sprint:</strong> <em>"{aiCoachTip || 'Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado respecto al sprint anterior. Te recomendamos resolver primero los bugs pendientes en QA antes de iniciar nuevos desarrollos.'}"</em>
             </p>
 
             <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-3 border-t border-indigo-200/60 dark:border-slate-700/60">
