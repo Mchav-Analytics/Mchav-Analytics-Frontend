@@ -15,7 +15,9 @@ import {
   PanelLeft,
   Lightbulb,
   Check,
-  ChevronRight
+  ChevronRight,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import owlMascotImg from '../../assets/owl_mascot.png';
 import { aiService } from '../../services/api';
@@ -62,6 +64,7 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
   });
 
   const [showHistorySidebar, setShowHistorySidebar] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -381,8 +384,8 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200">
-      <div className={`relative w-full ${showHistorySidebar ? 'max-w-5xl' : 'max-w-3xl'} h-[700px] max-h-[92vh] rounded-3xl bg-[#0e122b] border border-indigo-500/40 shadow-2xl flex overflow-hidden text-slate-100 transition-all duration-300`}>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center ${isFullscreen ? 'p-0' : 'p-2 sm:p-4'} bg-slate-950/85 backdrop-blur-md animate-in fade-in duration-200`}>
+      <div className={`relative w-full ${isFullscreen ? 'h-screen max-w-none max-h-none rounded-none border-0' : `${showHistorySidebar ? 'max-w-5xl' : 'max-w-3xl'} h-[720px] max-h-[92vh] rounded-3xl border border-indigo-500/40`} bg-[#0e122b] shadow-2xl flex overflow-hidden text-slate-100 transition-all duration-300`}>
         
         {/* ── PANEL LATERAL IZQUIERDO: HISTORIAL DE CONVERSACIONES ── */}
         {showHistorySidebar && (
@@ -517,6 +520,15 @@ export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ
                 title="Iniciar nuevo chat"
               >
                 <Plus size={14} /> Nuevo Chat
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer flex items-center justify-center"
+                title={isFullscreen ? "Restaurar ventana" : "Expandir a pantalla completa"}
+              >
+                {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
               </button>
 
               <button
