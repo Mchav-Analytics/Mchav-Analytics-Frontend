@@ -102,6 +102,8 @@ export default function DeveloperView({
   const { user } = useAuth();
   const [scorecard, setScorecard] = useState(null);
   const [aiCoachTip, setAiCoachTip] = useState(null);
+  const [efficiencyGain, setEfficiencyGain] = useState(14);
+  const [cleanDeliveries, setCleanDeliveries] = useState(100);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [taskFilter, setTaskFilter] = useState('ALL'); // 'ALL' | 'IN_PROGRESS' | 'PENDING' | 'BLOCKED' | 'COMPLETED'
   const [currentPage, setCurrentPage] = useState(1);
@@ -189,8 +191,10 @@ export default function DeveloperView({
       // Intentar cargar el consejo del AI Dev Coach generado por Gemini
       try {
         const focusData = await developerService.getDailyFocus(selectedProjectId);
-        if (focusData?.ai_coach_tip) {
-          setAiCoachTip(focusData.ai_coach_tip);
+        if (focusData) {
+          if (focusData.ai_coach_tip) setAiCoachTip(focusData.ai_coach_tip);
+          if (focusData.efficiency_gain_pct !== undefined) setEfficiencyGain(focusData.efficiency_gain_pct);
+          if (focusData.clean_deliveries_pct !== undefined) setCleanDeliveries(focusData.clean_deliveries_pct);
         }
       } catch (fErr) {
         console.warn("No se pudo cargar el consejo de Gemini DailyFocus:", fErr);
@@ -560,10 +564,10 @@ export default function DeveloperView({
 
             <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-3 border-t border-indigo-200/60 dark:border-slate-700/60">
               <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
-                <TrendingUp size={16} /> Ritmo: +14% Eficiencia
+                <TrendingUp size={16} /> Ritmo: {efficiencyGain >= 0 ? `+${efficiencyGain}%` : `${efficiencyGain}%`} Eficiencia
               </span>
               <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold">
-                <ShieldCheck size={16} /> Calidad: 100% Entregas Limpias
+                <ShieldCheck size={16} /> Calidad: {cleanDeliveries}% Entregas Limpias
               </span>
             </div>
           </div>
