@@ -25,6 +25,7 @@ import {
   FileDown
 } from 'lucide-react';
 
+import api from '../../../services/api';
 import { useAuth } from '../../auth/context/AuthContext';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 
@@ -92,6 +93,23 @@ type AdminUsuariosViewProps = {
   approvedUsers?: string[];
 };
 
+const formatTimestamp = (ts: string) => {
+  if (!ts) return 'Sin fecha';
+  const dateString = ts.endsWith('Z') ? ts : `${ts}Z`;
+  const dt = new Date(dateString);
+  if (isNaN(dt.getTime())) return ts.replace('T', ' ').substring(0, 19);
+  const day = String(dt.getDate()).padStart(2, '0');
+  const month = String(dt.getMonth() + 1).padStart(2, '0');
+  const year = dt.getFullYear();
+  let hours = dt.getHours();
+  const minutes = String(dt.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'p.m.' : 'a.m.';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const hoursStr = String(hours).padStart(2, '0');
+  return `${day}/${month}/${year}, ${hoursStr}:${minutes} ${ampm}`;
+};
+
 export default function AdminUsuariosView({
   approveUserPermission: propApproveUserPermission,
   approvedUsers: propApprovedUsers,
@@ -99,11 +117,37 @@ export default function AdminUsuariosView({
   const { approveUserPermission: authApprove, approvedUsers: authApproved } = useAuth();
   const approveUserPermission = propApproveUserPermission || authApprove;
   const approvedUsers = (propApprovedUsers && propApprovedUsers.length > 0) ? propApprovedUsers : authApproved;
-  const [users, setUsers] = useState<ManagementUser[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<ManagementUser[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null);
+  
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+  const [logPage, setLogPage] = useState(1);
+  const [logFilterDate, setLogFilterDate] = useState('ALL');
+  const [logSpecificDate, setLogSpecificDate] = useState('');
+  const itemsPerLogPage = 5;
+
+  React.useEffect(() => {
+    if (expandedUserId) {
+      const fetchLogs = async () => {
+        setLoadingLogs(true);
+        try {
+          const res = await api.get(`/api/v1/users/${expandedUserId}/logs`);
+          setLogs(res.data);
+        } catch (e) {
+          console.error("Error logs", e);
+        } finally {
+          setLoadingLogs(false);
+        }
+      };
+      fetchLogs();
+    } else {
+      setLogs([]);
+    }
+  }, [expandedUserId]);
 
   // Estado de Paginación de Usuarios
   const [currentPage, setCurrentPage] = useState(1);
@@ -124,31 +168,25 @@ export default function AdminUsuariosView({
   const approvedUsersKey = (approvedUsers || []).join(',');
 
   React.useEffect(() => {
-    try {
-      const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
-      const approvedList: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '[]');
-
-      setUsers(prevUsers => {
-        let hasChanges = false;
-        const updated = prevUsers.map(u => {
-          const storedRole = (rolesMap[u.email] as 'ADMIN' | 'MANAGER' | 'DEVELOPER') || u.role;
-          const isApproved = approvedList.includes(u.email) || (approvedUsers && approvedUsers.includes(u.email)) || u.role === 'ADMIN';
-          const newStatus = isApproved ? 'ACTIVE' : u.status;
-
-          if (storedRole !== u.role || newStatus !== u.status) {
-            hasChanges = true;
-          }
-          return {
-            ...u,
-            role: storedRole,
-            status: newStatus
-          };
-        });
-        return hasChanges ? updated : prevUsers;
-      });
-    } catch (e) {
-      console.error('Error cargando asignación de roles:', e);
-    }
+    const fetchUsers = async () => {
+      try {
+        const res = await api.get('/api/v1/users');
+        const mappedUsers = res.data.map((u: any) => ({
+          id: String(u.id_usuario),
+          name: u.nombre,
+          email: u.email,
+          role: u.rol ? (u.rol.toUpperCase().includes('ADMIN') ? 'ADMIN' : u.rol.toUpperCase().includes('MANAGER') ? 'MANAGER' : 'DEVELOPER') : 'DEVELOPER',
+          status: u.activo ? 'ACTIVE' : 'INACTIVE',
+          joinedDate: 'Reciente',
+          lastActive: 'Activo',
+          actions: []
+        }));
+        setUsers(mappedUsers);
+      } catch (e) {
+        console.error("Error fetching real users", e);
+      }
+    };
+    fetchUsers();
   }, [approvedUsersKey]);
 
   const showToast = (msg: string) => {
@@ -246,7 +284,36 @@ export default function AdminUsuariosView({
     currentPage * itemsPerPage
   );
 
+  const selectedLogUser = users.find(u => u.id === expandedUserId);
+
+  const filteredLogs = logs.filter((log: any) => {
+      const actDate = new Date(log.timestamp);
+      const today = new Date();
+      
+      let matchesPredefined = true;
+      if (logFilterDate === '7D') {
+        const diff = today.getTime() - actDate.getTime();
+        matchesPredefined = diff <= 7 * 24 * 60 * 60 * 1000;
+      } else if (logFilterDate === '30D') {
+        const diff = today.getTime() - actDate.getTime();
+        matchesPredefined = diff <= 30 * 24 * 60 * 60 * 1000;
+      }
+
+      let matchesSpecific = true;
+      if (logSpecificDate) {
+        // ISO format YYYY-MM-DD
+        const logDateStr = actDate.toISOString().split('T')[0];
+        matchesSpecific = logDateStr === logSpecificDate;
+      }
+
+      return matchesPredefined && matchesSpecific;
+  });
+
+  const totalLogPages = Math.ceil(filteredLogs.length / itemsPerLogPage) || 1;
+  const paginatedLogs = filteredLogs.slice((logPage - 1) * itemsPerLogPage, logPage * itemsPerLogPage);
+
   return (
+    <>
     <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-white/95 dark:bg-slate-900/95 border border-emerald-300 dark:border-emerald-500/50 text-emerald-700 dark:text-emerald-200 px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4 duration-200">
@@ -271,9 +338,7 @@ export default function AdminUsuariosView({
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                 Supervisión Ejecutiva
               </span>
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">10000</strong>
-              </span>
+              
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -482,7 +547,7 @@ export default function AdminUsuariosView({
             <div
               key={u.id}
               className={`rounded-2xl border transition-all duration-200 ${isExpanded
-                ? 'border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-[#12142e] shadow-md shadow-indigo-100 dark:shadow-none'
+                ? 'relative z-[45] border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/50 dark:bg-[#12142e] shadow-md shadow-indigo-100 dark:shadow-none'
                 : 'border-slate-200 dark:border-[#33376b] bg-slate-50/70 dark:bg-[#12142e] hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-900/50 hover:shadow-sm'
                 }`}
             >
@@ -569,27 +634,7 @@ export default function AdminUsuariosView({
                     <span>{isExpanded ? 'Ocultar' : 'Ver Log'}</span>
                   </button>
                 </div>
-              </div>
-
-              {isExpanded && (
-                <div className="border-t border-indigo-100 dark:border-slate-800 px-5 py-4 animate-in slide-in-from-top-2 duration-200">
-                  <div className="rounded-2xl border border-indigo-100 dark:border-slate-800 bg-white/80 dark:bg-slate-950/70 p-4 space-y-3">
-                    <h5 className="text-xs font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-2">
-                      <Activity size={15} className="text-indigo-500 dark:text-indigo-400" />
-                      Auditoría RBAC — {u.name}
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {u.actions.map((act, idx) => (
-                        <div key={idx} className="bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-[11px] text-slate-600 dark:text-slate-300 flex items-start gap-2.5 hover:border-indigo-200 dark:hover:border-indigo-500/30 transition-colors">
-                          <span className="w-2 h-2 rounded-full bg-indigo-500 dark:bg-indigo-400 mt-1 shrink-0" />
-                          <span className="leading-relaxed">{act}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+              </div>            </div>
           );
         })}
 
@@ -643,10 +688,12 @@ export default function AdminUsuariosView({
         )}
       </section>
 
+    </div>
+
       {/* MODAL CONFIGURACIÓN RBAC */}
       {showConfigModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md animate-in fade-in duration-150">
-          <div className="w-full max-w-3xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left max-h-[90vh] overflow-y-auto">
+          <div className="w-full max-w-xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 text-left max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
                 <Sliders size={20} className="text-purple-600 dark:text-purple-400" /> Matriz de Permisos Efectivos RBAC
@@ -669,25 +716,25 @@ export default function AdminUsuariosView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-slate-700 dark:text-slate-200 font-medium">
-                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <tr className={`transition-all duration-300 ${isExpanded ? "relative z-[45] bg-white dark:bg-[#191c3d] shadow-2xl ring-2 ring-indigo-500" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
                     <td className="py-3.5 px-5 font-extrabold">Dashboards & KPIs Consolidados</td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-purple-500 dark:text-purple-400 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><Minus className="w-4 h-4 text-slate-300 dark:text-slate-600 mx-auto" /></td>
                   </tr>
-                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <tr className={`transition-all duration-300 ${isExpanded ? "relative z-[45] bg-white dark:bg-[#191c3d] shadow-2xl ring-2 ring-indigo-500" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
                     <td className="py-3.5 px-5 font-extrabold">Consola JQL y Tareas Personales</td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-purple-500 dark:text-purple-400 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-emerald-500 dark:text-emerald-400 mx-auto" /></td>
                   </tr>
-                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <tr className={`transition-all duration-300 ${isExpanded ? "relative z-[45] bg-white dark:bg-[#191c3d] shadow-2xl ring-2 ring-indigo-500" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
                     <td className="py-3.5 px-5 font-extrabold">Gestión de Usuarios & Roles (RBAC)</td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-purple-500 dark:text-purple-400 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><Minus className="w-4 h-4 text-slate-300 dark:text-slate-600 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><Minus className="w-4 h-4 text-slate-300 dark:text-slate-600 mx-auto" /></td>
                   </tr>
-                  <tr className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
+                  <tr className={`transition-all duration-300 ${isExpanded ? "relative z-[45] bg-white dark:bg-[#191c3d] shadow-2xl ring-2 ring-indigo-500" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}>
                     <td className="py-3.5 px-5 font-extrabold">Auditoría ETL & Sincronización Jira</td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-purple-500 dark:text-purple-400 mx-auto" /></td>
                     <td className="py-3.5 px-5 text-center"><CheckCircle2 className="w-4 h-4 text-blue-500 dark:text-blue-400 mx-auto" /></td>
@@ -777,7 +824,123 @@ export default function AdminUsuariosView({
           </div>
         </div>
       )}
-    </div>
+
+      {/* MODAL VENTANA FLOTANTE DE AUDITORIA */}
+      {selectedLogUser && (
+        <>
+          {/* Backdrop (z-40) */}
+          <div 
+            className="fixed inset-0 z-[40] bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-200" 
+            onClick={() => setExpandedUserId(null)} 
+          />
+          
+          {/* Ventana Flotante */}
+          <div className="fixed inset-0 z-[50] flex items-center justify-end p-4 sm:pr-8 pointer-events-none">
+            <div className="w-full max-w-xl bg-white dark:bg-[#151832] border border-slate-200 dark:border-[#33376b] shadow-2xl rounded-3xl flex flex-col pointer-events-auto animate-in zoom-in-95 duration-200 overflow-hidden max-h-[85vh]">
+              
+              <div className="p-5 sm:p-6 border-b border-slate-200 dark:border-slate-800/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/50 dark:bg-slate-900/20">
+                <h3 className="text-base font-black text-slate-900 dark:text-slate-100 flex items-center gap-2.5">
+                  <Activity size={20} className="text-indigo-600 dark:text-indigo-400" /> 
+                  Auditoría
+                </h3>
+                
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl px-2.5 py-1.5 shadow-sm">
+                    <input
+                      type="date"
+                      value={logSpecificDate}
+                      onChange={(e) => { setLogSpecificDate(e.target.value); setLogPage(1); }}
+                      className="bg-transparent text-xs font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark] [&::-webkit-calendar-picker-indicator]:dark:invert"
+                      title="Buscar por fecha exacta"
+                    />
+                    {logSpecificDate && (
+                      <button onClick={() => { setLogSpecificDate(''); setLogPage(1); }} className="ml-1 text-slate-400 hover:text-rose-500">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <select
+                    value={logFilterDate}
+                    onChange={(e) => { setLogFilterDate(e.target.value); setLogPage(1); }}
+                    className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 outline-none shadow-sm"
+                  >
+                    <option value="ALL">Todo el Historial</option>
+                    <option value="7D">Últimos 7 días</option>
+                    <option value="30D">Mes Cerrado</option>
+                  </select>
+                  <button onClick={() => setExpandedUserId(null)} className="p-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/50 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer shadow-sm">
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto p-5 sm:p-6 bg-slate-50/30 dark:bg-transparent">
+                  {loadingLogs ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-slate-400 gap-3">
+                          <Activity className="w-8 h-8 animate-spin text-indigo-500" />
+                          <span className="text-sm font-bold text-slate-500">Analizando registros...</span>
+                      </div>
+                  ) : paginatedLogs.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-slate-500 gap-3">
+                          <Activity className="w-8 h-8 text-slate-300 dark:text-slate-700" />
+                          <span className="text-sm font-bold text-slate-500">Sin actividad registrada.</span>
+                      </div>
+                  ) : (
+                      <div className="flex flex-col gap-4 relative">
+                        {/* Lnea de tiempo (timeline) central */}
+                        <div className="absolute left-[15px] top-4 bottom-4 w-0.5 bg-slate-200 dark:bg-slate-800/60 rounded-full" />
+                        
+                        {paginatedLogs.map((log: any, idx: number) => (
+                          <div key={idx} className="relative pl-10">
+                            {/* Punto en la lnea de tiempo */}
+                            <div className={`absolute left-[11px] top-4 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#151832] ${log.type === 'LOGIN' ? 'bg-emerald-500 shadow-emerald-500/50' : log.type === 'SYSTEM' ? 'bg-blue-500 shadow-blue-500/50' : 'bg-indigo-500 shadow-indigo-500/50'}`} />
+                            
+                            <div className="bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/60 rounded-2xl p-4 text-xs flex flex-col gap-2 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all shadow-sm group">
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="font-bold text-slate-900 dark:text-slate-100 break-words leading-tight">
+                                  {log.action_path} <span className="text-[10px] bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded text-slate-500 ml-1">{log.method}</span>
+                                </span>
+                                <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 whitespace-nowrap">
+                                    {formatTimestamp(log.timestamp)}
+                                </span>
+                              </div>
+                              <span className="leading-relaxed text-slate-500 dark:text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-300 transition-colors">{log.description}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                  )}
+              </div>
+
+              <div className="p-4 sm:p-5 border-t border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/50">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">
+                    Pág. {logPage} de {totalLogPages} <span className="font-medium">({filteredLogs.length} total)</span>
+                  </span>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      onClick={() => setLogPage(p => Math.max(p - 1, 1))}
+                      disabled={logPage === 1}
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-black disabled:opacity-50 cursor-pointer shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors"
+                    >
+                      Ant
+                    </button>
+                    <button
+                      onClick={() => setLogPage(p => Math.min(p + 1, totalLogPages))}
+                      disabled={logPage === totalLogPages}
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-indigo-600 dark:hover:text-indigo-400 text-xs font-black disabled:opacity-50 cursor-pointer shadow-sm hover:border-indigo-500 dark:hover:border-indigo-500 transition-colors"
+                    >
+                      Sig
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
+
 

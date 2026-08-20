@@ -254,7 +254,8 @@ function Sidebar({
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}
         <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
           {navItems.map((item) => {
-            const isActive = activeTab === item.id;
+            const isMatrixSubtab = ['team_matrix', 'sprint_health', 'team_devs'].includes(activeTab);
+            const isActive = activeTab === item.id || (item.id === 'team_matrix' && isMatrixSubtab);
 
             return (
               <button

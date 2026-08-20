@@ -293,9 +293,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                 Supervisión Ejecutiva
               </span>
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">{selectedProjectId || 'SCRUM'}</strong>
-              </span>
+              
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
