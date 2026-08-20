@@ -17,31 +17,22 @@ import {
   ListTodo
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
-import { developerService, projectService } from '../../../services/api';
+import { developerService, projectService, jiraService } from '../../../services/api';
+import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
 
-const DEFAULT_WORKLOAD_LIST = [
-  { key_issue: 'MCHAV-101', summary: 'Implementar autenticación SSO y OAuth 2.0', status: 'EN PROGRESO', story_points: 8, cycle_time_days: 4.1, tipo: 'Historia de Usuario', prioridad: 'Alta', asignado: 'Valka Hoyos', avatar: '101', avatarBg: 'from-purple-600 to-indigo-600', fecha: 'Hace 3.2 días', descripcion: 'Integración completa con servicio de identidad Okta / Google OAuth para autenticación empresarial.' },
-  { key_issue: 'MCHAV-105', summary: 'Corregir bug en la API de pagos y transacciones', status: 'LISTO', story_points: 5, cycle_time_days: 2.5, tipo: 'Bug / Defecto', prioridad: 'Crítica', asignado: 'Valka Hoyos', avatar: '105', avatarBg: 'from-emerald-600 to-teal-600', fecha: 'Completado', descripcion: 'Resolución de excepción de concurrencia y validaciones nulas en endpoint transaccional.' },
-  { key_issue: 'MCHAV-108', summary: 'Configuración de alertas de inactividad', status: 'PENDIENTE', story_points: 5, cycle_time_days: 0, tipo: 'Historia de Usuario', prioridad: 'Media', asignado: 'Valka Hoyos', avatar: '108', avatarBg: 'from-blue-600 to-cyan-600', fecha: 'Registrado hoy', descripcion: 'Implementar job programado para detectar tareas sin movimiento por más de 3 días.' },
-  { key_issue: 'MCHAV-112', summary: 'Rediseñar vista de desarrollador con Recharts', status: 'EN PROGRESO', story_points: 13, cycle_time_days: 3.2, tipo: 'Historia de Usuario', prioridad: 'Media', asignado: 'Valka Hoyos', avatar: '112', avatarBg: 'from-purple-600 to-pink-600', fecha: 'Hace 1 día', descripcion: 'Construcción de dashboards modulares interactivos con animaciones y Recharts.' },
-  { key_issue: 'MCHAV-114', summary: 'Refactorización de consultas pesadas SQL', status: 'PENDIENTE', story_points: 8, cycle_time_days: 0, tipo: 'Deuda Técnica', prioridad: 'Alta', asignado: 'Valka Hoyos', avatar: '114', avatarBg: 'from-indigo-600 to-purple-700', fecha: 'Ayer', descripcion: 'Optimización de índices compuestos B-Tree y vistas materializadas en PostgreSQL.' },
-  { key_issue: 'MCHAV-121', summary: 'Documentación de API endpoints Swagger', status: 'PENDIENTE', story_points: 3, cycle_time_days: 0, tipo: 'Tarea / Deuda', prioridad: 'Baja', asignado: 'Valka Hoyos', avatar: '121', avatarBg: 'from-cyan-600 to-teal-600', fecha: 'Reg: 10 Feb', descripcion: 'Generación de esquemas OpenAPI 3.0 para OpenAPI Swagger UI.' },
-  { key_issue: 'MCHAV-124', summary: 'Pruebas unitarias en módulo Auth', status: 'PENDIENTE', story_points: 5, cycle_time_days: 0, tipo: 'Tarea / Deuda', prioridad: 'Media', asignado: 'Valka Hoyos', avatar: '124', avatarBg: 'from-emerald-600 to-teal-600', fecha: 'Reg: 11 Feb', descripcion: 'Aumentar cobertura de pruebas unitarias al 85% en manejadores de autenticación.' },
-  { key_issue: 'MCHAV-125', summary: 'Integración con API Sandbox externa', status: 'BLOQUEADA', status_motif: 'Esperando credenciales del equipo backend.', story_points: 5, cycle_time_days: 2.0, tipo: 'Bug / Defecto', prioridad: 'Crítica', asignado: 'Valka Hoyos', avatar: '125', avatarBg: 'from-rose-600 to-red-600', fecha: 'Bloqueada hace 2d', descripcion: 'Obtención de Tokens de prueba y endpoints de pruebas E2E para pasarela Sandbox.' },
-  { key_issue: 'MCHAV-129', summary: 'Resolver memory leak en servicio de WebSockets', status: 'EN PROGRESO', story_points: 8, cycle_time_days: 3.5, tipo: 'Bug / Defecto', prioridad: 'Alta', asignado: 'Valka Hoyos', avatar: '129', avatarBg: 'from-rose-600 to-purple-600', fecha: 'Hace 2 días', descripcion: 'Cierre correcto de conexiones inactivas e inspección de manejadores de eventos.' },
-  { key_issue: 'MCHAV-133', summary: 'Implementar exportador de reportes a PDF y Excel', status: 'LISTO', story_points: 8, cycle_time_days: 2.2, tipo: 'Historia de Usuario', prioridad: 'Media', asignado: 'Valka Hoyos', avatar: '133', avatarBg: 'from-teal-600 to-emerald-600', fecha: 'Completado', descripcion: 'Generación dinámica de documentos PDF vectoriales y hojas de cálculo XLSX.' },
-  { key_issue: 'MCHAV-137', summary: 'Actualizar dependencias de seguridad e imágenes Docker', status: 'LISTO', story_points: 3, cycle_time_days: 1.2, tipo: 'Deuda Técnica', prioridad: 'Baja', asignado: 'Valka Hoyos', avatar: '137', avatarBg: 'from-blue-600 to-indigo-600', fecha: 'Completado', descripcion: 'Escaneo de vulnerabilidades Trivy y actualización a Python 3.11-slim.' },
-  { key_issue: 'MCHAV-141', summary: 'Corregir desalineación de tarjetas en modo oscuro', status: 'LISTO', story_points: 2, cycle_time_days: 0.9, tipo: 'Bug / Defecto', prioridad: 'Baja', asignado: 'Valka Hoyos', avatar: '141', avatarBg: 'from-[#00f5d4] to-teal-700', fecha: 'Completado', descripcion: 'Ajuste de padding y bordes Tailwind CSS en componentes de visualización.' },
-  { key_issue: 'MCHAV-145', summary: 'Migración de esquemas de datos en base PostgreSQL', status: 'PENDIENTE', story_points: 5, cycle_time_days: 0, tipo: 'Deuda Técnica', prioridad: 'Alta', asignado: 'Valka Hoyos', avatar: '145', avatarBg: 'from-purple-600 to-indigo-700', fecha: 'Reg: 12 Feb', descripcion: 'Scripts de migración Alembic y actualización de constraints de clave foránea.' },
-  { key_issue: 'MCHAV-150', summary: 'Diseñar alertas contextuales de alto impacto', status: 'EN PROGRESO', story_points: 8, cycle_time_days: 1.5, tipo: 'Historia de Usuario', prioridad: 'Media', asignado: 'Valka Hoyos', avatar: '150', avatarBg: 'from-cyan-600 to-indigo-600', fecha: 'Hace 1 día', descripcion: 'Sistema de notificaciones push integradas en consola de desarrollador.' }
-];
+const DEFAULT_WORKLOAD_LIST = [];
 
-export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
+export default function DevWorkloadView({ 
+  projects = [],
+  selectedProjectId,
+  setSelectedProjectId,
+  syncSuccessMsg
+}) {
   const { user } = useAuth();
   const [, setScorecard] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('TODOS'); // 'TODOS' | 'PROGRESO' | 'PENDIENTES' | 'BLOQUEADAS' | 'LISTO'
+  const [activeFilter, setActiveFilter] = useState('TODOS'); // 'TODOS' | 'EN CURSO' | 'POR HACER' | 'FINALIZADO'
   const [sortBy, setSortBy] = useState('PRIORIDAD'); // 'PRIORIDAD' | 'SP' | 'CLAVE'
   const [tasksList, setTasksList] = useState(DEFAULT_WORKLOAD_LIST);
   const [selectedTaskModal, setSelectedTaskModal] = useState(null);
@@ -70,20 +61,28 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
       const dbRes = await projectService.getKpiIssuesDetail(selectedProjectId, { assignee_email: userEmail, assignee_name: userName, limit: 50 });
       
       if (dbRes && dbRes.issues && dbRes.issues.length > 0) {
-        const realTasks = dbRes.issues.map(issue => ({
-          key_issue: issue.key_issue,
-          summary: issue.summary,
-          status: issue.status_actual?.toUpperCase() || 'PENDIENTE',
-          story_points: issue.story_points || 0,
-          cycle_time_days: issue.cycle_time_days || 0,
-          tipo: issue.tipo || 'Historia',
-          prioridad: issue.prioridad || 'Media',
-          asignado: issue.assignee_name || userName,
-          avatar: issue.key_issue.split('-')[1] || '0',
-          avatarBg: 'from-indigo-600 to-purple-600',
-          fecha: new Date(issue.updated_at || Date.now()).toLocaleDateString(),
-          descripcion: issue.descripcion || 'Sin descripción'
-        }));
+        const realTasks = dbRes.issues.map(issue => {
+          let st = issue.status_actual?.toUpperCase() || 'POR HACER';
+          if (['FINALIZADO', 'DONE', 'COMPLETADA', 'LISTO'].includes(st)) st = 'FINALIZADO';
+          else if (['EN REVISIÓN', 'IN REVIEW', 'REVIEW'].includes(st)) st = 'EN REVISIÓN';
+          else if (['IN PROGRESS', 'EN CURSO', 'EN PROGRESO'].includes(st)) st = 'EN CURSO';
+          else if (['TO DO', 'POR HACER', 'PENDIENTE', 'BACKLOG'].includes(st)) st = 'POR HACER';
+          
+          return {
+            key_issue: issue.key_issue,
+            summary: issue.summary,
+            status: st,
+            story_points: issue.story_points || 0,
+            cycle_time_days: issue.cycle_time_days || 0,
+            tipo: issue.tipo || 'Historia',
+            prioridad: issue.prioridad || 'Media',
+            asignado: issue.assignee_name || userName,
+            avatar: issue.key_issue.split('-')[1] || '0',
+            avatarBg: 'from-indigo-600 to-purple-600',
+            fecha: issue.created_at ? new Date(issue.created_at).toLocaleDateString() : new Date().toLocaleDateString(),
+            descripcion: issue.descripcion || 'Sin descripción (no sincronizada)'
+          };
+        });
         setTasksList(realTasks);
       }
     } catch (err) {
@@ -97,11 +96,19 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
   const handleReload = async () => {
     setIsRefreshing(true);
+    try {
+      // 1. Forzar sincronización con Jira
+      await jiraService.triggerSync();
+      // 2. Darle un par de segundos al backend para que guarde los cambios en SQLite
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    } catch (error) {
+      console.error("Error al sincronizar con Jira:", error);
+    }
+    // 3. Recargar los datos locales
     await loadData();
-    setTimeout(() => setIsRefreshing(false), 500);
+    setIsRefreshing(false);
   };
 
-  const devName = user?.nombre || 'Valka Hoyos';
 
   // Cambio de estado de una tarea
   const handleUpdateStatus = (keyIssue, newStatus) => {
@@ -124,7 +131,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
     const createdTask = {
       key_issue: newKey,
       summary: newSummary,
-      status: 'PENDIENTE',
+      status: 'POR HACER',
       story_points: Number(newSp),
       cycle_time_days: 0,
       tipo: newTipo,
@@ -153,10 +160,10 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
 
     if (!matchesSearch) return false;
 
-    if (activeFilter === 'PENDIENTES') return task.status === 'PENDIENTE';
-    if (activeFilter === 'PROGRESO') return task.status === 'EN PROGRESO';
-    if (activeFilter === 'BLOQUEADAS') return task.status === 'BLOQUEADA';
-    if (activeFilter === 'LISTO') return task.status === 'LISTO';
+    if (activeFilter === 'POR HACER') return task.status === 'POR HACER';
+    if (activeFilter === 'EN CURSO') return task.status === 'EN CURSO';
+    if (activeFilter === 'EN REVISIÓN') return task.status === 'EN REVISIÓN';
+    if (activeFilter === 'FINALIZADO') return task.status === 'FINALIZADO';
 
     return true;
   }).sort((a, b) => {
@@ -171,21 +178,40 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage) || 1;
   const paginatedTasks = filteredTasks.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const countPendientes = tasksList.filter(t => t.status === 'PENDIENTE').length;
-  const countProgreso = tasksList.filter(t => t.status === 'EN PROGRESO').length;
+  const countPendientes = tasksList.filter(t => t.status === 'POR HACER').length;
+  const countProgreso = tasksList.filter(t => t.status === 'EN CURSO' || t.status === 'EN REVISIÓN').length;
   const countBloqueadas = tasksList.filter(t => t.status === 'BLOQUEADA').length;
-  const countListo = tasksList.filter(t => t.status === 'LISTO').length;
+  const countListo = tasksList.filter(t => t.status === 'FINALIZADO').length;
   const countTotal = tasksList.length;
 
-  const totalSPBurned = tasksList.filter(t => t.status === 'LISTO').reduce((acc, curr) => acc + curr.story_points, 0);
+  const totalSPBurned = tasksList.filter(t => t.status === 'FINALIZADO').reduce((acc, curr) => acc + curr.story_points, 0);
   const totalSPAssigned = tasksList.reduce((acc, curr) => acc + curr.story_points, 0);
-  const capacityPct = Math.min(100, Math.round(((countProgreso + countPendientes + countBloqueadas) / 10) * 100));
+  const capacityPct = totalSPAssigned > 0 ? Math.min(100, Math.round((totalSPBurned / totalSPAssigned) * 100)) : 0;
+
+  const devName = user?.nombre || 'Valka Hoyos';
+  const selectedProjectObj = projects.find(p => String(p.id_proyecto) === String(selectedProjectId));
+  const projectName = selectedProjectObj?.nombre || `Proyecto ${selectedProjectId}`;
 
   return (
     <div className="w-full max-w-full flex-1 flex flex-col justify-between space-y-4 text-left font-sans transition-colors duration-300 text-slate-800 dark:text-slate-100">
 
-      {/* 1. CABECERA AL ESTILO DIRECTORIO DE USUARIOS CON ACCIONES AVANZADAS */}
-      <div className="relative rounded-2xl bg-white dark:bg-[#141738] p-5 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] shrink-0">
+
+
+      {/* Si no hay proyecto seleccionado, mostrar prompt */}
+      {!selectedProjectId ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-10 bg-white dark:bg-[#141738] rounded-2xl border border-slate-200 dark:border-[#272b5c] text-center">
+          <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-500 rounded-full flex items-center justify-center mb-4">
+            <Layers size={40} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Selecciona un Proyecto</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+            Para ver y gestionar tu plan de trabajo, selecciona en qué proyecto deseas trabajar desde el selector superior.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* 1. CABECERA AL ESTILO DIRECTORIO DE USUARIOS CON ACCIONES AVANZADAS */}
+          <div className="relative rounded-2xl bg-white dark:bg-[#141738] p-5 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] shrink-0">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           
           {/* Título e Identidad */}
@@ -194,24 +220,30 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
               <Layers size={22} />
             </div>
             <div className="space-y-0.5 text-left">
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
                 <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                   DEVELOPER WORKSPACE
                 </span>
+                <span className="text-slate-300 dark:text-slate-600">•</span>
                 <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                  • Desarrollador: <strong className="text-slate-800 dark:text-slate-200 font-bold">{devName}</strong>
+                  Desarrollador: <strong className="text-slate-800 dark:text-slate-200 font-bold">{devName}</strong>
                 </span>
               </div>
-
               <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                 Plan de Trabajo
               </h1>
+                  <div className="mt-1">
+                    <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                      Proyecto: <strong className="text-indigo-600 dark:text-indigo-400 font-black text-base uppercase">{projectName}</strong>
+                    </span>
+                  </div>
             </div>
           </div>
 
           {/* Acciones principales: Registrar Tarea + Actualizar */}
-          <div className="flex items-center gap-2 shrink-0">
-            <button
+          <div className="flex items-center gap-4 shrink-0">
+            <div className="flex items-center gap-2">
+              <button
               onClick={() => setNewTaskModalOpen(true)}
               className="px-3.5 py-2 text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-md border border-purple-400/30 flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.02]"
             >
@@ -226,6 +258,7 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             >
               <RotateCcw size={15} className={isRefreshing ? "animate-spin text-indigo-500" : ""} />
             </button>
+          </div>
           </div>
 
         </div>
@@ -345,9 +378,10 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
         <div className="flex-1 overflow-y-auto space-y-2.5 pr-1">
           {paginatedTasks.length > 0 ? (
             paginatedTasks.map((task, idx) => {
-              const isProgreso = task.status === 'EN PROGRESO';
-              const isBloqueada = task.status === 'BLOQUEADA';
-              const isListo = task.status === 'LISTO';
+              const isProgreso = task.status === 'EN CURSO';
+              const isRevision = task.status === 'EN REVISIÓN';
+              const isListo = task.status === 'FINALIZADO';
+              const isPorHacer = task.status === 'POR HACER';
 
               return (
                 <div 
@@ -397,15 +431,15 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
                           ? 'bg-emerald-50 dark:bg-[#064e3b] text-emerald-700 dark:text-[#00f5d4] border-emerald-200 dark:border-[#00f5d4]/40'
                           : isProgreso
                           ? 'bg-purple-50 dark:bg-[#1e1b4b] text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-500/50'
-                          : isBloqueada
-                          ? 'bg-rose-50 dark:bg-[#4c0519] text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/50'
-                          : 'bg-slate-100 dark:bg-slate-800 text-amber-700 dark:text-amber-300 border-slate-200 dark:border-slate-700'
+                          : isRevision
+                          ? 'bg-blue-50 dark:bg-[#172554] text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-500/50'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'
                       }`}
                     >
-                      <option value="PENDIENTE">⚫ Pendiente</option>
-                      <option value="EN PROGRESO">🟣 En Progreso</option>
-                      <option value="BLOQUEADA">🔴 Bloqueada</option>
-                      <option value="LISTO">🟢 Listo</option>
+                      <option value="POR HACER">⚫ Por hacer</option>
+                      <option value="EN CURSO">🟣 En curso</option>
+                      <option value="EN REVISIÓN">🔵 En revisión</option>
+                      <option value="FINALIZADO">🟢 Finalizado</option>
                     </select>
                   </div>
 
@@ -617,9 +651,14 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
           <div className="relative w-full max-w-md rounded-2xl bg-white dark:bg-[#141738] p-6 shadow-2xl border border-slate-200 dark:border-[#272b5c] space-y-4 text-left">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-[#232752]">
               <div className="flex items-center gap-2.5">
-                <span className="font-mono font-black text-sm px-3 py-1 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/30">
+                <a
+                  href={`https://beltrancamilo592.atlassian.net/browse/${selectedTaskModal.key_issue}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="font-mono font-black text-sm px-3 py-1 bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-lg border border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/30 transition-colors"
+                >
                   {selectedTaskModal.key_issue}
-                </span>
+                </a>
                 <span className="text-xs font-bold text-slate-400 uppercase">Detalle y Log de Auditoría</span>
               </div>
               <button 
@@ -634,9 +673,20 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
               <h3 className="text-sm font-bold text-slate-900 dark:text-white leading-snug">
                 {selectedTaskModal.summary}
               </h3>
-              <p className="text-slate-700 dark:text-slate-300 text-xs leading-relaxed p-3 bg-slate-50 dark:bg-[#0c0e21] rounded-xl border border-slate-200 dark:border-[#232752]">
-                {selectedTaskModal.descripcion}
-              </p>
+              
+              <div className="p-3 bg-slate-50 dark:bg-[#0c0e21] rounded-xl border border-slate-200 dark:border-[#232752] flex flex-col gap-1 items-center justify-center text-center">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Para ver la descripción completa, subtareas y comentarios, consulta el ticket en Jira.
+                </span>
+                <a
+                  href={`https://beltrancamilo592.atlassian.net/browse/${selectedTaskModal.key_issue}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
+                >
+                  Abrir en Jira ↗
+                </a>
+              </div>
 
               <div className="grid grid-cols-2 gap-2 text-slate-700 dark:text-slate-200">
                 <div className="p-2.5 bg-slate-50 dark:bg-[#0c0e21] rounded-lg border border-slate-200 dark:border-[#232752]">
@@ -667,6 +717,9 @@ export default function DevWorkloadView({ selectedProjectId = 'PROJ-01' }) {
             </div>
           </div>
         </div>
+      )}
+
+        </>
       )}
 
     </div>

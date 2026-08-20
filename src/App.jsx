@@ -395,7 +395,10 @@ function MainAppContent() {
       {activeTab === 'developer' && (
         <DeveloperView
           kpis={filteredKpis}
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
           alerts={alerts}
           onNavigateToAlerts={() => setActiveTab('alerts_center')}
           onNavigateTab={(tab) => setActiveTab(tab)}
@@ -404,25 +407,37 @@ function MainAppContent() {
 
       {activeTab === 'daily_focus' && (
         <DailyFocusView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
       {activeTab === 'dev_workload' && (
         <DevWorkloadView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
       {activeTab === 'dev_alerts' && (
         <DevAlertsView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
       {activeTab === 'activity_history' && (
         <ActivityHistoryView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 

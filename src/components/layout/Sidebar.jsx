@@ -162,7 +162,7 @@ function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col h-screen py-4 bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative z-50 ${
+      className={`flex flex-col h-full py-4 bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative z-50 ${
         isCollapsed ? 'w-[72px] px-3 items-center overflow-visible' : 'w-64 px-5 overflow-y-auto'
       }`}
       style={{ flexShrink: 0 }}

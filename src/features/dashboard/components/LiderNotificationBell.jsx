@@ -25,130 +25,12 @@ import {
 
 // Configuración de notificaciones separadas POR ROL
 const roleNotifications = {
-  DEVELOPER: [
-    {
-      id: 'dev-1',
-      type: 'TASK_ASSIGNED',
-      title: '📌 Nueva Tarea Asignada',
-      description: 'Te han asignado la incidencia MCHAV-142 (3 SP) en Sprint 04.',
-      tagline: 'Asignación personal.',
-      time: 'Hace 10 min',
-      isRead: false,
-      issueKey: 'MCHAV-142'
-    },
-    {
-      id: 'dev-2',
-      type: 'SOLICITUD',
-      title: '💬 Respuesta de tu Líder Técnico',
-      description: 'Michael Salamanca respondió a tu duda sobre SSO (MCHAV-128).',
-      tagline: 'Necesita tu revisión.',
-      time: 'Hace 25 min',
-      isRead: false,
-      issueKey: 'MCHAV-128'
-    },
-    {
-      id: 'dev-3',
-      type: 'BUG',
-      title: '🐞 Bug Devuelto en QA',
-      description: 'Tu tarea MCHAV-105 fue devuelta por QA con 2 observaciones.',
-      tagline: 'Requiere corrección.',
-      time: 'Hace 1 hora',
-      isRead: false,
-      issueKey: 'MCHAV-105'
-    },
-    {
-      id: 'dev-4',
-      type: 'ALERTA',
-      title: '⚠️ Alerta de Inactividad Personal',
-      description: 'Llevas >48h sin registrar avances en MCHAV-104.',
-      tagline: 'Normalmente necesita acción.',
-      time: 'Hace 3 horas',
-      isRead: false
-    }
-  ],
-
-  MANAGER: [
-    {
-      id: 'mgr-1',
-      type: 'SOLICITUD',
-      title: '💬 Solicitud de Actualización de Desarrollador',
-      description: 'Carlos Pérez solicita confirmación sobre la entrega del módulo SSO (MCHAV-128).',
-      tagline: 'Necesita interacción humana.',
-      time: 'Hace 15 min',
-      isRead: false,
-      issueKey: 'MCHAV-128'
-    },
-    {
-      id: 'mgr-2',
-      type: 'BUG',
-      title: '🐞 3 Bugs Críticos Detectados en Sprint',
-      description: 'QA reportó fallos bloqueantes devueltos en MCHAV Analytics (MCHAV-105).',
-      tagline: 'No necesariamente necesita respuesta.',
-      time: 'Hace 45 min',
-      isRead: false,
-      issueKey: 'MCHAV-105'
-    },
-    {
-      id: 'mgr-3',
-      type: 'ALERTA',
-      title: '⚠️ Cycle Time Elevado en Equipo (>3.5d)',
-      description: 'MCHAV-104 (Clara Gómez) supera el umbral máximo del sprint.',
-      tagline: 'Normalmente necesita acción.',
-      time: 'Hace 2 horas',
-      isRead: false
-    },
-    {
-      id: 'mgr-4',
-      type: 'REPORT',
-      title: '📊 Informe de Predictibilidad Generado',
-      description: 'Resumen semanal de velocidad y salud del Sprint 04 listo.',
-      tagline: 'No necesita respuesta.',
-      time: 'Hace 4 horas',
-      isRead: true
-    }
-  ],
-
-  ADMIN: [
-    {
-      id: 'adm-1',
-      type: 'SYNC_FAIL',
-      title: '🔄 Sincronización Fallida ETL',
-      description: 'Error de conexión HTTP 504 en la ingesta de datos de Jira Cloud API.',
-      tagline: 'Acción técnica requerida.',
-      time: 'Hace 5 min',
-      isRead: false
-    },
-    {
-      id: 'adm-2',
-      type: 'USER_REG',
-      title: '👤 Solicitud de Acceso / Rol Pendiente',
-      description: 'Nuevo integrante registrado solicitando asignación de rol.',
-      tagline: 'Necesita aprobación de gobierno.',
-      time: 'Hace 30 min',
-      isRead: false
-    },
-    {
-      id: 'adm-3',
-      type: 'ALERTA',
-      title: '⚠️ Alerta de Gobernanza y SLAs',
-      description: '2 proyectos superan el SLA global de resolución de bloqueos.',
-      tagline: 'Normalmente necesita acción.',
-      time: 'Hace 1 hora',
-      isRead: false
-    },
-    {
-      id: 'adm-4',
-      type: 'REPORT',
-      title: '📊 Auditoría de ETL & Cron Scheduler',
-      description: 'Informe de ejecución del pipeline nocturno completado.',
-      tagline: 'No necesita respuesta.',
-      time: 'Hace 3 horas',
-      isRead: true
-    }
-  ]
+  DEVELOPER: [],
+  MANAGER: [],
+  ADMIN: []
 };
 
-export default function LiderNotificationBell({ className = "", onNavigateToHub = undefined, onNavigateTab = undefined }) {
+export default function LiderNotificationBell({ className = "", onNavigateToHub = undefined, onNavigateTab = undefined, dynamicNotifications = [], onOpenTask = undefined }) {
   const { user } = useAuth();
 
   // Detectar rol exacto del usuario activo
@@ -162,8 +44,11 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
 
   const getMergedNotifications = (role) => {
     const base = roleNotifications[role] || roleNotifications.MANAGER;
+    // Filter out static task assignments if dynamic ones exist, to avoid duplicates/dummy data
+    const filteredBase = dynamicNotifications.length > 0 ? base.filter(n => n.type !== 'TASK_ASSIGNED') : base;
+    const combined = [...dynamicNotifications, ...filteredBase];
     const readIds = getReadNotificationIds();
-    return base.map(n => ({
+    return combined.map(n => ({
       ...n,
       isRead: n.isRead || readIds.includes(n.id)
     }));
@@ -178,7 +63,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
       setNotifications(getMergedNotifications(activeRole));
     });
     return unsubscribe;
-  }, [activeRole]);
+  }, [activeRole, dynamicNotifications]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
@@ -220,6 +105,15 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
       onNavigateTab(tabName);
     } else if (onNavigateToHub) {
       onNavigateToHub(tabName);
+    }
+  };
+
+  const handleOpenTask = (issueKey) => {
+    setIsOpen(false);
+    if (onOpenTask && issueKey) {
+      onOpenTask(issueKey);
+    } else {
+      handleNavigate('developer');
     }
   };
 
@@ -317,16 +211,18 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
                         notif.type === 'BUG' ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' :
                           notif.type === 'ALERTA' ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' :
                             notif.type === 'SYNC_FAIL' ? 'bg-red-500/15 text-red-600 dark:text-red-400' :
-                              notif.type === 'USER_REG' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
-                                'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              notif.type === 'SYNC_SUCCESS' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                                notif.type === 'USER_REG' ? 'bg-cyan-500/15 text-cyan-600 dark:text-cyan-400' :
+                                  'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                     }`}>
                     {notif.type === 'TASK_ASSIGNED' ? <CheckSquare size={14} /> :
                       notif.type === 'SOLICITUD' ? <MessageSquare size={14} /> :
                         notif.type === 'BUG' ? <Bug size={14} /> :
                           notif.type === 'ALERTA' ? <AlertTriangle size={14} /> :
                             notif.type === 'SYNC_FAIL' ? <RefreshCw size={14} /> :
-                              notif.type === 'USER_REG' ? <UserCheck size={14} /> :
-                                <FileBarChart2 size={14} />}
+                              notif.type === 'SYNC_SUCCESS' ? <CheckCircle2 size={14} /> :
+                                notif.type === 'USER_REG' ? <UserCheck size={14} /> :
+                                  <FileBarChart2 size={14} />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
@@ -350,7 +246,7 @@ export default function LiderNotificationBell({ className = "", onNavigateToHub 
                 <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-200/50 dark:border-slate-800/50">
                   {notif.type === 'TASK_ASSIGNED' && (
                     <button
-                      onClick={() => handleNavigate('developer')}
+                      onClick={() => handleOpenTask(notif.issueKey)}
                       className="px-2.5 py-1 text-[10px] font-extrabold rounded-lg bg-blue-600 text-white hover:bg-blue-500 transition-colors flex items-center gap-1 cursor-pointer"
                     >
                       <CheckSquare size={11} /> Ver tarea
