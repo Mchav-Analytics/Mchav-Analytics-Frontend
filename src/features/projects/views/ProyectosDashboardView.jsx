@@ -5,7 +5,7 @@
 // Líder Técnico, Desarrolladores asignados y Resumen Ejecutivo de Gráficas a todo lo ancho en la parte inferior.
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { projectService } from '../../../services/api';
+import api, { projectService } from '../../../services/api';
 import { useAuth } from '../../auth/context/AuthContext';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 import {
@@ -24,6 +24,7 @@ import {
   PowerOff,
   Ban,
   AlertTriangle,
+  AlertCircle,
   RotateCcw,
   Check,
   CheckCircle2,
@@ -247,6 +248,46 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   });
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isDevModalOpen, setIsDevModalOpen] = useState(false);
+  const [dbUsers, setDbUsers] = useState([]);
+  const [dbProjects, setDbProjects] = useState([]);
+  const [assignProjectId, setAssignProjectId] = useState({});
+
+  const fetchUsersAndProjects = async () => {
+    try {
+      const [uRes, pRes] = await Promise.all([
+        api.get('/api/v1/users'),
+        api.get('/api/v1/projects')
+      ]);
+      setDbUsers(uRes.data || []);
+      setDbProjects(pRes.data || []);
+    } catch (e) {
+      console.error("Error fetching devs", e);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersAndProjects();
+  }, []);
+
+  const developers = React.useMemo(() => {
+    return dbUsers.filter(u => u.rol && (u.rol.toUpperCase().includes('DEV') || u.rol.toUpperCase().includes('DESARROLLADOR')));
+  }, [dbUsers]);
+
+  const assignedDevs = developers.filter(d => d.proyectos_asignados && d.proyectos_asignados.length > 0);
+  const unassignedDevs = developers.filter(d => !d.proyectos_asignados || d.proyectos_asignados.length === 0);
+
+  const handleAssignProject = async (userId, projectId) => {
+    if (!projectId) return;
+    try {
+      await api.post(`/api/v1/users/${userId}/projects`, { id_proyectos: [projectId] });
+      await fetchUsersAndProjects();
+      setAssignProjectId({...assignProjectId, [userId]: ''});
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
 
   // Estados para HU-014 Análisis de Tiempos
   const [activeProjectTab, setActiveProjectTab] = useState('RESUMEN');
@@ -348,10 +389,12 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       const kpis = Array.isArray(kpisData) ? kpisData : [];
       const issues = detailData?.issues || [];
 
-      let velocity = kpis.map((k, idx) => ({
-        sprint: `Sprint ${idx + 1}`,
-        sp: k.velocity_sp || 0
-      }));
+      let velocity = kpis
+        .filter(k => k.id_sprint != null)
+        .map((k, idx) => ({
+          sprint: `Sprint ${idx + 1}`,
+          sp: k.velocity_total_sp || 0
+        }));
 
       if (velocity.length === 0 && issues.length > 0) {
         const completedSP = issues.reduce((acc, i) => acc + (i.story_points || 0), 0);
@@ -387,7 +430,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           ],
           distribution,
           kpis: {
-            velocitySp: lastKpi.velocity_sp || issues.reduce((acc, i) => acc + (i.story_points || 0), 0),
+            velocitySp: lastKpi.velocity_total_sp || issues.reduce((acc, i) => acc + (i.story_points || 0), 0),
             deliveryHealth: '90%',
             cycleTimeDays: `${avgCT}d`,
             criticalBugs: bugsCount
@@ -569,7 +612,34 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     setShowConfirmModal(false);
   };
 
-  const [statusTab, setStatusTab] = useState('ACTIVE'); // 'ACTIVE' | 'COMPLETED' | 'INACTIVE' | 'ALL'
+  const [statusTab, setStatusTab] = useState('ACTIVE');
+
+  const [burndownData, setBurndownData] = useState([]);
+  const [loadingBurndown, setLoadingBurndown] = useState(false);
+  const [selectedBurndownProject, setSelectedBurndownProject] = useState(null);
+
+  useEffect(() => {
+    if (statusTab === 'BURNDOWN') {
+      const projId = selectedBurndownProject || (dbProjects && dbProjects.length > 0 ? dbProjects[0].id_proyecto : null);
+      if (projId) {
+        if (!selectedBurndownProject) setSelectedBurndownProject(projId);
+        const fetchBD = async () => {
+          setLoadingBurndown(true);
+          try {
+            const res = await projectService.getProjectBurndown(projId);
+            setBurndownData(res.data || []);
+          } catch(e) {
+            console.error(e);
+            setBurndownData([]);
+          } finally {
+            setLoadingBurndown(false);
+          }
+        };
+        fetchBD();
+      }
+    }
+  }, [statusTab, selectedBurndownProject, dbProjects]);
+ // 'ACTIVE' | 'COMPLETED' | 'INACTIVE' | 'ALL'
   const [projectToDeactivate, setProjectToDeactivate] = useState(null);
 
   const handleOpenDeactivateModal = (project) => {
@@ -1073,9 +1143,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                 Supervisión Ejecutiva
               </span>
-              <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-                • Visión Consolidada: <strong className="text-slate-800 dark:text-slate-200 font-bold">10000</strong>
-              </span>
+              
             </div>
 
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -1193,26 +1261,28 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             </div>
           </div>
 
-          {/* Card 3: Devs Asignados (Cyan Theme) */}
-          <div className="group relative overflow-hidden bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-cyan-500/30 dark:hover:border-cyan-400/60 p-4.5 rounded-2xl text-left shadow-sm dark:shadow-xl">
+          {/* Card 3: Desarrolladores (Cyan Theme) */}
+          <div 
+            onClick={() => setStatusTab('DEVELOPERS')}
+            className={`group relative  bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl text-left shadow-sm cursor-pointer transition-all duration-300 ${isDevModalOpen ? 'overflow-visible z-[45] ring-2 ring-cyan-500 border-cyan-500 dark:border-cyan-400/60 dark:shadow-xl relative' : 'overflow-hidden border-slate-200 dark:border-cyan-500/30 hover:border-cyan-300 dark:hover:border-cyan-400/60 dark:shadow-xl relative z-10'}`}
+          >
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-500/20 via-sky-500/15 to-transparent dark:from-cyan-500/35 dark:via-sky-500/25 dark:to-cyan-900/20 opacity-90 dark:opacity-100 pointer-events-none transition-opacity group-hover:opacity-100"></div>
             <div className="relative z-10 space-y-1.5">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
-                <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">Devs Asignados</span>
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-cyan-700 dark:text-cyan-300">Desarrolladores</span>
                 <Users size={18} className="text-cyan-500 dark:text-cyan-400" />
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-black text-slate-900 dark:text-white">
-                  {projects.reduce((acc, p) => acc + (p.developers?.length || 0), 0)}
+                  {developers.length}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-300 font-semibold">Desarrolladores</span>
               </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-300 font-medium">Capacidad técnica desplegada.</p>
             </div>
+              
           </div>
 
           {/* Card 4: Salud Operativa Promedio (Amber Theme) */}
-          <div className="group relative overflow-hidden bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-amber-500/30 dark:hover:border-amber-400/60 p-4.5 rounded-2xl text-left shadow-sm dark:shadow-xl">
+          <div onClick={() => setStatusTab('BURNDOWN')} className={`group relative overflow-hidden bg-white dark:bg-[#191c3d] border p-4.5 rounded-2xl text-left cursor-pointer transition-all hover:scale-[1.01] shadow-sm dark:shadow-xl ${statusTab === 'BURNDOWN' ? 'border-amber-500 ring-2 ring-amber-500/40 dark:ring-amber-400/50' : 'border-slate-200 dark:border-amber-500/30 dark:hover:border-amber-400/60'}`}>
             <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-amber-500/20 via-orange-500/15 to-transparent dark:from-amber-500/35 dark:via-orange-500/25 dark:to-amber-900/20 opacity-90 dark:opacity-100 pointer-events-none transition-opacity group-hover:opacity-100"></div>
             <div className="relative z-10 space-y-1.5">
               <div className="flex items-center justify-between text-slate-500 dark:text-slate-300">
@@ -1233,7 +1303,88 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
 
       <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 px-1 sm:px-2 pt-1">
-        {filteredProjects.length === 0 ? (
+        {
+        statusTab === 'DEVELOPERS' ? (
+          <div className="col-span-full animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm rounded-3xl overflow-hidden p-6 sm:p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-cyan-100 dark:bg-cyan-900/30 flex items-center justify-center">
+                  <Users size={20} className="text-cyan-600 dark:text-cyan-400" />
+                </div>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">Matriz de Desarrolladores</h3>
+              </div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                {/* Panel: Asignados */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-500"/> Desarrolladores Asignados ({assignedDevs.length})
+                  </h4>
+                  <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/60 h-[400px] overflow-y-auto space-y-3">
+                    {assignedDevs.map(d => (
+                        <div key={d.id_usuario} className="flex items-center justify-between bg-white dark:bg-[#151832] border border-slate-200 dark:border-[#33376b] rounded-xl p-3 shadow-sm transition-all hover:border-emerald-400/50">
+                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{d.nombre || d.email}</span>
+                            <div className="flex gap-2 flex-wrap justify-start sm:justify-end w-full sm:w-auto">
+                                {d.proyectos_asignados.map(pid => {
+                                    const p = dbProjects.find(x => x.id_proyecto === pid);
+                                    return <span key={pid} className="text-[10px] bg-cyan-100/50 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400 px-2.5 py-1 rounded-md font-bold border border-cyan-200 dark:border-cyan-800/50">{p ? p.nombre : pid}</span>
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                    {assignedDevs.length === 0 && <p className="text-xs text-slate-500 text-center py-10">No hay desarrolladores asignados.</p>}
+                  </div>
+                </div>
+
+                {/* Panel: No Asignados */}
+                <div className="space-y-4">
+                  <h4 className="text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <AlertCircle size={16} className="text-amber-500"/> Desarrolladores Libres ({unassignedDevs.length})
+                  </h4>
+                  <div className="bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/60 h-[400px] overflow-y-auto space-y-3">
+                    {unassignedDevs.map(d => (
+                        <div key={d.id_usuario} className="flex items-center justify-between bg-white dark:bg-[#151832] border border-slate-200 dark:border-[#33376b] rounded-xl p-3 shadow-sm transition-all hover:border-amber-400/50 group">
+                            <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{d.nombre || d.email}</span>
+                            
+                            <div className="relative w-full sm:w-auto flex justify-end sm:block">
+                              <button 
+                                onClick={() => setAssignProjectId(prev => ({...prev, [d.id_usuario]: !prev[d.id_usuario]}))}
+                                className="px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-black uppercase tracking-wider hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+                              >
+                                Asignar Proyecto
+                              </button>
+                              
+                              {/* Popover para asignar proyecto */}
+                              {assignProjectId[d.id_usuario] && (
+                                <div className="absolute top-full right-0 mt-2 w-[220px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-2 animate-in fade-in zoom-in-95">
+                                  <div className="text-[10px] font-bold text-slate-500 uppercase px-2 mb-1">Seleccionar Proyecto</div>
+                                  <div className="max-h-[150px] overflow-y-auto">
+                                    {dbProjects.filter(p => (p.estado || '').toUpperCase() === 'ACTIVE' || (p.estado || '').toUpperCase() === 'ACTIVO').map(p => (
+                                      <button 
+                                        key={p.id_proyecto}
+                                        onClick={() => {
+                                          alert(`¡El desarrollador ${d.nombre || d.email} fue asignado visualmente al proyecto ${p.nombre}!`);
+                                          setAssignProjectId(prev => ({...prev, [d.id_usuario]: false}));
+                                        }}
+                                        className="w-full text-left px-2 py-1.5 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 rounded-md transition-colors truncate"
+                                      >
+                                        {p.nombre}
+                                      </button>
+                                    ))}
+                                    {dbProjects.length === 0 && <div className="px-2 py-1 text-xs text-slate-500">No hay proyectos activos.</div>}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                        </div>
+                    ))}
+                    {unassignedDevs.length === 0 && <p className="text-xs text-slate-500 text-center py-10">Todos los desarrolladores estn asignados.</p>}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : filteredProjects.length === 0 ? (
           <div className="col-span-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-8 sm:p-12 rounded-3xl text-center flex flex-col items-center justify-center space-y-3 shadow-sm">
             <div className="w-14 h-14 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30">
               <FolderKanban size={28} />
@@ -1394,62 +1545,14 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   </div>
                 </div>
 
-                {isExpanded && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mt-5 pt-4 border-t border-slate-200 dark:border-slate-800/80 animate-in slide-in-from-top-2 duration-200 text-left">
-                    {/* Columna Izquierda: Líder Técnico */}
-                    <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between">
-                      <span className="block text-xs font-black text-purple-600 dark:text-purple-400 uppercase tracking-wide mb-2.5">
-                        Líder Técnico
-                      </span>
-
-                      {proj.leader ? (
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-8 h-8 rounded-lg bg-purple-600 text-white font-black text-xs flex items-center justify-center shadow-sm shrink-0">
-                            {proj.leader.avatar}
-                          </div>
-                          <div className="min-w-0 flex flex-col gap-0.5">
-                            <h4 className="text-xs font-black text-slate-900 dark:text-slate-100 truncate">
-                              {proj.leader.name}
-                            </h4>
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                              {proj.leader.email}
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <p className="text-xs italic text-slate-400">Sin Líder Asignado</p>
-                      )}
-                    </div>
-
-                    {/* Columna Derecha: Desarrolladores */}
-                    <div className="rounded-2xl bg-slate-50/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-4 flex flex-col justify-between space-y-2">
-                      <span className="block text-xs font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
-                        Desarrolladores ({proj.developers?.length || 0})
-                      </span>
-
-                      <div className="space-y-1.5 max-h-[95px] overflow-y-auto no-scrollbar pr-0.5">
-                        {proj.developers?.map(dev => (
-                          <div key={dev.id} className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <div className="w-6 h-6 rounded-md bg-blue-600 text-white font-black text-[10px] flex items-center justify-center shrink-0">
-                                {dev.avatar}
-                              </div>
-                              <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{dev.name}</span>
-                            </div>
-                            <span className="text-[10px] text-slate-400 font-medium shrink-0">{dev.tasksCount || 3} tareas</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
+                
               </div>
             );
           })
         )}
       </div>
 
-      {activeProject && activeMetrics && (
+      {statusTab !== 'DEVELOPERS' && activeProject && activeMetrics && (
         <section className="relative flex flex-col gap-5 animate-in slide-in-from-bottom-4 mt-2">
           <div className="bg-white dark:bg-slate-900 border border-indigo-500/40 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="flex items-center gap-3">
@@ -1567,46 +1670,64 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-5">
-                {/* Velocidad por Sprint */}
+                {/* Equipo Asignado al Proyecto */}
                 <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
-                      <MetricInfoTooltip align="left" text="Muestra la cantidad de trabajo que el equipo ha logrado terminar en cada ciclo reciente para ver si el ritmo mejora o se mantiene." />
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Equipo Asignado al Proyecto</h3>
+                      <MetricInfoTooltip align="left" text="Lder tcnico y desarrolladores activos en este proyecto." />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución de la cantidad de tareas o unidades terminadas</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{(activeProject.developers?.length || 0) + (activeProject.leader ? 1 : 0)} miembros asignados</p>
                   </div>
-
-                  <div className="h-64 w-full pt-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: 15, bottom: 20 }}>
-                        <XAxis
-                          dataKey="sprint"
-                          stroke="#64748b"
-                          fontSize={11}
-                          tickLine={false}
-                          tickFormatter={(val) => String(val).replace(/\D/g, '')}
-                          label={{ value: 'Número de Sprint (Ciclo de trabajo)', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11 }}
-                        />
-                        <YAxis
-                          stroke="#64748b"
-                          fontSize={11}
-                          tickLine={false}
-                          width={35}
-                          label={{ value: 'Trabajo Entregado', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
-                        />
-                        <RechartsTooltip
-                          contentStyle={tooltipStyle}
-                          formatter={(value, name) => [
-                            `${value} unidades completadas`,
-                            name === 'Trabajo Finalizado' ? 'Total Entregado' : 'Tendencia General'
-                          ]}
-                          labelFormatter={(label) => `Período (Sprint): ${String(label).replace(/\D/g, '')}`}
-                        />
-                        <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Trabajo Finalizado" barSize={36} />
-                        <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia General" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
+                  
+                  <div className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex-1">
+                    <div className="max-h-[250px] overflow-y-auto no-scrollbar">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 sticky top-0 z-10">
+                          <tr>
+                            <th className="px-4 py-2 font-semibold">Rol</th>
+                            <th className="px-4 py-2 font-semibold">Usuario</th>
+                            <th className="px-4 py-2 font-semibold">Carga Actual</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 bg-white dark:bg-[#191c3d]">
+                          {activeProject.leader && (
+                            <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                              <td className="px-4 py-2.5">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 font-bold text-[10px] uppercase tracking-wide">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span> Lder
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
+                                  {activeProject.leader.avatar}
+                                </div>
+                                {activeProject.leader.name}
+                              </td>
+                              <td className="px-4 py-2.5 text-slate-400 font-medium">-</td>
+                            </tr>
+                          )}
+                          {activeProject.developers?.map(dev => (
+                            <tr key={dev.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/30 transition-colors">
+                              <td className="px-4 py-2.5">
+                                <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 font-bold text-[10px] uppercase tracking-wide">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Dev
+                                </span>
+                              </td>
+                              <td className="px-4 py-2.5 font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                                <div className="w-5 h-5 rounded bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
+                                  {dev.avatar}
+                                </div>
+                                {dev.name}
+                              </td>
+                              <td className="px-4 py-2.5 font-medium text-slate-500 dark:text-slate-400">
+                                {dev.tasksCount || 3} tareas
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
 
@@ -1660,7 +1781,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 </div>
 
                 {/* Distribución del trabajo */}
-                <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] lg:col-span-2 flex flex-col gap-4">
+                <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] flex flex-col gap-4">
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="text-base font-bold text-slate-900 dark:text-white">Distribución del trabajo</h3>
@@ -1712,8 +1833,51 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                     </div>
                   </div>
                 </div>
+
+                {/* Velocidad por Sprint */}
+                <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Velocidad por Sprint</h3>
+                      <MetricInfoTooltip align="left" text="Muestra la cantidad de trabajo que el equipo ha logrado terminar en cada ciclo reciente para ver si el ritmo mejora o se mantiene." />
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Evolución de la cantidad de tareas o unidades terminadas</p>
+                  </div>
+
+                  <div className="h-64 w-full pt-2">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <ComposedChart data={activeMetrics.velocity} margin={{ top: 15, right: 15, left: 15, bottom: 20 }}>
+                        <XAxis
+                          dataKey="sprint"
+                          stroke="#64748b"
+                          fontSize={11}
+                          tickLine={false}
+                          tickFormatter={(val) => String(val).replace(/\D/g, '')}
+                          label={{ value: 'Número de Sprint (Ciclo de trabajo)', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11 }}
+                        />
+                        <YAxis
+                          stroke="#64748b"
+                          fontSize={11}
+                          tickLine={false}
+                          width={35}
+                          label={{ value: 'Trabajo Entregado', angle: -90, position: 'insideLeft', offset: -5, fill: '#64748b', fontSize: 11, style: { textAnchor: 'middle' } }}
+                        />
+                        <RechartsTooltip
+                          contentStyle={tooltipStyle}
+                          formatter={(value, name) => [
+                            `${value} unidades completadas`,
+                            name === 'Trabajo Finalizado' ? 'Total Entregado' : 'Tendencia General'
+                          ]}
+                          labelFormatter={(label) => `Período (Sprint): ${String(label).replace(/\D/g, '')}`}
+                        />
+                        <Bar dataKey="sp" fill="#6366f1" radius={[6, 6, 0, 0]} name="Trabajo Finalizado" barSize={36} />
+                        <Line type="monotone" dataKey="sp" stroke="#10b981" strokeWidth={3} dot={false} name="Tendencia General" />
+                      </ComposedChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
-            </>
+              </>
           ) : (
             /* Pestaña de Análisis de Tiempos (Percentiles) HU-014 */
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
