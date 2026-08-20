@@ -245,8 +245,9 @@ export default function DeveloperView({
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  // CAMBIO DE ESTADO EN TIEMPO REAL & REGISTRO EN EL HISTORIAL DE ACTIVIDAD
-  const handleUpdateTaskStatus = (issueKey, newStatus, storyPoints = 5, summary = '') => {
+  // CAMBIO DE ESTADO EN TIEMPO REAL CON JIRA CLOUD & REGISTRO EN EL HISTORIAL
+  const handleUpdateTaskStatus = async (issueKey, newStatus, storyPoints = 5, summary = '') => {
+    // 1. Actualización optimista local
     setAssignedIssuesList(prev => prev.map(t => {
       if (t.key_issue === issueKey) {
         return { ...t, status_actual: newStatus };
@@ -254,7 +255,21 @@ export default function DeveloperView({
       return t;
     }));
 
-    if (newStatus === 'LISTO' || newStatus === 'COMPLETADA') {
+    if (selectedIssueModal && selectedIssueModal.key_issue === issueKey) {
+      setSelectedIssueModal(prev => prev ? { ...prev, status_actual: newStatus } : null);
+    }
+
+    try {
+      // 2. Enviar transición de estado a la API de Jira Cloud (vía Backend FastAPI)
+      const res = await projectService.transitionIssue(issueKey, newStatus);
+      const msg = res?.message || `Estado de ${issueKey} actualizado a ${newStatus} en Jira Cloud`;
+      showNotificationToast(`⚡ ${msg}`);
+    } catch (err) {
+      console.warn("Aviso al sincronizar transición con Jira Cloud:", err);
+      showNotificationToast(`✨ Estado de ${issueKey} actualizado a "${newStatus}" localmente`);
+    }
+
+    if (newStatus === 'LISTO' || newStatus === 'COMPLETADA' || newStatus === 'DONE') {
       const nowStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const newLog = {
         time: `Hoy ${nowStr}`,
@@ -265,13 +280,6 @@ export default function DeveloperView({
       };
       const existingLogs = JSON.parse(localStorage.getItem('mchav_user_activity_log') || '[]');
       localStorage.setItem('mchav_user_activity_log', JSON.stringify([newLog, ...existingLogs]));
-      showNotificationToast(`✨ Tarea ${issueKey} marcada como LISTO y registrada en tu Historial`);
-    } else {
-      showNotificationToast(`✨ Estado de ${issueKey} actualizado a "${newStatus}"`);
-    }
-
-    if (selectedIssueModal && selectedIssueModal.key_issue === issueKey) {
-      setSelectedIssueModal(prev => prev ? { ...prev, status_actual: newStatus } : null);
     }
   };
 
@@ -713,14 +721,24 @@ export default function DeveloperView({
                             {t.summary}
                           </td>
                           <td className="py-2.5 px-3">
-                            <span className={`px-2.5 py-0.5 text-[10px] font-extrabold rounded-lg ${t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' :
-                              t.status_actual === 'EN PROGRESO' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
-                                t.status_actual === 'EN REVISIÓN' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' :
-                                  t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
-                                    'bg-slate-800 text-slate-300'
-                              }`}>
-                              {t.status_actual}
-                            </span>
+                            <select
+                              value={t.status_actual || 'POR HACER'}
+                              onChange={(e) => handleUpdateTaskStatus(t.key_issue, e.target.value, t.story_points, t.summary)}
+                              className={`px-2 py-1 text-[10px] font-extrabold rounded-lg border focus:outline-none cursor-pointer ${
+                                t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
+                                t.status_actual === 'EN PROGRESO' || t.status_actual === 'IN_PROGRESS' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
+                                t.status_actual === 'EN REVISIÓN' || t.status_actual === 'IN_REVIEW' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
+                                t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' || t.status_actual === 'DONE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
+                                'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                              }`}
+                              title="Cambiar estado y sincronizar con Jira Cloud"
+                            >
+                              <option value="POR HACER">Por Hacer (To Do)</option>
+                              <option value="EN PROGRESO">En Progreso (In Progress)</option>
+                              <option value="EN REVISIÓN">En Revisión (In Review)</option>
+                              <option value="BLOQUEADA">Bloqueada</option>
+                              <option value="LISTO">Listo (Done) ✅</option>
+                            </select>
                           </td>
                           <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
                             {t.story_points} SP

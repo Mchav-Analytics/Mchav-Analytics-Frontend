@@ -159,6 +159,15 @@ export const projectService = {
     if (USE_MOCK_DATA) return mockProjectService.getKpiIssuesDetail ? mockProjectService.getKpiIssuesDetail(projectId, params) : Promise.resolve({ total_issues: 0, issues: [] });
     return api.get(`/api/v1/projects/${projectId}/kpis/issues-detail`, { params }).then(res => res.data);
   },
+  transitionIssue(issueKey, targetStatus, transitionId = null) {
+    return api.post(`/api/v1/jira/issues/${issueKey}/transition`, {
+      target_status: targetStatus,
+      transition_id: transitionId
+    }).then(res => res.data);
+  },
+  getIssueTransitions(issueKey) {
+    return api.get(`/api/v1/jira/issues/${issueKey}/transitions`).then(res => res.data);
+  },
   async getSprintHealth(projectId = 'PROJ-01', sprintId = null) {
     try {
       let url = `/api/v1/projects/${projectId}/health`;
