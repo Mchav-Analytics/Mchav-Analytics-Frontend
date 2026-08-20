@@ -206,6 +206,11 @@ function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, o
             <Activity size={24} />
           </div>
           <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-1.5 text-[13px] mb-2 font-medium">
+              <span className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline transition-all" onClick={onNavigateToMatrix}>Matriz de Rendimiento</span>
+              <span className="text-slate-400 dark:text-slate-500 mx-0.5">&gt;</span>
+              <span className="text-slate-900 dark:text-white font-bold">Salud del Sprint</span>
+            </div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                 Predictability Engine

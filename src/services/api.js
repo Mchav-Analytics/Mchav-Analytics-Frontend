@@ -123,6 +123,15 @@ export const jqlService = {
 };
 
 export const projectService = {
+
+  // Obtener data para el Burndown Chart
+  getProjectBurndown: async (projectId, sprintId = null) => {
+    let url = `/api/v1/projects/${projectId}/burndown`;
+    if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/burndown`;
+    const response = await api.get(url);
+    return response.data;
+  },
+
   getProjects() {
     if (USE_MOCK_DATA) return mockProjectService.getProjects();
     return api.get('/api/v1/projects').then(res => res.data);
