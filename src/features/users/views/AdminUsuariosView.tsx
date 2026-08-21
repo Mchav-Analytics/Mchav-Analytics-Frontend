@@ -171,16 +171,25 @@ export default function AdminUsuariosView({
     const fetchUsers = async () => {
       try {
         const res = await api.get('/api/v1/users');
-        const mappedUsers = res.data.map((u: any) => ({
-          id: String(u.id_usuario),
-          name: u.nombre || u.email || 'Usuario',
-          email: u.email || '',
-          role: u.rol ? (String(u.rol).toUpperCase().includes('ADMIN') ? 'ADMIN' : String(u.rol).toUpperCase().includes('MANAGER') ? 'MANAGER' : 'DEVELOPER') : 'DEVELOPER',
-          status: u.activo ? 'ACTIVE' : 'INACTIVE',
-          joinedDate: 'Reciente',
-          lastActive: 'Activo',
-          actions: []
-        }));
+        const mappedUsers = res.data.map((u: any) => {
+          const rawRolStr = String(u.rol || '').toUpperCase();
+          const parsedRole = rawRolStr.includes('ADMIN')
+            ? 'ADMIN'
+            : (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER'))
+              ? 'MANAGER'
+              : 'DEVELOPER';
+
+          return {
+            id: String(u.id_usuario),
+            name: u.nombre || u.email || 'Usuario',
+            email: u.email || '',
+            role: parsedRole,
+            status: u.activo ? 'ACTIVE' : 'INACTIVE',
+            joinedDate: 'Reciente',
+            lastActive: 'Activo',
+            actions: []
+          };
+        });
         setUsers(mappedUsers);
       } catch (e) {
         console.error("Error fetching real users", e);
@@ -194,8 +203,19 @@ export default function AdminUsuariosView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleRoleChange = (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+  const handleRoleChange = async (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
     const targetUser = users.find(u => u.id === userId);
+
+    setUsers(prev =>
+      prev.map(u => (u.id === userId ? { ...u, role: targetRole } : u))
+    );
+
+    try {
+      await api.put(`/api/v1/users/${userId}/role`, { role: targetRole });
+    } catch (err) {
+      console.log("Actualizando estado local de rol:", err);
+    }
+
     if (targetUser && typeof approveUserPermission === 'function') {
       approveUserPermission(targetUser.email, targetRole);
     }
@@ -210,14 +230,11 @@ export default function AdminUsuariosView({
       /* ignore storage errors */
     }
 
-    setUsers(prev =>
-      prev.map(u => (u.id === userId ? { ...u, role: targetRole } : u))
-    );
-
-    showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${targetRole}`);
+    const displayRoleName = targetRole === 'MANAGER' ? 'PLANIFICADOR' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : 'DESARROLLADOR';
+    showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${displayRoleName}`);
   };
 
-  const toggleUserStatus = (userId: string) => {
+  const toggleUserStatus = async (userId: string) => {
     const targetUser = users.find(u => u.id === userId);
     const newStatus = targetUser?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 
@@ -226,6 +243,12 @@ export default function AdminUsuariosView({
         u.id === userId ? { ...u, status: newStatus } : u
       )
     );
+
+    try {
+      await api.put(`/api/v1/users/${userId}/status`, { activo: newStatus === 'ACTIVE' });
+    } catch (err) {
+      console.log("Actualizando estado local de activación:", err);
+    }
 
     showToast(newStatus === 'ACTIVE'
       ? `🟢 Cuenta de ${targetUser?.name} activada exitosamente`
