@@ -173,9 +173,9 @@ export default function AdminUsuariosView({
         const res = await api.get('/api/v1/users');
         const mappedUsers = res.data.map((u: any) => ({
           id: String(u.id_usuario),
-          name: u.nombre,
-          email: u.email,
-          role: u.rol ? (u.rol.toUpperCase().includes('ADMIN') ? 'ADMIN' : u.rol.toUpperCase().includes('MANAGER') ? 'MANAGER' : 'DEVELOPER') : 'DEVELOPER',
+          name: u.nombre || u.email || 'Usuario',
+          email: u.email || '',
+          role: u.rol ? (String(u.rol).toUpperCase().includes('ADMIN') ? 'ADMIN' : String(u.rol).toUpperCase().includes('MANAGER') ? 'MANAGER' : 'DEVELOPER') : 'DEVELOPER',
           status: u.activo ? 'ACTIVE' : 'INACTIVE',
           joinedDate: 'Reciente',
           lastActive: 'Activo',
@@ -271,8 +271,10 @@ export default function AdminUsuariosView({
   const pendingRequests = users.filter(u => u.status === 'INACTIVE');
 
   const filteredUsers = users.filter(u => {
-    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const userName = (u.name || u.email || '').toLowerCase();
+    const userEmail = (u.email || '').toLowerCase();
+    const search = (searchTerm || '').toLowerCase();
+    const matchesSearch = userName.includes(search) || userEmail.includes(search);
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
     const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
