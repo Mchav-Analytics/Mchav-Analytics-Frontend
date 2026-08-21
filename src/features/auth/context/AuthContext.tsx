@@ -49,7 +49,7 @@ const defaultContextValue: AuthContextType = {
   loginWithJira: async () => {},
   logout: async () => {},
   checkAuthSession: async () => {},
-  approvedUsers: ['vhoyos@mchav.com'],
+  approvedUsers: ['salamancamai12@gmail.com', 'valentina1025m@gmail.com', 'corredorbeltran592@gmail.com', 'pipealcala22@gmail.com', 'stephanyleon326@gmail.com'],
   approveUserPermission: () => {},
   switchViewRole: () => {},
   isRealAdmin: true,
@@ -70,7 +70,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Lista global de usuarios aprobados por el Administrador (persistencia en localStorage)
   const [approvedUsers, setApprovedUsers] = useState<string[]>(() => {
     const saved = localStorage.getItem('mock_approved_users');
-    return saved ? JSON.parse(saved) : ['vhoyos@mchav.com'];
+    return saved ? JSON.parse(saved) : ['salamancamai12@gmail.com', 'valentina1025m@gmail.com', 'corredorbeltran592@gmail.com', 'pipealcala22@gmail.com', 'stephanyleon326@gmail.com'];
   });
 
   useEffect(() => {
@@ -232,10 +232,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const resetDemoState = () => {
     localStorage.removeItem('mock_approved_users');
     localStorage.removeItem('mock_user_roles_map');
-    setApprovedUsers(['vhoyos@mchav.com', 'cgomez@mchav.com', 'dev@mchav.com']);
+    setApprovedUsers(['salamancamai12@gmail.com', 'valentina1025m@gmail.com', 'corredorbeltran592@gmail.com', 'pipealcala22@gmail.com', 'stephanyleon326@gmail.com']);
   };
 
-  const isRealAdmin = !user || normalizeRole(user.original_rol || user.rol) === 'ADMIN' || user.email === 'vhoyos@mchav.com';
+  const isRealAdmin = !user || normalizeRole(user.original_rol || user.rol) === 'ADMIN' || user.email === 'salamancamai12@gmail.com' || user.email === 'valentina1025m@gmail.com';
 
   const switchViewRole = (newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
     setUser(prev => {
