@@ -510,15 +510,6 @@ function LoginView() {
                       </svg>
                       <span>Continuar con Atlassian (Jira)</span>
                     </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => { e.stopPropagation(); handleLocalDevLogin(); }}
-                      disabled={isSubmitting || authLoading}
-                      className="w-full h-11 xl:h-12 rounded-xl bg-slate-800/90 hover:bg-slate-700/90 border border-cyan-500/30 text-cyan-300 font-semibold text-xs xl:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-md hover:border-cyan-400/60"
-                    >
-                      <span>🔑 Ingresar con Sesión Local (.env)</span>
-                    </button>
                   </div>
 
                   <div className="text-xs xl:text-sm text-slate-400 hover:text-cyan-300 transition-colors pt-4 cursor-pointer">
