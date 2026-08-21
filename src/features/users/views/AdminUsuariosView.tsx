@@ -405,7 +405,7 @@ export default function AdminUsuariosView({
             </div>
           </div>
 
-          {/* TARJETA 2: LÍDER TÉCNICO */}
+          {/* TARJETA 2: PLANIFICADOR */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'MANAGER' ? 'ALL' : 'MANAGER')}
             className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
@@ -421,7 +421,7 @@ export default function AdminUsuariosView({
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Líder Técnico</h3>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Planificador</h3>
                   {roleFilter === 'MANAGER' && <CheckCircle2 size={16} className="text-blue-600 dark:text-blue-400" />}
                 </div>
                 <p className="text-xs text-blue-700 dark:text-blue-300/80 font-semibold">Gestión de Sprint & Equipo</p>
@@ -803,7 +803,7 @@ export default function AdminUsuariosView({
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-slate-100 font-semibold outline-none cursor-pointer"
                 >
                   <option value="DEVELOPER">DEVELOPER (Desarrollador)</option>
-                  <option value="MANAGER">MANAGER (Líder Técnico)</option>
+                  <option value="MANAGER">MANAGER (Planificador)</option>
                   <option value="ADMIN">ADMIN (Administrador)</option>
                 </select>
               </div>

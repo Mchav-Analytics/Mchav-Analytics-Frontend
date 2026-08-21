@@ -259,8 +259,8 @@ export default function AlertsCenterView({ selectedProjectId = 'PROJ-01', onNavi
   const isDev = rawRol.includes('DEV');
   const isManager = rawRol.includes('MANAGER') || rawRol.includes('LIDER') || rawRol.includes('LEAD');
 
-  const currentUserName = user?.nombre || (isDev ? 'Valka Hoyos' : isManager ? 'Carlos Pérez' : 'Líder Técnico Admin');
-  const roleBadgeLabel = isDev ? '💻 VISTA DESARROLLADOR' : isManager ? '👨‍💻 VISTA LÍDER TÉCNICO' : '🛡️ VISTA ADMINISTRADOR';
+  const currentUserName = user?.nombre || (isDev ? 'Valka Hoyos' : isManager ? 'Carlos Pérez' : 'Planificador Admin');
+  const roleBadgeLabel = isDev ? '💻 VISTA DESARROLLADOR' : isManager ? '👨‍💻 VISTA PLANIFICADOR' : '🛡️ VISTA ADMINISTRADOR';
 
   // Carga de Feed Inicial según Rol
   const initialFeed = isDev ? INITIAL_DEV_FEED : isManager ? INITIAL_MANAGER_FEED : INITIAL_ADMIN_FEED;
@@ -730,14 +730,14 @@ export default function AlertsCenterView({ selectedProjectId = 'PROJ-01', onNavi
                             className="bg-white dark:bg-[#141738] text-xs font-bold text-slate-900 dark:text-white px-3 py-1.5 rounded-lg border border-slate-300 dark:border-[#33376b] outline-none shadow-xs cursor-pointer"
                           >
                             <option value="DEVELOPER">Desarrollador (Developer)</option>
-                            <option value="MANAGER">Líder Técnico (Tech Lead / Manager)</option>
+                            <option value="MANAGER">Planificador (Manager)</option>
                             <option value="ADMIN">Administrador (System Admin)</option>
                           </select>
 
                           <button
                             type="button"
                             onClick={() => {
-                              showNotificationToast(`✨ ¡Rol "${selectedRoleForCard === 'ADMIN' ? 'Administrador' : selectedRoleForCard === 'MANAGER' ? 'Líder Técnico' : 'Desarrollador'}" asignado correctamente!`);
+                              showNotificationToast(`✨ ¡Rol "${selectedRoleForCard === 'ADMIN' ? 'Administrador' : selectedRoleForCard === 'MANAGER' ? 'Planificador' : 'Desarrollador'}" asignado correctamente!`);
                             }}
                             className="px-4 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-md transition-all cursor-pointer flex items-center gap-1"
                           >

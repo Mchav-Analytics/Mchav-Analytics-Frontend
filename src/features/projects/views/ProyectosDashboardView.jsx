@@ -77,14 +77,14 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
   );
 };
 
-// Líderes Técnicos disponibles para asignación
+// Planificadores disponibles para asignación
 const AVAILABLE_LEADERS = [
   {
     id: 'usr-2',
     name: 'Andrés Felipe Torres',
     email: 'andres.torres@mchav.com',
     avatar: 'A',
-    role: 'Líder Técnico',
+    role: 'Planificador',
     experience: 'Senior Tech Lead'
   },
   {
@@ -803,12 +803,12 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   </section>
                 </div>
 
-                {/* Contenedor: Líder técnico */}
+                {/* Contenedor: Planificador */}
                 <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50" style={{ padding: '1.15rem 1.25rem' }}>
                   <div className="flex items-center justify-between gap-2" style={{ marginBottom: 14 }}>
                     <div className="flex items-center gap-2">
                       <ShieldCheck size={15} className="text-violet-500" />
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Líder técnico responsable</h4>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Planificador responsable</h4>
                     </div>
                     <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300 bg-violet-100 dark:bg-violet-500/15 px-2 py-0.5 rounded-md">
                       {formLeaderId ? '1 seleccionado' : 'Sin seleccionar'}
@@ -824,7 +824,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                       }`}
                   >
                     <p className={`text-sm font-semibold truncate ${formLeaderId ? 'text-slate-900 dark:text-slate-50' : 'text-slate-600 dark:text-slate-300'}`}>
-                      {formLeaderId && selectedLeader ? selectedLeader.name : 'Seleccionar líder técnico'}
+                      {formLeaderId && selectedLeader ? selectedLeader.name : 'Seleccionar planificador'}
                     </p>
                     {leaderOpen ? <ChevronUp size={18} className="text-violet-500 shrink-0" /> : <ChevronDown size={18} className="text-slate-400 shrink-0" />}
                   </button>
@@ -836,7 +836,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                         <input
                           type="text"
                           autoFocus
-                          placeholder="Buscar líder..."
+                          placeholder="Buscar planificador..."
                           value={leaderSearch}
                           onChange={e => setLeaderSearch(e.target.value)}
                           className="w-full bg-transparent border-0 outline-none text-sm font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
@@ -994,7 +994,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" style={{ padding: '0.85rem' }}>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-violet-600 dark:text-violet-300 mb-2">Líder técnico</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-violet-600 dark:text-violet-300 mb-2">Planificador</p>
                   {selectedLeader ? (
                     <>
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-50">{selectedLeader.name}</p>
@@ -1116,7 +1116,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       {showConfirmModal && pendingAssignment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-black text-slate-900 dark:text-slate-50">Confirmar líder técnico</h3>
+            <h3 className="text-lg font-black text-slate-900 dark:text-slate-50">Confirmar planificador</h3>
             <p className="text-sm text-slate-500">
               ¿Confirmas la asignación del proyecto <strong>{pendingAssignment.project.name}</strong>?
             </p>

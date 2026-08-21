@@ -129,7 +129,7 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
                       onClick={() => handleAlertAction(alert.issue_id || "101", "request_help")}
                       className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-rose-500 to-red-600 px-4 py-2 text-xs font-bold text-white transition-all duration-300 hover:from-rose-600 hover:to-red-700 cursor-pointer shadow-md shadow-rose-500/20 disabled:opacity-50"
                     >
-                      <HelpCircle size={16} /> Pedir Ayuda al Líder
+                      <HelpCircle size={16} /> Pedir Ayuda al Planificador
                     </button>
                     <button 
                       disabled={executingAction}
