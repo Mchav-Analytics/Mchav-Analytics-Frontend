@@ -586,9 +586,9 @@ export default function AdminUsuariosView({
                         : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
                       }`}
                   >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="MANAGER">MANAGER</option>
-                    <option value="DEVELOPER">DEVELOPER</option>
+                    <option value="ADMIN">ADMINISTRADOR</option>
+                    <option value="MANAGER">PLANIFICADOR</option>
+                    <option value="DEVELOPER">DESARROLLADOR</option>
                   </select>
                 </div>
 
@@ -802,9 +802,9 @@ export default function AdminUsuariosView({
                   onChange={e => setNewRole(e.target.value as 'ADMIN' | 'MANAGER' | 'DEVELOPER')}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-slate-100 font-semibold outline-none cursor-pointer"
                 >
-                  <option value="DEVELOPER">DEVELOPER (Desarrollador)</option>
-                  <option value="MANAGER">MANAGER (Planificador)</option>
-                  <option value="ADMIN">ADMIN (Administrador)</option>
+                  <option value="DEVELOPER">DESARROLLADOR (Developer)</option>
+                  <option value="MANAGER">PLANIFICADOR (Manager)</option>
+                  <option value="ADMIN">ADMINISTRADOR (Admin)</option>
                 </select>
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
