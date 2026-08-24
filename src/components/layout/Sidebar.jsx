@@ -136,7 +136,6 @@ function Sidebar({
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-        { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
       ];
     }
