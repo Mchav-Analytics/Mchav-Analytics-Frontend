@@ -119,6 +119,12 @@ function MainAppContent() {
         const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
         setActiveTab(nextTab);
       }
+    } else {
+      // Si es ADMIN o MANAGER y está en una vista exclusiva de DEVELOPER, enviarlo a dashboard
+      const exclusiveDevTabs = ['developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history'];
+      if (exclusiveDevTabs.includes(activeTab)) {
+        setActiveTab('dashboard');
+      }
     }
   }, [user?.rol]);
 

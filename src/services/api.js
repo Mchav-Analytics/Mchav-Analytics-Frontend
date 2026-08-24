@@ -209,7 +209,7 @@ export const projectService = {
       };
     }
   },
-  getPercentiles(projectId) {
+  getPercentiles(projectId, days = 15) {
     if (USE_MOCK_DATA) {
       return Promise.resolve([
         {
@@ -235,7 +235,7 @@ export const projectService = {
         }
       ]);
     }
-    return api.get(`/api/v1/projects/${projectId}/percentiles`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/percentiles?days=${days}`).then(res => res.data);
   }
 };
 

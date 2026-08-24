@@ -291,6 +291,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [activeProjectTab, setActiveProjectTab] = useState('RESUMEN');
   const [percentilesData, setPercentilesData] = useState(null);
   const [loadingPercentiles, setLoadingPercentiles] = useState(false);
+  const [percentilesWindow, setPercentilesWindow] = useState(15);
 
   const [availableLeaders, setAvailableLeaders] = useState(AVAILABLE_LEADERS);
   const [availableDevelopers, setAvailableDevelopers] = useState(AVAILABLE_DEVELOPERS);
@@ -467,12 +468,23 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
       // HU-014: Cargar datos de percentiles en paralelo
       setLoadingPercentiles(true);
-      projectService.getPercentiles(projectId)
+      projectService.getPercentiles(projectId, percentilesWindow)
         .then(data => setPercentilesData(data))
         .catch(err => console.error("Error al cargar percentiles", err))
         .finally(() => setLoadingPercentiles(false));
     }
   };
+
+  // Re-fetch percentiles if the window changes and the tab is open
+  useEffect(() => {
+    if (expandedProjectId && activeProjectTab === 'TIEMPOS') {
+      setLoadingPercentiles(true);
+      projectService.getPercentiles(expandedProjectId, percentilesWindow)
+        .then(data => setPercentilesData(data))
+        .catch(err => console.error("Error al cargar percentiles", err))
+        .finally(() => setLoadingPercentiles(false));
+    }
+  }, [percentilesWindow]);
 
   const resetAssignFormUi = () => {
     setLeaderOpen(false);
@@ -1878,12 +1890,31 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </>
           ) : (
             /* Pestaña de Análisis de Tiempos (Percentiles) HU-014 */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
-              {loadingPercentiles ? (
-                <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500 animate-pulse">
-                  Calculando percentiles y agregando datos de los últimos 15 días...
+            <div className="space-y-4">
+              <div className="flex justify-between items-center bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm animate-in fade-in">
+                <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Métricas de Flujo (Lead Time y Cycle Time)
                 </div>
-              ) : percentilesData && percentilesData.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium">Periodo evaluado:</span>
+                  <select
+                    className="bg-slate-100 dark:bg-slate-900 border-none text-xs font-bold text-slate-700 dark:text-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                    value={percentilesWindow}
+                    onChange={(e) => setPercentilesWindow(Number(e.target.value))}
+                  >
+                    <option value={15}>Últimos 15 días</option>
+                    <option value={30}>Últimos 30 días</option>
+                    <option value={60}>Últimos 60 días</option>
+                    <option value={90}>Últimos 90 días</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
+                {loadingPercentiles ? (
+                  <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500 animate-pulse">
+                    Calculando percentiles y agregando datos de los últimos {percentilesWindow} días...
+                  </div>
+                ) : percentilesData && percentilesData.length > 0 ? (
                 percentilesData.map((data, idx) => {
                   const colors = ['indigo', 'emerald', 'rose', 'sky', 'amber'];
                   return (
@@ -1898,9 +1929,10 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 })
               ) : (
                 <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500">
-                  No se encontraron datos de tareas resueltas en este proyecto en los últimos 15 días.
+                  No se encontraron datos de tareas resueltas en este proyecto en los últimos {percentilesWindow} días.
                 </div>
               )}
+              </div>
             </div>
           )}
         </section>
