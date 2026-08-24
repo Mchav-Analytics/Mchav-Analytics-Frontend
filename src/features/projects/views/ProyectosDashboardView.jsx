@@ -77,6 +77,7 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
       </div>
     </div>
   );
+};
 
 function isAdminRole(rol) {
   if (!rol) return true;
