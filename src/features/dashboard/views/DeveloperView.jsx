@@ -2,7 +2,7 @@
 // VISTA DEL DESARROLLADOR — MI TRABAJO (WORKSPACE PERSONAL DE TRABAJO)
 // ============================================================================
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Clock,
   CheckCircle,
@@ -32,8 +32,9 @@ import {
 import { ResponsiveContainer, AreaChart, Area, PieChart, Pie, Cell, BarChart, Bar, Tooltip as RechartsTooltip } from 'recharts';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { developerService, jiraService, jqlService, projectService } from '../../../services/api';
-import owlMascotImg from '../../../assets/owl_mascot.png';
+
 import LiderNotificationBell from '../components/LiderNotificationBell';
+import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
 
 const tooltipStyle = {
   backgroundColor: '#0f172a',
@@ -51,7 +52,7 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
         "left-1/2 -translate-x-1/2 md:left-0 md:translate-x-0";
 
   return (
-    <div className="group/tooltip relative inline-flex items-center cursor-help ml-1.5 shrink-0 z-[100]" title={text}>
+    <div className="group/tooltip relative inline-flex items-center cursor-help ml-1.5 shrink-0 z-[100]">
       <div className="p-1 rounded-full text-slate-400 hover:text-indigo-300 hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30">
         <Info size={14} className="shrink-0" />
       </div>
@@ -81,20 +82,12 @@ const SparklineMini = ({ color = "#00f5d4" }) => {
   );
 };
 
-// Dataset de Incidencias Asignadas al Desarrollador
-const DEFAULT_ASSIGNED_ISSUES = [
-  { key_issue: 'MCHAV-105', summary: 'Corregir bug en API de pagos y transacciones', status_actual: 'BLOQUEADA', story_points: 5, cycle_time_days: 2.5, tipo: 'Bug', prioridad: 'Crítica', fecha_creacion: '2026-08-03', fecha_actualizacion: '2026-08-11', descripcion: 'Desbordamiento de memoria y tiempos de respuesta elevados en endpoints de sincronización.' },
-  { key_issue: 'MCHAV-128', summary: 'Implementación módulo SSO y OAuth 2.0', status_actual: 'EN PROGRESO', story_points: 8, cycle_time_days: 3.2, tipo: 'Historia de Usuario', prioridad: 'Alta', fecha_creacion: '2026-08-01', fecha_actualizacion: '2026-08-12', descripcion: 'Integración del protocolo OAuth 2.0 y Single Sign-On para Jira API.' },
-  { key_issue: 'MCHAV-101', summary: 'Refactorizar consultas SQL en reportes de velocidad', status_actual: 'EN REVISIÓN', story_points: 8, cycle_time_days: 4.1, tipo: 'Tarea / Deuda Técnica', prioridad: 'Alta', fecha_creacion: '2026-08-05', fecha_actualizacion: '2026-08-12', descripcion: 'Optimización de índices y reescritura de queries pesadas en Postgres.' },
-  { key_issue: 'MCHAV-114', summary: 'Actualizar dependencias de seguridad y Docker', status_actual: 'PENDIENTE', story_points: 8, cycle_time_days: 0, tipo: 'Tarea / Deuda Técnica', prioridad: 'Alta', fecha_creacion: '2026-08-09', fecha_actualizacion: '2026-08-11', descripcion: 'Escaneo de vulnerabilidades Trivy y actualización de imágenes Python.' },
-  { key_issue: 'MCHAV-112', summary: 'Rediseñar vista de desarrollador con Recharts', status_actual: 'EN REVISIÓN', story_points: 13, cycle_time_days: 3.2, tipo: 'Historia de Usuario', prioridad: 'Media', fecha_creacion: '2026-08-05', fecha_actualizacion: '2026-08-12', descripcion: 'Componentización modular con Recharts y micro-interacciones.' },
-  { key_issue: 'MCHAV-120', summary: 'Pruebas de integración para Service Gateway X', status_actual: 'COMPLETADA', story_points: 8, cycle_time_days: 2.9, tipo: 'Tarea / Deuda Técnica', prioridad: 'Baja', fecha_creacion: '2026-08-09', fecha_actualizacion: '2026-08-12', descripcion: 'Suite automatizada E2E con PyTest y FastAPI TestClient.' },
-  { key_issue: 'MCHAV-124', summary: 'Refactorizar hooks personalizados en Frontend', status_actual: 'EN PROGRESO', story_points: 5, cycle_time_days: 1.8, tipo: 'Tarea / Deuda Técnica', prioridad: 'Media', fecha_creacion: '2026-08-10', fecha_actualizacion: '2026-08-12', descripcion: 'Desacoplamiento de lógica de renderizado en React.' }
-];
-
 export default function DeveloperView({
   kpis = [],
+  projects = [],
   selectedProjectId = 'PROJ-01',
+  setSelectedProjectId,
+  syncSuccessMsg,
   alerts = [],
   onNavigateToAlerts,
   onNavigateTab
@@ -106,6 +99,7 @@ export default function DeveloperView({
   const [cleanDeliveries, setCleanDeliveries] = useState(100);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [taskFilter, setTaskFilter] = useState('ALL'); // 'ALL' | 'IN_PROGRESS' | 'PENDING' | 'BLOCKED' | 'COMPLETED'
+  const [typeFilter, setTypeFilter] = useState('ALL'); // 'ALL' | 'Historia' | 'Bug' | 'Tarea'
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 5;
 
@@ -120,69 +114,17 @@ export default function DeveloperView({
   // Centro de Alertas y Ayuda
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
   const [alertsTab, setAlertsTab] = useState('request_form'); // 'request_form' | 'sent_requests' | 'alerts'
-  const [helpIssueKey, setHelpIssueKey] = useState('MCHAV-105');
+  const [helpIssueKey, setHelpIssueKey] = useState('');
   const [helpType, setHelpType] = useState('Bloqueo Técnico');
   const [helpUrgency, setHelpUrgency] = useState('Alta');
   const [helpMessage, setHelpMessage] = useState('');
-  const [submittedHelpRequests, setSubmittedHelpRequests] = useState([
-    {
-      id: 'SOL-801',
-      issueKey: 'MCHAV-105',
-      type: 'Bloqueo Técnico',
-      urgency: 'Alta',
-      message: 'Requiero apoyo en la configuración del servicio de pagos para QA.',
-      status: 'EN REVISIÓN LÍDER',
-      date: '2026-08-12 11:30'
-    }
-  ]);
+  const [submittedHelpRequests, setSubmittedHelpRequests] = useState([]);
   const [showHelpSuccessToast, setShowHelpSuccessToast] = useState(false);
 
   // Elementos "Requiere mi atención"
-  const [attentionItems, setAttentionItems] = useState([
-    {
-      id: 'att-1',
-      type: 'BLOCK',
-      priority: 'HIGH',
-      key_issue: 'MCHAV-105',
-      title: '🐞 Bug crítico bloqueado',
-      detail: 'Bloqueada desde hace 2 días por fallo de memoria en QA.',
-      time: 'Hace 2d',
-      actionText: 'Ver bug'
-    },
-    {
-      id: 'att-2',
-      type: 'REQUEST',
-      priority: 'MEDIUM',
-      key_issue: 'MCHAV-128',
-      title: '💬 Solicitud del equipo',
-      detail: 'Carlos Pérez solicita actualización sobre la entrega SSO OAuth 2.0.',
-      time: 'Hace 15m',
-      actionText: 'Responder',
-      message: '¿Podrían confirmar si la entrega del módulo SSO se mantiene para el viernes?'
-    },
-    {
-      id: 'att-3',
-      type: 'REVIEW',
-      priority: 'MEDIUM',
-      key_issue: 'MCHAV-101',
-      title: '🟡 Revisión pendiente',
-      detail: 'Esperando aprobación de Pull Request #42 por el Líder Técnico.',
-      time: 'Hace 4h',
-      actionText: 'Ver tarea'
-    },
-    {
-      id: 'att-4',
-      type: 'ALERT',
-      priority: 'HIGH',
-      key_issue: 'MCHAV-104',
-      title: '⚠️ Alerta de inactividad (>48h)',
-      detail: 'Más de 48 horas sin registro de commits en la rama activa.',
-      time: 'Hace 1d',
-      actionText: 'Revisar'
-    }
-  ]);
+  const [attentionItems, setAttentionItems] = useState([]);
 
-  const devName = user?.nombre || 'Valka Hoyos';
+  const devName = user?.nombre || 'Desarrollador';
 
   const loadScorecard = async () => {
     try {
@@ -210,16 +152,24 @@ export default function DeveloperView({
         const dbRes = await projectService.getKpiIssuesDetail(projectId, { assignee_email: userEmail, assignee_name: userName, limit: 50 });
         
         if (dbRes && dbRes.issues && dbRes.issues.length > 0) {
-          const realIssues = dbRes.issues.map(issue => ({
+          const realIssues = dbRes.issues.map(issue => {
+            let st = issue.status_actual?.toUpperCase() || 'PENDIENTE';
+            if (['FINALIZADO', 'DONE', 'COMPLETADA', 'LISTO'].includes(st)) st = 'LISTO';
+            else if (['IN PROGRESS', 'EN CURSO', 'EN PROGRESO'].includes(st)) st = 'EN PROGRESO';
+            else if (['TO DO', 'POR HACER', 'PENDIENTE', 'BACKLOG'].includes(st)) st = 'PENDIENTE';
+
+            return {
              key_issue: issue.key_issue,
              summary: issue.summary,
-             status_actual: issue.status_actual || 'PENDIENTE',
+             status_actual: st,
              story_points: issue.story_points || 0,
              cycle_time_days: issue.cycle_time_days || 0,
              tipo: issue.issue_type || 'Tarea',
              prioridad: issue.priority || 'Media',
+             epic_name: issue.epic_name,
              fecha_creacion: issue.created_at
-          }));
+            };
+          });
           data.assigned_issues = realIssues;
         } else {
           // Si no hay incidencias reales para este usuario
@@ -236,11 +186,32 @@ export default function DeveloperView({
   };
 
   useEffect(() => {
-    loadScorecard();
+    const initData = async () => {
+      try {
+        await jiraService.triggerSync();
+      } catch (e) {
+        // Ignorar si ya está corriendo o falla
+      }
+      loadScorecard();
+    };
+    initData();
+
+    const timer = setInterval(() => {
+      loadScorecard();
+    }, 15000); // 15 seconds polling
+    return () => clearInterval(timer);
   }, [selectedProjectId, user?.email]);
 
   const handleReloadData = async () => {
     setIsRefreshing(true);
+    try {
+      setToastMsg('Sincronizando tareas con Jira...');
+      await jiraService.triggerSync();
+    } catch (e) {
+      console.warn('Sync ya está en proceso o falló', e);
+    } finally {
+      setTimeout(() => setToastMsg(''), 3000);
+    }
     await loadScorecard();
     setTimeout(() => setIsRefreshing(false), 500);
   };
@@ -248,15 +219,28 @@ export default function DeveloperView({
   // CAMBIO DE ESTADO EN TIEMPO REAL CON JIRA CLOUD & REGISTRO EN EL HISTORIAL
   const handleUpdateTaskStatus = async (issueKey, newStatus, storyPoints = 5, summary = '') => {
     // 1. Actualización optimista local
-    setAssignedIssuesList(prev => prev.map(t => {
-      if (t.key_issue === issueKey) {
-        return { ...t, status_actual: newStatus };
-      }
-      return t;
-    }));
+    setScorecard(prev => {
+      if (!prev) return prev;
+      const issues = prev.assigned_issues || [];
+      return {
+        ...prev,
+        assigned_issues: issues.map(t => {
+          if (t.key_issue === issueKey) {
+            return { ...t, status_actual: newStatus };
+          }
+          return t;
+        })
+      };
+    });
 
     if (selectedIssueModal && selectedIssueModal.key_issue === issueKey) {
       setSelectedIssueModal(prev => prev ? { ...prev, status_actual: newStatus } : null);
+    }
+
+    try {
+      await developerService.updateTaskStatus(issueKey, newStatus);
+    } catch (err) {
+      console.warn("Aviso al sincronizar transición:", err);
     }
 
     try {
@@ -283,9 +267,7 @@ export default function DeveloperView({
     }
   };
 
-  const handlePrintPDF = () => {
-    window.print();
-  };
+
 
   // Abrir modal de respuesta rápida
   const handleOpenReply = (item) => {
@@ -348,17 +330,52 @@ export default function DeveloperView({
 
   const filteredTasks = assignedIssuesList.filter(issue => {
     const status = (issue.status_actual || '').toUpperCase();
-    if (taskFilter === 'IN_PROGRESS') return status.includes('PROGRESO');
-    if (taskFilter === 'PENDING') return status.includes('PENDIENTE');
-    if (taskFilter === 'BLOCKED') return status.includes('BLOQUEADA');
-    if (taskFilter === 'COMPLETED') return status.includes('COMPLETADA') || status.includes('LISTO');
-    return true;
+    const type = (issue.tipo || '').toUpperCase();
+    
+    let statusMatch = true;
+    if (taskFilter === 'IN_PROGRESS') statusMatch = status.includes('PROGRESO');
+    else if (taskFilter === 'PENDING') statusMatch = status.includes('PENDIENTE') || status.includes('TO DO');
+    else if (taskFilter === 'BLOCKED') statusMatch = status.includes('BLOQUEADA');
+    else if (taskFilter === 'COMPLETED') statusMatch = status.includes('COMPLETADA') || status.includes('LISTO') || status.includes('DONE');
+    
+    let typeMatch = true;
+    if (typeFilter === 'Historia') typeMatch = type.includes('HISTORIA') || type.includes('STORY');
+    else if (typeFilter === 'Bug') typeMatch = type.includes('BUG');
+    else if (typeFilter === 'Tarea') typeMatch = type.includes('TAREA') || type.includes('TASK');
+    
+    return statusMatch && typeMatch;
   });
 
-  const historiasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Historia')).length || 3;
-  const bugsCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Bug')).length || 2;
-  const tareasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Tarea')).length || 2;
-  const totalCount = assignedIssuesList.length || 7;
+  const historiasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Historia')).length;
+  const bugsCount = assignedIssuesList.filter(i => (i.tipo || '').toLowerCase().includes('bug')).length;
+  const tareasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Tarea') || (i.tipo || '').includes('Deuda')).length;
+  const totalCount = assignedIssuesList.length;
+
+  // Generate dynamic notifications for recent assigned tasks
+  const dynamicNotifications = assignedIssuesList
+    .slice()
+    .sort((a, b) => new Date(b.fecha_creacion || 0) - new Date(a.fecha_creacion || 0))
+    .slice(0, 4)
+    .map(t => {
+      let timeStr = 'Reciente';
+      if (t.fecha_creacion) {
+        const diffMs = new Date() - new Date(t.fecha_creacion);
+        const diffMins = Math.floor(diffMs / 60000);
+        if (diffMins < 60) timeStr = `Hace ${diffMins} min`;
+        else if (diffMins < 1440) timeStr = `Hace ${Math.floor(diffMins / 60)} horas`;
+        else timeStr = `Hace ${Math.floor(diffMins / 1440)} días`;
+      }
+      return {
+        id: `dyn-task-${t.key_issue}`,
+        type: 'TASK_ASSIGNED',
+        title: 'Nueva Tarea Asignada',
+        description: `Te han asignado la incidencia ${t.key_issue}: ${t.summary}`,
+        tagline: `Asignado por el equipo.`,
+        time: timeStr,
+        isRead: false,
+        issueKey: t.key_issue
+      };
+    });
 
   const donutData = [
     { name: 'Historias de Usuario', count: historiasCount, pct: Math.round((historiasCount / totalCount) * 100), color: '#8b5cf6', icon: User },
@@ -376,6 +393,7 @@ export default function DeveloperView({
           <span>{toastMsg}</span>
         </div>
       )}
+
 
       {/* 1. ENCABEZADO CONSOLE DE TRABAJO INDIVIDUAL (ESTILO DESIGN SYSTEM) */}
       <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -400,17 +418,28 @@ export default function DeveloperView({
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 shrink-0">
-          {/* CAMPANITA DE NOTIFICACIONES CON PREVIA EMERGENTE & ENLACE AL CENTRO DE ACTIVIDAD */}
-          <LiderNotificationBell onNavigateTab={onNavigateTab} />
+        <div className="flex items-center gap-4 shrink-0">
+          {/* ENCABEZADO DE CONTEXTO DE PROYECTO ACTIVO INTEGRADO */}
+          <div className="pr-4 border-r border-slate-200 dark:border-slate-700/50">
+            <DeveloperProjectHeader 
+              projects={projects}
+              selectedProjectId={selectedProjectId}
+              setSelectedProjectId={setSelectedProjectId}
+              syncSuccessMsg={syncSuccessMsg}
+              isGlobalView={true}
+            />
+          </div>
 
-          <button
-            onClick={handlePrintPDF}
-            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
-          >
-            <Printer size={15} />
-            <span>Exportar PDF</span>
-          </button>
+          {/* CAMPANITA DE NOTIFICACIONES CON PREVIA EMERGENTE & ENLACE AL CENTRO DE ACTIVIDAD */}
+          <LiderNotificationBell 
+            onNavigateTab={onNavigateTab} 
+            dynamicNotifications={dynamicNotifications} 
+            onOpenTask={(issueKey) => {
+              if (onNavigateTab) {
+                onNavigateTab('dev_workload');
+              }
+            }}
+          />
 
           <button
             onClick={handleReloadData}
@@ -434,14 +463,14 @@ export default function DeveloperView({
               </div>
               <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">CYCLE TIME</h3>
             </div>
-            <MetricInfoTooltip text="Tu tiempo promedio en resolver incidencias desglosado individualmente." />
+            <MetricInfoTooltip align="left" text="Tu tiempo promedio en resolver incidencias desglosado individualmente." />
           </div>
 
           <div className="flex items-baseline justify-between mt-2">
             <div>
-              <span className="text-3xl font-black text-emerald-500 tracking-tight">3.2</span>
+              <span className="text-3xl font-black text-emerald-500 tracking-tight">{scorecard?.cycle_time_personal ?? '3.2'}</span>
               <span className="text-xs font-bold text-emerald-500 ml-1">días</span>
-              <p className="text-[11px] text-slate-400 font-semibold mt-0.5">↓ 0.3d vs sprint previo</p>
+              <p className="text-[11px] text-slate-400 font-semibold mt-0.5">{scorecard?.cycle_time_prev && scorecard?.cycle_time_personal ? (scorecard.cycle_time_personal <= scorecard.cycle_time_prev ? '↓' : '↑') + ' ' + Math.abs(scorecard.cycle_time_personal - scorecard.cycle_time_prev).toFixed(1) + 'd vs sprint previo' : '↓ 0.3d vs sprint previo'}</p>
             </div>
             <SparklineMini color="#00f5d4" />
           </div>
@@ -462,15 +491,15 @@ export default function DeveloperView({
           <div className="mt-2 space-y-1.5">
             <div className="flex items-baseline justify-between">
               <div>
-                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">7</span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{scorecard?.wip_tickets ?? 7}</span>
                 <span className="text-xs font-bold text-purple-400 ml-1">tickets activos</span>
               </div>
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">
-                70% de capacidad
+                {scorecard?.wip_max ? Math.round(((scorecard.wip_tickets ?? 0) / scorecard.wip_max) * 100) : 70}% de capacidad
               </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-900 h-2 rounded-full overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full w-[70%]"></div>
+              <div className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full" style={{ width: `${scorecard?.wip_max ? Math.min(Math.round(((scorecard.wip_tickets ?? 0) / scorecard.wip_max) * 100), 100) : 70}%` }}></div>
             </div>
           </div>
         </div>
@@ -484,14 +513,14 @@ export default function DeveloperView({
               </div>
               <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">THROUGHPUT</h3>
             </div>
-            <MetricInfoTooltip text="Total de entregas e historias completadas por ti en este sprint." />
+            <MetricInfoTooltip align="right" text="Total de entregas e historias completadas por ti en este sprint." />
           </div>
 
           <div className="flex items-baseline justify-between mt-2">
             <div>
-              <span className="text-3xl font-black text-cyan-400 tracking-tight">14</span>
+              <span className="text-3xl font-black text-cyan-400 tracking-tight">{scorecard?.throughput_tickets ?? 14}</span>
               <span className="text-xs font-bold text-cyan-400 ml-1">tickets</span>
-              <p className="text-[11px] text-slate-400 font-semibold mt-0.5">Promedio: 2.3/día</p>
+              <p className="text-[11px] text-slate-400 font-semibold mt-0.5">Promedio: {scorecard?.throughput_avg_daily ?? '2.3'}/día</p>
             </div>
             <div className="w-16 h-7">
               <ResponsiveContainer width="100%" height="100%">
@@ -512,78 +541,29 @@ export default function DeveloperView({
               </div>
               <h3 className="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider">STORY POINTS</h3>
             </div>
-            <MetricInfoTooltip text="Puntos de historia completados versus tu meta del sprint." />
+            <MetricInfoTooltip align="right" text="Puntos de historia completados versus tu meta del sprint." />
           </div>
 
           <div className="mt-2 space-y-1.5">
             <div className="flex items-baseline justify-between">
               <div>
-                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">65</span>
+                <span className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">{scorecard?.story_points_burned ?? 65}</span>
                 <span className="text-xs font-bold text-pink-400 ml-1">SP</span>
               </div>
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-300 border border-pink-500/30">
-                81% de la meta
+                {scorecard?.story_points_target > 0 ? `${scorecard?.story_points_achieved_pct ?? 0}% de la meta` : 'Sin meta de sprint'}
               </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-900 h-2 rounded-full overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 h-full w-[81%]"></div>
+              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 h-full" style={{ width: scorecard?.story_points_target > 0 ? `${Math.min(scorecard?.story_points_achieved_pct ?? 0, 100)}%` : (scorecard?.story_points_burned > 0 ? '100%' : '0%') }}></div>
             </div>
           </div>
         </div>
 
       </div>
 
-
-
-
-
-      {/* 3. NUBI IA (MASCOTA BÚHO Y BOCADILLO DE DIÁLOGO NATIVO EN MI TRABAJO) */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 px-1 py-1">
-        {/* MASCOTA BÚHO */}
-        <div className="relative shrink-0 flex flex-col items-center group/mascot">
-          <img
-            src={owlMascotImg}
-            alt="Mascota Búho NubI IA"
-            className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl transition-transform duration-300 group-hover/mascot:scale-105"
-          />
-          <span className="mt-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs">
-            🦉 NubI IA
-          </span>
-        </div>
-
-        {/* BOCADILLO DE DIÁLOGO MODO CLARO & OSCURO */}
-        <div className="relative flex-1 rounded-3xl bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-white dark:from-[#191c3d] dark:via-[#241e54] dark:to-[#191c3d] p-6 shadow-sm dark:shadow-2xl border border-indigo-200/80 dark:border-indigo-500/30 space-y-4 group transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-400/50">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-5 dark:opacity-20 blur-md transition-opacity duration-300 group-hover:opacity-15 pointer-events-none"></div>
-
-          {/* Flecha del bocadillo hacia la mascota (izquierda) */}
-          <div className="hidden sm:block absolute top-1/2 -left-3 -translate-y-1/2 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-r-[14px] border-r-indigo-50/90 dark:border-r-[#191c3d]"></div>
-
-          <div className="relative z-10 space-y-3.5 text-left">
-            <div className="flex items-center gap-3 text-indigo-700 dark:text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
-              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
-                <Sparkles size={16} />
-              </div>
-              <span>Asistente Inteligente — NubI IA</span>
-            </div>
-
-            <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
-              💡 <strong>Diagnóstico del Sprint:</strong> <em>"{aiCoachTip || 'Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado respecto al sprint anterior. Te recomendamos resolver primero los bugs pendientes en QA antes de iniciar nuevos desarrollos.'}"</em>
-            </p>
-
-            <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-3 border-t border-indigo-200/60 dark:border-slate-700/60">
-              <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
-                <TrendingUp size={16} /> Ritmo: {efficiencyGain >= 0 ? `+${efficiencyGain}%` : `${efficiencyGain}%`} Eficiencia
-              </span>
-              <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold">
-                <ShieldCheck size={16} /> Calidad: {cleanDeliveries}% Entregas Limpias
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. SECCIÓN GRID SIDE-BY-SIDE EQUILIBRADA: DISTRIBUCIÓN DE MI TRABAJO & MIS TAREAS ASIGNADAS CON PAGINACIÓN */}
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6">
+      {/* 3. SECCIÓN GRID SIDE-BY-SIDE EQUILIBRADA: DISTRIBUCIÓN DE MI TRABAJO & MIS TAREAS ASIGNADAS CON PAGINACIÓN */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1">
 
         {/* TARJETA IZQUIERDA (5 COLUMNAS): DISTRIBUCIÓN DE MI TRABAJO CON GRÁFICA Y LEYENDAS LADO A LADO */}
         <div className="xl:col-span-5 p-6 rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
@@ -617,9 +597,23 @@ export default function DeveloperView({
                       paddingAngle={5}
                       dataKey="pct"
                     >
-                      {donutData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
+                      {donutData.map((entry, index) => {
+                        const tMap = { 'Historias de Usuario': 'Historia', 'Bugs / Defectos': 'Bug', 'Tareas / Deuda Técnica': 'Tarea' };
+                        const isSelected = typeFilter === tMap[entry.name];
+                        return (
+                          <Cell 
+                            key={`cell-${index}`} 
+                            fill={entry.color}
+                            opacity={typeFilter === 'ALL' || isSelected ? 1 : 0.3}
+                            className="cursor-pointer transition-all hover:opacity-80 outline-none"
+                            onClick={() => {
+                              const newType = tMap[entry.name];
+                              setTypeFilter(prev => prev === newType ? 'ALL' : newType);
+                              setCurrentPage(1);
+                            }}
+                          />
+                        );
+                      })}
                     </Pie>
                     <RechartsTooltip contentStyle={tooltipStyle} />
                   </PieChart>
@@ -634,14 +628,25 @@ export default function DeveloperView({
               <div className="space-y-2.5">
                 {donutData.map((item, idx) => {
                   const ItemIcon = item.icon;
+                  const tMap = { 'Historias de Usuario': 'Historia', 'Bugs / Defectos': 'Bug', 'Tareas / Deuda Técnica': 'Tarea' };
+                  const isSelected = typeFilter === tMap[item.name];
+                  
                   return (
-                    <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800/60 transition-all hover:border-slate-300 dark:hover:border-slate-700">
+                    <div 
+                      key={idx} 
+                      onClick={() => {
+                        const newType = tMap[item.name];
+                        setTypeFilter(prev => prev === newType ? 'ALL' : newType);
+                        setCurrentPage(1);
+                      }}
+                      className={`flex items-center justify-between p-3 rounded-xl transition-all cursor-pointer border ${isSelected ? 'bg-slate-100 dark:bg-slate-800 border-indigo-500 shadow-sm' : 'bg-slate-50 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800/60 hover:border-slate-300 dark:hover:border-slate-700'}`}
+                    >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-                        <ItemIcon size={14} className="text-slate-400 shrink-0" />
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 truncate">{item.name}</span>
+                        <ItemIcon size={14} className={`${isSelected ? 'text-indigo-500' : 'text-slate-400'} shrink-0`} />
+                        <span className={`text-xs font-semibold truncate ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-700 dark:text-slate-300'}`}>{item.name}</span>
                       </div>
-                      <span className="text-xs font-black text-slate-900 dark:text-white shrink-0 ml-1">
+                      <span className={`text-xs font-black shrink-0 ml-1 ${isSelected ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>
                         {item.count} <span className="text-slate-400 text-[10px]">({item.pct}%)</span>
                       </span>
                     </div>
@@ -720,25 +725,47 @@ export default function DeveloperView({
                           <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
                             {t.summary}
                           </td>
-                          <td className="py-2.5 px-3">
-                            <select
-                              value={t.status_actual || 'POR HACER'}
-                              onChange={(e) => handleUpdateTaskStatus(t.key_issue, e.target.value, t.story_points, t.summary)}
-                              className={`px-2 py-1 text-[10px] font-extrabold rounded-lg border focus:outline-none cursor-pointer ${
-                                t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
-                                t.status_actual === 'EN PROGRESO' || t.status_actual === 'IN_PROGRESS' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
-                                t.status_actual === 'EN REVISIÓN' || t.status_actual === 'IN_REVIEW' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                                t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' || t.status_actual === 'DONE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
-                                'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                              }`}
-                              title="Cambiar estado y sincronizar con Jira Cloud"
-                            >
-                              <option value="POR HACER">Por Hacer (To Do)</option>
-                              <option value="EN PROGRESO">En Progreso (In Progress)</option>
-                              <option value="EN REVISIÓN">En Revisión (In Review)</option>
-                              <option value="BLOQUEADA">Bloqueada</option>
-                              <option value="LISTO">Listo (Done) ✅</option>
-                            </select>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {(() => {
+                              const st = (t.status_actual || 'POR HACER').toUpperCase();
+                              if (st.includes('LISTO') || st.includes('DONE') || st.includes('COMPLETADA') || st.includes('FINALIZADO')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                                    <CheckCircle2 size={12} className="text-emerald-500" />
+                                    Listo
+                                  </span>
+                                );
+                              }
+                              if (st.includes('PROGRESO') || st.includes('PROGRESS') || st.includes('CURSO')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/40">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    En Progreso
+                                  </span>
+                                );
+                              }
+                              if (st.includes('BLOQUEADA') || st.includes('BLOCKED')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/50 dark:border-rose-800/40">
+                                    <AlertTriangle size={12} className="text-rose-500" />
+                                    Bloqueada
+                                  </span>
+                                );
+                              }
+                              if (st.includes('REVISI') || st.includes('REVIEW')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40">
+                                    <Clock size={12} className="text-amber-500" />
+                                    En Revisión
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
+                                  Por Hacer
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
                             {t.story_points} SP
@@ -845,7 +872,7 @@ export default function DeveloperView({
 
               <div className="flex items-center justify-between pt-1">
                 <a
-                  href={`https://jira.empresa.com/browse/${activeReplyIssue.key_issue || 'MCHAV-128'}`}
+                  href={`https://beltrancamilo592.atlassian.net/browse/${activeReplyIssue.key_issue || 'MCHAV-128'}`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-xs font-bold text-indigo-400 hover:underline flex items-center gap-1"
@@ -879,8 +906,8 @@ export default function DeveloperView({
 
       {/* MODAL DE DETALLE DE TAREA */}
       {selectedIssueModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-lg rounded-2xl shadow-2xl p-6 space-y-4 text-left">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-3xl rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto space-y-6 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-indigo-400 border border-slate-700 rounded">
@@ -902,18 +929,18 @@ export default function DeveloperView({
               <h3 className="text-base font-bold text-slate-900 dark:text-white">
                 {selectedIssueModal.summary}
               </h3>
-              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-800">
+              <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/70 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
                 {selectedIssueModal.descripcion || 'Sin descripción detallada de Jira.'}
               </p>
 
               <div className="grid grid-cols-2 gap-3 text-xs pt-2">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-800">
-                  <span className="text-slate-400 font-semibold block">Prioridad</span>
-                  <strong className="text-white font-bold">{selectedIssueModal.prioridad}</strong>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block">Prioridad</span>
+                  <strong className="text-slate-900 dark:text-white font-bold">{selectedIssueModal.prioridad}</strong>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-800">
-                  <span className="text-slate-400 font-semibold block">Story Points</span>
-                  <strong className="text-white font-bold">{selectedIssueModal.story_points} SP</strong>
+                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block">Story Points</span>
+                  <strong className="text-slate-900 dark:text-white font-bold">{selectedIssueModal.story_points} SP</strong>
                 </div>
               </div>
 
@@ -946,9 +973,9 @@ export default function DeveloperView({
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
               <a
-                href={`https://jira.empresa.com/browse/${selectedIssueModal.key_issue}`}
+                href={`https://beltrancamilo592.atlassian.net/browse/${selectedIssueModal.key_issue}`}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs font-bold text-indigo-400 hover:underline flex items-center gap-1"
@@ -968,7 +995,7 @@ export default function DeveloperView({
 
       {/* MODAL DE ALERTAS Y SOLICITAR AYUDA DEL DESARROLLADOR */}
       {alertsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-xl rounded-2xl shadow-2xl p-6 space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
@@ -1033,7 +1060,7 @@ export default function DeveloperView({
                       onChange={(e) => setHelpIssueKey(e.target.value)}
                       className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-indigo-500 cursor-pointer"
                     >
-                      {DEFAULT_ASSIGNED_ISSUES.map(i => (
+                      {assignedIssuesList.slice(0, 5).map(i => (
                         <option key={i.key_issue} value={i.key_issue}>{i.key_issue} - {i.summary.substring(0, 25)}...</option>
                       ))}
                     </select>
@@ -1066,7 +1093,7 @@ export default function DeveloperView({
                   />
                 </div>
 
-                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                   <button
                     type="button"
                     onClick={() => setAlertsModalOpen(false)}
@@ -1106,52 +1133,21 @@ export default function DeveloperView({
             {/* CONTENIDO PESTAÑA 3: MIS ALERTAS */}
             {alertsTab === 'alerts' && (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {[
-                  { id: 1, type: 'critical', text: 'MCHAV-105 en inactividad (2 días en bloqueo). Se sugiere solicitar apoyo.' },
-                  { id: 2, type: 'warning', text: 'WIP en 7 tareas abiertas. Mantener WIP ≤ 3 mejora la velocidad de entrega.' },
-                  { id: 3, type: 'info', text: 'Sprint activo. 81% de Story Points completados.' }
-                ].map(a => (
-                  <div key={a.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
+                {alerts && alerts.length > 0 ? alerts.map(a => (
+                  <div key={a.id || Math.random()} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
                     <AlertTriangle size={15} className="text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-xs text-slate-300 leading-relaxed">{a.text}</p>
+                    <p className="text-xs text-slate-300 leading-relaxed">{a.description || a.title || a.text}</p>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center text-center">
+                    <p className="text-xs text-slate-400">No hay alertas recientes.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       )}
-
-      {/* PLANTILLA EXCLUSIVA PARA IMPRESIÓN Y EXPORTACIÓN A PDF (A4) */}
-      <div className="hidden print:block w-full text-slate-900 bg-white p-8 space-y-6 font-sans leading-normal">
-        <div className="flex items-center justify-between border-b-2 border-slate-900 pb-4">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xl font-black tracking-widest text-indigo-900">MCHAV ANALYTICS</span>
-              <span className="text-xs px-2 py-0.5 bg-indigo-900 text-white font-bold rounded">REPORTE DE DESARROLLADOR</span>
-            </div>
-            <h1 className="text-lg font-bold text-slate-800">
-              Consola Ejecutiva de Trabajo Individual
-            </h1>
-          </div>
-          <div className="text-right text-xs space-y-1 font-medium text-slate-600">
-            <p><strong>Fecha:</strong> {new Date().toLocaleDateString('es-ES')}</p>
-            <p><strong>Desarrollador:</strong> {devName} (DEVELOPER)</p>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <h2 className="text-xs font-black uppercase text-slate-800 border-b border-slate-300 pb-1 tracking-wider">
-            MÉTRICAS CLAVE
-          </h2>
-          <div className="grid grid-cols-4 gap-3 text-center text-xs">
-            <div className="p-3 border border-slate-300 rounded-lg">Cycle Time: 3.2d</div>
-            <div className="p-3 border border-slate-300 rounded-lg">WIP: 7 Tickets</div>
-            <div className="p-3 border border-slate-300 rounded-lg">Throughput: 14 Tickets</div>
-            <div className="p-3 border border-slate-300 rounded-lg">Story Points: 65 SP</div>
-          </div>
-        </div>
-      </div>
 
     </div>
   );

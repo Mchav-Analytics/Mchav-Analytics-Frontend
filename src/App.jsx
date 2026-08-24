@@ -4,6 +4,7 @@
 // Enlaza el proveedor de autenticación (AuthProvider) y el enrutador principal (BrowserRouter)
 // para resolver errores de hooks de navegación en el navegador.
 
+import CentroReportesView from './features/reports/views/CentroReportesView';
 import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -26,6 +27,33 @@ import JqlConsultasView from './features/jql/views/JqlConsultasView';
 import LoginView from './features/auth/views/LoginView';
 import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, background: 'red', color: 'white', zIndex: 9999, position: 'relative' }}>
+          <h2>Algo salió mal en el renderizado:</h2>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error && this.state.error.toString()}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
+          <button onClick={() => this.setState({ hasError: false })}>Intentar de nuevo</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
@@ -120,6 +148,12 @@ function MainAppContent() {
         const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
         setActiveTab(nextTab);
       }
+    } else {
+      // Si es ADMIN o MANAGER y está en una vista exclusiva de DEVELOPER, enviarlo a dashboard
+      const exclusiveDevTabs = ['developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history'];
+      if (exclusiveDevTabs.includes(activeTab)) {
+        setActiveTab('dashboard');
+      }
     }
   }, [user?.rol]);
 
@@ -159,8 +193,11 @@ function MainAppContent() {
     projectService.getProjects()
       .then(data => {
         setProjects(data);
-        if (data.length > 0 && !selectedProjectId) {
-          setSelectedProjectId(data[0].id_proyecto);
+        if (data.length > 0) {
+          const projectExists = data.some(p => String(p.id_proyecto) === String(selectedProjectId));
+          if (!selectedProjectId || !projectExists) {
+            setSelectedProjectId(data[0].id_proyecto);
+          }
         }
       })
       .catch(err => {
@@ -260,12 +297,12 @@ function MainAppContent() {
       case 'daily_focus':
         return {
           title: "Mi Agenda de Hoy",
-          subtitle: "Lista de tareas, prioridades y metas personales planificadas para tu jornada de hoy."
+          subtitle: "Tu jornada de ejecución: lo que tienes que hacer hoy."
         };
       case 'dev_workload':
         return {
           title: "Plan de Trabajo",
-          subtitle: "Planificación estratégica de tareas pendientes, entregas en progreso y capacidad del sprint."
+          subtitle: "Visión general, backlog y planificación de todas tus tareas."
         };
       case 'dev_alerts':
         return {
@@ -318,6 +355,11 @@ function MainAppContent() {
           subtitle: "Validador sintáctico en tiempo real, ejecutor de consultas JQL y diccionario de campos (Solo Admin)."
         };
       case 'sincronizacion':
+      case 'reports_center':
+        return {
+          title: 'Centro de Análisis y Generación de Reportes',
+          subtitle: 'Módulo integral para generación de reportes en vivo y auditoría de historiales inmutables.'
+        };
         return {
           title: "Auditoría de ETL y Schedulers ",
           subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
@@ -362,7 +404,7 @@ function MainAppContent() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
       handleSyncNow={handleSyncNow}
       topbarTitle={headerDetails.title}
@@ -394,36 +436,53 @@ function MainAppContent() {
       )}
 
       {activeTab === 'developer' && (
-        <DeveloperView
-          kpis={filteredKpis}
-          selectedProjectId={selectedProjectId}
-          alerts={alerts}
-          onNavigateToAlerts={() => setActiveTab('alerts_center')}
-          onNavigateTab={(tab) => setActiveTab(tab)}
-        />
+        <ErrorBoundary>
+          <DeveloperView
+            kpis={filteredKpis}
+            projects={projects}
+            selectedProjectId={selectedProjectId}
+            setSelectedProjectId={setSelectedProjectId}
+            syncSuccessMsg={syncSuccessMsg}
+            alerts={alerts}
+            onNavigateToAlerts={() => setActiveTab('alerts_center')}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        </ErrorBoundary>
       )}
 
       {activeTab === 'daily_focus' && (
         <DailyFocusView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
       {activeTab === 'dev_workload' && (
         <DevWorkloadView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
       {activeTab === 'dev_alerts' && (
         <DevAlertsView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
       {activeTab === 'activity_history' && (
         <ActivityHistoryView
+          projects={projects}
           selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          syncSuccessMsg={syncSuccessMsg}
         />
       )}
 
@@ -464,6 +523,10 @@ function MainAppContent() {
 
       {activeTab === 'sincronizacion' && (
         <SystemSyncTab />
+      )}
+
+      {activeTab === 'reports_center' && (
+        <CentroReportesView selectedProjectId={selectedProjectId} />
       )}
 
 

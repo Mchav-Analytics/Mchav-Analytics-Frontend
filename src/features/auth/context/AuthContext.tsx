@@ -222,6 +222,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       sessionStorage.removeItem('mchav_app_session');
       sessionStorage.removeItem('mchav_authenticated_tab');
+      localStorage.removeItem('mchav_active_tab');    // Prevenir que la pestaña se arrastre a otro usuario
       localStorage.removeItem('mchav_jwt_token');
       localStorage.removeItem('mock_user_session');   // Eliminar datos de la sesión activa
       setUser(null);                                  // Limpiar estado de usuario en React

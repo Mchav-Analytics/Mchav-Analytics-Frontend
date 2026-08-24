@@ -15,15 +15,29 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { developerService } from '../../../services/api';
+import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
 
-export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
+export default function DevAlertsView({ 
+  projects = [],
+  selectedProjectId,
+  setSelectedProjectId,
+  syncSuccessMsg
+}) {
   const { user } = useAuth();
   const [alertsData, setAlertsData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionMsg, setActionMsg] = useState('');
   const [executingAction, setExecutingAction] = useState(false);
 
+  const devName = user?.nombre || 'Valka Hoyos';
+  const selectedProjectObj = projects.find(p => String(p.id_proyecto) === String(selectedProjectId));
+  const projectName = selectedProjectObj?.nombre || `Proyecto ${selectedProjectId}`;
+
   useEffect(() => {
+    if (!selectedProjectId) {
+      setAlertsData(null);
+      return;
+    }
     setLoading(true);
     developerService.getDevAlerts(selectedProjectId)
       .then(res => {
@@ -58,15 +72,34 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
   return (
     <div className="w-full space-y-10 py-4 px-1 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
-      {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA */}
-      <div className="relative group rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-rose-500/20 via-amber-500/20 to-red-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+
+      {/* Si no hay proyecto seleccionado, mostrar prompt */}
+      {!selectedProjectId ? (
+        <div className="flex-1 flex flex-col items-center justify-center p-10 bg-white dark:bg-[#141738] rounded-2xl border border-slate-200 dark:border-[#272b5c] text-center">
+          <div className="w-20 h-20 bg-rose-50 dark:bg-rose-900/30 text-rose-500 rounded-full flex items-center justify-center mb-4">
+            <AlertTriangle size={40} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Selecciona un Proyecto</h2>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+            Para ver tus alertas, selecciona en qué proyecto deseas trabajar desde el selector superior.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* ENCABEZADO ESPACIOSO CON AURA DEGRADADA */}
+          <div className="relative group rounded-2xl bg-white dark:bg-[#191c3d] p-8 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#33376b] transition-all duration-300">
+            <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-rose-500/20 via-amber-500/20 to-red-500/20 blur-md opacity-30 transition-opacity group-hover:opacity-50 pointer-events-none"></div>
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="flex items-center gap-5">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-rose-500 via-amber-500 to-red-600 text-white font-extrabold shadow-xl shadow-rose-500/20">
               <AlertTriangle size={26} />
             </div>
             <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
+                  Desarrollador: <strong className="text-slate-800 dark:text-slate-200 font-bold">{devName}</strong>
+                </span>
+              </div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-3">
                 Mis Bloqueos y Alertas
                 <span className="flex items-center gap-2 rounded-full bg-rose-500/10 px-3.5 py-1 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-500/20">
@@ -74,6 +107,11 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
                   {alerts.length} Alertas Activadas
                 </span>
               </h1>
+              <div className="mt-2 mb-1">
+                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Proyecto: <strong className="text-rose-600 dark:text-rose-400 font-black text-base uppercase">{projectName}</strong>
+                </span>
+              </div>
               <p className="text-sm text-slate-500 dark:text-slate-400">
                 Detector automático de inactividad, multitarea excesiva y cuellos de botella.
               </p>
@@ -162,6 +200,8 @@ export default function DevAlertsView({ selectedProjectId = 'PROJ-01' }) {
         })}
 
       </div>
+      </>
+      )}
     </div>
   );
 }

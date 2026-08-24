@@ -209,7 +209,7 @@ export const projectService = {
       };
     }
   },
-  getPercentiles(projectId) {
+  getPercentiles(projectId, days = 15) {
     if (USE_MOCK_DATA) {
       return Promise.resolve([
         {
@@ -235,7 +235,7 @@ export const projectService = {
         }
       ]);
     }
-    return api.get(`/api/v1/projects/${projectId}/percentiles`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/percentiles?days=${days}`).then(res => res.data);
   }
 };
 
@@ -460,6 +460,27 @@ export const developerService = {
         developers: []
       };
     }
+  },
+  // STUBS PARA LA AGENDA DIARIA
+  async createAgendaTask(payload) {
+    if (USE_MOCK_DATA) return Promise.reject(new Error("Funcionalidad no implementada en el backend"));
+    return api.post(`/api/v1/developers/me/agenda-tasks`, payload).then(res => res.data);
+  },
+  async updateTaskStatus(taskId, status) {
+    if (USE_MOCK_DATA) return Promise.reject(new Error("Funcionalidad no implementada en el backend"));
+    return api.patch(`/api/v1/developers/me/agenda-tasks/${taskId}`, { status }).then(res => res.data);
+  },
+  async createNote(date, text) {
+    if (USE_MOCK_DATA) return Promise.reject(new Error("Funcionalidad no implementada en el backend"));
+    return api.post(`/api/v1/developers/me/notes`, { date, text }).then(res => res.data);
+  },
+  async deleteNote(noteId) {
+    if (USE_MOCK_DATA) return Promise.reject(new Error("Funcionalidad no implementada en el backend"));
+    return api.delete(`/api/v1/developers/me/notes/${noteId}`).then(res => res.data);
+  },
+  async getNotesByDate(date) {
+    if (USE_MOCK_DATA) return Promise.reject(new Error("Funcionalidad no implementada en el backend"));
+    return api.get(`/api/v1/developers/me/notes`, { params: { date } }).then(res => res.data);
   }
 };
 

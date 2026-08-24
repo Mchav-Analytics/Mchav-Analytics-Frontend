@@ -165,7 +165,7 @@ export default function JqlConsultasView() {
         
         {/* COLUMNA IZQUIERDA (8 COLS): CONSOLA DE CONSULTA JQL REAL */}
         <div className="lg:col-span-8 space-y-6">
-          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 shadow-sm dark:shadow-xl space-y-5">
+          <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-8 shadow-2xl space-y-5">
             
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-3">
@@ -303,7 +303,7 @@ export default function JqlConsultasView() {
                 <button
                   type="submit"
                   disabled={isExecutingJql}
-                  className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-5 py-2.5 text-xs rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg hover:shadow-indigo-500/25 text-white font-extrabold px-5 py-2.5 text-xs rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
                 >
                   {isExecutingJql ? (
                     <>
@@ -396,7 +396,7 @@ export default function JqlConsultasView() {
         <div className="lg:col-span-4 space-y-6">
           
           {/* DICCIONARIO DE CAMPOS JQL */}
-          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 shadow-sm dark:shadow-xl space-y-4">
+          <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
               <BookOpen className="text-indigo-600 dark:text-indigo-400" size={18} />
               <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
@@ -440,7 +440,7 @@ export default function JqlConsultasView() {
           </div>
 
           {/* HISTORIAL / AUDITORÍA DE CONSULTAS JQL */}
-          <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 shadow-sm dark:shadow-xl space-y-3">
+          <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-6 shadow-2xl space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
               <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
                 <FileCode2 size={16} className="text-indigo-500" />
