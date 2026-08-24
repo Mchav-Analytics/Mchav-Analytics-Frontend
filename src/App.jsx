@@ -4,6 +4,7 @@
 // Enlaza el proveedor de autenticación (AuthProvider) y el enrutador principal (BrowserRouter)
 // para resolver errores de hooks de navegación en el navegador.
 
+import CentroReportesView from './features/reports/views/CentroReportesView';
 import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -353,6 +354,11 @@ function MainAppContent() {
           subtitle: "Validador sintáctico en tiempo real, ejecutor de consultas JQL y diccionario de campos (Solo Admin)."
         };
       case 'sincronizacion':
+      case 'reports_center':
+        return {
+          title: 'Centro de Análisis y Generación de Reportes',
+          subtitle: 'Módulo integral para generación de reportes en vivo y auditoría de historiales inmutables.'
+        };
         return {
           title: "Auditoría de ETL y Schedulers ",
           subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
@@ -516,6 +522,10 @@ function MainAppContent() {
 
       {activeTab === 'sincronizacion' && (
         <SystemSyncTab />
+      )}
+
+      {activeTab === 'reports_center' && (
+        <CentroReportesView selectedProjectId={selectedProjectId} />
       )}
 
 
