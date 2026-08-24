@@ -114,6 +114,7 @@ export const SprintBurndownChart = ({ data }) => {
             tickLine={false} 
             tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
             dx={10}
+          label={{ value: 'Cantidad de Tareas', angle: 90, position: 'insideRight', offset: -10, fill: '#64748b', fontSize: 11, fontWeight: 'bold' }}
           />
 
           <RechartsTooltip content={<CustomTooltip />} />

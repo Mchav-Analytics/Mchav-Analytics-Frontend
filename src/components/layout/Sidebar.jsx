@@ -144,6 +144,7 @@ function Sidebar({
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
         { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+        { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
       ];
     }
 
@@ -155,6 +156,7 @@ function Sidebar({
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+        { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
     ];
   }, [userRole]);
 
