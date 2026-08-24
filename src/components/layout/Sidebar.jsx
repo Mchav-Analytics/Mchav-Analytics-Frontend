@@ -133,7 +133,6 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
-        { id: 'dashboard', label: 'Panel Operativo', icon: icons.dashboard },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
@@ -143,9 +142,8 @@ function Sidebar({
     }
 
     return [
-      { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
-      { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+      { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },

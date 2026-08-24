@@ -33,9 +33,10 @@ function MainAppContent() {
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const savedTab = localStorage.getItem('mchav_active_tab');
-      return savedTab || 'dashboard';
+      if (!savedTab || savedTab === 'dashboard') return 'proyectos';
+      return savedTab;
     } catch (e) {
-      return 'dashboard';
+      return 'proyectos';
     }
   });
 
