@@ -35,8 +35,6 @@ import { developerService, jiraService, jqlService, projectService } from '../..
 
 import LiderNotificationBell from '../components/LiderNotificationBell';
 import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
-import { DeveloperPdfReport } from '../components/DeveloperPdfReport';
-import { useReactToPrint } from 'react-to-print';
 
 const tooltipStyle = {
   backgroundColor: '#0f172a',
@@ -84,17 +82,6 @@ const SparklineMini = ({ color = "#00f5d4" }) => {
   );
 };
 
-// Dataset de Incidencias Asignadas al Desarrollador
-const DEFAULT_ASSIGNED_ISSUES = [
-  { key_issue: 'MCHAV-105', summary: 'Corregir bug en API de pagos y transacciones', status_actual: 'BLOQUEADA', story_points: 5, cycle_time_days: 2.5, tipo: 'Bug', prioridad: 'Crítica', fecha_creacion: '2026-08-03', fecha_actualizacion: '2026-08-11', descripcion: 'Desbordamiento de memoria y tiempos de respuesta elevados en endpoints de sincronización.' },
-  { key_issue: 'MCHAV-128', summary: 'Implementación módulo SSO y OAuth 2.0', status_actual: 'EN PROGRESO', story_points: 8, cycle_time_days: 3.2, tipo: 'Historia de Usuario', prioridad: 'Alta', fecha_creacion: '2026-08-01', fecha_actualizacion: '2026-08-12', descripcion: 'Integración del protocolo OAuth 2.0 y Single Sign-On para Jira API.' },
-  { key_issue: 'MCHAV-101', summary: 'Refactorizar consultas SQL en reportes de velocidad', status_actual: 'EN REVISIÓN', story_points: 8, cycle_time_days: 4.1, tipo: 'Tarea / Deuda Técnica', prioridad: 'Alta', fecha_creacion: '2026-08-05', fecha_actualizacion: '2026-08-12', descripcion: 'Optimización de índices y reescritura de queries pesadas en Postgres.' },
-  { key_issue: 'MCHAV-114', summary: 'Actualizar dependencias de seguridad y Docker', status_actual: 'PENDIENTE', story_points: 8, cycle_time_days: 0, tipo: 'Tarea / Deuda Técnica', prioridad: 'Alta', fecha_creacion: '2026-08-09', fecha_actualizacion: '2026-08-11', descripcion: 'Escaneo de vulnerabilidades Trivy y actualización de imágenes Python.' },
-  { key_issue: 'MCHAV-112', summary: 'Rediseñar vista de desarrollador con Recharts', status_actual: 'EN REVISIÓN', story_points: 13, cycle_time_days: 3.2, tipo: 'Historia de Usuario', prioridad: 'Media', fecha_creacion: '2026-08-05', fecha_actualizacion: '2026-08-12', descripcion: 'Componentización modular con Recharts y micro-interacciones.' },
-  { key_issue: 'MCHAV-120', summary: 'Pruebas de integración para Service Gateway X', status_actual: 'COMPLETADA', story_points: 8, cycle_time_days: 2.9, tipo: 'Tarea / Deuda Técnica', prioridad: 'Baja', fecha_creacion: '2026-08-09', fecha_actualizacion: '2026-08-12', descripcion: 'Suite automatizada E2E con PyTest y FastAPI TestClient.' },
-  { key_issue: 'MCHAV-124', summary: 'Refactorizar hooks personalizados en Frontend', status_actual: 'EN PROGRESO', story_points: 5, cycle_time_days: 1.8, tipo: 'Tarea / Deuda Técnica', prioridad: 'Media', fecha_creacion: '2026-08-10', fecha_actualizacion: '2026-08-12', descripcion: 'Desacoplamiento de lógica de renderizado en React.' }
-];
-
 export default function DeveloperView({
   kpis = [],
   projects = [],
@@ -124,69 +111,17 @@ export default function DeveloperView({
   // Centro de Alertas y Ayuda
   const [alertsModalOpen, setAlertsModalOpen] = useState(false);
   const [alertsTab, setAlertsTab] = useState('request_form'); // 'request_form' | 'sent_requests' | 'alerts'
-  const [helpIssueKey, setHelpIssueKey] = useState('MCHAV-105');
+  const [helpIssueKey, setHelpIssueKey] = useState('');
   const [helpType, setHelpType] = useState('Bloqueo Técnico');
   const [helpUrgency, setHelpUrgency] = useState('Alta');
   const [helpMessage, setHelpMessage] = useState('');
-  const [submittedHelpRequests, setSubmittedHelpRequests] = useState([
-    {
-      id: 'SOL-801',
-      issueKey: 'MCHAV-105',
-      type: 'Bloqueo Técnico',
-      urgency: 'Alta',
-      message: 'Requiero apoyo en la configuración del servicio de pagos para QA.',
-      status: 'EN REVISIÓN LÍDER',
-      date: '2026-08-12 11:30'
-    }
-  ]);
+  const [submittedHelpRequests, setSubmittedHelpRequests] = useState([]);
   const [showHelpSuccessToast, setShowHelpSuccessToast] = useState(false);
 
   // Elementos "Requiere mi atención"
-  const [attentionItems, setAttentionItems] = useState([
-    {
-      id: 'att-1',
-      type: 'BLOCK',
-      priority: 'HIGH',
-      key_issue: 'MCHAV-105',
-      title: '🐞 Bug crítico bloqueado',
-      detail: 'Bloqueada desde hace 2 días por fallo de memoria en QA.',
-      time: 'Hace 2d',
-      actionText: 'Ver bug'
-    },
-    {
-      id: 'att-2',
-      type: 'REQUEST',
-      priority: 'MEDIUM',
-      key_issue: 'MCHAV-128',
-      title: '💬 Solicitud del equipo',
-      detail: 'Carlos Pérez solicita actualización sobre la entrega SSO OAuth 2.0.',
-      time: 'Hace 15m',
-      actionText: 'Responder',
-      message: '¿Podrían confirmar si la entrega del módulo SSO se mantiene para el viernes?'
-    },
-    {
-      id: 'att-3',
-      type: 'REVIEW',
-      priority: 'MEDIUM',
-      key_issue: 'MCHAV-101',
-      title: '🟡 Revisión pendiente',
-      detail: 'Esperando aprobación de Pull Request #42 por el Líder Técnico.',
-      time: 'Hace 4h',
-      actionText: 'Ver tarea'
-    },
-    {
-      id: 'att-4',
-      type: 'ALERT',
-      priority: 'HIGH',
-      key_issue: 'MCHAV-104',
-      title: '⚠️ Alerta de inactividad (>48h)',
-      detail: 'Más de 48 horas sin registro de commits en la rama activa.',
-      time: 'Hace 1d',
-      actionText: 'Revisar'
-    }
-  ]);
+  const [attentionItems, setAttentionItems] = useState([]);
 
-  const devName = user?.nombre || 'Valka Hoyos';
+  const devName = user?.nombre || 'Desarrollador';
 
   const loadScorecard = async () => {
     try {
@@ -236,7 +171,16 @@ export default function DeveloperView({
   };
 
   useEffect(() => {
-    loadScorecard();
+    const initData = async () => {
+      try {
+        await jiraService.triggerSync();
+      } catch (e) {
+        // Ignorar si ya está corriendo o falla
+      }
+      loadScorecard();
+    };
+    initData();
+
     const timer = setInterval(() => {
       loadScorecard();
     }, 15000); // 15 seconds polling
@@ -245,6 +189,14 @@ export default function DeveloperView({
 
   const handleReloadData = async () => {
     setIsRefreshing(true);
+    try {
+      setToastMsg('Sincronizando tareas con Jira...');
+      await jiraService.triggerSync();
+    } catch (e) {
+      console.warn('Sync ya está en proceso o falló', e);
+    } finally {
+      setTimeout(() => setToastMsg(''), 3000);
+    }
     await loadScorecard();
     setTimeout(() => setIsRefreshing(false), 500);
   };
@@ -286,13 +238,7 @@ export default function DeveloperView({
     }
   };
 
-  const printComponentRef = useRef();
 
-  const handlePrintPDF = useReactToPrint({
-    contentRef: printComponentRef,
-    documentTitle: `Informe_Ejecutivo_MCHAV_${new Date().toISOString().split('T')[0]}`,
-    removeAfterPrint: true
-  });
 
   // Abrir modal de respuesta rápida
   const handleOpenReply = (item) => {
@@ -371,10 +317,10 @@ export default function DeveloperView({
     return statusMatch && typeMatch;
   });
 
-  const historiasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Historia')).length || 3;
-  const bugsCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Bug')).length || 2;
-  const tareasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Tarea')).length || 2;
-  const totalCount = assignedIssuesList.length || 7;
+  const historiasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Historia')).length;
+  const bugsCount = assignedIssuesList.filter(i => (i.tipo || '').toLowerCase().includes('bug')).length;
+  const tareasCount = assignedIssuesList.filter(i => (i.tipo || '').includes('Tarea') || (i.tipo || '').includes('Deuda')).length;
+  const totalCount = assignedIssuesList.length;
 
   // Generate dynamic notifications for recent assigned tasks
   const dynamicNotifications = assignedIssuesList
@@ -393,7 +339,7 @@ export default function DeveloperView({
       return {
         id: `dyn-task-${t.key_issue}`,
         type: 'TASK_ASSIGNED',
-        title: '📌 Nueva Tarea Asignada',
+        title: 'Nueva Tarea Asignada',
         description: `Te han asignado la incidencia ${t.key_issue}: ${t.summary}`,
         tagline: `Asignado por el equipo.`,
         time: timeStr,
@@ -465,14 +411,6 @@ export default function DeveloperView({
               }
             }}
           />
-
-          <button
-            onClick={handlePrintPDF}
-            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
-          >
-            <Printer size={15} />
-            <span>Exportar PDF</span>
-          </button>
 
           <button
             onClick={handleReloadData}
@@ -584,11 +522,11 @@ export default function DeveloperView({
                 <span className="text-xs font-bold text-pink-400 ml-1">SP</span>
               </div>
               <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-pink-500/15 text-pink-300 border border-pink-500/30">
-                {scorecard?.story_points_achieved_pct ?? 81}% de la meta
+                {scorecard?.story_points_target > 0 ? `${scorecard?.story_points_achieved_pct ?? 0}% de la meta` : 'Sin meta de sprint'}
               </span>
             </div>
             <div className="w-full bg-slate-100 dark:bg-slate-900 h-2 rounded-full overflow-hidden">
-              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 h-full" style={{ width: `${Math.min(scorecard?.story_points_achieved_pct ?? 81, 100)}%` }}></div>
+              <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-rose-500 h-full" style={{ width: scorecard?.story_points_target > 0 ? `${Math.min(scorecard?.story_points_achieved_pct ?? 0, 100)}%` : (scorecard?.story_points_burned > 0 ? '100%' : '0%') }}></div>
             </div>
           </div>
         </div>
@@ -1140,30 +1078,22 @@ export default function DeveloperView({
             {/* CONTENIDO PESTAÑA 3: MIS ALERTAS */}
             {alertsTab === 'alerts' && (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {[
-                  { id: 1, type: 'critical', text: 'MCHAV-105 en inactividad (2 días en bloqueo). Se sugiere solicitar apoyo.' },
-                  { id: 2, type: 'warning', text: 'WIP en 7 tareas abiertas. Mantener WIP ≤ 3 mejora la velocidad de entrega.' },
-                  { id: 3, type: 'info', text: 'Sprint activo. 81% de Story Points completados.' }
-                ].map(a => (
-                  <div key={a.id} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
+                {alerts && alerts.length > 0 ? alerts.map(a => (
+                  <div key={a.id || Math.random()} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
                     <AlertTriangle size={15} className="text-amber-400 shrink-0 mt-0.5" />
-                    <p className="text-xs text-slate-300 leading-relaxed">{a.text}</p>
+                    <p className="text-xs text-slate-300 leading-relaxed">{a.description || a.title || a.text}</p>
                   </div>
-                ))}
+                )) : (
+                  <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex items-center justify-center text-center">
+                    <p className="text-xs text-slate-400">No hay alertas recientes.</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* COMPONENTE OCULTO PARA IMPRESIÓN PDF */}
-      <DeveloperPdfReport 
-        ref={printComponentRef} 
-        project={projects.find(p => String(p.id_proyecto) === String(selectedProjectId))}
-        devName={devName}
-        kpis={scorecard?.kpis}
-        assignedIssues={assignedIssuesList}
-      />
     </div>
   );
 }
