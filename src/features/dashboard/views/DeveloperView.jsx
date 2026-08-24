@@ -725,25 +725,47 @@ export default function DeveloperView({
                           <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
                             {t.summary}
                           </td>
-                          <td className="py-2.5 px-3">
-                            <select
-                              value={t.status_actual || 'POR HACER'}
-                              onChange={(e) => handleUpdateTaskStatus(t.key_issue, e.target.value, t.story_points, t.summary)}
-                              className={`px-2 py-1 text-[10px] font-extrabold rounded-lg border focus:outline-none cursor-pointer ${
-                                t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
-                                t.status_actual === 'EN PROGRESO' || t.status_actual === 'IN_PROGRESS' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
-                                t.status_actual === 'EN REVISIÓN' || t.status_actual === 'IN_REVIEW' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                                t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' || t.status_actual === 'DONE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
-                                'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                              }`}
-                              title="Cambiar estado y sincronizar con Jira Cloud"
-                            >
-                              <option value="POR HACER">Por Hacer (To Do)</option>
-                              <option value="EN PROGRESO">En Progreso (In Progress)</option>
-                              <option value="EN REVISIÓN">En Revisión (In Review)</option>
-                              <option value="BLOQUEADA">Bloqueada</option>
-                              <option value="LISTO">Listo (Done) ✅</option>
-                            </select>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {(() => {
+                              const st = (t.status_actual || 'POR HACER').toUpperCase();
+                              if (st.includes('LISTO') || st.includes('DONE') || st.includes('COMPLETADA') || st.includes('FINALIZADO')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                                    <CheckCircle2 size={12} className="text-emerald-500" />
+                                    Listo
+                                  </span>
+                                );
+                              }
+                              if (st.includes('PROGRESO') || st.includes('PROGRESS') || st.includes('CURSO')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/40">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    En Progreso
+                                  </span>
+                                );
+                              }
+                              if (st.includes('BLOQUEADA') || st.includes('BLOCKED')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/50 dark:border-rose-800/40">
+                                    <AlertTriangle size={12} className="text-rose-500" />
+                                    Bloqueada
+                                  </span>
+                                );
+                              }
+                              if (st.includes('REVISI') || st.includes('REVIEW')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40">
+                                    <Clock size={12} className="text-amber-500" />
+                                    En Revisión
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
+                                  Por Hacer
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
                             {t.story_points} SP
