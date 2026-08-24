@@ -35,6 +35,7 @@ import { developerService, jiraService, jqlService, projectService } from '../..
 
 import LiderNotificationBell from '../components/LiderNotificationBell';
 import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
+import owlMascotImg from '../../../assets/owl_mascot.png';
 
 const tooltipStyle = {
   backgroundColor: '#0f172a',
