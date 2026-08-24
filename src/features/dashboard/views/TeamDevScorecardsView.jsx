@@ -42,7 +42,7 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
 };
 
 const SparklineMini = ({ color = "#10b981" }) => {
-  const dummyData = [{ v: 4.2 }, { v: 3.8 }, { v: 4.5 }, { v: 3.1 }, { v: 2.8 }, { v: 3.2 }];
+  const dummyData = [];
   return (
     <div className="w-20 h-7 inline-block">
       <ResponsiveContainer width="100%" height="100%">
@@ -114,21 +114,17 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
     (d.email || '').toLowerCase().includes(searchFilter.toLowerCase())
   );
 
-  const sparklineCycleTime = [
-    { v: 4.5 }, { v: 4.1 }, { v: 3.8 }, { v: 4.2 }, { v: 3.5 }, { v: 3.9 }, { v: 3.2 }
-  ];
+  const sparklineCycleTime = [];
 
   const donutWipData = [
-    { name: 'En Progreso', value: scorecard?.wip_tickets || 7, color: '#8b5cf6' },
-    { name: 'Capacidad Restante', value: Math.max(0, (scorecard?.wip_max || 10) - (scorecard?.wip_tickets || 7)), color: '#1e293b' }
+    { name: 'En Progreso', value: scorecard?.wip_tickets || 0, color: '#8b5cf6' },
+    { name: 'Capacidad Restante', value: Math.max(0, (scorecard?.wip_max || 0) - (scorecard?.wip_tickets || 0)), color: '#1e293b' }
   ];
 
-  const throughputDaily = [
-    { day: 'L', v: 2 }, { day: 'M', v: 3 }, { day: 'M', v: 1 }, { day: 'J', v: 4 }, { day: 'V', v: 4 }
-  ];
+  const throughputDaily = scorecard?.throughput_daily || [];
 
   const assignedIssuesList = scorecard?.assigned_issues || [];
-  const workDist = scorecard?.work_distribution || { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 };
+  const workDist = scorecard?.work_distribution || { pct_historias: 0, pct_bugs: 0, pct_tareas: 0 };
 
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-8 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
@@ -300,7 +296,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
                 <div>
                   <span className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight">
-                    {scorecard?.cycle_time_personal || 3.2} <span className="text-lg font-bold text-emerald-600 dark:text-emerald-500">días</span>
+                    {scorecard?.cycle_time_personal || 0} <span className="text-lg font-bold text-emerald-600 dark:text-emerald-500">días</span>
                   </span>
                   <div className="w-full h-12 mt-3">
                     <ResponsiveContainer width="100%" height="100%">
@@ -339,7 +335,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
                 <div>
                   <span className="text-3xl font-extrabold text-purple-600 dark:text-purple-400 tracking-tight">
-                    {scorecard?.wip_tickets || 7} <span className="text-sm font-bold text-purple-600 dark:text-purple-500">Tickets activos</span>
+                    {scorecard?.wip_tickets || 0} <span className="text-sm font-bold text-purple-600 dark:text-purple-500">Tickets activos</span>
                   </span>
                   <div className="w-full bg-slate-100 dark:bg-slate-900 h-3 rounded-full mt-4 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
                     <div 
@@ -351,7 +347,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
                 <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
                   <span className="text-slate-500 dark:text-slate-400">Capacidad Máx</span>
-                  <span className="font-semibold text-purple-600 dark:text-purple-400">{scorecard?.wip_max || 10} Tickets</span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">{scorecard?.wip_max || 0} Tickets</span>
                 </div>
               </div>
             </div>
@@ -371,7 +367,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
                 <div>
                   <span className="text-3xl font-extrabold text-teal-600 dark:text-teal-400 tracking-tight">
-                    {scorecard?.throughput_tickets || 14} <span className="text-xs font-bold text-teal-600 dark:text-teal-500">Tickets</span>
+                    {scorecard?.throughput_tickets || 0} <span className="text-xs font-bold text-teal-600 dark:text-teal-500">Tickets</span>
                   </span>
                   <div className="w-full h-11 mt-2">
                     <ResponsiveContainer width="100%" height="100%">
@@ -384,7 +380,7 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
                 <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
                   <span className="text-slate-500 dark:text-slate-400">Promedio Diario</span>
-                  <span className="font-semibold text-teal-600 dark:text-teal-400">{scorecard?.throughput_avg_daily || 2.3}/día</span>
+                  <span className="font-semibold text-teal-600 dark:text-teal-400">{scorecard?.throughput_avg_daily || 0}/día</span>
                 </div>
               </div>
             </div>
@@ -404,19 +400,19 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
 
                 <div>
                   <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight">
-                    {scorecard?.story_points_burned || 65} <span className="text-sm font-bold text-indigo-600 dark:text-indigo-500">SP</span>
+                    {scorecard?.story_points_burned || 0} <span className="text-sm font-bold text-indigo-600 dark:text-indigo-500">SP</span>
                   </span>
                   <div className="w-full bg-slate-100 dark:bg-slate-900 h-3 rounded-full mt-4 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
                     <div 
                       className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"
-                      style={{ width: `${scorecard?.story_points_achieved_pct || 81}%` }}
+                      style={{ width: `${scorecard?.story_points_achieved_pct || 0}%` }}
                     ></div>
                   </div>
                 </div>
 
                 <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
                   <span className="text-slate-500 dark:text-slate-400">Meta Sprint</span>
-                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">{scorecard?.story_points_target || 80} SP</span>
+                  <span className="font-semibold text-indigo-600 dark:text-indigo-400">{scorecard?.story_points_target || 0} SP</span>
                 </div>
               </div>
             </div>

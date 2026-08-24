@@ -79,159 +79,6 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
   );
 };
 
-// Líderes Técnicos disponibles para asignación
-const AVAILABLE_LEADERS = [
-  {
-    id: 'usr-2',
-    name: 'Andrés Felipe Torres',
-    email: 'andres.torres@mchav.com',
-    avatar: 'A',
-    role: 'Líder Técnico',
-    experience: 'Senior Tech Lead'
-  },
-  {
-    id: 'usr-1',
-    name: 'Mauricio Salamanca',
-    email: 'mauricio.salamanca@mchav.com',
-    avatar: 'M',
-    role: 'Administrador / Lead System',
-    experience: 'Architect'
-  },
-  {
-    id: 'usr-6',
-    name: 'Carlos Mendoza',
-    email: 'carlos.mendoza@mchav.com',
-    avatar: 'C',
-    role: 'Líder Técnico Mobile',
-    experience: 'Tech Lead Cloud'
-  }
-];
-
-// Desarrolladores disponibles para asignación
-const AVAILABLE_DEVELOPERS = [
-  { id: 'usr-3', name: 'Clara Gómez', email: 'clara.gomez@mchav.com', avatar: 'C', tasksCount: 5, status: 'Active' },
-  { id: 'usr-4', name: 'Diana Patarroyo', email: 'diana.patarroyo@mchav.com', avatar: 'D', tasksCount: 4, status: 'Active' },
-  { id: 'usr-5', name: 'Eduardo Martínez', email: 'eduardo.m@mchav.com', avatar: 'E', tasksCount: 3, status: 'Active' },
-  { id: 'usr-7', name: 'Fernando Ruiz', email: 'fernando.ruiz@mchav.com', avatar: 'F', tasksCount: 4, status: 'Active' },
-  { id: 'usr-8', name: 'Gabriela López', email: 'gabriela.lopez@mchav.com', avatar: 'G', tasksCount: 2, status: 'Active' }
-];
-
-// Datos Mock de Métricas y Gráficos por Proyecto
-const MOCK_PROJECT_METRICS = {
-  'proj-1': {
-    velocity: [
-      { sprint: 'SP 11', sp: 32 },
-      { sprint: 'SP 12', sp: 38 },
-      { sprint: 'SP 13', sp: 50 },
-      { sprint: 'SP 14', sp: 46 }
-    ],
-    burndown: [
-      { day: 'D1', real: 46, ideal: 46 },
-      { day: 'D3', real: 38, ideal: 37 },
-      { day: 'D5', real: 28, ideal: 27 },
-      { day: 'D7', real: 16, ideal: 18 },
-      { day: 'D9', real: 6, ideal: 9 },
-      { day: 'D10', real: 0, ideal: 0 }
-    ],
-    distribution: [
-      { name: 'Historias de Usuario', value: 14, percentage: 70, color: '#8b5cf6' },
-      { name: 'Bugs y Defectos', value: 4, percentage: 20, color: '#ec4899' },
-      { name: 'Deuda Técnica', value: 2, percentage: 10, color: '#06b6d4' }
-    ],
-    kpis: { velocitySp: 46, deliveryHealth: '88%', cycleTimeDays: '2.4d', criticalBugs: 1 }
-  },
-  'proj-2': {
-    velocity: [
-      { sprint: 'SP 5', sp: 25 },
-      { sprint: 'SP 6', sp: 30 },
-      { sprint: 'SP 7', sp: 36 },
-      { sprint: 'SP 8', sp: 40 }
-    ],
-    burndown: [
-      { day: 'D1', real: 40, ideal: 40 },
-      { day: 'D3', real: 35, ideal: 32 },
-      { day: 'D5', real: 26, ideal: 24 },
-      { day: 'D7', real: 18, ideal: 16 },
-      { day: 'D9', real: 8, ideal: 8 },
-      { day: 'D10', real: 2, ideal: 0 }
-    ],
-    distribution: [
-      { name: 'Historias de Usuario', value: 10, percentage: 62, color: '#8b5cf6' },
-      { name: 'Bugs y Defectos', value: 4, percentage: 25, color: '#ec4899' },
-      { name: 'Deuda Técnica', value: 2, percentage: 13, color: '#06b6d4' }
-    ],
-    kpis: { velocitySp: 40, deliveryHealth: '75%', cycleTimeDays: '3.1d', criticalBugs: 2 }
-  },
-  'proj-3': {
-    velocity: [
-      { sprint: 'SP 1', sp: 20 },
-      { sprint: 'SP 2', sp: 28 },
-      { sprint: 'SP 3', sp: 34 },
-      { sprint: 'SP 4', sp: 42 }
-    ],
-    burndown: [
-      { day: 'D1', real: 42, ideal: 42 },
-      { day: 'D3', real: 30, ideal: 33 },
-      { day: 'D5', real: 20, ideal: 25 },
-      { day: 'D7', real: 10, ideal: 16 },
-      { day: 'D9', real: 2, ideal: 8 },
-      { day: 'D10', real: 0, ideal: 0 }
-    ],
-    distribution: [
-      { name: 'Historias de Usuario', value: 16, percentage: 80, color: '#8b5cf6' },
-      { name: 'Bugs y Defectos', value: 2, percentage: 10, color: '#ec4899' },
-      { name: 'Deuda Técnica', value: 2, percentage: 10, color: '#06b6d4' }
-    ],
-    kpis: { velocitySp: 42, deliveryHealth: '92%', cycleTimeDays: '1.8d', criticalBugs: 0 }
-  }
-};
-
-const getProjectMetrics = (projId) => MOCK_PROJECT_METRICS[projId] || {
-  velocity: [{ sprint: 'SP 1', sp: 24 }, { sprint: 'SP 2', sp: 30 }, { sprint: 'SP 3', sp: 38 }, { sprint: 'SP 4', sp: 44 }],
-  burndown: [{ day: 'D1', real: 44, ideal: 44 }, { day: 'D3', real: 36, ideal: 35 }, { day: 'D5', real: 25, ideal: 26 }, { day: 'D7', real: 14, ideal: 17 }, { day: 'D10', real: 0, ideal: 0 }],
-  distribution: [{ name: 'Historias de Usuario', value: 12, percentage: 75, color: '#8b5cf6' }, { name: 'Bugs y Defectos', value: 3, percentage: 18, color: '#ec4899' }, { name: 'Deuda Técnica', value: 1, percentage: 7, color: '#06b6d4' }],
-  kpis: { velocitySp: 44, deliveryHealth: '85%', cycleTimeDays: '2.1d', criticalBugs: 0 }
-};
-
-const INITIAL_PROJECTS = [
-  {
-    id: 'proj-1',
-    key: 'MCHAV-01',
-    name: 'Sistema Analytics MCHAV',
-    description: 'Plataforma de métricas ejecutivas, rendimiento de equipo y gobernanza RBAC.',
-    status: 'ACTIVE',
-    statusLabel: 'Sprint 14 Activo',
-    progress: 88,
-    category: 'Backend & Frontend',
-    leader: AVAILABLE_LEADERS[0],
-    developers: [AVAILABLE_DEVELOPERS[0], AVAILABLE_DEVELOPERS[1], AVAILABLE_DEVELOPERS[2]]
-  },
-  {
-    id: 'proj-2',
-    key: 'RBAC-02',
-    name: 'Portal de Clientes & Seguridad RBAC',
-    description: 'Módulo de autenticación segura, control de matriz de permisos y auditoría.',
-    status: 'ACTIVE',
-    statusLabel: 'Sprint 8 en Proceso',
-    progress: 75,
-    category: 'Seguridad & Permisos',
-    leader: AVAILABLE_LEADERS[0],
-    developers: [AVAILABLE_DEVELOPERS[0], AVAILABLE_DEVELOPERS[1]]
-  },
-  {
-    id: 'proj-3',
-    key: 'ETL-03',
-    name: 'API Gateway & Sincronización Jira ETL',
-    description: 'Motor de extracción y carga de tareas Jira con webhooks en tiempo real.',
-    status: 'STABLE',
-    statusLabel: 'Optimización y Mantenimiento',
-    progress: 92,
-    category: 'Integración & Datos',
-    leader: AVAILABLE_LEADERS[1],
-    developers: [AVAILABLE_DEVELOPERS[2]]
-  }
-];
-
 function isAdminRole(rol) {
   if (!rol) return true;
   const r = String(rol).toLowerCase();
@@ -243,8 +90,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const isAdmin = isAdminRole(userProfile?.rol || user?.rol);
 
   const [projects, setProjects] = useState(() => {
-    const savedCustom = JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
-    return savedCustom.length > 0 ? [...savedCustom, ...INITIAL_PROJECTS] : INITIAL_PROJECTS;
+    return JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
   });
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -294,8 +140,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [percentilesData, setPercentilesData] = useState(null);
   const [loadingPercentiles, setLoadingPercentiles] = useState(false);
 
-  const [availableLeaders, setAvailableLeaders] = useState(AVAILABLE_LEADERS);
-  const [availableDevelopers, setAvailableDevelopers] = useState(AVAILABLE_DEVELOPERS);
+  const [availableLeaders, setAvailableLeaders] = useState([]);
+  const [availableDevelopers, setAvailableDevelopers] = useState([]);
   const [realProjectMetrics, setRealProjectMetrics] = useState({});
 
   // Cargar usuarios reales (Líderes y Desarrolladores) desde el backend
@@ -353,8 +199,8 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             statusLabel: `Estado: ${p.estado || 'Activo'}`,
             progress: 85,
             category: 'Proyecto Jira Cloud',
-            leader: availableLeaders[idx % availableLeaders.length] || AVAILABLE_LEADERS[0],
-            developers: availableDevelopers.slice(0, 3).length > 0 ? availableDevelopers.slice(0, 3) : AVAILABLE_DEVELOPERS.slice(0, 3)
+            leader: availableLeaders[idx % availableLeaders.length] || null,
+            developers: availableDevelopers.slice(0, 3)
           }));
           
           const savedCustom = JSON.parse(localStorage.getItem('custom_user_projects') || '[]');
@@ -509,7 +355,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     setEditingProjectId(project.id);
     setFormName(project.name);
     setFormKey(project.key);
-    setFormLeaderId(project.leader?.id || AVAILABLE_LEADERS[0].id);
+    setFormLeaderId(project.leader?.id || '');
     setFormDevIds(project.developers?.map(d => d.id) || []);
     resetAssignFormUi();
     setShowAssignModal(true);
@@ -521,27 +367,27 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   };
 
   const selectedLeader = useMemo(
-    () => AVAILABLE_LEADERS.find(l => l.id === formLeaderId) || null,
-    [formLeaderId]
+    () => availableLeaders.find(l => l.id === formLeaderId) || null,
+    [formLeaderId, availableLeaders]
   );
 
   const selectedDevs = useMemo(
-    () => AVAILABLE_DEVELOPERS.filter(d => formDevIds.includes(d.id)),
-    [formDevIds]
+    () => availableDevelopers.filter(d => formDevIds.includes(d.id)),
+    [formDevIds, availableDevelopers]
   );
 
   const filteredLeaders = useMemo(() => {
     const q = leaderSearch.trim().toLowerCase();
-    if (!q) return AVAILABLE_LEADERS;
-    return AVAILABLE_LEADERS.filter(
+    if (!q) return availableLeaders;
+    return availableLeaders.filter(
       l => l.name.toLowerCase().includes(q) || l.email.toLowerCase().includes(q) || l.role.toLowerCase().includes(q)
     );
   }, [leaderSearch]);
 
   const filteredDevelopers = useMemo(() => {
     const q = devSearch.trim().toLowerCase();
-    if (!q) return AVAILABLE_DEVELOPERS;
-    return AVAILABLE_DEVELOPERS.filter(
+    if (!q) return availableDevelopers;
+    return availableDevelopers.filter(
       d => d.name.toLowerCase().includes(q) || d.email.toLowerCase().includes(q)
     );
   }, [devSearch]);
@@ -702,7 +548,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   });
 
   const activeProject = filteredProjects.find(p => p.id === expandedProjectId);
-  const activeMetrics = activeProject ? (realProjectMetrics[activeProject.id] || getProjectMetrics(activeProject.id)) : null;
+  const activeMetrics = activeProject ? realProjectMetrics[activeProject.id] : null;
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
@@ -885,7 +731,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                       <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Desarrolladores asignados</h4>
                     </div>
                     <span className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-100 dark:bg-sky-500/15 px-2 py-0.5 rounded-md">
-                      {formDevIds.length} de {AVAILABLE_DEVELOPERS.length}
+                      {formDevIds.length} de {availableDevelopers.length}
                     </span>
                   </div>
 

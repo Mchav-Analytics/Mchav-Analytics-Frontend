@@ -27,6 +27,33 @@ import LoginView from './features/auth/views/LoginView';
 import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null, errorInfo: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    this.setState({ errorInfo });
+    console.error("ErrorBoundary caught an error", error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div style={{ padding: 20, background: 'red', color: 'white', zIndex: 9999, position: 'relative' }}>
+          <h2>Algo salió mal en el renderizado:</h2>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error && this.state.error.toString()}</pre>
+          <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
+          <button onClick={() => this.setState({ hasError: false })}>Intentar de nuevo</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
   // Persistir pestaña activa actual en localStorage para no volver al inicio al hacer Refresh
@@ -158,8 +185,11 @@ function MainAppContent() {
     projectService.getProjects()
       .then(data => {
         setProjects(data);
-        if (data.length > 0 && !selectedProjectId) {
-          setSelectedProjectId(data[0].id_proyecto);
+        if (data.length > 0) {
+          const projectExists = data.some(p => String(p.id_proyecto) === String(selectedProjectId));
+          if (!selectedProjectId || !projectExists) {
+            setSelectedProjectId(data[0].id_proyecto);
+          }
         }
       })
       .catch(err => {
@@ -259,12 +289,12 @@ function MainAppContent() {
       case 'daily_focus':
         return {
           title: "Mi Agenda de Hoy",
-          subtitle: "Lista de tareas, prioridades y metas personales planificadas para tu jornada de hoy."
+          subtitle: "Tu jornada de ejecución: lo que tienes que hacer hoy."
         };
       case 'dev_workload':
         return {
           title: "Plan de Trabajo",
-          subtitle: "Planificación estratégica de tareas pendientes, entregas en progreso y capacidad del sprint."
+          subtitle: "Visión general, backlog y planificación de todas tus tareas."
         };
       case 'dev_alerts':
         return {
@@ -361,7 +391,7 @@ function MainAppContent() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
       handleSyncNow={handleSyncNow}
       topbarTitle={headerDetails.title}
@@ -393,16 +423,18 @@ function MainAppContent() {
       )}
 
       {activeTab === 'developer' && (
-        <DeveloperView
-          kpis={filteredKpis}
-          projects={projects}
-          selectedProjectId={selectedProjectId}
-          setSelectedProjectId={setSelectedProjectId}
-          syncSuccessMsg={syncSuccessMsg}
-          alerts={alerts}
-          onNavigateToAlerts={() => setActiveTab('alerts_center')}
-          onNavigateTab={(tab) => setActiveTab(tab)}
-        />
+        <ErrorBoundary>
+          <DeveloperView
+            kpis={filteredKpis}
+            projects={projects}
+            selectedProjectId={selectedProjectId}
+            setSelectedProjectId={setSelectedProjectId}
+            syncSuccessMsg={syncSuccessMsg}
+            alerts={alerts}
+            onNavigateToAlerts={() => setActiveTab('alerts_center')}
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        </ErrorBoundary>
       )}
 
       {activeTab === 'daily_focus' && (
