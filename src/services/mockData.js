@@ -4,34 +4,32 @@
 // Este archivo contiene objetos y funciones ficticias para simular la respuesta
 // del servidor FastAPI cuando el modo offline / mock está activado (USE_MOCK_DATA = true).
 
-// 1. Objeto de usuario simulado que representa la sesión del usuario Administrador
+// 1. Usuarios simulados principales
 export const mockUserAdmin = {
-  id_usuario: 1,                          // Identificador único del usuario Administrador
-  nombre: "Valka Hoyos",                 // Nombre completo que se muestra en la interfaz
-  email: "vhoyos@mchav.com",              // Correo electrónico del usuario Administrador
-  rol: "ADMIN",                           // Rol asignado: ADMINISTRADOR (Acceso Total)
-  avatar_url: null,                       // URL de avatar personalizado (opcional)
-  jira_connected: true                    // Estado de vinculación con Atlassian Jira
+  id_usuario: 1,
+  nombre: "Michael Salamanca",
+  email: "salamancamai12@gmail.com",
+  rol: "ADMIN",
+  avatar_url: null,
+  jira_connected: true
 };
 
-// 1b. Objeto de usuario simulado que representa la sesión del Desarrollador
 export const mockUserDeveloper = {
-  id_usuario: 2,                          // Identificador único del usuario Desarrollador
-  nombre: "Clara Gomez",                 // Nombre completo que se muestra en la interfaz
-  email: "cgomez@mchav.com",                 // Correo electrónico del usuario Desarrollador
-  rol: "DEVELOPER",                       // Rol asignado: DESARROLLADOR (Acceso Restringido y Vista Propia)
-  avatar_url: null,                       // URL de avatar personalizado (opcional)
-  jira_connected: true                    // Estado de vinculación con Atlassian Jira
+  id_usuario: 2,
+  nombre: "Felipe Alcalá",
+  email: "pipealcala22@gmail.com",
+  rol: "DEVELOPER",
+  avatar_url: null,
+  jira_connected: true
 };
 
-// 1c. Objeto de usuario simulado que representa la sesión del Manager (Líder Técnico)
 export const mockUserManager = {
-  id_usuario: 3,                          // Identificador único del usuario Manager
-  nombre: "Andrés Felipe Torres",        // Nombre completo que se muestra en la interfaz
-  email: "aftorres@mchav.com",            // Correo electrónico del usuario Manager
-  rol: "MANAGER",                         // Rol asignado: MANAGER (Acceso Restringido y Vista Propia)
-  avatar_url: null,                       // URL de avatar personalizado (opcional)
-  jira_connected: true                    // Estado de vinculación con Atlassian Jira
+  id_usuario: 3,
+  nombre: "Camilo Corredor",
+  email: "corredorbeltran592@gmail.com",
+  rol: "MANAGER",
+  avatar_url: null,
+  jira_connected: true
 };
 
 export const mockUser = mockUserAdmin;

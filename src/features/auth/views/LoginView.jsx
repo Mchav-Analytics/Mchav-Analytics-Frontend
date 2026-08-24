@@ -59,6 +59,18 @@ function LoginView() {
     }
   };
 
+  const handleLocalDevLogin = () => {
+    setIsSubmitting(true);
+    const userSession = {
+      email: 'admin@mchav.com',
+      rol: 'ADMIN',
+      name: 'Administrador MCHAV',
+      activo: true
+    };
+    localStorage.setItem('mock_user_session', JSON.stringify(userSession));
+    window.location.href = '/dashboard';
+  };
+
   return (
     <div
       ref={containerRef}
@@ -486,7 +498,7 @@ function LoginView() {
                   )}
 
                   {/* BOTÓN ÚNICO DE AUTENTICACIÓN CON ATLASSIAN (JIRA) */}
-                  <div className="my-4 w-full">
+                  <div className="my-4 w-full flex flex-col gap-2.5">
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); handleJiraAuth(); }}

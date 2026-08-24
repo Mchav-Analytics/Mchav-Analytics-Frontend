@@ -168,6 +168,15 @@ export const projectService = {
     if (USE_MOCK_DATA) return mockProjectService.getKpiIssuesDetail ? mockProjectService.getKpiIssuesDetail(projectId, params) : Promise.resolve({ total_issues: 0, issues: [] });
     return api.get(`/api/v1/projects/${projectId}/kpis/issues-detail`, { params }).then(res => res.data);
   },
+  transitionIssue(issueKey, targetStatus, transitionId = null) {
+    return api.post(`/api/v1/jira/issues/${issueKey}/transition`, {
+      target_status: targetStatus,
+      transition_id: transitionId
+    }).then(res => res.data);
+  },
+  getIssueTransitions(issueKey) {
+    return api.get(`/api/v1/jira/issues/${issueKey}/transitions`).then(res => res.data);
+  },
   async getSprintHealth(projectId = 'PROJ-01', sprintId = null) {
     try {
       let url = `/api/v1/projects/${projectId}/health`;
@@ -200,7 +209,7 @@ export const projectService = {
       };
     }
   },
-  getPercentiles(projectId) {
+  getPercentiles(projectId, days = 15) {
     if (USE_MOCK_DATA) {
       return Promise.resolve([
         {
@@ -226,7 +235,7 @@ export const projectService = {
         }
       ]);
     }
-    return api.get(`/api/v1/projects/${projectId}/percentiles`).then(res => res.data);
+    return api.get(`/api/v1/projects/${projectId}/percentiles?days=${days}`).then(res => res.data);
   }
 };
 
@@ -543,6 +552,15 @@ export const automationService = {
   getHealthMetrics() {
     if (USE_MOCK_DATA) return mockAutomationService.getHealthMetrics();
     return api.get('/api/v1/system/health').then(res => res.data);
+  }
+};
+
+export const aiService = {
+  chat(message, projectId = 'PROJ-01', history = []) {
+    return api.post('/api/v1/ai/chat', { message, project_id: projectId, history }).then(res => res.data);
+  },
+  getSuggestedPrompts() {
+    return api.get('/api/v1/ai/prompts').then(res => res.data);
   }
 };
 

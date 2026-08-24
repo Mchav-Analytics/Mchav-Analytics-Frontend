@@ -112,7 +112,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
             {getUserInitials()}
           </div>
           <span className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate max-w-[220px]">
-            {userProfile?.email || 'vhoyos@mchav.com'}
+            {userProfile?.email || 'salamancamai12@gmail.com'}
           </span>
         </div>
 
@@ -125,7 +125,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
         </button>
       </div>
 
-      {/* 2. ENCABEZADO CENTRAL: AVATAR GRANDE Y SALUDO GOOGLE ("¡Hola, Valka!") */}
+      {/* 2. ENCABEZADO CENTRAL: AVATAR GRANDE Y SALUDO GOOGLE ("¡Hola, Michael!") */}
       <div className="flex flex-col items-center text-center space-y-1.5 py-1">
         <div className="relative">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 via-purple-600 to-teal-500 text-white font-extrabold text-xl flex items-center justify-center shadow-md border-2 border-white dark:border-slate-800">
@@ -155,7 +155,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
             </span>
           </div>
           <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-            {userProfile?.nombre || 'Valka Hoyos'}
+            {userProfile?.nombre || 'Michael Salamanca'}
           </span>
         </div>
 
@@ -170,7 +170,7 @@ export default function ProfileSettingsModal({ isOpen, onClose, userProfile }) {
             </span>
           </div>
           <span className="text-xs font-bold text-slate-800 dark:text-slate-200 font-mono">
-            {userProfile?.email || 'vhoyos@mchav.com'}
+            {userProfile?.email || 'salamancamai12@gmail.com'}
           </span>
         </div>
 

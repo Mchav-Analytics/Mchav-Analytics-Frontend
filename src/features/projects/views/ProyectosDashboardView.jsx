@@ -77,7 +77,6 @@ const MetricInfoTooltip = ({ text, align = "auto" }) => {
       </div>
     </div>
   );
-};
 
 function isAdminRole(rol) {
   if (!rol) return true;
@@ -139,6 +138,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [activeProjectTab, setActiveProjectTab] = useState('RESUMEN');
   const [percentilesData, setPercentilesData] = useState(null);
   const [loadingPercentiles, setLoadingPercentiles] = useState(false);
+  const [percentilesWindow, setPercentilesWindow] = useState(15);
 
   const [availableLeaders, setAvailableLeaders] = useState([]);
   const [availableDevelopers, setAvailableDevelopers] = useState([]);
@@ -315,12 +315,23 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
       // HU-014: Cargar datos de percentiles en paralelo
       setLoadingPercentiles(true);
-      projectService.getPercentiles(projectId)
+      projectService.getPercentiles(projectId, percentilesWindow)
         .then(data => setPercentilesData(data))
         .catch(err => console.error("Error al cargar percentiles", err))
         .finally(() => setLoadingPercentiles(false));
     }
   };
+
+  // Re-fetch percentiles if the window changes and the tab is open
+  useEffect(() => {
+    if (expandedProjectId && activeProjectTab === 'TIEMPOS') {
+      setLoadingPercentiles(true);
+      projectService.getPercentiles(expandedProjectId, percentilesWindow)
+        .then(data => setPercentilesData(data))
+        .catch(err => console.error("Error al cargar percentiles", err))
+        .finally(() => setLoadingPercentiles(false));
+    }
+  }, [percentilesWindow]);
 
   const resetAssignFormUi = () => {
     setLeaderOpen(false);
@@ -651,12 +662,12 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                   </section>
                 </div>
 
-                {/* Contenedor: Líder técnico */}
+                {/* Contenedor: Planificador */}
                 <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50" style={{ padding: '1.15rem 1.25rem' }}>
                   <div className="flex items-center justify-between gap-2" style={{ marginBottom: 14 }}>
                     <div className="flex items-center gap-2">
                       <ShieldCheck size={15} className="text-violet-500" />
-                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Líder técnico responsable</h4>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Planificador responsable</h4>
                     </div>
                     <span className="text-[10px] font-bold text-violet-600 dark:text-violet-300 bg-violet-100 dark:bg-violet-500/15 px-2 py-0.5 rounded-md">
                       {formLeaderId ? '1 seleccionado' : 'Sin seleccionar'}
@@ -672,7 +683,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                       }`}
                   >
                     <p className={`text-sm font-semibold truncate ${formLeaderId ? 'text-slate-900 dark:text-slate-50' : 'text-slate-600 dark:text-slate-300'}`}>
-                      {formLeaderId && selectedLeader ? selectedLeader.name : 'Seleccionar líder técnico'}
+                      {formLeaderId && selectedLeader ? selectedLeader.name : 'Seleccionar planificador'}
                     </p>
                     {leaderOpen ? <ChevronUp size={18} className="text-violet-500 shrink-0" /> : <ChevronDown size={18} className="text-slate-400 shrink-0" />}
                   </button>
@@ -684,7 +695,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                         <input
                           type="text"
                           autoFocus
-                          placeholder="Buscar líder..."
+                          placeholder="Buscar planificador..."
                           value={leaderSearch}
                           onChange={e => setLeaderSearch(e.target.value)}
                           className="w-full bg-transparent border-0 outline-none text-sm font-medium text-slate-700 dark:text-slate-200 placeholder:text-slate-400"
@@ -842,7 +853,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 </div>
 
                 <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900" style={{ padding: '0.85rem' }}>
-                  <p className="text-[10px] font-black uppercase tracking-wider text-violet-600 dark:text-violet-300 mb-2">Líder técnico</p>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-violet-600 dark:text-violet-300 mb-2">Planificador</p>
                   {selectedLeader ? (
                     <>
                       <p className="text-xs font-bold text-slate-900 dark:text-slate-50">{selectedLeader.name}</p>
@@ -964,7 +975,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       {showConfirmModal && pendingAssignment && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <h3 className="text-lg font-black text-slate-900 dark:text-slate-50">Confirmar líder técnico</h3>
+            <h3 className="text-lg font-black text-slate-900 dark:text-slate-50">Confirmar planificador</h3>
             <p className="text-sm text-slate-500">
               ¿Confirmas la asignación del proyecto <strong>{pendingAssignment.project.name}</strong>?
             </p>
@@ -1726,12 +1737,31 @@ export default function ProyectosDashboardView({ userProfile = null }) {
               </>
           ) : (
             /* Pestaña de Análisis de Tiempos (Percentiles) HU-014 */
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
-              {loadingPercentiles ? (
-                <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500 animate-pulse">
-                  Calculando percentiles y agregando datos de los últimos 15 días...
+            <div className="space-y-4">
+              <div className="flex justify-between items-center bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm animate-in fade-in">
+                <div className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                  Métricas de Flujo (Lead Time y Cycle Time)
                 </div>
-              ) : percentilesData && percentilesData.length > 0 ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-500 font-medium">Periodo evaluado:</span>
+                  <select
+                    className="bg-slate-100 dark:bg-slate-900 border-none text-xs font-bold text-slate-700 dark:text-slate-300 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
+                    value={percentilesWindow}
+                    onChange={(e) => setPercentilesWindow(Number(e.target.value))}
+                  >
+                    <option value={15}>Últimos 15 días</option>
+                    <option value={30}>Últimos 30 días</option>
+                    <option value={60}>Últimos 60 días</option>
+                    <option value={90}>Últimos 90 días</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in fade-in duration-300">
+                {loadingPercentiles ? (
+                  <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500 animate-pulse">
+                    Calculando percentiles y agregando datos de los últimos {percentilesWindow} días...
+                  </div>
+                ) : percentilesData && percentilesData.length > 0 ? (
                 percentilesData.map((data, idx) => {
                   const colors = ['indigo', 'emerald', 'rose', 'sky', 'amber'];
                   return (
@@ -1746,9 +1776,10 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 })
               ) : (
                 <div className="col-span-full py-12 text-center text-sm font-bold text-slate-500">
-                  No se encontraron datos de tareas resueltas en este proyecto en los últimos 15 días.
+                  No se encontraron datos de tareas resueltas en este proyecto en los últimos {percentilesWindow} días.
                 </div>
               )}
+              </div>
             </div>
           )}
         </section>

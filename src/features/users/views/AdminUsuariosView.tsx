@@ -171,16 +171,25 @@ export default function AdminUsuariosView({
     const fetchUsers = async () => {
       try {
         const res = await api.get('/api/v1/users');
-        const mappedUsers = res.data.map((u: any) => ({
-          id: String(u.id_usuario),
-          name: u.nombre,
-          email: u.email,
-          role: u.rol ? (u.rol.toUpperCase().includes('ADMIN') ? 'ADMIN' : u.rol.toUpperCase().includes('MANAGER') ? 'MANAGER' : 'DEVELOPER') : 'DEVELOPER',
-          status: u.activo ? 'ACTIVE' : 'INACTIVE',
-          joinedDate: 'Reciente',
-          lastActive: 'Activo',
-          actions: []
-        }));
+        const mappedUsers = res.data.map((u: any) => {
+          const rawRolStr = String(u.rol || '').toUpperCase();
+          const parsedRole = rawRolStr.includes('ADMIN')
+            ? 'ADMIN'
+            : (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER'))
+              ? 'MANAGER'
+              : 'DEVELOPER';
+
+          return {
+            id: String(u.id_usuario),
+            name: u.nombre || u.email || 'Usuario',
+            email: u.email || '',
+            role: parsedRole,
+            status: u.activo ? 'ACTIVE' : 'INACTIVE',
+            joinedDate: 'Reciente',
+            lastActive: 'Activo',
+            actions: []
+          };
+        });
         setUsers(mappedUsers);
       } catch (e) {
         console.error("Error fetching real users", e);
@@ -194,8 +203,19 @@ export default function AdminUsuariosView({
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleRoleChange = (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+  const handleRoleChange = async (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
     const targetUser = users.find(u => u.id === userId);
+
+    setUsers(prev =>
+      prev.map(u => (u.id === userId ? { ...u, role: targetRole } : u))
+    );
+
+    try {
+      await api.put(`/api/v1/users/${userId}/role`, { role: targetRole });
+    } catch (err) {
+      console.log("Actualizando estado local de rol:", err);
+    }
+
     if (targetUser && typeof approveUserPermission === 'function') {
       approveUserPermission(targetUser.email, targetRole);
     }
@@ -210,14 +230,11 @@ export default function AdminUsuariosView({
       /* ignore storage errors */
     }
 
-    setUsers(prev =>
-      prev.map(u => (u.id === userId ? { ...u, role: targetRole } : u))
-    );
-
-    showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${targetRole}`);
+    const displayRoleName = targetRole === 'MANAGER' ? 'PLANIFICADOR' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : 'DESARROLLADOR';
+    showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${displayRoleName}`);
   };
 
-  const toggleUserStatus = (userId: string) => {
+  const toggleUserStatus = async (userId: string) => {
     const targetUser = users.find(u => u.id === userId);
     const newStatus = targetUser?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
 
@@ -226,6 +243,12 @@ export default function AdminUsuariosView({
         u.id === userId ? { ...u, status: newStatus } : u
       )
     );
+
+    try {
+      await api.put(`/api/v1/users/${userId}/status`, { activo: newStatus === 'ACTIVE' });
+    } catch (err) {
+      console.log("Actualizando estado local de activación:", err);
+    }
 
     showToast(newStatus === 'ACTIVE'
       ? `🟢 Cuenta de ${targetUser?.name} activada exitosamente`
@@ -271,8 +294,10 @@ export default function AdminUsuariosView({
   const pendingRequests = users.filter(u => u.status === 'INACTIVE');
 
   const filteredUsers = users.filter(u => {
-    const matchesSearch = u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const userName = (u.name || u.email || '').toLowerCase();
+    const userEmail = (u.email || '').toLowerCase();
+    const search = (searchTerm || '').toLowerCase();
+    const matchesSearch = userName.includes(search) || userEmail.includes(search);
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
     const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -403,7 +428,7 @@ export default function AdminUsuariosView({
             </div>
           </div>
 
-          {/* TARJETA 2: LÍDER TÉCNICO */}
+          {/* TARJETA 2: PLANIFICADOR */}
           <div
             onClick={() => setRoleFilter(roleFilter === 'MANAGER' ? 'ALL' : 'MANAGER')}
             className={`group bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.02] cursor-pointer flex items-center justify-between ${
@@ -419,7 +444,7 @@ export default function AdminUsuariosView({
               </div>
               <div className="space-y-1">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Líder Técnico</h3>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight">Planificador</h3>
                   {roleFilter === 'MANAGER' && <CheckCircle2 size={16} className="text-blue-600 dark:text-blue-400" />}
                 </div>
                 <p className="text-xs text-blue-700 dark:text-blue-300/80 font-semibold">Gestión de Sprint & Equipo</p>
@@ -584,9 +609,9 @@ export default function AdminUsuariosView({
                         : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
                       }`}
                   >
-                    <option value="ADMIN">ADMIN</option>
-                    <option value="MANAGER">MANAGER</option>
-                    <option value="DEVELOPER">DEVELOPER</option>
+                    <option value="ADMIN">ADMINISTRADOR</option>
+                    <option value="MANAGER">PLANIFICADOR</option>
+                    <option value="DEVELOPER">DESARROLLADOR</option>
                   </select>
                 </div>
 
@@ -800,9 +825,9 @@ export default function AdminUsuariosView({
                   onChange={e => setNewRole(e.target.value as 'ADMIN' | 'MANAGER' | 'DEVELOPER')}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-slate-100 font-semibold outline-none cursor-pointer"
                 >
-                  <option value="DEVELOPER">DEVELOPER (Desarrollador)</option>
-                  <option value="MANAGER">MANAGER (Líder Técnico)</option>
-                  <option value="ADMIN">ADMIN (Administrador)</option>
+                  <option value="DEVELOPER">DESARROLLADOR (Developer)</option>
+                  <option value="MANAGER">PLANIFICADOR (Manager)</option>
+                  <option value="ADMIN">ADMINISTRADOR (Admin)</option>
                 </select>
               </div>
               <div className="flex justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-800">
