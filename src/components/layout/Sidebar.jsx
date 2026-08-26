@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings, Sparkles } from 'lucide-react';
+import { Settings, Sparkles, Shield, Briefcase, Code } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
 
@@ -121,6 +121,11 @@ function Sidebar({
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5m-9-6h.008v.008H12v-.008zM12 15h.008v.008H12V15zm0 2.25h.008v.008H12v-.008zM9.75 15h.008v.008H9.75V15zm0 2.25h.008v.008H9.75v-.008zM7.5 15h.008v.008H7.5V15zm0 2.25h.008v.008H7.5v-.008zm6.75-4.5h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V15zm0 2.25h.008v.008h-.008v-.008zm2.25-4.5h.008v.008H16.5v-.008zm0 2.25h.008v.008H16.5V15z" />
       </svg>
+    ),
+    calculator: (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-3-2.25V18m-3-2.25V18m3-6.75h.008v.008H12V9.75zm0 3h.008v.008H12v-.008zm0 3h.008v.008H12v-.008zm-3-6h.008v.008H9v-.008zm0 3h.008v.008H9v-.008zm0 3h.008v.008H9v-.008zm6-6h.008v.008h-.008V9.75zm0 3h.008v.008h-.008v-.008zm0 3h.008v.008h-.008v-.008zM6.75 3h10.5a2.25 2.25 0 012.25 2.25v13.5a2.25 2.25 0 01-2.25 2.25H6.75a2.25 2.25 0 01-2.25-2.25V5.25A2.25 2.25 0 016.75 3z" />
+      </svg>
     )
   };
 
@@ -138,8 +143,8 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
-        { id: 'dashboard', label: 'Panel Operativo', icon: icons.dashboard },
-        { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+        { id: 'dashboard', label: 'Proyectos', icon: icons.projects },
+        { id: 'capacity_calculator', label: 'Calculadora de Capacidad', icon: icons.calculator },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
         { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
@@ -225,6 +230,62 @@ function Sidebar({
           >
             <Sparkles size={18} className="text-yellow-300 animate-pulse" />
           </button>
+        )}
+
+        {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
+        {isRealAdmin && (
+          <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center' : 'grid grid-cols-3 gap-1'}`}>
+            <button
+              type="button"
+              onClick={() => {
+                switchViewRole('ADMIN');
+                setActiveTab('dashboard');
+              }}
+              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                userRole === 'ADMIN'
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+              }`}
+              title="Cambiar a Vista Administrador"
+            >
+              <Shield size={13} />
+              {!isCollapsed && <span>Admin</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                switchViewRole('MANAGER');
+                setActiveTab('dashboard');
+              }}
+              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                userRole === 'MANAGER'
+                  ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+              }`}
+              title="Cambiar a Vista Líder Técnico"
+            >
+              <Briefcase size={13} />
+              {!isCollapsed && <span>Líder</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                switchViewRole('DEVELOPER');
+                setActiveTab('developer');
+              }}
+              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                userRole === 'DEVELOPER'
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+              }`}
+              title="Cambiar a Vista Desarrollador"
+            >
+              <Code size={13} />
+              {!isCollapsed && <span>Dev</span>}
+            </button>
+          </div>
         )}
 
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}

@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
 import LiderTecnicoDashboardView from './features/dashboard/views/LiderTecnicoDashboardView';
+import CapacityCalculatorView from './features/dashboard/views/CapacityCalculatorView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
 import DailyFocusView from './features/dashboard/views/DailyFocusView';
 import DevWorkloadView from './features/dashboard/views/DevWorkloadView';
@@ -415,11 +416,7 @@ function MainAppContent() {
     >
       {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
         normalizeRole(user?.rol) === 'MANAGER' ? (
-          <LiderTecnicoDashboardView
-            selectedProjectId={selectedProjectId}
-            setActiveTab={setActiveTab}
-            isDarkMode={isDarkMode}
-          />
+          <ProyectosDashboardView userProfile={user} />
         ) : (
           <DashboardView
             metrics={metrics}
@@ -432,6 +429,10 @@ function MainAppContent() {
             subTab={activeTab}
           />
         )
+      )}
+
+      {activeTab === 'capacity_calculator' && (
+        <CapacityCalculatorView isDarkMode={isDarkMode} />
       )}
 
       {activeTab === 'developer' && (
