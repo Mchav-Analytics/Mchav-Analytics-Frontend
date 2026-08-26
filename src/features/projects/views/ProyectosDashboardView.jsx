@@ -10,6 +10,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 import { SprintBurndownChart } from '../components/SprintBurndownChart';
 import { ProjectMetrics } from '../components/ProjectMetrics';
+import { ProjectCard } from '../components/ProjectCard';
 import {
   FolderKanban,
   ChevronDown,
@@ -57,6 +58,8 @@ import {
   Cell
 } from 'recharts';
 import PercentilesChart from '../../dashboard/components/PercentilesChart';
+import { MetricInfoTooltip } from '../../../components/ui/MetricInfoTooltip';
+import { useProjectsData } from '../../../hooks/useProjectsData';
 
 const tooltipStyle = {
   backgroundColor: 'var(--bg-card)',
@@ -67,19 +70,7 @@ const tooltipStyle = {
   boxShadow: 'var(--shadow-card)'
 };
 
-const MetricInfoTooltip = ({ text, align = "auto" }) => {
-  return (
-    <div className="group/tooltip relative inline-flex items-center cursor-help ml-1.5 shrink-0 z-[100]">
-      <div className="p-1 rounded-full text-slate-400 hover:text-indigo-300 hover:bg-slate-800/80 transition-all cursor-pointer border border-transparent hover:border-indigo-500/30">
-        <Info size={14} />
-      </div>
-      <div className={`absolute bottom-full mb-2 ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"} hidden group-hover/tooltip:block w-56 p-2.5 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none text-left backdrop-blur-md font-normal leading-relaxed`}>
-        {text}
-        <div className={`absolute top-full ${align === "right" ? "right-3" : align === "left" ? "left-3" : "left-1/2 -translate-x-1/2"} border-4 border-transparent border-t-slate-900`}></div>
-      </div>
-    </div>
-  );
-};
+
 
 function isAdminRole(rol) {
   if (!rol) return true;
@@ -97,44 +88,16 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDevModalOpen, setIsDevModalOpen] = useState(false);
-  const [dbUsers, setDbUsers] = useState([]);
-  const [dbProjects, setDbProjects] = useState([]);
-  const [assignProjectId, setAssignProjectId] = useState({});
-
-  const fetchUsersAndProjects = async () => {
-    try {
-      const [uRes, pRes] = await Promise.all([
-        api.get('/api/v1/users'),
-        api.get('/api/v1/projects')
-      ]);
-      setDbUsers(uRes.data || []);
-      setDbProjects(pRes.data || []);
-    } catch (e) {
-      console.error("Error fetching devs", e);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsersAndProjects();
-  }, []);
-
-  const developers = React.useMemo(() => {
-    return dbUsers.filter(u => u.rol && (u.rol.toUpperCase().includes('DEV') || u.rol.toUpperCase().includes('DESARROLLADOR')));
-  }, [dbUsers]);
-
-  const assignedDevs = developers.filter(d => d.proyectos_asignados && d.proyectos_asignados.length > 0);
-  const unassignedDevs = developers.filter(d => !d.proyectos_asignados || d.proyectos_asignados.length === 0);
-
-  const handleAssignProject = async (userId, projectId) => {
-    if (!projectId) return;
-    try {
-      await api.post(`/api/v1/users/${userId}/projects`, { id_proyectos: [projectId] });
-      await fetchUsersAndProjects();
-      setAssignProjectId({...assignProjectId, [userId]: ''});
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const {
+    dbUsers,
+    dbProjects,
+    developers,
+    assignedDevs,
+    unassignedDevs,
+    assignProjectId,
+    setAssignProjectId,
+    handleAssignProject
+  } = useProjectsData();
 
 
   // Estados para HU-014 Análisis de Tiempos
@@ -1310,156 +1273,19 @@ export default function ProyectosDashboardView({ userProfile = null }) {
             </p>
           </div>
         ) : (
-          filteredProjects.map((proj, idx) => {
-            const isExpanded = expandedProjectId === proj.id;
-            const isCompleted = proj.status === 'COMPLETED' || proj.status === 'DELIVERED';
-            const isInactive = proj.status === 'INACTIVE';
-            const isPurple = idx % 3 === 1;
-            const isEmerald = idx % 3 === 2;
-
-            const colorClasses = isCompleted
-              ? {
-                borderActive: 'border-indigo-500 ring-2 ring-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-lg shadow-indigo-500/20',
-                borderInactive: 'border-indigo-200 dark:border-[#33376b] hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl',
-                iconBox: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 ring-indigo-500/20',
-                subtitle: 'text-indigo-700 dark:text-indigo-300/80',
-                button: 'bg-indigo-100 dark:bg-indigo-500/25 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-200 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/40'
-              }
-              : isPurple
-                ? {
-                  borderActive: 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/50 dark:bg-purple-950/20 shadow-lg shadow-purple-500/20',
-                  borderInactive: 'border-purple-200 dark:border-[#33376b] hover:border-purple-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-purple-500/15',
-                  iconBox: 'bg-purple-50 dark:bg-purple-500/10 border-purple-200 dark:border-purple-500/30 text-purple-600 dark:text-purple-400 ring-purple-500/20',
-                  subtitle: 'text-purple-700 dark:text-purple-300/80',
-                  button: 'bg-purple-100 dark:bg-purple-500/25 border-purple-300 dark:border-purple-500/40 text-purple-700 dark:text-purple-200 group-hover:bg-purple-200 dark:group-hover:bg-purple-500/40'
-                }
-                : isEmerald
-                  ? {
-                    borderActive: 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-50/50 dark:bg-emerald-950/20 shadow-lg shadow-emerald-500/20',
-                    borderInactive: 'border-emerald-200 dark:border-[#33376b] hover:border-emerald-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-emerald-500/15',
-                    iconBox: 'bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20',
-                    subtitle: 'text-emerald-700 dark:text-emerald-300/80',
-                    button: 'bg-emerald-100 dark:bg-emerald-500/25 border-emerald-300 dark:border-emerald-500/40 text-emerald-700 dark:text-emerald-200 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/40'
-                  }
-                  : {
-                    borderActive: 'border-indigo-500 ring-2 ring-indigo-500/40 bg-indigo-50/50 dark:bg-indigo-950/20 shadow-lg shadow-indigo-500/20',
-                    borderInactive: 'border-indigo-200 dark:border-[#33376b] hover:border-indigo-500 hover:bg-slate-50 dark:hover:bg-slate-900/70 hover:shadow-xl hover:shadow-indigo-500/15',
-                    iconBox: 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 ring-indigo-500/20',
-                    subtitle: 'text-indigo-700 dark:text-indigo-300/80',
-                    button: 'bg-indigo-100 dark:bg-indigo-500/25 border-indigo-300 dark:border-indigo-500/40 text-indigo-700 dark:text-indigo-200 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/40'
-                  };
-
-            return (
-              <div
-                key={proj.id}
-                onClick={() => toggleExpand(proj.id)}
-                className={`group relative bg-white dark:bg-[#191c3d] backdrop-blur-xl border rounded-2xl p-5 sm:px-6 sm:py-5 shadow-sm dark:shadow-2xl transition-all duration-300 transform hover:-translate-y-1.5 hover:scale-[1.01] cursor-pointer flex flex-col justify-between ${isExpanded ? colorClasses.borderActive : colorClasses.borderInactive
-                  }`}
-              >
-                <div className="flex items-start justify-between gap-4 min-w-0">
-                  <div className="flex items-center gap-3.5 min-w-0">
-                    <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shrink-0 shadow-inner ring-1 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 ${colorClasses.iconBox}`}>
-                      <FolderKanban size={26} />
-                    </div>
-
-                    <div className="space-y-1 min-w-0 text-left">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className={`px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border ${isCompleted
-                            ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-800/40'
-                            : isInactive
-                              ? 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-800/40'
-                              : 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
-                          }`}>
-                          {isCompleted ? 'Entregado' : isInactive ? 'Desactivado' : 'Activo'}
-                        </span>
-                        <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500">{proj.key}</span>
-                      </div>
-                      <h3 className="text-base font-black text-slate-900 dark:text-slate-100 tracking-tight truncate">
-                        {proj.name}
-                      </h3>
-
-                      <div className="flex items-center gap-1.5 pt-1">
-                        {proj.leader && (
-                          <div title={`Líder: ${proj.leader.name}`} className="w-5 h-5 rounded-full bg-purple-600 border border-white dark:border-slate-900 text-[9px] font-black text-white flex items-center justify-center shadow-md">
-                            {proj.leader.avatar}
-                          </div>
-                        )}
-                        {proj.developers?.map(dev => (
-                          <div key={dev.id} title={`Dev: ${dev.name}`} className="w-5 h-5 rounded-full bg-blue-600 border border-white dark:border-slate-900 text-[9px] font-black text-white flex items-center justify-center shadow-md">
-                            {dev.avatar}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col items-center shrink-0" style={{ gap: 8 }}>
-                    <div className="flex items-center gap-1">
-                      {/* BOTÓN MARCAR COMO ENTREGADO / REABRIR (Habilitado para Líder Técnico y Admin) */}
-                      <button
-                        type="button"
-                        title={isCompleted ? "Reabrir proyecto a Activo" : "Marcar proyecto como Entregado / Finalizado"}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleDeliveredProject(proj);
-                        }}
-                        className={`w-8 h-8 rounded-xl inline-flex items-center justify-center transition-all cursor-pointer border ${isCompleted
-                            ? 'bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-500/30 hover:bg-indigo-100 dark:hover:bg-indigo-500/30'
-                            : 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 hover:bg-emerald-100 dark:hover:bg-emerald-500/30'
-                          }`}
-                      >
-                        {isCompleted ? <RotateCcw size={14} /> : <CheckCircle2 size={14} />}
-                      </button>
-
-                      {/* BOTÓN DESACTIVAR (Restringido EXCLUSIVAMENTE al Administrador — Invisible para Líder Técnico) */}
-                      {isAdmin && (
-                        isInactive ? (
-                          <button
-                            type="button"
-                            title="Reactivar proyecto"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleReactivateProject(proj);
-                            }}
-                            className="w-8 h-8 rounded-xl inline-flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 transition-colors cursor-pointer"
-                          >
-                            <RotateCcw size={14} />
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            title="Desactivar proyecto (Solo Admin)"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenDeactivateModal(proj);
-                            }}
-                            className="w-8 h-8 rounded-xl inline-flex items-center justify-center text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-500/20 border border-rose-200 dark:border-rose-500/30 transition-colors cursor-pointer"
-                          >
-                            <PowerOff size={14} />
-                          </button>
-                        )
-                      )}
-
-
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleExpand(proj.id);
-                      }}
-                      className={`px-3 py-2 rounded-xl border text-xs font-black flex items-center justify-center shadow-xs group-hover:scale-105 transition-all duration-300 cursor-pointer ${colorClasses.button}`}
-                    >
-                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                    </button>
-                  </div>
-                </div>
-
-                
-              </div>
-            );
-          })
+          filteredProjects.map((proj, idx) => (
+            <ProjectCard
+              key={proj.id}
+              proj={proj}
+              idx={idx}
+              isExpanded={expandedProjectId === proj.id}
+              isAdmin={isAdmin}
+              toggleExpand={toggleExpand}
+              handleToggleDeliveredProject={handleToggleDeliveredProject}
+              handleReactivateProject={handleReactivateProject}
+              handleOpenDeactivateModal={handleOpenDeactivateModal}
+            />
+          ))
         )}
       </div>
 

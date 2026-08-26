@@ -51,6 +51,8 @@ import {
   Pie, 
   Cell 
 } from 'recharts';
+import { MetricInfoTooltip } from '../../../components/ui/MetricInfoTooltip';
+import { useAnimatedCounter } from '../../../hooks/useAnimatedCounter';
 
 // --- MOCK DATA PARA LOS PANORAMAS Y GRÁFICOS BASE ---
 const mockProjectsHealthList = [
@@ -89,50 +91,7 @@ const RENDIMIENTO_MOCK_DATA = {
   }
 };
 
-// Tooltip flotante informativo universal
-const InfoTooltip = ({ text, align = 'center' }) => {
-  const [isHovered, setIsHovered] = useState(false);
 
-  return (
-    <div 
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onClick={(e) => e.stopPropagation()} 
-      className="relative inline-flex items-center cursor-pointer ml-1 z-10"
-    >
-      <Info 
-        size={14} 
-        className="text-slate-400 hover:text-indigo-500 dark:hover:text-indigo-400 transition-colors shrink-0" 
-      />
-      
-      {isHovered && (
-        <div className={`absolute z-50 p-3 bg-slate-900 dark:bg-slate-950 text-slate-100 text-xs font-medium rounded-xl shadow-2xl border border-slate-700 pointer-events-none leading-relaxed text-left w-60 backdrop-blur-md animate-in fade-in duration-150 ${
-          align === 'right' 
-            ? 'top-full mt-2 right-0' 
-            : 'bottom-full mb-2 left-1/2 -translate-x-1/2'
-        }`}>
-          <span className="block">{text}</span>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Hook: contador animado para los KPI (count-up al cargar)
-const useAnimatedCounter = (target, duration = 1200) => {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    let start = 0;
-    const step = target / (duration / 16);
-    const timer = setInterval(() => {
-      start += step;
-      if (start >= target) { setCount(target); clearInterval(timer); }
-      else setCount(Math.round(start * 10) / 10);
-    }, 16);
-    return () => clearInterval(timer);
-  }, [target, duration]);
-  return count;
-};
 
 function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis, setActiveTab }) {
   const { user } = useAuth();
@@ -333,7 +292,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
           <div className="flex items-center gap-2">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>Panorama de proyectos</span>
-              <InfoTooltip text="Estado consolidado de salud, avance y total de incidencias de todos los proyectos activos en Jira." />
+              <MetricInfoTooltip text="Estado consolidado de salud, avance y total de incidencias de todos los proyectos activos en Jira." />
             </h2>
           </div>
 
@@ -484,7 +443,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
               <span>Tendencia general</span>
-              <InfoTooltip text="Evolución histórica del volumen de incidencias completadas a lo largo de los últimos meses." />
+              <MetricInfoTooltip text="Evolución histórica del volumen de incidencias completadas a lo largo de los últimos meses." />
             </h2>
 
             {/* SELECTORES DE FILTRO Y TIEMPO */}
@@ -554,7 +513,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
                 <RefreshCw size={11} className="text-emerald-500" />
                 Última sincronización
               </span>
-              <InfoTooltip text="Fecha, hora y usuario de la última sincronización ejecutada con Jira Cloud." align="right" />
+              <MetricInfoTooltip text="Fecha, hora y usuario de la última sincronización ejecutada con Jira Cloud." align="right" />
             </div>
 
             <div className="flex items-end justify-between">
@@ -578,7 +537,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
             
             <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mb-3">
               <span>Estado general</span>
-              <InfoTooltip text="Proporción global de proyectos según su nivel de salud operativa." />
+              <MetricInfoTooltip text="Proporción global de proyectos según su nivel de salud operativa." />
             </h2>
 
             <div className="flex items-center gap-5">
@@ -639,7 +598,7 @@ function DashboardView({ subTab = 'dashboard', selectedProjectId, metrics, kpis,
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
             <span>Rendimiento global <span className="text-xs text-slate-500 font-normal">(promedio)</span></span>
-            <InfoTooltip text="Métricas agregadas promedio del equipo: velocidad, throughput, cycle time y lead time." />
+            <MetricInfoTooltip text="Métricas agregadas promedio del equipo: velocidad, throughput, cycle time y lead time." />
           </h2>
           <div className="relative">
             <select
