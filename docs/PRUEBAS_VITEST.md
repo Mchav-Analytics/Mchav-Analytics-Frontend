@@ -1,0 +1,77 @@
+# Pruebas Unitarias y de Integración con Vitest
+
+Este documento explica cómo están configuradas y funcionando las pruebas del Frontend, qué se ha logrado con ellas y cómo ejecutarlas localmente.
+
+## 🛠️ Herramientas Utilizadas
+El proyecto utiliza **Vitest** como framework principal de testing, junto con **React Testing Library** para renderizar y simular interacciones de usuario en el DOM de React de forma aislada.
+
+## 🚀 ¿Qué se logró con estas pruebas?
+Las pruebas actuales garantizan la estabilidad de las vistas más críticas y complejas del sistema, asegurando que:
+- **Renderizado sin bloqueos:** Se verifica que ninguna vista principal arroje errores fatales al montarse en el DOM (evitando la "pantalla blanca de la muerte" de React).
+- **Consumo de Hooks y Contextos:** Se verifica que las vistas puedan consumir `AuthContext`, los hooks personalizados (`useProjectsData`, `useAnimatedCounter`) y proveedores globales sin fallar.
+- **Simulación de API (Mocks):** Se utilizan *Mocks* de `vi.mock` sobre `src/services/api` para simular respuestas del backend, probando que las vistas manejen estados de carga (Loading) y rendericen datos de prueba sin hacer llamadas reales a los servidores.
+- **Interacciones Básicas:** Se prueban interacciones clave, como el cambio de pestañas en `CentroReportesView` y la apertura de modales (como `AiChatModal` y `ProfileSettingsModal`).
+
+## 📊 Porcentajes de Cobertura (Coverage)
+Al momento de la última ejecución, la cobertura global del proyecto es la siguiente:
+
+- **Líneas (Lines):** ~29.70%
+- **Declaraciones (Statements):** ~27.63%
+- **Ramas / Condiciones (Branches):** ~19.26%
+- **Funciones (Functions):** ~16.40%
+
+> **Nota:** La cobertura está enfocada principalmente en las carpetas de `features/dashboard`, `features/reports`, y `features/auth`. Archivos más complejos como `ProyectosDashboardView.jsx` aún tienen una baja cobertura directa debido a la extensa cantidad de ramas y modales anidados, por lo cual la refactorización reciente ayudará significativamente a aislar pruebas por componentes más pequeños en el futuro.
+
+## 💻 Comandos Útiles
+
+Puedes ejecutar y verificar estas pruebas usando los siguientes comandos en tu terminal (asegúrate de estar en el directorio `Mchav-Analytics-Frontend`):
+
+### 1. Ejecutar las pruebas una sola vez
+```bash
+npm run test:run
+```
+Este comando corre los 62 tests disponibles (en 24 archivos) y te muestra un reporte de éxito o fallo en consola.
+
+### 2. Ejecutar las pruebas en modo "Watch" (Desarrollo)
+```bash
+npm run test
+```
+Este comando dejará Vitest abierto. Cada vez que guardes un archivo `.jsx` o `.js`, ejecutará automáticamente las pruebas que se vean afectadas, ayudándote a programar sin romper nada.
+
+### 3. Generar el reporte de Cobertura (Coverage)
+```bash
+npx vitest run --coverage
+```
+Este comando ejecuta todos los tests y, al finalizar, genera una tabla detallada con los porcentajes de código que fue ejecutado durante las pruebas, mostrándote exactamente qué líneas de código te faltan por probar.
+
+---
+
+# Pruebas End-to-End (E2E) con Playwright
+
+Además de las pruebas unitarias con Vitest, el proyecto cuenta con pruebas de integración reales utilizando **Playwright**. Estas pruebas simulan a un usuario real interactuando con la aplicación en un entorno de navegador completo.
+
+## 🚀 ¿Qué se logró con las pruebas E2E?
+Las pruebas de Playwright verifican los flujos completos y críticos de extremo a extremo, probando la compatibilidad cruzada en diferentes navegadores (Chromium, WebKit y Firefox). Los flujos actualmente cubiertos son:
+
+1. **Flujo de Autenticación (`auth.spec.js`):** Simula el inicio de sesión a través de `localStorage` y verifica la redirección exitosa al dashboard principal.
+2. **Dashboard Principal (`dashboard.spec.js`):** Ingresa a la vista del Dashboard principal y verifica que todos sus componentes clave se rendericen correctamente y sin colapsos.
+3. **Dashboard de Proyectos (`proyectos.spec.js`):** Verifica específicamente que la vista más compleja de la plataforma (Proyectos) se renderice correctamente en los diferentes motores de renderizado web.
+
+## 📊 Resultados y Compatibilidad (Cross-Browser)
+Actualmente, las pruebas E2E se ejecutan contra tres motores principales:
+- ✅ **Chromium (Chrome/Edge):** Las 3 suites de pruebas pasan de manera exitosa (tiempos promedio entre 8s y 10s).
+- ✅ **WebKit (Safari):** Las 3 suites de pruebas pasan exitosamente, confirmando soporte para macOS/iOS (tiempos promedio entre 8s y 27s).
+- ❌ **Firefox:** Actualmente se está presentando un timeout/fallo en el entorno automatizado para las tres vistas, que requiere investigación adicional sobre cómo Firefox maneja la carga asíncrona de recursos en la plataforma.
+
+## 💻 Comandos de Playwright
+
+### 1. Ejecutar todas las pruebas E2E en todos los navegadores
+```bash
+npx playwright test
+```
+
+### 2. Ejecutar las pruebas con la interfaz de usuario de Playwright
+```bash
+npx playwright test --ui
+```
+Este comando abre una herramienta visual interactiva que te permite ver el navegador en vivo, inspeccionar el DOM, viajar en el tiempo por los pasos de la prueba y debuggear fácilmente cualquier fallo (muy útil para revisar qué está pasando con Firefox).
