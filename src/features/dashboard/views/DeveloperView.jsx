@@ -35,7 +35,6 @@ import { developerService, jiraService, jqlService, projectService } from '../..
 
 import LiderNotificationBell from '../components/LiderNotificationBell';
 import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
-import owlMascotImg from '../../../assets/owl_mascot.png';
 
 const tooltipStyle = {
   backgroundColor: '#0f172a',
@@ -563,53 +562,7 @@ export default function DeveloperView({
 
       </div>
 
-
-
-
-
-      {/* 3. NUBI IA (DIAGNÓSTICO NATIVO EN MI TRABAJO) */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 px-1 py-1">
-        <div className="relative shrink-0 flex flex-col items-center group/mascot">
-          <img
-            src={owlMascotImg}
-            alt="Mascota Búho NUBIIA"
-            className="w-24 h-24 sm:w-28 sm:h-28 object-contain drop-shadow-xl transition-transform duration-300 group-hover/mascot:scale-105"
-          />
-          <span className="mt-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs">
-            🦉 NUBIIA
-          </span>
-        </div>
-
-        <div className="relative flex-1 rounded-3xl bg-gradient-to-r from-indigo-50/90 via-purple-50/80 to-white dark:from-[#191c3d] dark:via-[#241e54] dark:to-[#191c3d] p-6 shadow-sm dark:shadow-2xl border border-indigo-200/80 dark:border-indigo-500/30 space-y-4 group transition-all duration-300 hover:border-indigo-300 dark:hover:border-indigo-400/50">
-          <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 opacity-5 dark:opacity-20 blur-md transition-opacity duration-300 group-hover:opacity-15 pointer-events-none"></div>
-
-          <div className="hidden sm:block absolute top-1/2 -left-3 -translate-y-1/2 w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-r-[14px] border-r-indigo-50/90 dark:border-r-[#191c3d]"></div>
-
-          <div className="relative z-10 space-y-3.5 text-left">
-            <div className="flex items-center gap-3 text-indigo-700 dark:text-indigo-400 font-extrabold text-xs uppercase tracking-wider">
-              <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
-                <Sparkles size={16} />
-              </div>
-              <span>Asistente Inteligente — NUBIIA</span>
-            </div>
-
-            <p className="text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-medium">
-              💡 <strong>Diagnóstico del Sprint:</strong> <em>"{aiCoachTip || 'Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado respecto al sprint anterior. Te recomendamos resolver primero los bugs pendientes en QA antes de iniciar nuevos desarrollos.'}"</em>
-            </p>
-
-            <div className="flex flex-wrap gap-6 text-xs font-semibold text-slate-600 dark:text-slate-300 pt-3 border-t border-indigo-200/60 dark:border-slate-700/60">
-              <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-extrabold">
-                <TrendingUp size={16} /> Ritmo: {efficiencyGain >= 0 ? `+${efficiencyGain}%` : `${efficiencyGain}%`} Eficiencia
-              </span>
-              <span className="flex items-center gap-2 text-amber-700 dark:text-amber-400 font-extrabold">
-                <ShieldCheck size={16} /> Calidad: {cleanDeliveries}% Entregas Limpias
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 4. SECCIÓN GRID SIDE-BY-SIDE EQUILIBRADA: DISTRIBUCIÓN DE MI TRABAJO & MIS TAREAS ASIGNADAS CON PAGINACIÓN */}
+      {/* 3. SECCIÓN GRID SIDE-BY-SIDE EQUILIBRADA: DISTRIBUCIÓN DE MI TRABAJO & MIS TAREAS ASIGNADAS CON PAGINACIÓN */}
       <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 flex-1">
 
         {/* TARJETA IZQUIERDA (5 COLUMNAS): DISTRIBUCIÓN DE MI TRABAJO CON GRÁFICA Y LEYENDAS LADO A LADO */}
@@ -772,25 +725,47 @@ export default function DeveloperView({
                           <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-slate-100 max-w-xs truncate">
                             {t.summary}
                           </td>
-                          <td className="py-2.5 px-3">
-                            <select
-                              value={t.status_actual || 'POR HACER'}
-                              onChange={(e) => handleUpdateTaskStatus(t.key_issue, e.target.value, t.story_points, t.summary)}
-                              className={`px-2 py-1 text-[10px] font-extrabold rounded-lg border focus:outline-none cursor-pointer ${
-                                t.status_actual === 'BLOQUEADA' ? 'bg-rose-500/20 text-rose-300 border-rose-500/40' :
-                                t.status_actual === 'EN PROGRESO' || t.status_actual === 'IN_PROGRESS' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' :
-                                t.status_actual === 'EN REVISIÓN' || t.status_actual === 'IN_REVIEW' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' :
-                                t.status_actual === 'COMPLETADA' || t.status_actual === 'LISTO' || t.status_actual === 'DONE' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' :
-                                'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                              }`}
-                              title="Cambiar estado y sincronizar con Jira Cloud"
-                            >
-                              <option value="POR HACER">Por Hacer (To Do)</option>
-                              <option value="EN PROGRESO">En Progreso (In Progress)</option>
-                              <option value="EN REVISIÓN">En Revisión (In Review)</option>
-                              <option value="BLOQUEADA">Bloqueada</option>
-                              <option value="LISTO">Listo (Done) ✅</option>
-                            </select>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            {(() => {
+                              const st = (t.status_actual || 'POR HACER').toUpperCase();
+                              if (st.includes('LISTO') || st.includes('DONE') || st.includes('COMPLETADA') || st.includes('FINALIZADO')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-800/40">
+                                    <CheckCircle2 size={12} className="text-emerald-500" />
+                                    Listo
+                                  </span>
+                                );
+                              }
+                              if (st.includes('PROGRESO') || st.includes('PROGRESS') || st.includes('CURSO')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200/50 dark:border-indigo-800/40">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse"></span>
+                                    En Progreso
+                                  </span>
+                                );
+                              }
+                              if (st.includes('BLOQUEADA') || st.includes('BLOCKED')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-50 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-200/50 dark:border-rose-800/40">
+                                    <AlertTriangle size={12} className="text-rose-500" />
+                                    Bloqueada
+                                  </span>
+                                );
+                              }
+                              if (st.includes('REVISI') || st.includes('REVIEW')) {
+                                return (
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-50 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/40">
+                                    <Clock size={12} className="text-amber-500" />
+                                    En Revisión
+                                  </span>
+                                );
+                              }
+                              return (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700/60">
+                                  Por Hacer
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="py-2.5 px-3 text-center font-bold text-slate-800 dark:text-slate-200">
                             {t.story_points} SP

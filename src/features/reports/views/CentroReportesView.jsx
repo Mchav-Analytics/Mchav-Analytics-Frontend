@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download } from 'lucide-react';
 import api from '../../../services/api';
+import { useReactToPrint } from 'react-to-print';
+import ExecutiveReportTemplate from '../components/ExecutiveReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
 
 export default function CentroReportesView({ selectedProjectId }) {
@@ -10,6 +12,12 @@ export default function CentroReportesView({ selectedProjectId }) {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const reportRef = useRef(null);
+  const handlePrint = useReactToPrint({
+    contentRef: reportRef,
+    documentTitle: "MCHAV_Reporte_Ejecutivo",
+    onAfterPrint: () => alert("🦉 Búho IA: ¡He analizado tu reporte! La velocidad de este mes ha mejorado, pero debes tener cuidado con el aumento de bugs.")
+  });
   const [reportData, setReportData] = useState(null);
   
   const [selectedMonth, setSelectedMonth] = useState('');
@@ -166,7 +174,14 @@ export default function CentroReportesView({ selectedProjectId }) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ml-0 md:ml-12 mb-20 flex-1">
-              {['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos'].map((item, idx) => (
+              {(reportType === 'proyecto' 
+                ? ['Resumen ejecutivo', 'KPIs del proyecto', 'Velocidad por sprint', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
+                : reportType === 'sprint'
+                ? ['Resumen del sprint', 'Burndown del sprint', 'Tareas completadas vs pendientes', 'Distribución por desarrollador', 'Bugs reportados', 'Retrospectiva y mejoras']
+                : reportType === 'desarrollador'
+                ? ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo']
+                : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
+              ).map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
                     <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
@@ -368,6 +383,8 @@ export default function CentroReportesView({ selectedProjectId }) {
         {activeTab === 'generacion' ? renderGeneracion() : renderHistorial()}
       </div>
       
+      {/* Plantilla oculta para el PDF */}
+      <ExecutiveReportTemplate ref={reportRef} reportType={reportType} filters={{}} />
     </div>
   );
 }
