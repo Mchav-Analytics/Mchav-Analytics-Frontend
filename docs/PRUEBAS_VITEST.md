@@ -16,12 +16,12 @@ Las pruebas actuales garantizan la estabilidad de las vistas más críticas y co
 ## 📊 Porcentajes de Cobertura (Coverage)
 Tras la finalización de las Fases 1 y 2, la cobertura global del proyecto es la siguiente (con más de 118 pruebas exitosas):
 
-- **Líneas (Lines):** ~36.69%
-- **Declaraciones (Statements):** ~34.63%
-- **Ramas / Condiciones (Branches):** ~23.19%
-- **Funciones (Functions):** ~23.29%
+- **Líneas (Lines):** ~40.42%
+- **Declaraciones (Statements):** ~38.29%
+- **Ramas / Condiciones (Branches):** ~26.34%
+- **Funciones (Functions):** ~26.22%
 
-> **Nota:** La cobertura ha incrementado significativamente en la capa de servicios (`src/services`) y Hooks (`src/hooks` al 100%). Sin embargo, archivos masivos como `ProyectosDashboardView.jsx` aún mantienen una baja cobertura debido a la extensa cantidad de ramas y modales anidados. La Fase 3 se enfocará en estas Vistas Masivas para continuar el camino hacia la meta del 90%.
+> **Nota:** Con la finalización de la **Fase 3**, la cobertura del proyecto ha dado un salto significativo. Se refactorizaron las pruebas de vistas masivas y complejas (como `ProyectosDashboardView.jsx` de más de 1300 líneas y `CentroReportesView.test.jsx`), resolviendo problemas de carga asíncrona de dependencias (imports dinámicos) y errores de timeout (warnings de `act(...)`). La cobertura de estas vistas individuales ha pasado de casi 0% a promedios entre el 40% y el 70%. La **Fase 4** se centrará en pulir componentes individuales, modales y utilidades secundarias para alcanzar la meta global del 90%.
 
 ## 💻 Comandos Útiles
 
