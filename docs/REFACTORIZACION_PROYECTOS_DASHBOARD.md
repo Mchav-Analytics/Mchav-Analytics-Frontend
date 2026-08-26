@@ -1,39 +1,45 @@
-# Refactorización de Pruebas: ProyectosDashboardView
+# Refactorización de ProyectosDashboardView
 
-Este documento detalla los cambios, desafíos y soluciones implementadas durante la refactorización de las pruebas unitarias y de integración para la vista principal del dashboard de proyectos (`ProyectosDashboardView.jsx`).
+Este documento detalla los motivos, el proceso y los beneficios de la profunda refactorización arquitectónica realizada en la vista principal del dashboard de proyectos (`ProyectosDashboardView.jsx`), así como la posterior actualización de sus pruebas.
 
-## 🎯 Objetivo de la Refactorización
-El objetivo principal fue elevar la calidad de las pruebas de uno de los componentes más grandes (más de 1300 líneas) y complejos de la aplicación. Originalmente, las pruebas estaban "saltadas" (`describe.skip`) o fallaban debido a problemas de asincronía y resolución de módulos. Queríamos pasar de "Smoke Tests" básicos a **pruebas de comportamiento real** que simularan a un usuario interactuando con el sistema, logrando así un salto significativo en la cobertura global del Frontend.
+## 🎯 El Problema: Un Componente Monolítico
+Antes de la refactorización, `ProyectosDashboardView.jsx` era un componente masivo que superaba las **1300 líneas de código**. Sufría de un grave problema de acoplamiento, ya que centralizaba demasiadas responsabilidades en un solo lugar.
 
-## 🛠️ Desafíos Encontrados
+**¿Qué tenía antes?**
+- **Falta de Reusabilidad:** Todo el código HTML/JSX para las tarjetas de proyecto, las gráficas (sparklines), las etiquetas y los tooltips estaba escrito directamente en el archivo. No se utilizaban componentes reutilizables.
+- **Mezcla de Responsabilidades:** El componente manejaba la obtención de datos (fetching a la API), el filtrado complejo, la lógica de negocio, los cálculos de KPIs y toda la presentación visual al mismo tiempo.
+- **Mantenibilidad Crítica:** Modificar cualquier pequeño detalle visual o agregar una nueva regla de negocio requería navegar por cientos de líneas, aumentando el riesgo de romper otra funcionalidad sin darse cuenta.
 
-1. **Imports Dinámicos en React (Code Splitting):**
-   `ProyectosDashboardView.jsx` utiliza importaciones dinámicas (`import('../../../services/api')`) dentro de sus `useEffect` para cargar servicios bajo demanda y no bloquear el renderizado inicial. Esto causaba que el entorno de Vitest/Node no lograra resolver correctamente la ruta de `mockData` durante el testeo, resultando en el error `Cannot find module .../mockData`.
+## 🛠️ La Solución: Separación de Responsabilidades
 
-2. **Mocks Excesivos y Frágiles:**
-   El test original sobre-escribía casi todos los componentes hijos (como `ProjectCard`) con versiones sumamente simplificadas. Esto impedía probar cómo la vista manejaba la expansión de tarjetas y la interacción real con los botones internos, reduciendo la cobertura efectiva.
+Para resolver esto, decidimos aplicar el principio de **Separación de Responsabilidades (Separation of Concerns)** y arquitecturar el frontend basándonos en componentes modulares y reutilizables. 
 
-3. **Condiciones de Carrera (Race Conditions) y `act(...)` Warnings:**
-   Al ser una vista con múltiples llamadas asíncronas encadenadas (cargar usuarios, cargar proyectos, cargar KPIs al expandir), las aserciones de los tests se ejecutaban antes de que React terminara de actualizar el estado, lanzando errores de timeout o advertencias sobre actualizaciones de estado fuera de `act()`.
+Los pasos clave de esta refactorización fueron:
 
-## ✅ Soluciones Implementadas
+### 1. Creación de Componentes UI Reutilizables
+Se extrajeron los fragmentos de interfaz repetitivos hacia sus propios componentes aislados:
+- **`ProjectCard.jsx`**: Se creó un componente dedicado exclusivamente a renderizar la información de cada proyecto individual y manejar su estado de expansión.
+- **`SparklineMini.jsx` y `MetricInfoTooltip.jsx`**: Se abstrajeron los elementos visuales menores en micro-componentes que ahora pueden ser usados en cualquier otra vista de la aplicación (no solo en el dashboard).
 
-### 1. Resolución de Módulos (Imports)
-- Se corrigieron las importaciones en `api.js` para asegurar que el motor de resolución de Node/Vitest encontrara los mocks sin problemas, añadiendo la extensión explícita (`.js`).
-- Se reescribió la estrategia de mocking del API en el test. En lugar de depender del require dinámico para interceptar `userService` y `projectService`, inyectamos directamente los `vi.fn().mockResolvedValue()` sobre los servicios reales simulados antes del montaje.
+### 2. Extracción de Lógica de Negocio (Custom Hooks)
+- Todo el manejo de estado (carga de datos, paginación, filtrado de texto, sincronización y manejo de errores) se extrajo hacia un custom hook dedicado, como **`useProjectsData.js`**.
+- Esto liberó a la vista de tener que saber *cómo* se obtienen los datos. Ahora, la vista simplemente *consume* los datos que el hook le provee y se encarga únicamente de orquestar la interfaz gráfica.
 
-### 2. Pruebas Centradas en el Usuario (User-Centric Testing)
-En lugar de aislar excesivamente el componente, permitimos que renderizara gran parte de su árbol real (eliminando el mock restrictivo de `ProjectCard`). Ahora las pruebas:
-- **Renderizado inicial:** Verifican que la vista muestre los títulos esperados y haga las peticiones iniciales de proyectos.
-- **Filtrado:** Simulan escritura en el input de búsqueda mediante `userEvent.type()` y verifican que la lista de proyectos en el DOM se reduzca dinámicamente, asegurando que componentes como "Proyecto BETA" desaparezcan de la pantalla si no coinciden.
-- **Interacciones asíncronas:** Simulan clics en los botones de "Expandir" de las tarjetas de proyecto. El test ahora hace un `await waitFor(...)` para garantizar que la expansión dispara las llamadas correctas a `projectService.getKpis` y `projectService.getKpiIssuesDetail`.
-- **Navegación por Pestañas:** Simulan la selección de la pestaña "TIEMPOS (HU-014)" para asegurar que el enrutamiento interno del componente muestra los gráficos adecuados (`PercentilesChart`).
+## ✅ Impacto de la Refactorización
 
-### 3. Control de Asincronía
-- Se unificó el uso de `userEvent` (sin fake timers) junto con `await act(async () => ...)` para envolver cualquier acción que dispara peticiones y muta el estado de React. Esto eliminó por completo los warnings de `act(...)` y los timeouts.
+1. **Código Limpio y Legible:** El archivo `ProyectosDashboardView.jsx` redujo drásticamente su tamaño, convirtiéndose en un orquestador limpio que importa y acomoda componentes hijos.
+2. **Alta Reusabilidad:** Los nuevos componentes (`ProjectCard`, `MetricInfoTooltip`, etc.) están ahora disponibles para futuras vistas, evitando la duplicación de código.
+3. **Escalabilidad:** Añadir nuevas funcionalidades (ej. un nuevo filtro o un nuevo tipo de tarjeta) es mucho más fácil y seguro, ya que cada pieza de código tiene una única responsabilidad.
 
-## 📈 Impacto y Resultados
-- **Estabilidad:** Pasamos de 0 pruebas útiles (estaban en `.skip`) a 4 pruebas de integración robustas que verifican flujos completos.
-- **Cobertura de Líneas:** La cobertura del archivo `ProyectosDashboardView.jsx` saltó de cerca de un **0% a un ~37%**, lo cual es masivo considerando el tamaño del archivo.
-- **Cobertura en Cascada:** Al no mockear `ProjectCard`, la cobertura de este componente subió automáticamente al **47%**.
-- **Cobertura Global:** Esta refactorización fue un factor clave para que la cobertura global del Frontend superara la barrera del **40%**.
+---
+
+## 🧪 Refactorización de las Pruebas (Testing)
+
+Debido a que la arquitectura de la vista cambió radicalmente, las pruebas antiguas quedaron obsoletas, se rompió la resolución de módulos por imports dinámicos y dependían de *mocks* excesivamente simplificados. 
+
+Para acompañar la nueva arquitectura, las pruebas también fueron refactorizadas:
+- Se implementaron **Pruebas Centradas en el Usuario (User-Centric Testing)** utilizando `userEvent` para simular clics y escritura real.
+- Se eliminó el mock de `ProjectCard` para permitir que el árbol de componentes real se renderice, logrando probar la integración completa entre la vista padre y los nuevos componentes hijos reutilizables.
+- Se envolvieron las interacciones asíncronas en `act(async () => ...)` para estabilizar la suite y evitar condiciones de carrera (Race Conditions).
+
+**Resultado del Testing:** Gracias a la separación de responsabilidades y a las nuevas pruebas de integración, la cobertura de `ProyectosDashboardView.jsx` subió de 0% a promedios superiores al 40%, elevando drásticamente la cobertura global del proyecto.
