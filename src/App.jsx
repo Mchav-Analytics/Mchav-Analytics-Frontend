@@ -430,6 +430,7 @@ function MainAppContent() {
             selectedProjectId={selectedProjectId}
             setActiveTab={setActiveTab}
             subTab={activeTab}
+            isDarkMode={isDarkMode}
           />
         )
       )}

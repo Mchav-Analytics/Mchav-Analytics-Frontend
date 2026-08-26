@@ -185,7 +185,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           }
         })
         .catch(err => console.warn("Aviso: usando fallback de usuarios:", err));
-    });
+    }).catch(err => console.warn("Error importando api:", err));
   }, []);
 
   // Cargar proyectos reales sincronizados desde Jira Cloud
