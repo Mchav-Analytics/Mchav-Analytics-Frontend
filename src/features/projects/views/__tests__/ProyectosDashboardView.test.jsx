@@ -70,7 +70,7 @@ describe('ProyectosDashboardView', () => {
   it('renders correctly and fetches initial data', async () => {
     render(<ProyectosDashboardView />);
     
-    expect(screen.getByText('Proyectos y Equipos')).toBeInTheDocument();
+    expect(screen.getByText('Control de Proyectos')).toBeInTheDocument();
     
     await waitFor(() => {
       expect(api.get).toHaveBeenCalledWith('/api/v1/projects');

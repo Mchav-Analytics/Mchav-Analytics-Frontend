@@ -9,6 +9,7 @@ import api, { projectService } from '../../../services/api';
 import { useAuth } from '../../auth/context/AuthContext';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 import { SprintBurndownChart } from '../components/SprintBurndownChart';
+import { ProjectMetrics } from '../components/ProjectMetrics';
 import {
   FolderKanban,
   ChevronDown,

@@ -14,7 +14,7 @@ import {
   Cell,
   Bar
 } from 'recharts';
-import { PercentilesChart } from './PercentilesChart'; 
+import PercentilesChart from "../../dashboard/components/PercentilesChart"; 
 
 const tooltipStyle = {
   backgroundColor: 'rgba(255, 255, 255, 0.95)',
