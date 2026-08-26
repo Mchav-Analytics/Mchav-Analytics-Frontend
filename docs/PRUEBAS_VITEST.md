@@ -6,21 +6,22 @@ Este documento explica cómo están configuradas y funcionando las pruebas del F
 El proyecto utiliza **Vitest** como framework principal de testing, junto con **React Testing Library** para renderizar y simular interacciones de usuario en el DOM de React de forma aislada.
 
 ## 🚀 ¿Qué se logró con estas pruebas?
-Las pruebas actuales garantizan la estabilidad de las vistas más críticas y complejas del sistema, asegurando que:
-- **Renderizado sin bloqueos:** Se verifica que ninguna vista principal arroje errores fatales al montarse en el DOM (evitando la "pantalla blanca de la muerte" de React).
-- **Consumo de Hooks y Contextos:** Se verifica que las vistas puedan consumir `AuthContext`, los hooks personalizados (`useProjectsData`, `useAnimatedCounter`) y proveedores globales sin fallar.
-- **Simulación de API (Mocks):** Se utilizan *Mocks* de `vi.mock` sobre `src/services/api` para simular respuestas del backend, probando que las vistas manejen estados de carga (Loading) y rendericen datos de prueba sin hacer llamadas reales a los servidores.
+Las pruebas actuales garantizan la estabilidad de las vistas más críticas y complejas del sistema, así como la capa de servicios y hooks core, asegurando que:
+- **Componentes de Layout (Sidebar y Topbar):** Utilizando `userEvent` se valida que los menús laterales rendericen correctamente según el rol del usuario, y se simulan interacciones completas (como hacer click en notificaciones y en botones de logout).
+- **Servicios Core (api.js, NotificationStore):** Se cubren exhaustivamente las peticiones del proxy de backend (`jqlService`, `projectService`, `authService`) verificando que llamen correctamente a `api.get` y `api.post`. Además, se verifica el almacenamiento local de `NotificationStore`.
+- **Hooks y Contextos (`AuthContext`, `useProjectsData`):** Se cubre la lógica de autorización, manejo de estado `useProjectsData` y animaciones (`useAnimatedCounter`), alcanzando 100% de cobertura en la capa de hooks.
+- **Renderizado sin bloqueos:** Se verifica que ninguna vista principal arroje errores fatales al montarse en el DOM.
 - **Interacciones Básicas:** Se prueban interacciones clave, como el cambio de pestañas en `CentroReportesView` y la apertura de modales (como `AiChatModal` y `ProfileSettingsModal`).
 
 ## 📊 Porcentajes de Cobertura (Coverage)
-Al momento de la última ejecución, la cobertura global del proyecto es la siguiente:
+Tras la finalización de las Fases 1 y 2, la cobertura global del proyecto es la siguiente (con más de 118 pruebas exitosas):
 
-- **Líneas (Lines):** ~29.70%
-- **Declaraciones (Statements):** ~27.63%
-- **Ramas / Condiciones (Branches):** ~19.26%
-- **Funciones (Functions):** ~16.40%
+- **Líneas (Lines):** ~36.69%
+- **Declaraciones (Statements):** ~34.63%
+- **Ramas / Condiciones (Branches):** ~23.19%
+- **Funciones (Functions):** ~23.29%
 
-> **Nota:** La cobertura está enfocada principalmente en las carpetas de `features/dashboard`, `features/reports`, y `features/auth`. Archivos más complejos como `ProyectosDashboardView.jsx` aún tienen una baja cobertura directa debido a la extensa cantidad de ramas y modales anidados, por lo cual la refactorización reciente ayudará significativamente a aislar pruebas por componentes más pequeños en el futuro.
+> **Nota:** La cobertura ha incrementado significativamente en la capa de servicios (`src/services`) y Hooks (`src/hooks` al 100%). Sin embargo, archivos masivos como `ProyectosDashboardView.jsx` aún mantienen una baja cobertura debido a la extensa cantidad de ramas y modales anidados. La Fase 3 se enfocará en estas Vistas Masivas para continuar el camino hacia la meta del 90%.
 
 ## 💻 Comandos Útiles
 
