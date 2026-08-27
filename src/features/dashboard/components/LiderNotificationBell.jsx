@@ -28,11 +28,13 @@ const roleNotifications = {
   ADMIN: []
 };
 
+const EMPTY_ARRAY = [];
+
 export default function LiderNotificationBell({ 
   className = "", 
   onNavigateToHub = undefined, 
   onNavigateTab = undefined, 
-  dynamicNotifications = [], 
+  dynamicNotifications = EMPTY_ARRAY, 
   onOpenTask = undefined 
 }) {
   const { user } = useAuth();
