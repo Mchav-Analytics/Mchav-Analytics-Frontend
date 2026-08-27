@@ -85,7 +85,7 @@ export default function DeveloperProjectHeader({
 
       {isOpen && (
         <div 
-          className="absolute right-0 top-[100%] mt-2 w-[320px] bg-white dark:bg-[#141738] rounded-2xl border border-slate-200 dark:border-[#33376b] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[9999]"
+          className="absolute right-0 top-[100%] mt-2 w-[calc(100vw-2.5rem)] sm:w-[320px] max-w-[320px] bg-white dark:bg-[#141738] rounded-2xl border border-slate-200 dark:border-[#33376b] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 z-[9999]"
         >
           <div className="p-3 border-b border-slate-100 dark:border-[#272b5c] bg-slate-50 dark:bg-[#191c3d]">
             <div className="relative">

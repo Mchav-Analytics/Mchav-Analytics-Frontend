@@ -60,9 +60,9 @@ function MainAppContent() {
   const [activeTab, setActiveTabState] = useState(() => {
     try {
       const savedTab = localStorage.getItem('mchav_active_tab');
-      return savedTab || 'dashboard';
+      return savedTab || 'developer';
     } catch (e) {
-      return 'dashboard';
+      return 'developer';
     }
   });
 
@@ -99,6 +99,17 @@ function MainAppContent() {
       localStorage.setItem('mchav_active_tab', activeTab);
     }
   }, [activeTab]);
+
+  // Sincronizar clase dark global en documentElement y body para que los portales hereden el modo oscuro
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Filtro de rango de fechas activo
   const [dateFilter, setDateFilter] = useState({ label: 'Todos los tiempos', key: 'all' });
@@ -145,12 +156,6 @@ function MainAppContent() {
       if (!devTabs.includes(activeTab)) {
         const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
         setActiveTab(nextTab);
-      }
-    } else {
-      // Si es ADMIN o MANAGER y está en una vista exclusiva de DEVELOPER, enviarlo a dashboard
-      const exclusiveDevTabs = ['developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history'];
-      if (exclusiveDevTabs.includes(activeTab)) {
-        setActiveTab('dashboard');
       }
     }
   }, [user?.rol]);

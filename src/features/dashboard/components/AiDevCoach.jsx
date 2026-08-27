@@ -1,54 +1,74 @@
 import React from 'react';
-import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
+import { Sparkles, TrendingUp, ShieldCheck, Loader2 } from 'lucide-react';
 import owlMascot from '../../../assets/owl_mascot.png';
 
-export default function AiDevCoach({ message, loading = false, actionLabel = null, onActionClick = null }) {
+export default function AiDevCoach({ 
+  message = null, 
+  tip = null,
+  efficiencyGain = 14, 
+  cleanDeliveries = 100, 
+  loading = false,
+  className = ""
+}) {
+  const displayTip = tip || message || "Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero las incidencias en curso antes de avanzar en nuevas tareas.";
+
   return (
-    <div className="flex flex-col bg-slate-50 dark:bg-[#141738] rounded-2xl p-4 shadow-sm border border-slate-200 dark:border-[#272b5c] transition-all">
-      <div className="flex items-center gap-3 mb-2.5">
-        <div className="w-9 h-9 overflow-hidden flex items-center justify-center bg-indigo-100 dark:bg-indigo-900/30 rounded-full shrink-0">
+    <div className={`w-full shrink-0 rounded-3xl bg-white/60 dark:bg-[#141738]/60 backdrop-blur-xl border border-indigo-200/50 dark:border-indigo-500/20 p-4 sm:p-5 md:p-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6 shadow-sm dark:shadow-xl relative overflow-hidden group ${className}`}>
+      {/* GLOW DE FONDO */}
+      <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[80px] -z-10 group-hover:bg-indigo-500/30 transition-all duration-500 pointer-events-none"></div>
+      
+      {/* MASCOTA BÚHO */}
+      <div className="flex flex-col items-center justify-center shrink-0">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center relative">
+          <div className="absolute inset-0 bg-indigo-400/20 rounded-full blur-xl -z-10"></div>
           <img 
-            src={owlMascot} 
-            alt="NUBIIA" 
-            className="w-full h-full object-contain p-1"
+            src={owlMascot || '/owl_mascot.png'} 
+            alt="Nubi Coach" 
+            className="w-full h-full object-contain drop-shadow-lg group-hover:scale-110 group-hover:-translate-y-1 transition-transform duration-300"
             onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.parentElement.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-600 dark:text-indigo-400"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>';
+              if (!e.target.dataset.triedPublic) {
+                e.target.dataset.triedPublic = "true";
+                e.target.src = "/owl_mascot.png";
+              }
             }}
           />
         </div>
-        <div className="flex items-center gap-1.5">
-          <h3 className="text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-            <Sparkles size={14} className="text-indigo-500 animate-pulse" /> NUBIIA
-          </h3>
-          <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">✨</span>
+      </div>
+
+      {/* CONTENIDO PRINCIPAL */}
+      <div className="flex-1 w-full flex flex-col justify-center space-y-3 relative z-10 text-center sm:text-left">
+        {/* HEADER DEL ASISTENTE */}
+        <div className="flex items-center justify-center sm:justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 text-[10px] sm:text-xs font-black uppercase tracking-widest flex items-center gap-1.5 border border-indigo-200/50 dark:border-indigo-500/30 shadow-sm">
+              <Sparkles size={12} className="animate-pulse" /> NUBI
+            </span>
+          </div>
+          {loading && (
+            <span className="text-[10px] sm:text-[11px] font-bold text-indigo-500/70 flex items-center gap-1.5 mt-2 sm:mt-0">
+              <Loader2 size={12} className="animate-spin" /> Analizando...
+            </span>
+          )}
+        </div>
+
+        {/* MENSAJE PRINCIPAL */}
+        <p className="text-sm sm:text-base text-slate-800 dark:text-slate-100 font-medium leading-relaxed">
+          <span className="font-bold text-indigo-600 dark:text-indigo-400 mr-1.5">👋 ¡Hola! Soy Nubi y este es mi diagnóstico de hoy:</span>
+          <span className="italic opacity-90">"{displayTip}"</span>
+        </p>
+
+        {/* PIE CON MÉTRICAS DE RITMO Y CALIDAD */}
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3 sm:gap-4 pt-1">
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-100/50 dark:bg-emerald-500/10 border border-emerald-200/50 dark:border-emerald-500/20 px-2.5 py-1.5 rounded-lg shadow-sm">
+            <TrendingUp size={14} />
+            <span>Ritmo: +{efficiencyGain}% Eficiencia</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-amber-700 dark:text-amber-400 bg-amber-100/50 dark:bg-amber-500/10 border border-amber-200/50 dark:border-amber-500/20 px-2.5 py-1.5 rounded-lg shadow-sm">
+            <ShieldCheck size={14} />
+            <span>Calidad: {cleanDeliveries}% Entregas Limpias</span>
+          </div>
         </div>
       </div>
-      
-      {loading ? (
-        <div className="flex items-center gap-2 py-3 text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-          <Loader2 size={15} className="animate-spin text-indigo-500" />
-          <span>NUBIIA está analizando tu agenda…</span>
-        </div>
-      ) : (
-        <>
-          <div className="text-sm text-slate-700 dark:text-slate-300 font-medium leading-relaxed">
-            {message}
-          </div>
-          
-          {actionLabel && onActionClick && (
-            <div className="mt-3 pt-2.5 border-t border-slate-200/60 dark:border-[#232752]">
-              <button 
-                onClick={onActionClick} 
-                className="flex items-center gap-1.5 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer group"
-              >
-                <span>{actionLabel}</span>
-                <ArrowRight size={13} className="group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-          )}
-        </>
-      )}
     </div>
   );
 }

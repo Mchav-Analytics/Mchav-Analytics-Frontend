@@ -59,13 +59,19 @@ export const jiraService = {
     if (USE_MOCK_DATA) return mockJiraService.getMetrics();
     return api.get('/api/v1/jira/metrics').then(res => res.data);
   },
-  triggerSync() {
+  triggerSync(wait = false) {
     if (USE_MOCK_DATA) return mockJiraService.triggerSync();
-    return api.post('/api/v1/jira/sync').then(res => res.data);
+    return api.post('/api/v1/jira/sync', null, { params: { wait } }).then(res => res.data);
   },
   getSyncLogs(params = {}) {
     if (USE_MOCK_DATA) return mockJiraService.getSyncLogs();
     return api.get('/api/v1/jira/sync/logs', { params }).then(res => res.data);
+  },
+  getIssueTransitions(issueKey) {
+    return api.get(`/api/v1/jira/issues/${issueKey}/transitions`).then(res => res.data);
+  },
+  executeIssueTransition(issueKey, payload) {
+    return api.post(`/api/v1/jira/issues/${issueKey}/transitions`, payload).then(res => res.data);
   }
 };
 

@@ -17,11 +17,12 @@ export interface AuthUser {
 }
 
 export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPER' {
-  if (!rawRole) return 'ADMIN';
+  if (!rawRole) return 'DEVELOPER';
   const str = String(rawRole).toUpperCase();
-  if (str.includes('DEV') || str.includes('DESARROLLADOR')) return 'DEVELOPER';
+  if (str.includes('ADMIN')) return 'ADMIN';
   if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER')) return 'MANAGER';
-  return 'ADMIN';
+  if (str.includes('DEV') || str.includes('DESARROLLADOR')) return 'DEVELOPER';
+  return 'DEVELOPER';
 }
 
 export interface AuthContextType {
@@ -119,13 +120,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
+      const rolePref = localStorage.getItem('mchav_active_role');
       
       const normRole = normalizeRole(userData.rol);
       const isApproved = USE_MOCK_DATA 
         ? currentApproved.includes(userData.email) 
         : (userData.activo !== false);
 
-      const assignedRole = USE_MOCK_DATA ? (rolesMap[userData.email] || normRole) : normRole;
+      const assignedRole = rolePref || (USE_MOCK_DATA ? (rolesMap[userData.email] || 'DEVELOPER') : 'DEVELOPER');
 
       if (userData?.token || userData?.access_token) {
         localStorage.setItem('mchav_jwt_token', userData.token || userData.access_token);
@@ -181,12 +183,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       
       const isApproved = currentApproved.includes(loggedUser.email);
-      const assignedRole = rolesMap[loggedUser.email] || loggedUser.rol;
+      const assignedRole = localStorage.getItem('mchav_active_role') || (rolesMap[loggedUser.email] || 'DEVELOPER');
 
       const userWithStatus: AuthUser = {
         ...loggedUser,
         rol: assignedRole,
-        status: isApproved ? 'ACTIVE' : (loggedUser.rol === 'ADMIN' ? 'ACTIVE' : 'PENDING')
+        status: isApproved ? 'ACTIVE' : (assignedRole === 'ADMIN' ? 'ACTIVE' : 'PENDING')
       };
       
       localStorage.setItem('mock_user_session', JSON.stringify(userWithStatus));
@@ -239,6 +241,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const isRealAdmin = !user || normalizeRole(user.original_rol || user.rol) === 'ADMIN' || user.email === 'salamancamai12@gmail.com' || user.email === 'valentina1025m@gmail.com';
 
   const switchViewRole = (newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+    try {
+      localStorage.setItem('mchav_active_role', newRole);
+    } catch (e) {}
     setUser(prev => {
       if (!prev) return null;
       return {

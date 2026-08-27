@@ -202,55 +202,36 @@ function Sidebar({
         </label>
       </div>
 
-      <div className="flex flex-col justify-between flex-1 mt-1.5">
+      <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
 
-        {/* ── BOTÓN DESTACADO DE CHAT IA CONVERSACIONAL (NUBI IA) ── */}
-        {!isCollapsed ? (
-          <button
-            type="button"
-            onClick={() => setIsAiChatOpen(true)}
-            className="mb-2 py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:to-pink-500 text-white font-extrabold text-xs shadow-md shadow-purple-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer group"
-          >
-            <Sparkles size={16} className="text-yellow-300 animate-pulse" />
-            <span>💬 Consultar a NubI IA</span>
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setIsAiChatOpen(true)}
-            className="mb-2 p-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white flex items-center justify-center shadow-md cursor-pointer hover:scale-105 transition-all"
-            title="Consultar a NubI IA"
-          >
-            <Sparkles size={18} className="text-yellow-300 animate-pulse" />
-          </button>
-        )}
+        {/* ── NAVEGACIÓN PRINCIPAL CENTRADA VERTICALMENTE ── */}
+        <div className="flex-1 flex flex-col justify-center my-auto py-2">
+          <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
+            {navItems.map((item) => {
+              const isMatrixSubtab = ['team_matrix', 'sprint_health', 'team_devs'].includes(activeTab);
+              const isActive = activeTab === item.id || (item.id === 'team_matrix' && isMatrixSubtab);
 
-        {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM (by mymiamo) ── */}
-        <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
-          {navItems.map((item) => {
-            const isMatrixSubtab = ['team_matrix', 'sprint_health', 'team_devs'].includes(activeTab);
-            const isActive = activeTab === item.id || (item.id === 'team_matrix' && isMatrixSubtab);
-
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`group relative uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
-              >
-                {item.icon}
-                {!isCollapsed && <span>{item.label}</span>}
-                
-                {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
-                    <span>{item.label}</span>
-                    <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </nav>
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`group relative uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
+                >
+                  {item.icon}
+                  {!isCollapsed && <span>{item.label}</span>}
+                  
+                  {isCollapsed && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
+                      <span>{item.label}</span>
+                      <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
 
 
 
