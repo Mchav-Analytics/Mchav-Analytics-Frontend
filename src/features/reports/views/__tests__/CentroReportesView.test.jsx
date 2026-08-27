@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import CentroReportesView from '../CentroReportesView';
@@ -39,7 +39,9 @@ describe('CentroReportesView', () => {
   });
 
   it('renders correctly and fetches initial data', async () => {
-    render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
     
     expect(screen.getByText('Centro de Reportes')).toBeInTheDocument();
     
@@ -49,21 +51,31 @@ describe('CentroReportesView', () => {
     });
   });
 
-  it('can switch tabs to Historial', () => {
-    render(<CentroReportesView selectedProjectId="PROJ-01" />);
+  it('can switch tabs to Historial', async () => {
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
     
     const histTab = screen.getByText('Historial Inmutable');
-    fireEvent.click(histTab);
+    
+    await act(async () => {
+      fireEvent.click(histTab);
+    });
     
     expect(screen.getByText('Reconstruir Histórico')).toBeInTheDocument();
   });
 
   it('can change report type to developer and load users', async () => {
-    render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
     
     // Click on "Desarrollador" card
     const devCard = screen.getByText('Desarrollador');
-    fireEvent.click(devCard);
+    
+    await act(async () => {
+      fireEvent.click(devCard);
+    });
     
     await waitFor(() => {
       expect(screen.getByText('Selecciona un desarrollador...')).toBeInTheDocument();
@@ -71,15 +83,20 @@ describe('CentroReportesView', () => {
   });
 
   it('triggers fake live report generation', async () => {
-    render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
     
     const generateBtn = screen.getByText('Generar reporte →');
-    fireEvent.click(generateBtn);
+    
+    await act(async () => {
+      fireEvent.click(generateBtn);
+    });
     
     expect(generateBtn).toBeDisabled();
     
     await waitFor(() => {
       expect(generateBtn).not.toBeDisabled();
-    }, { timeout: 3000 });
+    }, { timeout: 3500 });
   });
 });

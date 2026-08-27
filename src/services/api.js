@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData';
+import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData.js';
 
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;

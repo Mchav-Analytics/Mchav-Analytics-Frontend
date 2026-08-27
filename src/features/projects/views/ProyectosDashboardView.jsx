@@ -303,8 +303,6 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     });
   }, [projectsList, searchTerm, selectedFilterProject]);
 
-  const activeProject = projectsList.find(p => p.id === expandedProjectId);
-
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
       {/* Toast Notification */}

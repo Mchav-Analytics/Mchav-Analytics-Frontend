@@ -60,8 +60,9 @@ export default function CapacitySimulator({
       {/* FILA 1: CAMPOS DE ENTRADA */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         <div>
-          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Integrantes Activos</label>
+          <label htmlFor="devCount" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Integrantes Activos</label>
           <input
+            id="devCount"
             type="number"
             min={1}
             max={20}
@@ -72,8 +73,9 @@ export default function CapacitySimulator({
         </div>
 
         <div>
-          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Días del Sprint</label>
+          <label htmlFor="sprintDays" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Días del Sprint</label>
           <input
+            id="sprintDays"
             type="number"
             min={1}
             max={30}
@@ -84,8 +86,9 @@ export default function CapacitySimulator({
         </div>
 
         <div>
-          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Ausencias Planificadas</label>
+          <label htmlFor="vacationDays" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Ausencias Planificadas</label>
           <input
+            id="vacationDays"
             type="number"
             min={0}
             max={50}
@@ -96,8 +99,9 @@ export default function CapacitySimulator({
         </div>
 
         <div>
-          <label className="text-[10px] font-extrabold text-rose-600 dark:text-rose-400 block mb-1">🚨 Devs Incapacitados</label>
+          <label htmlFor="sickDevsCount" className="text-[10px] font-extrabold text-rose-600 dark:text-rose-400 block mb-1">🚨 Devs Incapacitados</label>
           <input
+            id="sickDevsCount"
             type="number"
             min={0}
             max={devCount}
@@ -108,8 +112,9 @@ export default function CapacitySimulator({
         </div>
 
         <div>
-          <label className="text-[10px] font-extrabold text-rose-600 dark:text-rose-400 block mb-1">🩺 Días Incapacidad / Dev</label>
+          <label htmlFor="sickDays" className="text-[10px] font-extrabold text-rose-600 dark:text-rose-400 block mb-1">🩺 Días Incapacidad / Dev</label>
           <input
+            id="sickDays"
             type="number"
             min={0}
             max={sprintDays}
@@ -120,8 +125,9 @@ export default function CapacitySimulator({
         </div>
 
         <div>
-          <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Velocidad Prom / Dev</label>
+          <label htmlFor="avgDevVelocity" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Velocidad Prom / Dev</label>
           <input
+            id="avgDevVelocity"
             type="number"
             min={1}
             max={30}
