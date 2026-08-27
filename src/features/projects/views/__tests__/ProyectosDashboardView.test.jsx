@@ -127,18 +127,18 @@ describe('ProyectosDashboardView', () => {
   it('renders correctly and fetches initial data', async () => {
     render(<ProyectosDashboardView />);
     
-    expect(screen.getByText(/Proyectos/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
   });
 
   it('filters projects based on search term', async () => {
     const user = userEvent.setup();
     render(<ProyectosDashboardView />);
     
-    expect(await screen.findByText(/Proyectos/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
 
-    const searchInput = screen.getByPlaceholderText(/Buscar/i);
+    const searchInput = screen.getByPlaceholderText('Buscar proyecto...');
     await user.type(searchInput, 'ALPHA');
 
-    expect(screen.getByText(/Proyectos/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
   });
 });

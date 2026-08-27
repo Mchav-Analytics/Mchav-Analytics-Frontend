@@ -12,6 +12,10 @@ vi.mock('../../../../features/auth/context/AuthContext', () => ({
 }));
 
 vi.mock('../../../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+  },
   jiraService: {
     triggerSync: vi.fn()
   }
