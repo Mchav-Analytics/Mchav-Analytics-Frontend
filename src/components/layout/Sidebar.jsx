@@ -154,14 +154,13 @@ function Sidebar({
     }
 
     return [
-      { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
       { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
-        { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
+      { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
     ];
   }, [userRole]);
 
@@ -239,7 +238,7 @@ function Sidebar({
               type="button"
               onClick={() => {
                 switchViewRole('ADMIN');
-                setActiveTab('dashboard');
+                setActiveTab('usuarios');
               }}
               className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
                 userRole === 'ADMIN'

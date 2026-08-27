@@ -31,10 +31,9 @@ vi.mock('../../ui/AiChatModal', () => ({
 describe('Sidebar', () => {
   it('renders navigation items for ADMIN role', () => {
     const setActiveTab = vi.fn();
-    render(<Sidebar activeTab="dashboard" setActiveTab={setActiveTab} isCollapsed={false} />);
+    render(<Sidebar activeTab="usuarios" setActiveTab={setActiveTab} isCollapsed={false} />);
     
     // Check for some admin navigation items
-    expect(screen.getByText('Resumen')).toBeInTheDocument();
     expect(screen.getByText('Usuarios y Roles')).toBeInTheDocument();
     expect(screen.getByText('Proyectos')).toBeInTheDocument();
   });
