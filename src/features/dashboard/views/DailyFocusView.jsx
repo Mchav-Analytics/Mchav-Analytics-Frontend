@@ -258,7 +258,7 @@ export default function DailyFocusView({
                 Mi Trabajo / Mi Agenda
               </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
               Mi Agenda de Hoy
             </h1>
             <div>

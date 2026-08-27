@@ -492,7 +492,7 @@ export default function DevWorkloadView({
                 Desarrollador: <strong className="text-slate-800 dark:text-slate-200 font-bold">{devName}</strong>
               </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-none">
               Plan de Trabajo
             </h1>
             <div>
