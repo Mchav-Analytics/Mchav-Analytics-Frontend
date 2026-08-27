@@ -93,7 +93,7 @@ describe('App Root Component', () => {
     });
 
     expect(screen.getByTestId('main-layout')).toBeInTheDocument();
-    expect(screen.getByTestId('topbar-title')).toHaveTextContent(/Panel Operativo del Líder Técnico/i);
+    expect(screen.getByTestId('topbar-title')).toHaveTextContent(/Proyectos/i);
     expect(screen.getByTestId('lider-dashboard')).toBeInTheDocument();
     
     // Verificamos que se haya llamado la API al autenticarse

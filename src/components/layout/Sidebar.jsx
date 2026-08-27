@@ -138,11 +138,9 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
-        { id: 'dashboard', label: 'Panel Operativo', icon: icons.dashboard },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-        { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
       ];
     }
@@ -292,6 +290,75 @@ function Sidebar({
         {/* ── FOOTER: PERFIL DE USUARIO, MODO CLARO/OSCURO Y BOTÓN DE CERRAR SESIÓN ── */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
           
+          {/* Selector de Rol de Vista (ADMIN, LÍDER, DEV) */}
+          {!isCollapsed ? (
+            <div className="px-1">
+              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-800/80 p-1 rounded-xl border border-gray-200 dark:border-slate-700/60 text-[10px] font-extrabold">
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchViewRole('ADMIN');
+                    setActiveTab('proyectos');
+                  }}
+                  className={`flex-1 py-1.5 px-1 rounded-lg transition-all text-center cursor-pointer ${
+                    userRole === 'ADMIN'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black'
+                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Cambiar a Vista Administrador"
+                >
+                  ADMIN
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchViewRole('MANAGER');
+                    setActiveTab('proyectos');
+                  }}
+                  className={`flex-1 py-1.5 px-1 rounded-lg transition-all text-center cursor-pointer ${
+                    userRole === 'MANAGER'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black'
+                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Cambiar a Vista Líder Técnico"
+                >
+                  LÍDER
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    switchViewRole('DEVELOPER');
+                    setActiveTab('alerts_center');
+                  }}
+                  className={`flex-1 py-1.5 px-1 rounded-lg transition-all text-center cursor-pointer ${
+                    userRole === 'DEVELOPER'
+                      ? 'bg-indigo-600 text-white shadow-xs font-black'
+                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Cambiar a Vista Desarrollador"
+                >
+                  DEV
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-center">
+              <button
+                type="button"
+                onClick={() => {
+                  const nextRole = userRole === 'ADMIN' ? 'MANAGER' : userRole === 'MANAGER' ? 'DEVELOPER' : 'ADMIN';
+                  switchViewRole(nextRole);
+                  if (nextRole === 'DEVELOPER') setActiveTab('alerts_center');
+                  else setActiveTab('proyectos');
+                }}
+                className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 font-black text-[10px] flex items-center justify-center border border-indigo-500/40 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
+                title={`Rol actual: ${userRole}. Clic para rotar de rol.`}
+              >
+                {userRole === 'ADMIN' ? 'ADM' : userRole === 'MANAGER' ? 'MGR' : 'DEV'}
+              </button>
+            </div>
+          )}
+
           {/* Switch de Tema Sol / Luna Uiverse (Alineado a la izquierda) */}
           <div className="flex items-center justify-start px-1 py-1">
             <ThemeToggleSwitch isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />

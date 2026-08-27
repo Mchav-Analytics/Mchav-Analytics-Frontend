@@ -80,7 +80,7 @@ describe('API Services', () => {
     it('triggerSync calls POST sync', async () => {
       api.post.mockResolvedValueOnce({ data: { synced: true } });
       const res = await jiraService.triggerSync();
-      expect(api.post).toHaveBeenCalledWith('/api/v1/jira/sync');
+      expect(api.post).toHaveBeenCalledWith('/api/v1/jira/sync', null, { params: { wait: false } });
       expect(res).toEqual({ synced: true });
     });
 
