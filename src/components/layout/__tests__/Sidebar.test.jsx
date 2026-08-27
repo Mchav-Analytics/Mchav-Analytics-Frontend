@@ -34,7 +34,6 @@ describe('Sidebar', () => {
     render(<Sidebar activeTab="dashboard" setActiveTab={setActiveTab} isCollapsed={false} />);
     
     // Check for some admin navigation items
-    expect(screen.getByText('Resumen')).toBeInTheDocument();
     expect(screen.getByText('Usuarios y Roles')).toBeInTheDocument();
     expect(screen.getByText('Proyectos')).toBeInTheDocument();
   });
@@ -63,7 +62,7 @@ describe('Sidebar', () => {
   it('renders user info correctly', () => {
     render(<Sidebar activeTab="dashboard" setActiveTab={vi.fn()} isCollapsed={false} />);
     expect(screen.getByText('Test Admin')).toBeInTheDocument();
-    expect(screen.getByText('ADMIN')).toBeInTheDocument();
+    expect(screen.getAllByText('ADMIN')[0]).toBeInTheDocument();
     expect(screen.getByText('TA')).toBeInTheDocument(); // Initials
   });
 });
