@@ -148,13 +148,13 @@ function Sidebar({
     }
 
     return [
-      { id: 'dashboard', label: 'Resumen', icon: icons.dashboard },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
       { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
       { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+      { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
     ];
   }, [userRole]);
 
@@ -207,31 +207,88 @@ function Sidebar({
         {/* ── NAVEGACIÓN PRINCIPAL CENTRADA VERTICALMENTE ── */}
         <div className="flex-1 flex flex-col justify-center my-auto py-2">
           <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
-            {navItems.map((item) => {
-              const isMatrixSubtab = ['team_matrix', 'sprint_health', 'team_devs'].includes(activeTab);
-              const isActive = activeTab === item.id || (item.id === 'team_matrix' && isMatrixSubtab);
+        {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
+        {isRealAdmin && (
+          <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center' : 'grid grid-cols-3 gap-1'}`}>
+            <button
+              type="button"
+              onClick={() => {
+                switchViewRole('ADMIN');
+                setActiveTab('usuarios');
+              }}
+              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                userRole === 'ADMIN'
+                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+              }`}
+              title="Cambiar a Vista Administrador"
+            >
+              <Shield size={13} />
+              {!isCollapsed && <span>Admin</span>}
+            </button>
 
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`group relative uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
-                >
-                  {item.icon}
-                  {!isCollapsed && <span>{item.label}</span>}
-                  
-                  {isCollapsed && (
-                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
-                      <span>{item.label}</span>
-                      <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
+            <button
+              type="button"
+              onClick={() => {
+                switchViewRole('MANAGER');
+                setActiveTab('dashboard');
+              }}
+              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                userRole === 'MANAGER'
+                  ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+              }`}
+              title="Cambiar a Vista Líder Técnico"
+            >
+              <Briefcase size={13} />
+              {!isCollapsed && <span>Líder</span>}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                switchViewRole('DEVELOPER');
+                setActiveTab('developer');
+              }}
+              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+                userRole === 'DEVELOPER'
+                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+              }`}
+              title="Cambiar a Vista Desarrollador"
+            >
+              <Code size={13} />
+              {!isCollapsed && <span>Dev</span>}
+            </button>
+          </div>
+        )}
+
+        {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM ── */}
+        <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
+          {navItems.map((item) => {
+            const isMatrixSubtab = ['team_matrix', 'sprint_health', 'team_devs'].includes(activeTab);
+            const isActive = activeTab === item.id || (item.id === 'team_matrix' && isMatrixSubtab);
+
+            return (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`group relative uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
+              >
+                {item.icon}
+                {!isCollapsed && <span>{item.label}</span>}
+                
+                {isCollapsed && (
+                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
+                    <span>{item.label}</span>
+                    <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+                  </div>
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
 
 

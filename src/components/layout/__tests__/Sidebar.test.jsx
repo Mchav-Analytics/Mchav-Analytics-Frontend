@@ -43,7 +43,7 @@ describe('Sidebar Component', () => {
 
   it('renders correct navigation items for ADMIN role', () => {
     renderSidebar('ADMIN');
-    expect(screen.getByText(/Resumen/i)).toBeInTheDocument();
+    expect(screen.queryByText(/Resumen/i)).not.toBeInTheDocument();
     expect(screen.getByText(/Usuarios y Roles/i)).toBeInTheDocument();
     expect(screen.getByText(/Proyectos/i)).toBeInTheDocument();
   });

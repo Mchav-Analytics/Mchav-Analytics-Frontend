@@ -50,7 +50,7 @@ function MainLayout({
     } else if (newRole === 'DEVELOPER') {
       setActiveTab('developer');
     } else {
-      setActiveTab('dashboard');
+      setActiveTab('usuarios');
     }
   };
 
