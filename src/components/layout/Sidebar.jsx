@@ -204,9 +204,6 @@ function Sidebar({
 
       <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
 
-        {/* ── NAVEGACIÓN PRINCIPAL CENTRADA VERTICALMENTE ── */}
-        <div className="flex-1 flex flex-col justify-center my-auto py-2">
-          <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
         {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
         {isRealAdmin && (
           <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center' : 'grid grid-cols-3 gap-1'}`}>
