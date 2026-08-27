@@ -11,6 +11,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
 import LiderTecnicoDashboardView from './features/dashboard/views/LiderTecnicoDashboardView';
+import CapacityCalculatorView from './features/dashboard/views/CapacityCalculatorView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
 import DailyFocusView from './features/dashboard/views/DailyFocusView';
 import DevWorkloadView from './features/dashboard/views/DevWorkloadView';
@@ -95,12 +96,33 @@ function MainAppContent() {
     });
   };
 
-  // Guardar pestaña activa en localStorage al cambiar
+  // Guardar pestaña activa en localStorage al cambiar y escuchar redirecciones
   useEffect(() => {
     if (activeTab) {
       localStorage.setItem('mchav_active_tab', activeTab);
     }
+    const handleCustomTabChange = (e) => {
+      if (e.detail && e.detail.tab) {
+        setActiveTabState(e.detail.tab);
+        try {
+          localStorage.setItem('mchav_active_tab', e.detail.tab);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('mchav-change-tab', handleCustomTabChange);
+    return () => window.removeEventListener('mchav-change-tab', handleCustomTabChange);
   }, [activeTab]);
+
+  // Sincronizar clase dark global en documentElement y body para que los portales hereden el modo oscuro
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [isDarkMode]);
 
   // Filtro de rango de fechas activo
   const [dateFilter, setDateFilter] = useState({ label: 'Todos los tiempos', key: 'all' });
@@ -147,12 +169,6 @@ function MainAppContent() {
       if (!devTabs.includes(activeTab)) {
         const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
         setActiveTab(nextTab);
-      }
-    } else {
-      // Si es ADMIN o MANAGER y está en una vista exclusiva de DEVELOPER, enviarlo a dashboard
-      const exclusiveDevTabs = ['developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history'];
-      if (exclusiveDevTabs.includes(activeTab)) {
-        setActiveTab('dashboard');
       }
     }
   }, [user?.rol]);
@@ -414,26 +430,12 @@ function MainAppContent() {
       alerts={alerts}
       setAlerts={setAlerts}
     >
-      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
-        normalizeRole(user?.rol) === 'MANAGER' ? (
-          <LiderTecnicoDashboardView
-            selectedProjectId={selectedProjectId}
-            setActiveTab={setActiveTab}
-            isDarkMode={isDarkMode}
-          />
-        ) : (
-          <DashboardView
-            metrics={metrics}
-            metricsLoading={metricsLoading}
-            metricsError={metricsError}
-            syncSuccessMsg={syncSuccessMsg}
-            kpis={filteredKpis}
-            selectedProjectId={selectedProjectId}
-            setActiveTab={setActiveTab}
-            subTab={activeTab}
-            isDarkMode={isDarkMode}
-          />
-        )
+      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history' || activeTab === 'proyectos') && (
+        <ProyectosDashboardView userProfile={user} />
+      )}
+
+      {activeTab === 'capacity_calculator' && (
+        <CapacityCalculatorView isDarkMode={isDarkMode} />
       )}
 
       {activeTab === 'developer' && (
@@ -530,10 +532,6 @@ function MainAppContent() {
         <CentroReportesView selectedProjectId={selectedProjectId} />
       )}
 
-
-      {activeTab === 'proyectos' && (
-        <ProyectosDashboardView />
-      )}
 
       {activeTab === 'usuarios' && (
         <AdminUsuariosView />

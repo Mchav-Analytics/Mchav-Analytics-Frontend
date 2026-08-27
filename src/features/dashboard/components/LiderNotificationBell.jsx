@@ -39,8 +39,8 @@ export default function LiderNotificationBell({
 }) {
   const { user } = useAuth();
 
-  const rawRole = (user?.rol || 'MANAGER').toUpperCase();
-  const activeRole = rawRole.includes('DEV') ? 'DEVELOPER' : rawRole.includes('ADMIN') ? 'ADMIN' : 'MANAGER';
+  const rawRole = (user?.rol || 'DEVELOPER').toUpperCase();
+  const activeRole = rawRole.includes('ADMIN') ? 'ADMIN' : rawRole.includes('MANAG') || rawRole.includes('LIDER') ? 'MANAGER' : 'DEVELOPER';
 
   const [isOpen, setIsOpen] = useState(false);
   const [syncingId, setSyncingId] = useState(null);
@@ -159,7 +159,7 @@ export default function LiderNotificationBell({
 
       {/* POPUP EMERGENTE DE NOTIFICACIONES */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-88 sm:w-96 bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-50 p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-left">
+        <div className="absolute right-0 mt-3 w-[calc(100vw-2.5rem)] sm:w-96 max-w-sm bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-4 animate-in fade-in zoom-in-95 duration-150 text-left">
           
           {/* CABECERA POPUP */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">
@@ -265,7 +265,10 @@ export default function LiderNotificationBell({
                   <div className="flex items-center justify-end pt-2 border-t border-slate-100 dark:border-[#232752]/70">
                     {notif.type === 'TASK_ASSIGNED' && (
                       <button
-                        onClick={() => handleOpenTask(notif.issueKey)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenTask(notif.issueKey);
+                        }}
                         className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
                       >
                         <span>Ver tarea</span>
