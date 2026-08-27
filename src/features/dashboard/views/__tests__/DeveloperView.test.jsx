@@ -1,9 +1,10 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import DeveloperView from '../DeveloperView';
-import { developerService } from '../../../../services/api';
+import { developerService, projectService, jiraService } from '../../../../services/api';
 
 vi.mock('../../../../features/auth/context/AuthContext', () => ({
   useAuth: vi.fn(() => ({ 
@@ -39,52 +40,104 @@ vi.mock('../../../../components/layout/DeveloperProjectHeader', () => ({
 }));
 
 // Mock services
-vi.mock('../../../../services/api', () => {
-  return {
-    developerService: {
-      getMyScorecard: vi.fn(() => Promise.resolve({
-        cycle_time_personal: 3.5,
-        wip_tickets: 5,
-        throughput_tickets: 10,
-        story_points_burned: 40,
-        assigned_issues: []
-      })),
-      getDailyFocus: vi.fn(() => Promise.resolve({
-        ai_coach_tip: 'Keep up the good work!',
-        efficiency_gain_pct: 10,
-        clean_deliveries_pct: 95
-      })),
-      updateTaskStatus: vi.fn()
-    },
-    jiraService: {
-      triggerSync: vi.fn(() => Promise.resolve())
-    },
-    projectService: {
-      getKpiIssuesDetail: vi.fn(() => Promise.resolve({ issues: [] })),
-      transitionIssue: vi.fn()
-    },
-    jqlService: {
-      fetch: vi.fn()
-    }
-  };
-});
+vi.mock('../../../../services/api', () => ({
+  developerService: {
+    getMyScorecard: vi.fn(),
+    getDailyFocus: vi.fn(),
+    updateTaskStatus: vi.fn()
+  },
+  jiraService: {
+    triggerSync: vi.fn(() => Promise.resolve()),
+    addComment: vi.fn()
+  },
+  projectService: {
+    getKpiIssuesDetail: vi.fn(),
+    transitionIssue: vi.fn()
+  }
+}));
 
-describe('DeveloperView', () => {
+describe('DeveloperView Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    developerService.getMyScorecard.mockResolvedValue({
+      cycle_time_personal: 3.5,
+      wip_tickets: 5,
+      throughput_tickets: 10,
+      story_points_burned: 40
+    });
+    
+    projectService.getKpiIssuesDetail.mockResolvedValue({
+      issues: [
+        { key_issue: 'TSK-1', summary: 'Hacer login', status_actual: 'IN PROGRESS', issue_type: 'Historia', story_points: 5 },
+        { key_issue: 'TSK-2', summary: 'Fix bug', status_actual: 'DONE', issue_type: 'Bug', story_points: 3 }
+      ]
+    });
   });
 
-  it('renders correctly without crashing', async () => {
-    render(<DeveloperView selectedProjectId="PROJ-01" projects={[]} />);
+  it('renders correctly and loads data', async () => {
+    await act(async () => {
+      render(<DeveloperView selectedProjectId="PROJ-01" projects={[]} />);
+    });
     
-    // Check if main metrics text is rendered
     expect(screen.getByText('CYCLE TIME')).toBeInTheDocument();
     expect(screen.getByText('TICKETS WIP')).toBeInTheDocument();
-    expect(screen.getByText('THROUGHPUT')).toBeInTheDocument();
-    expect(screen.getByText('STORY POINTS')).toBeInTheDocument();
     
     await waitFor(() => {
-      expect(developerService.getMyScorecard).toHaveBeenCalled();
+      expect(screen.getByText('Hacer login')).toBeInTheDocument();
+      expect(screen.getByText('Fix bug')).toBeInTheDocument();
     });
+  });
+
+  it('opens issue detail modal and can transition issue', async () => {
+    const user = userEvent.setup();
+    developerService.updateTaskStatus.mockResolvedValue({});
+    projectService.transitionIssue.mockResolvedValue({ message: 'Success' });
+
+    await act(async () => {
+      render(<DeveloperView selectedProjectId="PROJ-01" projects={[]} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Hacer login')).toBeInTheDocument();
+    });
+
+    // Click on "Ver"
+    const viewButtons = screen.getAllByRole('button', { name: /ver/i });
+    await act(async () => {
+      await user.click(viewButtons[0]);
+    });
+
+    // Modal should be open
+    expect(screen.getByText('Cambiar Estado de la Incidencia:')).toBeInTheDocument();
+
+    // Click "LISTO"
+    const readyButton = screen.getByRole('button', { name: /Marcar como LISTO/i });
+    await act(async () => {
+      await user.click(readyButton);
+    });
+
+    expect(developerService.updateTaskStatus).toHaveBeenCalledWith('TSK-1', 'LISTO');
+    expect(projectService.transitionIssue).toHaveBeenCalledWith('TSK-1', 'LISTO');
+  });
+
+  it('filters issues correctly', async () => {
+    const user = userEvent.setup();
+    await act(async () => {
+      render(<DeveloperView selectedProjectId="PROJ-01" projects={[]} />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Hacer login')).toBeInTheDocument();
+    });
+
+    // Filter by completed
+    const btnCompletadas = screen.getByRole('button', { name: 'Completadas' });
+    await act(async () => {
+      await user.click(btnCompletadas);
+    });
+
+    expect(screen.queryByText('Hacer login')).not.toBeInTheDocument();
+    expect(screen.getByText('Fix bug')).toBeInTheDocument();
   });
 });
