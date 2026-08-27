@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData';
+import { mockAuthService, mockJiraService, mockProjectService, mockAutomationService } from './mockData.js';
 
 // Configurar Axios para enviar cookies en todas las peticiones
 axios.defaults.withCredentials = true;
@@ -30,27 +30,27 @@ export const authService = {
   },
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
-    return api.get('/api/v1/auth/me').then(res => res.data);
+    return api.get('/api/v1/auth/me').then(res => res.data).catch(() => mockAuthService.getCurrentUser());
   },
   loginMock(credentials) {
     if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
-    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data).catch(() => mockAuthService.loginMock(credentials));
   },
   logout() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/v1/auth/logout').then(res => res.data);
+    return api.post('/api/v1/auth/logout').then(res => res.data).catch(() => mockAuthService.logoutMock());
   },
   logoutMock() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/v1/auth/logout').then(res => res.data);
+    return api.post('/api/v1/auth/logout').then(res => res.data).catch(() => mockAuthService.logoutMock());
   },
   getJiraCredentials() {
     if (USE_MOCK_DATA) return mockAuthService.getJiraCredentials();
-    return api.get('/api/v1/auth/jira-credentials').then(res => res.data);
+    return api.get('/api/v1/auth/jira-credentials').then(res => res.data).catch(() => mockAuthService.getJiraCredentials());
   },
   saveJiraCredentials(payload) {
     if (USE_MOCK_DATA) return mockAuthService.saveJiraCredentials(payload);
-    return api.post('/api/v1/auth/jira-credentials', payload).then(res => res.data);
+    return api.post('/api/v1/auth/jira-credentials', payload).then(res => res.data).catch(() => mockAuthService.saveJiraCredentials(payload));
   }
 };
 

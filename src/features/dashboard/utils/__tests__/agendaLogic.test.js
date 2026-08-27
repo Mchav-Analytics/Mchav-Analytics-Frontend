@@ -1,12 +1,23 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { 
   isTaskOverdue, 
   classifyAgendaTasks, 
   getNubiaAnalysis,
-  addDays
+  addDays,
+  getTodayStr,
+  formatDateLocal
 } from '../agendaLogic';
 
 describe('Agenda Logic & NUBIIA Business Rules', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-24T12:00:00Z'));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
 
   const sampleTasks = [
     {
@@ -148,4 +159,42 @@ describe('Agenda Logic & NUBIIA Business Rules', () => {
     expect(nubia.actionLabel).toBe('Ver SCRUM-90');
   });
 
+  it('getTodayStr and formatDateLocal work correctly', () => {
+    const today = getTodayStr();
+    expect(today).toBe('2026-08-24'); // mocked date
+    
+    const formatted = formatDateLocal('2026-08-24');
+    expect(formatted).toContain('24');
+    expect(formatted.toLowerCase()).toContain('ago');
+  });
+
+  it('addDays correctly adds days to a date string', () => {
+    const result = addDays('2026-08-24', 2);
+    expect(result).toBe('2026-08-26');
+  });
+
+  it('getNubiaAnalysis handles perfect score (all tasks completed)', () => {
+    const selectedDate = '2026-08-24';
+    const classification = classifyAgendaTasks([
+      {
+        id: '1', key: 'SCRUM-1', status: 'FINALIZADO', resolved_at: '2026-08-24', priority: 'Alta'
+      }
+    ], selectedDate);
+    
+    const nubia = getNubiaAnalysis(classification, selectedDate, 'Proyecto Principal');
+    expect(nubia.message).toContain('¡Excelente trabajo!');
+  });
+  
+  it('getNubiaAnalysis recommends a critical task', () => {
+    const selectedDate = '2026-08-24';
+    const classification = classifyAgendaTasks([
+      {
+        id: '2', key: 'SCRUM-2', status: 'POR HACER', dueDate: '2026-08-25', priority: 'Crítica', created_at: '2026-08-24'
+      }
+    ], selectedDate);
+    
+    const nubia = getNubiaAnalysis(classification, selectedDate, 'Proyecto Principal');
+    expect(nubia.message).toContain('SCRUM-2');
+  });
 });
+

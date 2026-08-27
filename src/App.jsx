@@ -4,12 +4,14 @@
 // Enlaza el proveedor de autenticación (AuthProvider) y el enrutador principal (BrowserRouter)
 // para resolver errores de hooks de navegación en el navegador.
 
+import CentroReportesView from './features/reports/views/CentroReportesView';
 import React, { useState, useEffect, useMemo } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MainLayout from './components/layout/MainLayout';
 import DashboardView from './features/dashboard/views/DashboardView';
 import LiderTecnicoDashboardView from './features/dashboard/views/LiderTecnicoDashboardView';
+import CapacityCalculatorView from './features/dashboard/views/CapacityCalculatorView';
 import DeveloperView from './features/dashboard/views/DeveloperView';
 import DailyFocusView from './features/dashboard/views/DailyFocusView';
 import DevWorkloadView from './features/dashboard/views/DevWorkloadView';
@@ -93,11 +95,21 @@ function MainAppContent() {
     });
   };
 
-  // Guardar pestaña activa en localStorage al cambiar
+  // Guardar pestaña activa en localStorage al cambiar y escuchar redirecciones
   useEffect(() => {
     if (activeTab) {
       localStorage.setItem('mchav_active_tab', activeTab);
     }
+    const handleCustomTabChange = (e) => {
+      if (e.detail && e.detail.tab) {
+        setActiveTabState(e.detail.tab);
+        try {
+          localStorage.setItem('mchav_active_tab', e.detail.tab);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('mchav-change-tab', handleCustomTabChange);
+    return () => window.removeEventListener('mchav-change-tab', handleCustomTabChange);
   }, [activeTab]);
 
   // Sincronizar clase dark global en documentElement y body para que los portales hereden el modo oscuro
@@ -358,6 +370,11 @@ function MainAppContent() {
           subtitle: "Validador sintáctico en tiempo real, ejecutor de consultas JQL y diccionario de campos (Solo Admin)."
         };
       case 'sincronizacion':
+      case 'reports_center':
+        return {
+          title: 'Centro de Análisis y Generación de Reportes',
+          subtitle: 'Módulo integral para generación de reportes en vivo y auditoría de historiales inmutables.'
+        };
         return {
           title: "Auditoría de ETL y Schedulers ",
           subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
@@ -412,25 +429,12 @@ function MainAppContent() {
       alerts={alerts}
       setAlerts={setAlerts}
     >
-      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
-        normalizeRole(user?.rol) === 'MANAGER' ? (
-          <LiderTecnicoDashboardView
-            selectedProjectId={selectedProjectId}
-            setActiveTab={setActiveTab}
-            isDarkMode={isDarkMode}
-          />
-        ) : (
-          <DashboardView
-            metrics={metrics}
-            metricsLoading={metricsLoading}
-            metricsError={metricsError}
-            syncSuccessMsg={syncSuccessMsg}
-            kpis={filteredKpis}
-            selectedProjectId={selectedProjectId}
-            setActiveTab={setActiveTab}
-            subTab={activeTab}
-          />
-        )
+      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history' || activeTab === 'proyectos') && (
+        <ProyectosDashboardView userProfile={user} />
+      )}
+
+      {activeTab === 'capacity_calculator' && (
+        <CapacityCalculatorView isDarkMode={isDarkMode} />
       )}
 
       {activeTab === 'developer' && (
@@ -523,10 +527,10 @@ function MainAppContent() {
         <SystemSyncTab />
       )}
 
-
-      {activeTab === 'proyectos' && (
-        <ProyectosDashboardView />
+      {activeTab === 'reports_center' && (
+        <CentroReportesView selectedProjectId={selectedProjectId} />
       )}
+
 
       {activeTab === 'usuarios' && (
         <AdminUsuariosView />
