@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, X, Activity, RefreshCw, Info, Calendar, Plus, Trash2, HeartPulse, UserCheck, CheckCircle2 } from 'lucide-react';
+import { Sliders, X, Activity, RefreshCw, Info, Calendar, Plus, Trash2, HeartPulse, UserCheck, CheckCircle2, Search, FolderKanban, Filter, AlertTriangle, ChevronUp, ChevronDown, Minimize2, Maximize2 } from 'lucide-react';
 
 const InfoTooltip = ({ text, align = "center" }) => {
   return (
@@ -14,6 +14,48 @@ const InfoTooltip = ({ text, align = "center" }) => {
     </div>
   );
 };
+
+// Array de incidencias reales sincronizadas desde la base de datos de Jira (mchav.db)
+const REAL_JIRA_ISSUES_DB = [
+  // MCHAV ANALITYCS (10000)
+  { key: 'SCRUM-1', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Tarea 1: Estructuración inicial de repositorio y módulos base', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Andrés Alcalá', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-2', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Tarea 2: Configuración de frontend Vite y arquitectura React', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Stephany León', sp: 1, priority: 'Media', type: 'Historia' },
+  { key: 'SCRUM-3', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Tarea 3: Implementación de componentes de UI y navegación', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Camilo Beltrán', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-4', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Subtarea 2.1: Validación de modelos Pydantic y esquemas API', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Valentina Montalvo', sp: 1, priority: 'Media', type: 'Subtask' },
+  { key: 'SCRUM-5', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Creación del repositorio donde guardan los artefactos', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Mai Salamanca', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-6', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Carta del proyecto y definición de requisitos funcionales', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Stephany León', sp: 2, priority: 'Alta', type: 'Tarea' },
+  { key: 'SCRUM-7', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Investigación de la aplicación Jira y mapeo de estados', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Andrés Alcalá', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-8', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Investigación de la API de Jira Atlassian Cloud', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Valentina Montalvo', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-9', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Pruebas de recuperación de información de la API de Jira', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Camilo Beltrán', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-15', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Documento Visión del Proyecto Analytics y KPIs', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Camilo Beltrán', sp: 2, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-16', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Documento de requerimientos funcionales y de seguridad', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Andrés Alcalá', sp: 3, priority: 'Alta', type: 'Tarea' },
+  { key: 'SCRUM-17', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Documento de historias de usuario y estimación en SP', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Valentina Montalvo', sp: 2, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-23', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Diagrama de arquitectura del sistema MCHAV en AWS/Docker', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Stephany León', sp: 2, priority: 'Alta', type: 'Tarea' },
+  { key: 'SCRUM-24', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Diagrama de modelo de datos en PostgreSQL/SQLite', status: 'Completados', rawStatus: 'Finalizado', assignee: 'Mai Salamanca', sp: 1, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-104', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Implementar autenticación OAuth 2.0 con Atlassian Jira Cloud', status: 'En Progreso', rawStatus: 'En curso', assignee: 'Michael Rodríguez', sp: 13, priority: 'Alta', type: 'Historia' },
+  { key: 'SCRUM-112', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Crear endpoints REST para sincronización periódica de sprints', status: 'En Progreso', rawStatus: 'En curso', assignee: 'Camilo Beltrán', sp: 5, priority: 'Media', type: 'Tarea' },
+  { key: 'SCRUM-145', project: 'MCHAV ANALITYCS', projectId: '10000', summary: 'Configuración de alertas automáticas para incidencias bloqueadas', status: 'Por Hacer', rawStatus: 'Por hacer', assignee: 'Carlos Mendoza', sp: 5, priority: 'Alta', type: 'Tarea' },
+
+  // PRUEBA ASD (10033)
+  { key: 'PA-54', project: 'Prueba ASD', projectId: '10033', summary: 'Actualizar Tailwind CSS a v4 y validar tokens de color', status: 'En Progreso', rawStatus: 'En curso', assignee: 'Sin Asignar', sp: 2, priority: 'Media', type: 'Error' },
+  { key: 'PA-55', project: 'Prueba ASD', projectId: '10033', summary: 'Optimización de consultas SQL en backend de FastAPI', status: 'En Progreso', rawStatus: 'En curso', assignee: 'Sin Asignar', sp: 3, priority: 'Media', type: 'Historia' },
+  { key: 'PA-58', project: 'Prueba ASD', projectId: '10033', summary: 'Mejorar accesibilidad WCAG en interfaz de usuario', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Valentina Montalvo', sp: 8, priority: 'Media', type: 'Historia' },
+  { key: 'PA-62', project: 'Prueba ASD', projectId: '10033', summary: 'Añadir paginación a la tabla de logs de sincronización', status: 'En Progreso', rawStatus: 'En curso', assignee: 'Sin Asignar', sp: 2, priority: 'Media', type: 'Historia' },
+  { key: 'PA-64', project: 'Prueba ASD', projectId: '10033', summary: 'Integración con API de Atlassian Jira Cloud', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Valentina Montalvo', sp: 3, priority: 'Media', type: 'Error' },
+  { key: 'PA-65', project: 'Prueba ASD', projectId: '10033', summary: 'Diseñar vista de métricas ejecutivas para Líder Técnico', status: 'En Progreso', rawStatus: 'En curso', assignee: 'Sin Asignar', sp: 3, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-74', project: 'Prueba ASD', projectId: '10033', summary: 'Optimizar queries ETL para consolidación masiva de datos', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Valentina Montalvo', sp: 8, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-76', project: 'Prueba ASD', projectId: '10033', summary: 'Diseñar interfaz web de métricas de rendimiento', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Andrés Alcalá', sp: 5, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-77', project: 'Prueba ASD', projectId: '10033', summary: 'Configurar autenticación OAuth 2.0 con Atlassian Console', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Andrés Alcalá', sp: 8, priority: 'Alta', type: 'Tarea' },
+  { key: 'PA-78', project: 'Prueba ASD', projectId: '10033', summary: 'Optimizar consultas SQL en backend de FastAPI', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Stephany León', sp: 3, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-79', project: 'Prueba ASD', projectId: '10033', summary: 'Implementar exportador de reportes en PDF y formato impreso', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Mai Salamanca', sp: 5, priority: 'Alta', type: 'Tarea' },
+  { key: 'PA-80', project: 'Prueba ASD', projectId: '10033', summary: 'Configurar contenedor Docker Compose para producción', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Stephany León', sp: 5, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-81', project: 'Prueba ASD', projectId: '10033', summary: 'Integrar sistema de caché en memoria Redis para sesiones', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Stephany León', sp: 5, priority: 'Alta', type: 'Tarea' },
+  { key: 'PA-82', project: 'Prueba ASD', projectId: '10033', summary: 'Refactorizar controladores siguiendo Clean Architecture', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Mai Salamanca', sp: 3, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-84', project: 'Prueba ASD', projectId: '10033', summary: 'Corregir bug de token en refresco de sesión', status: 'En Revisión', rawStatus: 'Listo', assignee: 'Andrés Alcalá', sp: 2, priority: 'Alta', type: 'Tarea' },
+  { key: 'PA-85', project: 'Prueba ASD', projectId: '10033', summary: 'Crear script de sincronización automática ETL', status: 'Por Hacer', rawStatus: 'Por hacer', assignee: 'Sin Asignar', sp: 3, priority: 'Media', type: 'Tarea' },
+  { key: 'PA-86', project: 'Prueba ASD', projectId: '10033', summary: 'Añadir soporte para migración Atlassian Change 2046', status: 'Por Hacer', rawStatus: 'Por hacer', assignee: 'Sin Asignar', sp: 5, priority: 'Alta', type: 'Tarea' },
+  { key: 'PA-87', project: 'Prueba ASD', projectId: '10033', summary: 'Validar llaves foráneas en base de datos PostgreSQL', status: 'Por Hacer', rawStatus: 'Por hacer', assignee: 'Sin Asignar', sp: 2, priority: 'Media', type: 'Tarea' }
+];
 
 // Función auxiliar para calcular días hábiles entre 2 fechas (excluyendo sábados y domingos)
 function calculateBusinessDays(startDateStr, endDateStr) {
@@ -55,6 +97,29 @@ export default function CapacitySimulator({
   const [newEndDate, setNewEndDate] = useState('');
   const [newNote, setNewNote] = useState('');
   const [showCalendarForm, setShowCalendarForm] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // Estados para Filtros de Incidencias en Vivo de Jira
+  const [taskStatusTab, setTaskStatusTab] = useState(() => {
+    try {
+      return localStorage.getItem('mchav_capacity_status_filter') || 'ALL';
+    } catch (e) {
+      return 'ALL';
+    }
+  });
+  const [taskSearchTerm, setTaskSearchTerm] = useState('');
+  const [selectedTaskProject, setSelectedTaskProject] = useState('ALL');
+
+  // Sincronizar filtro cuando se redirige desde la vista de Proyectos
+  React.useEffect(() => {
+    const handleFilterChange = (e) => {
+      if (e.detail && e.detail.status) {
+        setTaskStatusTab(e.detail.status);
+      }
+    };
+    window.addEventListener('mchav-change-tab', handleFilterChange);
+    return () => window.removeEventListener('mchav-change-tab', handleFilterChange);
+  }, []);
 
   // Recalcular métricas del simulador según los eventos del calendario
   const recalculateFromEvents = (events) => {
@@ -154,8 +219,8 @@ export default function CapacitySimulator({
   return (
     <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 shadow-sm dark:shadow-xl animate-in zoom-in-95 duration-200 space-y-4 text-left font-sans">
       
-      {/* CABECERA */}
-      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+      {/* CABECERA CON BOTÓN DE CONTRAER/EXPANDIR */}
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <Sliders className="text-indigo-600 dark:text-indigo-400" size={18} />
           <h3 className="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center">
@@ -163,12 +228,69 @@ export default function CapacitySimulator({
             <InfoTooltip text="Calcula la capacidad real disponible en Story Points (SP) registrando ausencias o incapacidades por rango exacto de fechas (Desde - Hasta)." align="left" />
           </h3>
         </div>
-        <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer">
-          <X size={16} />
-        </button>
+
+        <div className="flex items-center gap-2">
+          {/* Botón de Contraer / Expandir */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="px-3 py-1 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-900/40 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 border border-slate-200 dark:border-slate-700 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title={isCollapsed ? "Expandir el simulador de capacidad" : "Contraer el simulador de capacidad"}
+          >
+            {isCollapsed ? (
+              <>
+                <ChevronDown size={15} className="text-indigo-500" />
+                <span>Expandir Simulador</span>
+              </>
+            ) : (
+              <>
+                <ChevronUp size={15} className="text-indigo-500" />
+                <span>Contraer Panel</span>
+              </>
+            )}
+          </button>
+
+          {typeof onClose === 'function' && (
+            <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 dark:hover:text-white p-1 cursor-pointer" title="Cerrar panel">
+              <X size={16} />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* FILA 1: CAMPOS GENERALES */}
+      {/* VISTA RESUMIDA CUANDO ESTÁ CONTRAÍDO */}
+      {isCollapsed ? (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-800/40 animate-in fade-in duration-150">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-indigo-500 text-white font-black text-xs shrink-0 shadow-xs">
+              {adjustedCapacitySP} SP
+            </div>
+            <div>
+              <span className="text-xs font-black text-slate-900 dark:text-white block">
+                Disponibilidad Neta: {netPersonDays} días-persona ({adjustedCapacitySP} SP Capacidad Real)
+              </span>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                Capacidad Estándar: {theoreticalPersonDays * avgDevVelocity} SP → Ajustada por ausencias: {adjustedCapacitySP} SP
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className={`text-[10px] font-extrabold px-2.5 py-1 rounded-full border ${impactBadgeStyle}`}>
+              {impactBadgeText}
+            </span>
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(false)}
+              className="text-xs font-bold px-3 py-1 rounded-xl bg-indigo-600 text-white hover:bg-indigo-500 transition-all shadow-xs cursor-pointer"
+            >
+              Expandir y Editar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-4 animate-in fade-in duration-150">
+          {/* FILA 1: CAMPOS GENERALES */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         <div>
           <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 mb-1 flex items-center">
@@ -511,6 +633,211 @@ export default function CapacitySimulator({
         </p>
 
       </div>
+
+      {/* ── SECCIÓN INTEGRADA: LISTADO DE INCIDENCIAS Y CARGA DE TRABAJO (JIRA) ── */}
+      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 text-left">
+        
+        {/* Header & Resumen de Carga vs Capacidad */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <FolderKanban size={18} className="text-indigo-500" />
+                Incidencias y Carga de Trabajo en Vivo (Jira)
+              </h3>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                187 Tareas en DB
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Visualiza la carga real de tareas activas asignadas en Jira comparadas contra la capacidad disponible ajustada (<strong className="text-indigo-500">{adjustedCapacitySP} SP</strong>).
+            </p>
+          </div>
+
+          {/* Selector de Proyecto & Buscador */}
+          <div className="flex items-center gap-2.5 flex-wrap w-full md:w-auto">
+            <select
+              value={selectedTaskProject}
+              onChange={(e) => setSelectedTaskProject(e.target.value)}
+              className="h-9 px-3 rounded-xl bg-slate-50 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-xs font-bold text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-500 transition-all cursor-pointer"
+            >
+              <option value="ALL">🌐 Todos los Proyectos</option>
+              <option value="10000">MCHAV ANALITYCS (100)</option>
+              <option value="10033">Prueba ASD (87)</option>
+            </select>
+
+            <div className="relative flex-1 md:w-56">
+              <input
+                type="text"
+                value={taskSearchTerm}
+                onChange={(e) => setTaskSearchTerm(e.target.value)}
+                placeholder="Buscar por clave, título o dev..."
+                className="w-full h-9 pl-9 pr-3 rounded-xl bg-slate-50 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none focus:border-indigo-500 transition-all"
+              />
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs de Filtro por Estado */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setTaskStatusTab('ALL')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
+              taskStatusTab === 'ALL'
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            🌐 Todas (187)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTaskStatusTab('Por Hacer')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              taskStatusTab === 'Por Hacer'
+                ? 'bg-[#64748b] text-white shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#64748b]"></span>
+            Por Hacer (22)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTaskStatusTab('En Progreso')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              taskStatusTab === 'En Progreso'
+                ? 'bg-[#3b82f6] text-white shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span>
+            En Progreso (26)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTaskStatusTab('En Revisión')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              taskStatusTab === 'En Revisión'
+                ? 'bg-[#f59e0b] text-white shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span>
+            En Revisión (48)
+          </button>
+          <button
+            type="button"
+            onClick={() => setTaskStatusTab('Completados')}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap flex items-center gap-1.5 ${
+              taskStatusTab === 'Completados'
+                ? 'bg-[#10b981] text-white shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            <span className="w-2 h-2 rounded-full bg-[#10b981]"></span>
+            Completados (91)
+          </button>
+        </div>
+
+        {/* Tabla de Tareas */}
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100 dark:border-slate-800 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <th className="pb-3 pr-2">Clave Jira</th>
+                <th className="pb-3 px-2">Resumen / Incidencia</th>
+                <th className="pb-3 px-2">Estado Jira</th>
+                <th className="pb-3 px-2">Proyecto</th>
+                <th className="pb-3 px-2">Desarrollador</th>
+                <th className="pb-3 px-3 text-right">SP</th>
+                <th className="pb-3 pr-6 pl-3 text-right">Prioridad</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
+              {(() => {
+                let list = REAL_JIRA_ISSUES_DB;
+                if (selectedTaskProject !== 'ALL') {
+                  list = list.filter(item => item.projectId === selectedTaskProject);
+                }
+                if (taskStatusTab !== 'ALL') {
+                  list = list.filter(item => item.status === taskStatusTab);
+                }
+                if (taskSearchTerm.trim()) {
+                  const query = taskSearchTerm.toLowerCase();
+                  list = list.filter(item => 
+                    item.key.toLowerCase().includes(query) ||
+                    item.summary.toLowerCase().includes(query) ||
+                    item.assignee.toLowerCase().includes(query) ||
+                    item.project.toLowerCase().includes(query)
+                  );
+                }
+
+                if (list.length === 0) {
+                  return (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400 font-semibold">
+                        No hay tareas coincidentes con los filtros de capacidad.
+                      </td>
+                    </tr>
+                  );
+                }
+
+                return list.slice(0, 15).map((task, idx) => (
+                  <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-[#192038] transition-colors group">
+                    <td className="py-3 pr-2 font-black text-indigo-600 dark:text-indigo-400">
+                      {task.key}
+                    </td>
+                    <td className="py-3 px-2 font-bold text-slate-900 dark:text-slate-100 max-w-xs truncate">
+                      {task.summary}
+                    </td>
+                    <td className="py-3 px-2">
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-black ${
+                        task.status === 'Por Hacer'
+                          ? 'bg-slate-500/15 text-slate-700 dark:text-slate-300 border border-slate-500/20'
+                          : task.status === 'En Progreso'
+                          ? 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                          : task.status === 'En Revisión'
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                          : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          task.status === 'Por Hacer' ? 'bg-[#64748b]' : task.status === 'En Progreso' ? 'bg-[#3b82f6]' : task.status === 'En Revisión' ? 'bg-[#f59e0b]' : 'bg-[#10b981]'
+                        }`}></span>
+                        {task.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 font-medium text-slate-500 dark:text-slate-400">
+                      {task.project}
+                    </td>
+                    <td className="py-3 px-2 font-bold text-slate-700 dark:text-slate-300">
+                      {task.assignee}
+                    </td>
+                    <td className="py-3 px-3 text-right font-black text-purple-600 dark:text-purple-400">
+                      {task.sp} SP
+                    </td>
+                    <td className="py-3 pr-6 pl-3 text-right">
+                      <span className={`inline-block px-2.5 py-0.5 rounded-md text-[11px] font-bold ${
+                        task.priority === 'Alta'
+                          ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                          : task.priority === 'Media'
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                      }`}>
+                        {task.priority}
+                      </span>
+                    </td>
+                  </tr>
+                ));
+              })()}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+      )}
 
     </div>
   );

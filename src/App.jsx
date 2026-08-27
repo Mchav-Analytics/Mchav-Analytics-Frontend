@@ -95,11 +95,21 @@ function MainAppContent() {
     });
   };
 
-  // Guardar pestaña activa en localStorage al cambiar
+  // Guardar pestaña activa en localStorage al cambiar y escuchar redirecciones
   useEffect(() => {
     if (activeTab) {
       localStorage.setItem('mchav_active_tab', activeTab);
     }
+    const handleCustomTabChange = (e) => {
+      if (e.detail && e.detail.tab) {
+        setActiveTabState(e.detail.tab);
+        try {
+          localStorage.setItem('mchav_active_tab', e.detail.tab);
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('mchav-change-tab', handleCustomTabChange);
+    return () => window.removeEventListener('mchav-change-tab', handleCustomTabChange);
   }, [activeTab]);
 
   // Filtro de rango de fechas activo
@@ -414,21 +424,8 @@ function MainAppContent() {
       alerts={alerts}
       setAlerts={setAlerts}
     >
-      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
-        normalizeRole(user?.rol) === 'MANAGER' ? (
-          <ProyectosDashboardView userProfile={user} />
-        ) : (
-          <DashboardView
-            metrics={metrics}
-            metricsLoading={metricsLoading}
-            metricsError={metricsError}
-            syncSuccessMsg={syncSuccessMsg}
-            kpis={filteredKpis}
-            selectedProjectId={selectedProjectId}
-            setActiveTab={setActiveTab}
-            subTab={activeTab}
-          />
-        )
+      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history' || activeTab === 'proyectos') && (
+        <ProyectosDashboardView userProfile={user} />
       )}
 
       {activeTab === 'capacity_calculator' && (
@@ -529,10 +526,6 @@ function MainAppContent() {
         <CentroReportesView selectedProjectId={selectedProjectId} />
       )}
 
-
-      {activeTab === 'proyectos' && (
-        <ProyectosDashboardView />
-      )}
 
       {activeTab === 'usuarios' && (
         <AdminUsuariosView />

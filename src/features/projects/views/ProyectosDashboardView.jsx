@@ -8,6 +8,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import api, { projectService } from '../../../services/api';
 import { useAuth } from '../../auth/context/AuthContext';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
+import { SprintBurndownChart } from '../components/SprintBurndownChart';
 import {
   FolderKanban,
   CheckCircle2,
@@ -34,7 +35,8 @@ import {
   ListFilter,
   Check,
   Building2,
-  Box
+  Box,
+  ClipboardList
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -135,6 +137,20 @@ const GENERAL_VELOCITY_DATA = [
   { sprint: 'Sprint 17', PA: 65, MC: 54, WD: 46, AG: 38 },
 ];
 
+const MOCK_BURNDOWN_DATA = [
+  { fecha_real: '13 ago', esfuerzo_ideal: 225, esfuerzo_restante: 185, tareas_completadas: 0 },
+  { fecha_real: '16 ago', esfuerzo_ideal: 200, esfuerzo_restante: 165, tareas_completadas: 5 },
+  { fecha_real: '19 ago', esfuerzo_ideal: 175, esfuerzo_restante: 145, tareas_completadas: 12 },
+  { fecha_real: '22 ago', esfuerzo_ideal: 150, esfuerzo_restante: 125, tareas_completadas: 20 },
+  { fecha_real: '25 ago', esfuerzo_ideal: 125, esfuerzo_restante: 100, tareas_completadas: 35 },
+  { fecha_real: '28 ago', esfuerzo_ideal: 100, esfuerzo_restante: 75, tareas_completadas: 55 },
+  { fecha_real: '31 ago', esfuerzo_ideal: 75, esfuerzo_restante: 55, tareas_completadas: 80 },
+  { fecha_real: '3 sep', esfuerzo_ideal: 50, esfuerzo_restante: 35, tareas_completadas: 110 },
+  { fecha_real: '7 sep', esfuerzo_ideal: 25, esfuerzo_restante: 15, tareas_completadas: 130 },
+  { fecha_real: '10 sep', esfuerzo_ideal: 10, esfuerzo_restante: 5, tareas_completadas: 138 },
+  { fecha_real: '13 sep', esfuerzo_ideal: 0, esfuerzo_restante: 0, tareas_completadas: 141 },
+];
+
 export default function ProyectosDashboardView({ userProfile = null }) {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
@@ -145,30 +161,91 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [pageSize, setPageSize] = useState(10);
   const [toastMsg, setToastMsg] = useState(null);
 
-  // Proyectos reales backend
+  // Proyectos reales backend, Burndown & Sprints
   const [realProjects, setRealProjects] = useState([]);
+  const [realBurndownData, setRealBurndownData] = useState([]);
+  const [realIssues, setRealIssues] = useState([]);
+  const [realSprints, setRealSprints] = useState([]);
+  const [showBurndownDocModal, setShowBurndownDocModal] = useState(false);
 
   useEffect(() => {
     projectService.getProjects()
-      .then((data) => {
+      .then(async (data) => {
         if (Array.isArray(data) && data.length > 0) {
-          const mapped = data.map((p, idx) => ({
-            id: p.id_proyecto || `proj-${idx + 1}`,
-            key: p.key_proyecto || `PROJ-${idx + 1}`,
-            name: p.nombre || `Proyecto ${idx + 1}`,
-            status: (p.estado || '').toUpperCase() === 'INACTIVE' ? 'Pausado' : 'Activo',
-            issuesCount: Math.floor(Math.random() * 200) + 100,
-            velocity: (Math.random() * 30 + 15).toFixed(1),
-            cycleTime: `${(Math.random() * 2 + 2).toFixed(1)} días`,
-            progress: Math.floor(Math.random() * 40) + 60,
-            lastSync: 'Hace momentos',
-            color: ['#8b5cf6', '#3b82f6', '#f97316', '#10b981', '#a855f7', '#06b6d4'][idx % 6]
+          const mappedProjects = await Promise.all(data.map(async (p, idx) => {
+            const projId = p.id_proyecto || p.key_proyecto || `PROJ-${idx + 1}`;
+            let issuesArr = [];
+            try {
+              const res = await projectService.getKpiIssuesDetail(projId);
+              issuesArr = res?.issues || (Array.isArray(res) ? res : []);
+            } catch (err) {
+              issuesArr = [];
+            }
+
+            const totalCount = issuesArr.length;
+            const doneIssues = issuesArr.filter(i => ['done', 'finalizado', 'resolved', 'completado', 'cerrado'].some(s => (i.status_actual || '').toLowerCase().includes(s)));
+            const doneCount = doneIssues.length;
+            const progressPct = totalCount > 0 ? Math.round((doneCount / totalCount) * 100) : 0;
+            const totalVelocity = doneIssues.reduce((acc, i) => acc + parseFloat(i.story_points || 0), 0);
+
+            const validCycleTimes = issuesArr.map(i => parseFloat(i.cycle_time_days || 0)).filter(t => t > 0);
+            const avgCycle = validCycleTimes.length > 0
+              ? (validCycleTimes.reduce((a, b) => a + b, 0) / validCycleTimes.length).toFixed(1)
+              : '0.0';
+
+            return {
+              id: projId,
+              key: p.key_proyecto || p.key || `PROJ-${idx + 1}`,
+              name: p.nombre || `Proyecto ${idx + 1}`,
+              status: (p.estado || '').toUpperCase() === 'INACTIVE' ? 'Pausado' : 'Activo',
+              issuesCount: totalCount,
+              velocity: totalVelocity > 0 ? totalVelocity.toFixed(1) : '0.0',
+              cycleTime: `${avgCycle} días`,
+              progress: progressPct,
+              lastSync: 'Hace momentos',
+              color: ['#8b5cf6', '#3b82f6', '#f97316', '#10b981', '#a855f7', '#06b6d4'][idx % 6]
+            };
           }));
-          setRealProjects(mapped);
+
+          setRealProjects(mappedProjects);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
+
+  // Fetch de Burndown, Sprints e Incidencias Reales según el proyecto seleccionado
+  useEffect(() => {
+    const targetProjId = selectedProjectId === 'ALL'
+      ? (realProjects[0]?.id || 'PROJ-01')
+      : selectedProjectId;
+
+    projectService.getProjectBurndown(targetProjId)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setRealBurndownData(data);
+        } else {
+          setRealBurndownData([]);
+        }
+      })
+      .catch(() => setRealBurndownData([]));
+
+    projectService.getSprints(targetProjId)
+      .then(data => {
+        if (Array.isArray(data) && data.length > 0) {
+          setRealSprints(data);
+        } else {
+          setRealSprints([]);
+        }
+      })
+      .catch(() => setRealSprints([]));
+
+    projectService.getKpiIssuesDetail(targetProjId)
+      .then(res => {
+        const issuesArr = res?.issues || (Array.isArray(res) ? res : []);
+        setRealIssues(issuesArr);
+      })
+      .catch(() => setRealIssues([]));
+  }, [selectedProjectId, realProjects]);
 
   const allProjectsList = useMemo(() => {
     return realProjects.length > 0 ? realProjects : DEFAULT_PROJECT_ROWS;
@@ -187,7 +264,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       list = list.filter(p => p.id === selectedProjectId);
     }
     if (!searchTerm.trim()) return list;
-    return list.filter(p => 
+    return list.filter(p =>
       p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       p.key.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -222,32 +299,217 @@ export default function ProyectosDashboardView({ userProfile = null }) {
     };
   }, [selectedProjectObj, allProjectsList]);
 
-  // Datos del Gráfico Donut de Estados según la selección
+  // Datos del Gráfico Donut de Estados calculados desde la BD real de Jira
   const statusDistributionData = useMemo(() => {
-    if (selectedProjectObj) {
-      const tot = selectedProjectObj.issuesCount;
-      const todo = Math.round(tot * 0.25);
-      const inProg = Math.round(tot * 0.38);
-      const review = Math.round(tot * 0.18);
-      const done = Math.round(tot * 0.17);
-      const blocked = tot - (todo + inProg + review + done);
+    if (Array.isArray(realIssues) && realIssues.length > 0) {
+      let completados = 0;
+      let enProgreso = 0;
+      let porCompletar = 0;
+      let bloqueados = 0;
+      let sinAsignar = 0;
 
+      realIssues.forEach(issue => {
+        const st = (issue.status_actual || '').toLowerCase();
+        if (['done', 'finalizado', 'resolved', 'completado', 'cerrado'].some(s => st.includes(s))) {
+          completados++;
+        } else if (['in progress', 'en progreso', 'desarrollo', 'in review', 'revisión', 'doing'].some(s => st.includes(s))) {
+          enProgreso++;
+        } else if (['blocked', 'bloqueado', 'impediment'].some(s => st.includes(s))) {
+          bloqueados++;
+        } else if (['to do', 'por hacer', 'backlog', 'open', 'abierto'].some(s => st.includes(s))) {
+          porCompletar++;
+        } else {
+          sinAsignar++;
+        }
+      });
+
+      const total = realIssues.length;
       return [
-        { name: 'To Do', value: todo, percentage: `${Math.round((todo/tot)*100)}%`, color: '#3b82f6' },
-        { name: 'In Progress', value: inProg, percentage: `${Math.round((inProg/tot)*100)}%`, color: '#06b6d4' },
-        { name: 'In Review', value: review, percentage: `${Math.round((review/tot)*100)}%`, color: '#f97316' },
-        { name: 'Done', value: done, percentage: `${Math.round((done/tot)*100)}%`, color: '#10b981' },
-        { name: 'Blocked', value: Math.max(0, blocked), percentage: `${Math.round((Math.max(0, blocked)/tot)*100)}%`, color: '#ef4444' },
+        { name: 'Completados', value: completados, percentage: total ? `${((completados / total) * 100).toFixed(1)}%` : '0%', color: '#10b981' },
+        { name: 'En progreso', value: enProgreso, percentage: total ? `${((enProgreso / total) * 100).toFixed(1)}%` : '0%', color: '#8b5cf6' },
+        { name: 'Por completar', value: porCompletar, percentage: total ? `${((porCompletar / total) * 100).toFixed(1)}%` : '0%', color: '#3b82f6' },
+        { name: 'Bloqueados', value: bloqueados, percentage: total ? `${((bloqueados / total) * 100).toFixed(1)}%` : '0%', color: '#f59e0b' },
+        { name: 'Sin asignar', value: sinAsignar, percentage: total ? `${((sinAsignar / total) * 100).toFixed(1)}%` : '0%', color: '#cbd5e1' },
       ];
     }
+
     return [
-      { name: 'To Do', value: 342, percentage: '27.4%', color: '#3b82f6' },
-      { name: 'In Progress', value: 456, percentage: '36.5%', color: '#06b6d4' },
-      { name: 'In Review', value: 234, percentage: '18.8%', color: '#f97316' },
-      { name: 'Done', value: 198, percentage: '15.9%', color: '#10b981' },
-      { name: 'Blocked', value: 18, percentage: '1.4%', color: '#ef4444' },
+      { name: 'Completados', value: 141, percentage: '57.8%', color: '#10b981' },
+      { name: 'En progreso', value: 73, percentage: '29.9%', color: '#8b5cf6' },
+      { name: 'Por completar', value: 30, percentage: '12.3%', color: '#3b82f6' },
+      { name: 'Bloqueados', value: 13, percentage: '5.3%', color: '#f59e0b' },
+      { name: 'Sin asignar', value: 5, percentage: '2.0%', color: '#cbd5e1' },
     ];
-  }, [selectedProjectObj]);
+  }, [realIssues]);
+
+  // Métricas consolidadas en tiempo real
+  const computedMetrics = useMemo(() => {
+    const totalIssuesCount = Array.isArray(realIssues) && realIssues.length > 0
+      ? realIssues.length
+      : 244;
+
+    const completadosCount = statusDistributionData.find(s => s.name === 'Completados')?.value || 141;
+    const enProgresoCount = statusDistributionData.find(s => s.name === 'En progreso')?.value || 73;
+    const porCompletarCount = statusDistributionData.find(s => s.name === 'Por completar')?.value || 30;
+
+    const pctCompletado = totalIssuesCount > 0
+      ? ((completadosCount / totalIssuesCount) * 100).toFixed(1)
+      : '57.8';
+
+    const activeProjs = realProjects.length > 0
+      ? realProjects.filter(p => p.status === 'Activo').length
+      : 8;
+
+    return {
+      activeProjects: activeProjs,
+      totalIssues: totalIssuesCount,
+      completados: completadosCount,
+      enProgreso: enProgresoCount,
+      porCompletar: porCompletarCount,
+      pctCompletado: `${pctCompletado}%`,
+      pctNum: parseFloat(pctCompletado) || 57.8
+    };
+  }, [realIssues, statusDistributionData, realProjects]);
+
+  // Datos del Gráfico de Barras de Velocidad del equipo dinámicos desde Jira / BD
+  const teamVelocityData = useMemo(() => {
+    if (Array.isArray(realSprints) && realSprints.length > 0) {
+      const colors = ['#8b5cf6', '#3b82f6', '#10b981'];
+      return realSprints.slice(-3).reverse().map((s, idx) => ({
+        name: s.nombre || `Sprint ${idx + 10}`,
+        SP: Math.round(s.sp_completados || s.sp_completed || (realIssues.filter(i => i.sprint_nombre === s.nombre && (i.status_actual || '').toLowerCase().includes('done')).reduce((acc, i) => acc + (i.story_points || 0), 0)) || (42 - idx * 4)),
+        color: colors[idx % colors.length]
+      }));
+    }
+
+    if (Array.isArray(realIssues) && realIssues.length > 0) {
+      const doneSP = realIssues
+        .filter(i => ['done', 'finalizado', 'resolved', 'completado'].some(st => (i.status_actual || '').toLowerCase().includes(st)))
+        .reduce((acc, i) => acc + (i.story_points || 0), 0);
+
+      const totalSP = Math.round(doneSP) || 42;
+      return [
+        { name: 'Sprint Actual', SP: totalSP, color: '#8b5cf6' },
+        { name: 'Sprint Anterior', SP: Math.max(10, Math.round(totalSP * 0.85)), color: '#3b82f6' },
+        { name: 'Sprint Previo', SP: Math.max(10, Math.round(totalSP * 0.7)), color: '#10b981' },
+      ];
+    }
+
+    return [
+      { name: 'Sprint 12', SP: 42, color: '#8b5cf6' },
+      { name: 'Sprint 11', SP: 38, color: '#3b82f6' },
+      { name: 'Sprint 10', SP: 34, color: '#10b981' },
+    ];
+  }, [realSprints, realIssues]);
+
+  // Equipo asignado al proyecto (Carga Actual calculada en tiempo real desde Jira / BD)
+  const assignedTeam = useMemo(() => {
+    if (Array.isArray(realIssues) && realIssues.length > 0) {
+      const assigneeMap = {};
+      
+      realIssues.forEach(issue => {
+        const name = issue.assignee_name || 'Sin Asignar';
+        if (name === 'Sin Asignar') return;
+        
+        if (!assigneeMap[name]) {
+          assigneeMap[name] = {
+            total: 0,
+            pending: 0,
+            pendingSp: 0,
+            role: Object.keys(assigneeMap).length === 0 ? 'LÍDER' : 'DEV'
+          };
+        }
+        
+        assigneeMap[name].total += 1;
+        const st = (issue.status_actual || '').toLowerCase();
+        const isDone = ['done', 'finalizado', 'resolved', 'completado', 'cerrado'].some(s => st.includes(s));
+        
+        if (!isDone) {
+          assigneeMap[name].pending += 1;
+          assigneeMap[name].pendingSp += parseFloat(issue.story_points || 0);
+        }
+      });
+
+      const members = Object.keys(assigneeMap).map((name, idx) => {
+        const pCount = assigneeMap[name].pending;
+        const pSp = Math.round(assigneeMap[name].pendingSp);
+        let workloadText = 'Sin tareas pendientes';
+        if (pCount > 0) {
+          workloadText = pSp > 0 ? `${pCount} tareas (${pSp} SP)` : `${pCount} tareas`;
+        }
+
+        return {
+          id: `user-${idx}`,
+          name,
+          role: assigneeMap[name].role,
+          initial: name.charAt(0).toUpperCase(),
+          tasks: workloadText,
+          color: ['#8b5cf6', '#2563eb', '#10b981', '#f59e0b', '#06b6d4'][idx % 5]
+        };
+      });
+
+      if (members.length > 0) return members;
+    }
+
+    return [
+      { id: '1', role: 'LÍDER', initial: 'V', name: 'Valentina Montalvo', tasks: '2 tareas (5 SP)', color: '#8b5cf6' },
+      { id: '2', role: 'DEV', initial: 'S', name: 'Stephany León', tasks: '4 tareas (12 SP)', color: '#2563eb' },
+      { id: '3', role: 'DEV', initial: 'C', name: 'Camilo Corredor', tasks: '3 tareas (8 SP)', color: '#10b981' }
+    ];
+  }, [realIssues]);
+
+  // Tiempo de Ciclo Promedio por Tipo de Incidencia (Días para resolver Bugs, Historias, Tareas, etc.)
+  const cycleTimeByTypeData = useMemo(() => {
+    if (Array.isArray(realIssues) && realIssues.length > 0) {
+      const typeMap = {};
+      
+      realIssues.forEach(issue => {
+        const rawType = issue.issue_type || issue.issuetype || 'Story';
+        let typeName = 'Historias';
+        if (rawType.toLowerCase().includes('bug')) typeName = 'Bugs';
+        else if (rawType.toLowerCase().includes('task') || rawType.toLowerCase().includes('tarea')) typeName = 'Tareas';
+        else if (rawType.toLowerCase().includes('improvement') || rawType.toLowerCase().includes('mejora')) typeName = 'Mejoras';
+
+        if (!typeMap[typeName]) {
+          typeMap[typeName] = { totalDays: 0, count: 0 };
+        }
+
+        const days = parseFloat(issue.cycle_time_days || issue.lead_time_days || 0);
+        if (days > 0) {
+          typeMap[typeName].totalDays += days;
+          typeMap[typeName].count += 1;
+        }
+      });
+
+      const colors = {
+        'Bugs': '#ef4444',
+        'Historias': '#8b5cf6',
+        'Tareas': '#3b82f6',
+        'Mejoras': '#10b981'
+      };
+
+      const result = Object.keys(typeMap).map(typeName => {
+        const avg = typeMap[typeName].count > 0
+          ? (typeMap[typeName].totalDays / typeMap[typeName].count).toFixed(1)
+          : 0;
+        return {
+          name: typeName,
+          dias: parseFloat(avg) || 1.5,
+          color: colors[typeName] || '#6366f1',
+          count: typeMap[typeName].count
+        };
+      });
+
+      if (result.length > 0) return result;
+    }
+
+    return [
+      { name: 'Bugs', dias: 1.4, color: '#ef4444', count: 18 },
+      { name: 'Historias', dias: 4.2, color: '#8b5cf6', count: 45 },
+      { name: 'Tareas', dias: 2.1, color: '#3b82f6', count: 32 },
+      { name: 'Mejoras', dias: 2.8, color: '#10b981', count: 12 },
+    ];
+  }, [realIssues]);
 
   // Datos del Gráfico de Barras según selección
   const topProjectsBarData = useMemo(() => {
@@ -304,7 +566,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
   return (
     <div className="space-y-6 text-left font-sans animate-in fade-in duration-200 pb-12">
-      
+
       {/* Toast Notificación */}
       {toastMsg && (
         <div className="fixed top-6 right-6 z-50 bg-slate-900/95 dark:bg-slate-950/95 text-white border border-emerald-500/50 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-3">
@@ -316,201 +578,105 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      {/* ── HEADER CON BOTÓN SELECTOR DE PROYECTO ── */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] p-5 rounded-3xl shadow-xs">
+      {/* ── HEADER CON CONTROLES GLOBALES DE CONTEXTO ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30 uppercase tracking-wider">
-              Control Ejecutivo Agile
-            </span>
-            {selectedProjectObj ? (
-              <span className="text-xs font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-500/10 px-2 py-0.5 rounded-lg border border-purple-200 dark:border-purple-500/20 flex items-center gap-1">
-                <Box size={13} /> {selectedProjectObj.name} ({selectedProjectObj.key})
-              </span>
-            ) : (
-              <span className="text-xs text-slate-400">• Resumen General (Todos los Proyectos)</span>
-            )}
-          </div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-            {selectedProjectObj ? `Proyecto: ${selectedProjectObj.name}` : 'Proyectos & Métricas de Rendimiento'}
+          <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            Bienvenido de nuevo, {userProfile?.first_name || user?.email?.split('@')[0] || 'Camilo'} 👋
           </h1>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mt-1">
-            {selectedProjectObj
-              ? `Analizando el rendimiento, velocidad y ciclo del proyecto ${selectedProjectObj.name} (${selectedProjectObj.key}).`
-              : 'Gestiona y analiza el rendimiento consolidado de todos tus proyectos sincronizados con Jira Cloud.'
-            }
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+            Resumen general del rendimiento de tus proyectos
           </p>
         </div>
 
-        {/* CONTROLES Y BOTÓN DE SELECCIÓN DE PROYECTO */}
-        <div className="flex flex-wrap items-center gap-3">
-          <LiderNotificationBell />
-
-          {/* 🎯 BOTÓN DE SELECCIÓN DE PROYECTO (SELECT DROPDOWN DESTACADO) */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Selector de Proyecto Global */}
           <div className="relative">
-            <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] rounded-2xl shadow-xs">
-              <span className="pl-2.5 text-slate-400">
-                <Box size={16} className="text-indigo-500" />
-              </span>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-xl shadow-2xs">
+              <Filter size={14} className="text-slate-400" />
               <select
                 value={selectedProjectId}
                 onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="h-8 pr-8 bg-transparent text-xs font-extrabold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+                className="bg-transparent text-xs font-extrabold text-slate-800 dark:text-slate-100 outline-none cursor-pointer pr-4"
               >
-                <option value="ALL" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-bold">
-                  🌐 Resumen General (Todos los Proyectos)
+                <option value="ALL" className="bg-white dark:bg-slate-900 font-bold">
+                  Todos los proyectos
                 </option>
                 {allProjectsList.map(p => (
-                  <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-semibold">
-                    📦 {p.name} ({p.key})
+                  <option key={p.id} value={p.id} className="bg-white dark:bg-slate-900 font-semibold">
+                    {p.name} ({p.key})
                   </option>
                 ))}
               </select>
             </div>
           </div>
-
-          {/* Selector de Rango de Fecha */}
-          <div className="relative">
-            <select
-              value={dateRange}
-              onChange={(e) => setDateRange(e.target.value)}
-              className="h-10 pl-3.5 pr-8 rounded-xl bg-slate-50 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer shadow-xs"
-            >
-              <option value="MAY_2024">01 May 2024 - 31 May 2024</option>
-              <option value="JUN_2024">01 Jun 2024 - 30 Jun 2024</option>
-              <option value="LAST_90">Últimos 90 días</option>
-            </select>
-          </div>
-
-          {/* Botón Sincronizar */}
-          <button
-            type="button"
-            onClick={handleSyncNow}
-            disabled={syncing}
-            className="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/20 cursor-pointer transition-all active:scale-95 disabled:opacity-60"
-          >
-            <RefreshCw size={14} className={syncing ? 'animate-spin' : ''} />
-            <span>{syncing ? 'Sincronizando...' : '+ Sincronizar ahora'}</span>
-          </button>
         </div>
       </div>
 
-      {/* BANNER INFORMATIVO SI UN PROYECTO ESTÁ SELECCIONADO */}
-      {selectedProjectObj && (
-        <div className="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/30 flex items-center justify-between gap-3 text-xs animate-in slide-in-from-top-2">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2.5 h-2.5 rounded-full bg-indigo-500 animate-ping"></span>
-            <span className="font-bold text-indigo-950 dark:text-indigo-200">
-              Viendo métricas filtradas del proyecto: <strong>{selectedProjectObj.name}</strong> ({selectedProjectObj.key})
-            </span>
+      {/* ── BLOQUE 1: RESUMEN GENERAL (KPI STRIP UNIFICADO CON DIVIDERS 4 COLUMNAS) ── */}
+      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl shadow-2xs overflow-hidden p-4 sm:p-5">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-slate-100 dark:divide-slate-800/80 gap-y-4 sm:gap-y-0">
+          
+          {/* KPI 1: Issues totales */}
+          <div className="flex items-center gap-3 px-3 first:pl-0">
+            <div className="w-10 h-10 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+              <ClipboardList size={18} />
+            </div>
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Issues totales</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                {computedMetrics.totalIssues}
+              </span>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setSelectedProjectId('ALL')}
-            className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-extrabold cursor-pointer transition-all flex items-center gap-1 shadow-xs"
-          >
-            <span>Ver Resumen General</span>
-            <X size={13} />
-          </button>
-        </div>
-      )}
 
-      {/* ── FILA 1: 5 TARJETAS KPIS CON DATOS DINÁMICOS SEGÚN EL PROYECTO ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        
-        {/* Card 1: Proyectos Activos / Estado */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] p-4.5 rounded-2xl shadow-xs flex items-center justify-between hover:border-emerald-500/50 transition-all">
-          <div className="space-y-1">
-            <div className="flex items-center">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Proyectos Activos</span>
-              <InfoTooltip text="Estado del desarrollo del proyecto actualmente seleccionado o total de proyectos activos." />
+          {/* KPI 2: Completados */}
+          <div className="flex items-center gap-3 px-3">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+              <CheckCircle2 size={18} />
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {metrics.activeCountLabel}
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">Completados</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                {computedMetrics.completados}
+              </span>
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium block truncate max-w-[130px]">
-              {metrics.activeSubtext}
-            </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-emerald-500/15 text-emerald-500 flex items-center justify-center border border-emerald-500/20 shrink-0">
-            <FolderKanban size={20} />
-          </div>
-        </div>
 
-        {/* Card 2: Incidencias Totales */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] p-4.5 rounded-2xl shadow-xs flex items-center justify-between hover:border-purple-500/50 transition-all">
-          <div className="space-y-1">
-            <div className="flex items-center">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Incidencias Totales</span>
-              <InfoTooltip text="Suma de Historias, Tareas y Bugs registrados para la selección actual." />
+          {/* KPI 3: En progreso */}
+          <div className="flex items-center gap-3 px-3">
+            <div className="w-10 h-10 rounded-full bg-purple-500/10 text-purple-500 flex items-center justify-center shrink-0">
+              <RefreshCw size={18} />
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {metrics.totalIssues}
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">En progreso</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                {computedMetrics.enProgreso}
+              </span>
             </div>
-            <span className="text-[10px] text-purple-600 dark:text-purple-400 font-extrabold flex items-center gap-1">
-              ↑ 18.5% <span className="text-slate-400 font-normal">vs periodo anterior</span>
-            </span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-purple-500/15 text-purple-500 flex items-center justify-center border border-purple-500/20 shrink-0">
-            <CheckCircle2 size={20} />
-          </div>
-        </div>
 
-        {/* Card 3: Velocidad Promedio */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] p-4.5 rounded-2xl shadow-xs flex items-center justify-between hover:border-blue-500/50 transition-all">
-          <div className="space-y-1">
-            <div className="flex items-center">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Velocidad Promedio</span>
-              <InfoTooltip text="Promedio de Puntos de Historia (Story Points) completados por Sprint." />
+          {/* KPI 6: % Completado */}
+          <div className="flex items-center justify-between gap-3 px-3 last:pr-0">
+            <div>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 block">% Completado</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white leading-tight">
+                {computedMetrics.pctCompletado}
+              </span>
             </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {metrics.avgVelocity}
+            <div className="w-9 h-9 relative flex items-center justify-center shrink-0">
+              <svg className="w-9 h-9 transform -rotate-90">
+                <circle cx="18" cy="18" r="14" stroke="currentColor" strokeWidth="3" className="text-slate-100 dark:text-slate-800" fill="transparent" />
+                <circle cx="18" cy="18" r="14" stroke="#10b981" strokeWidth="3" strokeDasharray={88} strokeDashoffset={88 - (88 * computedMetrics.pctNum) / 100} strokeLinecap="round" fill="transparent" />
+              </svg>
             </div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">Puntos por sprint (SP)</span>
           </div>
-          <div className="w-11 h-11 rounded-xl bg-blue-500/15 text-blue-500 flex items-center justify-center border border-blue-500/20 shrink-0">
-            <TrendingUp size={20} />
-          </div>
-        </div>
 
-        {/* Card 4: Tiempo Ciclo Promedio */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] p-4.5 rounded-2xl shadow-xs flex items-center justify-between hover:border-amber-500/50 transition-all">
-          <div className="space-y-1">
-            <div className="flex items-center">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Tiempo Ciclo Promedio</span>
-              <InfoTooltip text="Días promedio para completar una tarea desde que inicia en desarrollo." />
-            </div>
-            <div className="text-2xl font-black text-slate-900 dark:text-white">
-              {metrics.cycleTime}
-            </div>
-            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-extrabold flex items-center gap-1">
-              ↑ 8.1% <span className="text-slate-400 font-normal">vs periodo anterior</span>
-            </span>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-amber-500/15 text-amber-500 flex items-center justify-center border border-amber-500/20 shrink-0">
-            <Clock size={20} />
-          </div>
         </div>
-
-        {/* Card 5: Última Sincronización */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] p-4.5 rounded-2xl shadow-xs flex items-center justify-between hover:border-cyan-500/50 transition-all">
-          <div className="space-y-1">
-            <div className="flex items-center">
-              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">Última Sync</span>
-              <InfoTooltip text="Fecha y hora de la última sincronización con Jira." />
-            </div>
-            <div className="text-base font-black text-slate-900 dark:text-white leading-tight">{metrics.lastSync}</div>
-            <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium block">31 May 2024, 08:30 AM</span>
-          </div>
-          <div className="w-11 h-11 rounded-xl bg-cyan-500/15 text-cyan-500 flex items-center justify-center border border-cyan-500/20 shrink-0">
-            <RefreshCw size={20} />
-          </div>
-        </div>
-
       </div>
 
-      {/* ── FILA 2: TABLA RESUMEN DE PROYECTOS (A TODO LO LARGO) ── */}
-      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+      {/* ── TABLA RESUMEN DE PROYECTOS (UBICADA SOBRE EL BURNDOWN CHART) ── */}
+      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
         
         {/* Header Tabla */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -567,86 +733,85 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                 <th className="pb-3 px-2 text-right">
                   <span className="flex items-center justify-end">
                     T. Ciclo
-                    <InfoTooltip text="Días promedio para entrega de tareas." />
+                    <InfoTooltip text="Tiempo promedio de resolución." />
                   </span>
                 </th>
-                <th className="pb-3 px-2 min-w-[100px]">
-                  <span className="flex items-center">
-                    Progreso
-                    <InfoTooltip text="Porcentaje de avance estimado." />
+                <th className="pb-3 px-2">
+                  <span className="flex items-center justify-center">
+                    Avance General
+                    <InfoTooltip text="Porcentaje global de completitud." />
                   </span>
                 </th>
                 <th className="pb-3 px-2 text-right">Última Sync</th>
                 <th className="pb-3 pl-2 text-center">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-xs">
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-semibold text-slate-700 dark:text-slate-300">
               {displayProjects.map((proj) => (
-                <tr 
-                  key={proj.id} 
-                  onClick={() => setSelectedProjectId(proj.id)}
-                  className={`cursor-pointer transition-colors ${
-                    selectedProjectId === proj.id 
-                      ? 'bg-indigo-50/80 dark:bg-indigo-500/10 font-bold' 
-                      : 'hover:bg-slate-50/70 dark:hover:bg-slate-900/40'
-                  }`}
+                <tr
+                  key={proj.id}
+                  className={`hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5 transition-colors cursor-pointer ${selectedProjectId === proj.id ? 'bg-indigo-50/60 dark:bg-indigo-500/10 font-bold' : ''
+                    }`}
+                  onClick={() => setSelectedProjectId(selectedProjectId === proj.id ? 'ALL' : proj.id)}
                 >
-                  
-                  {/* Proyecto */}
-                  <td className="py-3 pr-2 font-extrabold text-slate-900 dark:text-slate-100">
+                  {/* Nombre Proyecto */}
+                  <td className="py-3 pr-2">
                     <div className="flex items-center gap-2.5">
-                      <div
-                        className="w-6 h-6 rounded-md text-[10px] font-black text-white flex items-center justify-center shrink-0 shadow-xs"
-                        style={{ backgroundColor: proj.color || '#8b5cf6' }}
-                      >
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[10px] font-extrabold shrink-0 shadow-2xs" style={{ backgroundColor: proj.color }}>
                         {proj.key.substring(0, 2)}
                       </div>
-                      <span className="truncate max-w-[130px] sm:max-w-[160px]">{proj.name}</span>
+                      <span className="font-extrabold text-slate-900 dark:text-white truncate max-w-[160px]">
+                        {proj.name}
+                      </span>
                     </div>
                   </td>
 
                   {/* Clave */}
-                  <td className="py-3 px-2 font-bold text-slate-400 dark:text-slate-500">
+                  <td className="py-3 px-2 font-mono text-[11px] text-slate-500 dark:text-slate-400 font-bold">
                     {proj.key}
                   </td>
 
                   {/* Estado */}
                   <td className="py-3 px-2">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${
-                      proj.status === 'Activo'
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1 ${proj.status === 'Activo'
                         ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                         : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20'
-                    }`}>
+                      }`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${proj.status === 'Activo' ? 'bg-emerald-500' : 'bg-amber-500'}`}></span>
                       {proj.status}
                     </span>
                   </td>
 
                   {/* Incidencias */}
-                  <td className="py-3 px-2 text-right font-bold text-slate-800 dark:text-slate-200">
+                  <td className="py-3 px-2 text-right font-extrabold text-slate-900 dark:text-white">
                     {proj.issuesCount}
                   </td>
 
                   {/* Velocidad */}
                   <td className="py-3 px-2 text-right font-bold text-slate-800 dark:text-slate-200">
-                    {proj.velocity} <span className="text-[10px] text-slate-400 font-normal">SP</span>
+                    {proj.velocity} <span className="text-[10px] text-slate-400 font-medium">SP</span>
                   </td>
 
-                  {/* Tiempo de Ciclo */}
-                  <td className="py-3 px-2 text-right font-semibold text-slate-500 dark:text-slate-400">
+                  {/* Tiempo Ciclo */}
+                  <td className="py-3 px-2 text-right text-slate-600 dark:text-slate-300 font-medium">
                     {proj.cycleTime}
                   </td>
 
-                  {/* Barra de Progreso */}
+                  {/* Avance */}
                   <td className="py-3 px-2">
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <div className="flex items-center gap-2 max-w-[120px] mx-auto">
+                      <div className="flex-1 bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
                         <div
-                          className={`h-full rounded-full ${proj.progress < 50 ? 'bg-amber-500' : 'bg-emerald-500'}`}
-                          style={{ width: `${proj.progress}%` }}
+                          className="h-full rounded-full transition-all duration-500"
+                          style={{
+                            width: `${proj.progress}%`,
+                            backgroundColor: proj.color
+                          }}
                         />
                       </div>
-                      <span className="text-[10px] font-extrabold text-slate-600 dark:text-slate-400">{proj.progress}%</span>
+                      <span className="text-[11px] font-extrabold text-slate-600 dark:text-slate-400 w-8 text-right">
+                        {proj.progress}%
+                      </span>
                     </div>
                   </td>
 
@@ -657,17 +822,16 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
                   {/* Botón Seleccionar */}
                   <td className="py-3 pl-2 text-center">
-                    <button 
+                    <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedProjectId(selectedProjectId === proj.id ? 'ALL' : proj.id);
                       }}
-                      className={`px-2 py-1 rounded-lg text-[10px] font-extrabold transition-all ${
-                        selectedProjectId === proj.id 
-                          ? 'bg-indigo-600 text-white shadow-xs' 
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all ${selectedProjectId === proj.id
+                          ? 'bg-indigo-600 text-white shadow-xs'
                           : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/20'
-                      }`}
+                        }`}
                     >
                       {selectedProjectId === proj.id ? 'Viendo' : 'Ver'}
                     </button>
@@ -681,7 +845,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         {/* Footer Paginación */}
         <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-500 dark:text-slate-400 font-medium">
           <span>Mostrando {displayProjects.length} proyectos</span>
-          
+
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1">
               <button type="button" className="w-7 h-7 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center hover:bg-slate-100 dark:hover:bg-slate-800">
@@ -699,119 +863,70 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
       </div>
 
-      {/* ── FILA 3: EVOLUCIÓN DE VELOCIDAD (A TODO LO LARGO - FULL WIDTH) ── */}
-      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col justify-between space-y-4">
+      {/* ── BLOQUE 2: EVOLUCIÓN DEL SPRINT (BURNDOWN CHART INTEGRADO FULL WIDTH) ── */}
+      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
         
-        {/* Header Gráfico */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center">
+        {/* Header Burndown */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              {selectedProjectObj ? `Evolución de Velocidad: ${selectedProjectObj.name}` : 'Evolución de Velocidad'}
+              Burndown del sprint
             </h3>
-            <InfoTooltip text="Tendencia histórica de Puntos de Historia (Story Points) entregados en cada sprint a lo largo del tiempo." />
+            <InfoTooltip text="Seguimiento diario del trabajo pendiente frente al ritmo ideal de ejecución para cumplir con el alcance del sprint." />
           </div>
 
-          <select
-            value={sprintRange}
-            onChange={(e) => setSprintRange(e.target.value)}
-            className="h-8 px-2.5 rounded-xl bg-slate-50 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-xs font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer"
-          >
-            <option value="6_SPRINTS">Últimos 6 sprints</option>
-            <option value="12_SPRINTS">Últimos 12 sprints</option>
-          </select>
-        </div>
-
-        {/* Gráfico de Líneas Full Width con Ejes X/Y estructurados */}
-        <div className="h-80 sm:h-96 w-full pt-2">
-          <ResponsiveContainer width="100%" height="100%">
-            {selectedProjectObj ? (
-              <LineChart data={velocityEvolutionData} margin={{ top: 15, right: 30, left: 10, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
-                <XAxis 
-                  dataKey="sprint" 
-                  stroke="#64748b" 
-                  fontSize={11} 
-                  tickLine={false}
-                  dy={8}
-                  label={{ value: 'Ciclos de Desarrollo (Sprints)', position: 'insideBottom', offset: -22, fill: '#64748b', fontSize: 11, fontWeight: 700 }}
-                />
-                <YAxis 
-                  stroke="#64748b" 
-                  fontSize={11} 
-                  tickLine={false} 
-                  domain={[0, 100]}
-                  dx={-8}
-                  label={{ value: 'Puntos de Historia (SP)', angle: -90, position: 'insideLeft', offset: -2, fill: '#64748b', fontSize: 11, fontWeight: 700, style: { textAnchor: 'middle' } }}
-                />
-                <RechartsTooltip content={<EnrichedChartTooltip unit="Puntos (SP)" titlePrefix="Sprint" />} />
-                <Line type="monotone" dataKey="SP" stroke={selectedProjectObj.color || '#8b5cf6'} strokeWidth={3.5} dot={{ r: 6, fill: selectedProjectObj.color || '#8b5cf6' }} activeDot={{ r: 8 }} name={selectedProjectObj.name} />
-              </LineChart>
-            ) : (
-              <LineChart data={velocityEvolutionData} margin={{ top: 15, right: 30, left: 10, bottom: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.15} />
-                <XAxis 
-                  dataKey="sprint" 
-                  stroke="#64748b" 
-                  fontSize={11} 
-                  tickLine={false}
-                  dy={8}
-                  label={{ value: 'Ciclos de Desarrollo (Sprints)', position: 'insideBottom', offset: -22, fill: '#64748b', fontSize: 11, fontWeight: 700 }}
-                />
-                <YAxis 
-                  stroke="#64748b" 
-                  fontSize={11} 
-                  tickLine={false} 
-                  domain={[0, 100]}
-                  dx={-8}
-                  label={{ value: 'Puntos de Historia (SP)', angle: -90, position: 'insideLeft', offset: -2, fill: '#64748b', fontSize: 11, fontWeight: 700, style: { textAnchor: 'middle' } }}
-                />
-                <RechartsTooltip content={<EnrichedChartTooltip unit="Puntos (SP)" titlePrefix="Sprint" />} />
-                <Line type="monotone" dataKey="PA" stroke="#8b5cf6" strokeWidth={3.5} dot={{ r: 5, fill: '#8b5cf6' }} activeDot={{ r: 7 }} name="Plataforma Analytics" />
-                <Line type="monotone" dataKey="MC" stroke="#3b82f6" strokeWidth={3.5} dot={{ r: 5, fill: '#3b82f6' }} activeDot={{ r: 7 }} name="MCHAV Core" />
-                <Line type="monotone" dataKey="WD" stroke="#f97316" strokeWidth={3.5} dot={{ r: 5, fill: '#f97316' }} activeDot={{ r: 7 }} name="Web Dashboard" />
-                <Line type="monotone" dataKey="AG" stroke="#10b981" strokeWidth={3.5} dot={{ r: 5, fill: '#10b981' }} activeDot={{ r: 7 }} name="API Gateway" />
-              </LineChart>
-            )}
-          </ResponsiveContainer>
-        </div>
-
-        {/* Leyenda Abajo */}
-        <div className="flex flex-wrap items-center justify-center gap-6 pt-3 border-t border-slate-100 dark:border-slate-800/80 text-xs font-semibold text-slate-600 dark:text-slate-400">
-          {selectedProjectObj ? (
-            <span className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-200">
-              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: selectedProjectObj.color || '#8b5cf6' }}></span> 
-              Velocidad acumulada de {selectedProjectObj.name} ({selectedProjectObj.key})
+          {/* Leyenda en Header */}
+          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300 flex-wrap">
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 border-t-2 border-dashed border-emerald-500"></span> Trabajo ideal
             </span>
-          ) : (
-            <>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#8b5cf6]"></span> Plataforma Analytics</span>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#3b82f6]"></span> MCHAV Core</span>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#f97316]"></span> Web Dashboard</span>
-              <span className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#10b981]"></span> API Gateway</span>
-            </>
-          )}
+            <span className="flex items-center gap-1.5">
+              <span className="w-3 border-t-2 border-emerald-500"></span> Trabajo real
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-xs bg-purple-500"></span> Trabajado
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-xs bg-amber-400"></span> Alcance
+            </span>
+          </div>
+
+          {/* Controles Derecha */}
+          <div className="flex items-center gap-3">
+            <select className="h-8 px-3 rounded-xl bg-slate-50 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-xs font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer">
+              <option value="ACTUAL">Sprint actual</option>
+              <option value="PREV">Sprint anterior</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setShowBurndownDocModal(true)}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1"
+            >
+              <span>Ver detalle</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
         </div>
 
+        {/* Gráfica Burndown */}
+        <div className="pt-2">
+          <SprintBurndownChart data={realBurndownData.length > 0 ? realBurndownData : MOCK_BURNDOWN_DATA} />
+        </div>
       </div>
 
-      {/* ── FILA 3: DISTRIBUCIÓN DE ESTADOS (1/3) + TOP INCIDENCIAS/TIPOS (1/3) + ACTIVIDAD RECIENTE (1/3) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* ── BLOQUE 3: RENDIMIENTO DEL EQUIPO (GRID 2 COLUMNAS) ── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        {/* COLUMNA 1: DISTRIBUCIÓN DE ESTADOS (DONUT CHART DINÁMICO) */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Distribución de Estados
-              </h3>
-              <InfoTooltip text="Desglose del volumen de trabajo según su estado actual en el flujo de Jira." />
-            </div>
-            <PieIcon size={16} className="text-indigo-500" />
-          </div>
+        {/* COLUMNA 1: DISTRIBUCIÓN DE ESTADOS (DONUT + TABLA EXPLICATIVA) */}
+        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+            Distribución de estados
+          </h3>
 
-          <div className="flex items-center justify-between gap-4">
-            {/* Donut Chart */}
-            <div className="h-48 w-44 relative flex items-center justify-center shrink-0">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
+            {/* Donut Chart con total en el centro */}
+            <div className="h-44 w-44 relative flex items-center justify-center shrink-0">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -819,77 +934,79 @@ export default function ProyectosDashboardView({ userProfile = null }) {
                     cx="50%"
                     cy="50%"
                     innerRadius={55}
-                    outerRadius={80}
-                    paddingAngle={4}
+                    outerRadius={75}
+                    paddingAngle={3}
                     dataKey="value"
                   >
                     {statusDistributionData.map((entry, idx) => (
                       <Cell key={`cell-${idx}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <RechartsTooltip content={<EnrichedChartTooltip unit="tareas" titlePrefix="Estado" />} />
+                  <RechartsTooltip content={<EnrichedChartTooltip unit="issues" titlePrefix="Estado" />} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                <span className="text-lg font-black text-slate-900 dark:text-white">
-                  {selectedProjectObj ? selectedProjectObj.issuesCount : '1,248'}
-                </span>
-                <span className="text-[10px] font-bold text-slate-400 uppercase">Total Incidencias</span>
+                <span className="text-xl font-black text-slate-900 dark:text-white">{computedMetrics.totalIssues}</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase">Total issues</span>
               </div>
             </div>
 
-            {/* Leyenda Derecha */}
-            <div className="space-y-2 flex-1 text-xs font-semibold">
+            {/* Tabla Leyenda Derecha */}
+            <div className="space-y-2.5 flex-1 w-full text-xs font-semibold">
               {statusDistributionData.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between">
+                <div key={idx} className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/50 pb-1.5 last:border-0">
                   <span className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
                     <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                     {item.name}
                   </span>
-                  <span className="font-extrabold text-slate-900 dark:text-white">
-                    {item.value} <span className="text-slate-400 font-medium text-[10px]">({item.percentage})</span>
-                  </span>
+                  <div className="flex items-center gap-4">
+                    <span className="text-slate-400 font-medium text-[11px] min-w-[40px] text-right">{item.percentage}</span>
+                    <span className="font-extrabold text-slate-900 dark:text-white min-w-[28px] text-right">{item.value}</span>
+                  </div>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* COLUMNA 2: TOP PROYECTOS / DESGLOSE POR TIPO DE TAREA */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 flex flex-col justify-between">
+        {/* COLUMNA 2: TIEMPO DE CICLO POR TIPO DE INCIDENCIA */}
+        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <div className="flex items-center">
+            <div className="flex items-center gap-2">
               <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                {selectedProjectObj ? `Desglose: ${selectedProjectObj.key}` : 'Top Proyectos por Incidencias'}
+                Tiempo de ciclo por tipo
               </h3>
-              <InfoTooltip text="Muestra el desglose de volumen de trabajo por proyecto o por tipo de tarea." />
+              <InfoTooltip text="Tiempo promedio en días desde que se inicia la tarea hasta su resolución completa según la categoría." />
             </div>
-            <BarChart3 size={16} className="text-purple-500" />
+
+            <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+              Días de resolución
+            </span>
           </div>
 
-          <div className="h-56 w-full pt-1">
+          <div className="h-48 w-full pt-1">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={topProjectsBarData} layout="vertical" margin={{ top: 5, right: 25, left: 10, bottom: 20 }}>
+              <BarChart data={cycleTimeByTypeData} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#334155" opacity={0.15} />
-                <XAxis 
-                  type="number" 
-                  stroke="#64748b" 
-                  fontSize={10} 
+                <XAxis
+                  type="number"
+                  stroke="#64748b"
+                  fontSize={10}
                   tickLine={false}
-                  label={{ value: 'Total de Incidencias Registradas', position: 'insideBottom', offset: -14, fill: '#64748b', fontSize: 10, fontWeight: 700 }}
+                  label={{ value: 'Días de resolución promedio', position: 'insideBottom', offset: -14, fill: '#64748b', fontSize: 10, fontWeight: 700 }}
                 />
-                <YAxis 
-                  type="category" 
-                  dataKey="name" 
-                  stroke="#64748b" 
-                  fontSize={10} 
-                  tickLine={false} 
-                  width={110} 
+                <YAxis
+                  type="category"
+                  dataKey="name"
+                  stroke="#64748b"
+                  fontSize={11}
+                  tickLine={false}
+                  width={75}
                 />
-                <RechartsTooltip content={<EnrichedChartTooltip unit="incidencias" titlePrefix="Item" />} />
-                <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={16}>
-                  {topProjectsBarData.map((entry, index) => (
-                    <Cell key={`bar-${index}`} fill={entry.color} />
+                <RechartsTooltip content={<EnrichedChartTooltip unit="días" titlePrefix="Tipo" />} />
+                <Bar dataKey="dias" radius={[0, 6, 6, 0]} barSize={16}>
+                  {cycleTimeByTypeData.map((entry, index) => (
+                    <Cell key={`bar-cycle-${index}`} fill={entry.color} />
                   ))}
                 </Bar>
               </BarChart>
@@ -897,43 +1014,107 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           </div>
         </div>
 
-        {/* COLUMNA 3: ACTIVIDAD RECIENTE FILTRADA */}
-        <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-xs space-y-4 flex flex-col justify-between">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-                Actividad Reciente
-              </h3>
-              <InfoTooltip text="Eventos de sincronización y movimientos de tareas en tiempo real." />
-            </div>
-            <a href="#" onClick={(e) => e.preventDefault()} className="text-xs font-extrabold text-indigo-500 hover:text-indigo-400">
-              Ver todas
-            </a>
-          </div>
+      </div>
 
-          <div className="space-y-3.5">
-            {recentActivities.map((act) => (
-              <div key={act.id} className="flex items-start gap-3 p-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-900/40 transition-colors">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-xs font-extrabold ${act.iconBg}`}>
-                  {act.type === 'SYNC' ? <RefreshCw size={14} /> : act.type === 'SPRINT' ? <CheckCircle2 size={14} /> : 'MC'}
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-xs font-extrabold text-slate-900 dark:text-slate-100 leading-snug">
-                    {act.title}
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                    {act.project}
-                  </p>
-                </div>
-                <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap">
-                  {act.time}
-                </span>
-              </div>
-            ))}
+      {/* ── BLOQUE 4: EQUIPO ASIGNADO AL PROYECTO ── */}
+      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+        
+        {/* Header Seccion */}
+        <div>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              Equipo Asignado al Proyecto
+            </h3>
+            <InfoTooltip text="Lista de miembros asignados activamente a las tareas del proyecto y su carga de trabajo actual." />
           </div>
+          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 mt-0.5">
+            {assignedTeam.length} miembros asignados
+          </p>
+        </div>
+
+        {/* Tabla / Contenedor Estilizado */}
+        <div className="border border-slate-100 dark:border-slate-800/80 rounded-xl overflow-hidden">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="bg-slate-50/70 dark:bg-[#1a2138]/50 border-b border-slate-100 dark:border-slate-800/80 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                <th className="py-2.5 px-4 w-32">Rol</th>
+                <th className="py-2.5 px-4">Usuario</th>
+                <th className="py-2.5 px-4 text-right">Carga Actual</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-semibold text-slate-700 dark:text-slate-300">
+              {assignedTeam.map((member) => (
+                <tr key={member.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                  {/* Rol Badge */}
+                  <td className="py-3 px-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1.5 ${
+                      member.role === 'LÍDER'
+                        ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20'
+                        : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20'
+                    }`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${member.role === 'LÍDER' ? 'bg-purple-500' : 'bg-blue-500'}`} />
+                      {member.role}
+                    </span>
+                  </td>
+
+                  {/* Usuario */}
+                  <td className="py-3 px-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg flex items-center justify-center text-white text-[11px] font-black shrink-0 shadow-2xs" style={{ backgroundColor: member.color }}>
+                        {member.initial}
+                      </div>
+                      <span className="font-extrabold text-slate-900 dark:text-white">
+                        {member.name}
+                      </span>
+                    </div>
+                  </td>
+
+                  {/* Carga Actual */}
+                  <td className="py-3 px-4 text-right font-medium text-slate-500 dark:text-slate-400">
+                    {member.tasks}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
 
       </div>
+
+      {/* FOOTER INSTITUCIONAL */}
+      <div className="pt-6 border-t border-slate-200/60 dark:border-slate-800/80 text-center text-xs text-slate-400 font-medium">
+        © 2025 MCHAV Analytics. Todos los derechos reservados.
+      </div>
+
+      {/* MODAL DOCUMENTACIÓN TÉCNICA BURNDOWN */}
+      {showBurndownDocModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <FileDown size={18} className="text-indigo-500" />
+                Justificación Técnica: Cálculo del Sprint Burndown Chart
+              </h3>
+              <button type="button" onClick={() => setShowBurndownDocModal(false)} className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
+              <p><strong>1. Metodología de Quemado de Esfuerzo (Story Points vs Issue Count):</strong><br />
+              El sistema toma las incidencias asignadas al sprint activo y evalúa diariamente la suma de Puntos de Historia pendientes (no finalizados).</p>
+              <p><strong>2. Eje Horizontal y Línea Ideal:</strong><br />
+              La recta de ritmo ideal calcula el consumo uniforme diario desde la fecha de inicio hasta el cierre programado del sprint.</p>
+              <p><strong>3. Sincronización Jira Cloud:</strong><br />
+              Los cambios de estado capturados en el historial de transiciones impactan dinámicamente el trabajo pendiente de cada día.</p>
+            </div>
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button type="button" onClick={() => setShowBurndownDocModal(false)} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md">
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
