@@ -36,6 +36,10 @@ vi.mock('../components/SprintBurndownChart', () => ({
   SprintBurndownChart: () => <div data-testid="sprint-burndown-mock">SprintBurndownChart</div>
 }));
 
+vi.mock('../components/SprintBurnupChart', () => ({
+  SprintBurnupChart: () => <div data-testid="sprint-burnup-mock">SprintBurnupChart</div>
+}));
+
 vi.mock('../components/ProjectMetrics', () => ({
   ProjectMetrics: () => <div data-testid="project-metrics-mock">ProjectMetrics</div>
 }));

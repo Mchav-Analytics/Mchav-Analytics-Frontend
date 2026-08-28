@@ -177,7 +177,7 @@ export default function CentroReportesView({ selectedProjectId }) {
               {(reportType === 'proyecto' 
                 ? ['Resumen ejecutivo', 'KPIs del proyecto', 'Velocidad por sprint', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
                 : reportType === 'sprint'
-                ? ['Resumen del sprint', 'Burndown del sprint', 'Tareas completadas vs pendientes', 'Distribución por desarrollador', 'Bugs reportados', 'Retrospectiva y mejoras']
+                ? ['Resumen del sprint', 'Burnup del sprint', 'Tareas completadas vs pendientes', 'Distribución por desarrollador', 'Bugs reportados', 'Retrospectiva y mejoras']
                 : reportType === 'desarrollador'
                 ? ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo']
                 : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']

@@ -8,7 +8,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import api, { projectService } from '../../../services/api';
 import { useAuth } from '../../auth/context/AuthContext';
 import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
-import { SprintBurndownChart } from '../components/SprintBurndownChart';
+import { SprintBurnupChart } from '../components/SprintBurnupChart';
+import { CumulativeFlowDiagram } from '../components/CumulativeFlowDiagram';
 import {
   FolderKanban,
   CheckCircle2,
@@ -137,18 +138,34 @@ const GENERAL_VELOCITY_DATA = [
   { sprint: 'Sprint 17', PA: 65, MC: 54, WD: 46, AG: 38 },
 ];
 
-const MOCK_BURNDOWN_DATA = [
-  { fecha_real: '13 ago', esfuerzo_ideal: 225, esfuerzo_restante: 185, tareas_completadas: 0 },
-  { fecha_real: '16 ago', esfuerzo_ideal: 200, esfuerzo_restante: 165, tareas_completadas: 5 },
-  { fecha_real: '19 ago', esfuerzo_ideal: 175, esfuerzo_restante: 145, tareas_completadas: 12 },
-  { fecha_real: '22 ago', esfuerzo_ideal: 150, esfuerzo_restante: 125, tareas_completadas: 20 },
-  { fecha_real: '25 ago', esfuerzo_ideal: 125, esfuerzo_restante: 100, tareas_completadas: 35 },
-  { fecha_real: '28 ago', esfuerzo_ideal: 100, esfuerzo_restante: 75, tareas_completadas: 55 },
-  { fecha_real: '31 ago', esfuerzo_ideal: 75, esfuerzo_restante: 55, tareas_completadas: 80 },
-  { fecha_real: '3 sep', esfuerzo_ideal: 50, esfuerzo_restante: 35, tareas_completadas: 110 },
-  { fecha_real: '7 sep', esfuerzo_ideal: 25, esfuerzo_restante: 15, tareas_completadas: 130 },
-  { fecha_real: '10 sep', esfuerzo_ideal: 10, esfuerzo_restante: 5, tareas_completadas: 138 },
-  { fecha_real: '13 sep', esfuerzo_ideal: 0, esfuerzo_restante: 0, tareas_completadas: 141 },
+const MOCK_BURNUP_DATA = [
+  { fecha_real: '13 ago', alcance_total: 225, trabajo_completado: 0, ritmo_ideal: 0, tareas_completadas: 0 },
+  { fecha_real: '16 ago', alcance_total: 225, trabajo_completado: 20, ritmo_ideal: 22.5, tareas_completadas: 5 },
+  { fecha_real: '19 ago', alcance_total: 225, trabajo_completado: 40, ritmo_ideal: 45, tareas_completadas: 12 },
+  { fecha_real: '22 ago', alcance_total: 225, trabajo_completado: 60, ritmo_ideal: 67.5, tareas_completadas: 20 },
+  { fecha_real: '25 ago', alcance_total: 230, trabajo_completado: 85, ritmo_ideal: 90, tareas_completadas: 35 },
+  { fecha_real: '28 ago', alcance_total: 235, trabajo_completado: 120, ritmo_ideal: 112.5, tareas_completadas: 55 },
+  { fecha_real: '31 ago', alcance_total: 235, trabajo_completado: 155, ritmo_ideal: 135, tareas_completadas: 80 },
+  { fecha_real: '3 sep', alcance_total: 240, trabajo_completado: 180, ritmo_ideal: 157.5, tareas_completadas: 110 },
+  { fecha_real: '7 sep', alcance_total: 240, trabajo_completado: 210, ritmo_ideal: 180, tareas_completadas: 130 },
+];
+
+const MOCK_CFD_DATA = [
+  { fecha_real: '13 ago', por_hacer: 200, en_progreso: 15, en_revision: 10, completado: 0 },
+  { fecha_real: '16 ago', por_hacer: 170, en_progreso: 25, en_revision: 10, completado: 20 },
+  { fecha_real: '19 ago', por_hacer: 140, en_progreso: 30, en_revision: 15, completado: 40 },
+  { fecha_real: '22 ago', por_hacer: 110, en_progreso: 35, en_revision: 20, completado: 60 },
+  { fecha_real: '25 ago', por_hacer: 80, en_progreso: 40, en_revision: 25, completado: 85 },
+  { fecha_real: '28 ago', por_hacer: 55, en_progreso: 35, en_revision: 25, completado: 120 },
+  { fecha_real: '31 ago', por_hacer: 35, en_progreso: 30, en_revision: 15, completado: 155 },
+  { fecha_real: '3 sep', por_hacer: 20, en_progreso: 25, en_revision: 15, completado: 180 },
+  { fecha_real: '7 sep', por_hacer: 10, en_progreso: 12, en_revision: 8, completado: 210 }
+]; 
+
+const MOCK_BURNUP_DATA_EXTENDED = [
+  ...MOCK_BURNUP_DATA,
+  { fecha_real: '10 sep', alcance_total: 240, trabajo_completado: 230, ritmo_ideal: 202.5, tareas_completadas: 138 },
+  { fecha_real: '13 sep', alcance_total: 240, trabajo_completado: 240, ritmo_ideal: 225, tareas_completadas: 141 },
 ];
 
 export default function ProyectosDashboardView({ userProfile = null }) {
@@ -161,12 +178,14 @@ export default function ProyectosDashboardView({ userProfile = null }) {
   const [pageSize, setPageSize] = useState(10);
   const [toastMsg, setToastMsg] = useState(null);
 
-  // Proyectos reales backend, Burndown & Sprints
+  // Proyectos reales backend, Burnup, CFD & Sprints
   const [realProjects, setRealProjects] = useState([]);
-  const [realBurndownData, setRealBurndownData] = useState([]);
+  const [realBurnupData, setRealBurnupData] = useState([]);
+  const [realCfdData, setRealCfdData] = useState([]);
   const [realIssues, setRealIssues] = useState([]);
   const [realSprints, setRealSprints] = useState([]);
   const [showBurndownDocModal, setShowBurndownDocModal] = useState(false);
+  const [showCfdDocModal, setShowCfdDocModal] = useState(false);
 
   useEffect(() => {
     projectService.getProjects()
@@ -219,15 +238,27 @@ export default function ProyectosDashboardView({ userProfile = null }) {
       ? (realProjects[0]?.id || 'PROJ-01')
       : selectedProjectId;
 
-    projectService.getProjectBurndown(targetProjId)
-      .then(data => {
-        if (Array.isArray(data) && data.length > 0) {
-          setRealBurndownData(data);
+    projectService.getProjectBurnup(targetProjId)
+      .then(res => {
+        const burnupArr = res?.data || (Array.isArray(res) ? res : []);
+        if (Array.isArray(burnupArr) && burnupArr.length > 0) {
+          setRealBurnupData(burnupArr);
         } else {
-          setRealBurndownData([]);
+          setRealBurnupData([]);
         }
       })
-      .catch(() => setRealBurndownData([]));
+      .catch(() => setRealBurnupData([]));
+
+    projectService.getProjectCFD(targetProjId)
+      .then(res => {
+        const cfdArr = res?.data || (Array.isArray(res) ? res : []);
+        if (Array.isArray(cfdArr) && cfdArr.length > 0) {
+          setRealCfdData(cfdArr);
+        } else {
+          setRealCfdData([]);
+        }
+      })
+      .catch(() => setRealCfdData([]));
 
     projectService.getSprints(targetProjId)
       .then(data => {
@@ -863,32 +894,56 @@ export default function ProyectosDashboardView({ userProfile = null }) {
 
       </div>
 
-      {/* ── BLOQUE 2: EVOLUCIÓN DEL SPRINT (BURNDOWN CHART INTEGRADO FULL WIDTH) ── */}
+      {/* ── BLOQUE 2A: DIAGRAMA DE FLUJO ACUMULADO (CFD FULL WIDTH) ── */}
       <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
         
-        {/* Header Burndown */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
+        {/* Header CFD */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-3">
             <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-              Burndown del sprint
+              Diagrama de Flujo Acumulado (CFD)
             </h3>
-            <InfoTooltip text="Seguimiento diario del trabajo pendiente frente al ritmo ideal de ejecución para cumplir con el alcance del sprint." />
+            <InfoTooltip
+              text="Muestra la cantidad acumulada de tareas/puntos por estado (Por Hacer, En Progreso, En Revisión, Completado) para detectar cuellos de botella y medir estabilidad del WIP."
+            />
           </div>
 
-          {/* Leyenda en Header */}
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-600 dark:text-slate-300 flex-wrap">
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 border-t-2 border-dashed border-emerald-500"></span> Trabajo ideal
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 border-t-2 border-emerald-500"></span> Trabajo real
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-xs bg-purple-500"></span> Trabajado
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-xs bg-amber-400"></span> Alcance
-            </span>
+          {/* Controles Derecha */}
+          <div className="flex items-center gap-3">
+            <select className="h-8 px-3 rounded-xl bg-slate-50 dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-xs font-bold text-slate-700 dark:text-slate-300 outline-none cursor-pointer">
+              <option value="ACTUAL">Sprint actual</option>
+              <option value="PREV">Sprint anterior</option>
+            </select>
+
+            <button
+              type="button"
+              onClick={() => setShowCfdDocModal(true)}
+              className="text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center gap-1"
+            >
+              <span>Ver detalle</span>
+              <ChevronRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Gráfica CFD */}
+        <div className="pt-2">
+          <CumulativeFlowDiagram data={realCfdData.length > 0 ? realCfdData : MOCK_CFD_DATA} />
+        </div>
+      </div>
+
+      {/* ── BLOQUE 2B: SPRINT BURNUP CHART (FULL WIDTH) ── */}
+      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
+        
+        {/* Header Burnup */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <div className="flex items-center gap-3">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+              Sprint Burnup Chart
+            </h3>
+            <InfoTooltip
+              text="Seguimiento del trabajo completado acumulado frente al alcance total del sprint para identificar cambios de alcance (Scope Creep)."
+            />
           </div>
 
           {/* Controles Derecha */}
@@ -909,9 +964,9 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           </div>
         </div>
 
-        {/* Gráfica Burndown */}
+        {/* Gráfica Burnup */}
         <div className="pt-2">
-          <SprintBurndownChart data={realBurndownData.length > 0 ? realBurndownData : MOCK_BURNDOWN_DATA} />
+          <SprintBurnupChart data={realBurnupData.length > 0 ? realBurnupData : MOCK_BURNUP_DATA} />
         </div>
       </div>
 
@@ -1086,29 +1141,59 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         © 2025 MCHAV Analytics. Todos los derechos reservados.
       </div>
 
-      {/* MODAL DOCUMENTACIÓN TÉCNICA BURNDOWN */}
+      {/* MODAL DOCUMENTACIÓN TÉCNICA BURNUP */}
       {showBurndownDocModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
               <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
                 <FileDown size={18} className="text-indigo-500" />
-                Justificación Técnica: Cálculo del Sprint Burndown Chart
+                Justificación Técnica: Cálculo del Sprint Burnup Chart
               </h3>
               <button type="button" onClick={() => setShowBurndownDocModal(false)} className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
                 <X size={16} />
               </button>
             </div>
             <div className="text-xs text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
-              <p><strong>1. Metodología de Quemado de Esfuerzo (Story Points vs Issue Count):</strong><br />
-              El sistema toma las incidencias asignadas al sprint activo y evalúa diariamente la suma de Puntos de Historia pendientes (no finalizados).</p>
-              <p><strong>2. Eje Horizontal y Línea Ideal:</strong><br />
-              La recta de ritmo ideal calcula el consumo uniforme diario desde la fecha de inicio hasta el cierre programado del sprint.</p>
-              <p><strong>3. Sincronización Jira Cloud:</strong><br />
-              Los cambios de estado capturados en el historial de transiciones impactan dinámicamente el trabajo pendiente de cada día.</p>
+              <p><strong>1. Alcance Total vs Trabajo Completado:</strong><br />
+              El Burnup dibuja dos curvas clave: el **Alcance Total (Total Scope)** en el tiempo y el **Trabajo Completado acumulado** diariamente. Esto permite evidenciar si las variaciones en el cumplimiento se deben a entregas o a cambios en el alcance (*Scope Creep*).</p>
+              <p><strong>2. Eje Horizontal y Proyección Ideal:</strong><br />
+              La línea de ritmo ideal marca la trayectoria uniforme proyectada desde el inicio del sprint hasta el tope de alcance al cierre.</p>
+              <p><strong>3. Historial de Transiciones Jira Cloud:</strong><br />
+              Las tareas pasadas a estados resueltos (*Done*, *Completado*) incrementan el trabajo acumulado del día correspondiente.</p>
             </div>
             <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
               <button type="button" onClick={() => setShowBurndownDocModal(false)} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md">
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DOCUMENTACIÓN TÉCNICA CFD */}
+      {showCfdDocModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4 text-left">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                <FileDown size={18} className="text-indigo-500" />
+                Justificación Técnica: Cumulative Flow Diagram (CFD)
+              </h3>
+              <button type="button" onClick={() => setShowCfdDocModal(false)} className="p-1 rounded-xl text-slate-400 hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+                <X size={16} />
+              </button>
+            </div>
+            <div className="text-xs text-slate-600 dark:text-slate-300 space-y-3 leading-relaxed">
+              <p><strong>1. Áreas Apiladas por Estado:</strong><br />
+              El CFD representa la cantidad acumulada de tareas/puntos distribuidos en las etapas del flujo: *Por Hacer*, *En Progreso*, *En Revisión / QA* y *Completado*.</p>
+              <p><strong>2. Detección de Cuellos de Botella:</strong><br />
+              Un ensanchamiento repentino en las bandas intermedias (*En Progreso* o *En Revisión*) indica una acumulación de trabajo bloqueado o baja capacidad de salida.</p>
+              <p><strong>3. Cálculo de Lead Time y Estabilidad de WIP:</strong><br />
+              La distancia horizontal entre la curva de inicio y la curva de *Completado* refleja la tendencia del Lead Time del equipo.</p>
+            </div>
+            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+              <button type="button" onClick={() => setShowCfdDocModal(false)} className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-md">
                 Entendido
               </button>
             </div>

@@ -2,7 +2,7 @@ import React, { forwardRef } from 'react';
 import Logo from '../../../components/layout/Logo';
 import { Activity, Clock, CheckCircle, AlertTriangle, Zap } from 'lucide-react';
 import LiderVelocityChart from '../../dashboard/components/LiderVelocityChart';
-import { SprintBurndownChart } from '../../projects/components/SprintBurndownChart';
+import { SprintBurnupChart } from '../../projects/components/SprintBurnupChart';
 import CriticalIssuesList from '../../dashboard/components/CriticalIssuesList';
 
 const ExecutiveReportTemplate = forwardRef(({ reportType, filters }, ref) => {
@@ -116,9 +116,13 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters }, ref) => {
               </div>
             </div>
             <div className="border border-slate-200 rounded-xl p-4">
-              <h4 className="text-sm font-bold mb-4 text-center text-slate-600">Burndown Sprint Actual</h4>
+              <h4 className="text-sm font-bold mb-4 text-center text-slate-600">Burnup Sprint Actual</h4>
               <div className="h-[200px]">
-                <SprintBurndownChart data={[{ date: '01/07', ideal: 50, actual: 50 }, { date: '05/07', ideal: 40, actual: 42 }, { date: '10/07', ideal: 30, actual: 35 }]} />
+                <SprintBurnupChart data={[
+                  { fecha_real: '01/07', alcance_total: 50, trabajo_completado: 10, ritmo_ideal: 10, tareas_completadas: 2 },
+                  { fecha_real: '05/07', alcance_total: 50, trabajo_completado: 25, ritmo_ideal: 25, tareas_completadas: 3 },
+                  { fecha_real: '10/07', alcance_total: 50, trabajo_completado: 45, ritmo_ideal: 40, tareas_completadas: 4 }
+                ]} />
               </div>
             </div>
           </div>

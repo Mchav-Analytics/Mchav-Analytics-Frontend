@@ -77,9 +77,9 @@ export default function AdminUserModals({
       title = method === 'GET' ? 'Consulta de Usuarios' : 'Gestión de Usuarios';
       desc = method === 'GET' ? 'Visualizó el listado de usuarios y métricas generales del sistema.' : 'Realizó modificaciones en los perfiles o configuraciones de seguridad.';
       type = 'SYSTEM';
-    } else if (path.includes('/burndown')) {
+    } else if (path.includes('/burnup') || path.includes('/burndown')) {
       title = 'Consulta de Salud Operativa';
-      desc = 'Revisó el gráfico de Burndown y el progreso general del proyecto actual.';
+      desc = 'Revisó el gráfico de Burnup y el progreso general del proyecto actual.';
       type = 'PROJECT';
     } else if (path.includes('/sprints/sync') || path.includes('/sync')) {
       title = 'Sincronización de Entorno';
