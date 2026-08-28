@@ -6,7 +6,7 @@ export const ProjectsHeader = ({ userProfile, user, selectedProjectId, setSelect
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
         <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-          Bienvenido de nuevo, {userProfile?.first_name || user?.email?.split('@')[0] || 'Camilo'} 👋
+          Bienvenido de nuevo, {userProfile?.first_name || user?.email?.split('@')[0] || 'Camilo'}
         </h1>
         <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
           Resumen general del rendimiento de tus proyectos
