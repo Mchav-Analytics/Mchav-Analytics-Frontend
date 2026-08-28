@@ -151,6 +151,7 @@ describe('Agenda Logic & NUBIIA Business Rules', () => {
     ];
 
     const classification = classifyAgendaTasks(tasksWithOverdue, selectedDate);
+    classification.todayStr = selectedDate;
     expect(classification.overdueTasks.length).toBe(1);
 
     const nubia = getNubiaAnalysis(classification, selectedDate, 'Proyecto Principal');

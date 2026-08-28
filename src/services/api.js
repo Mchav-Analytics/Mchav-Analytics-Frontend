@@ -135,7 +135,23 @@ export const projectService = {
     let url = `/api/v1/projects/${projectId}/burndown`;
     if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/burndown`;
     const response = await api.get(url);
-    return response.data;
+    return response.data?.data || response.data;
+  },
+
+  // Obtener data para el Burnup Chart
+  getProjectBurnup: async (projectId, sprintId = null) => {
+    let url = `/api/v1/projects/${projectId}/burnup`;
+    if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/burnup`;
+    const response = await api.get(url);
+    return response.data?.data || response.data;
+  },
+
+  // Obtener data para el Cumulative Flow Diagram (CFD)
+  getProjectCFD: async (projectId, sprintId = null) => {
+    let url = `/api/v1/projects/${projectId}/cfd`;
+    if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/cfd`;
+    const response = await api.get(url);
+    return response.data?.data || response.data;
   },
 
   getProjects() {

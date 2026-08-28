@@ -9,6 +9,10 @@ vi.mock('../../../auth/context/AuthContext', () => ({
   useAuth: vi.fn(() => ({ token: 'mock-token' }))
 }));
 
+vi.mock('react-to-print', () => ({
+  useReactToPrint: () => vi.fn()
+}));
+
 vi.mock('../../../../services/api', () => ({
   default: {
     get: vi.fn(),

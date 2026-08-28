@@ -66,7 +66,6 @@ describe('Sidebar Component', () => {
     const user = userEvent.setup();
     renderSidebar('ADMIN');
     
-    // El botón es un button que contiene el span con el texto
     const proyectosTab = screen.getByText(/Proyectos/i).closest('button');
     await act(async () => {
       await user.click(proyectosTab);
@@ -115,7 +114,6 @@ describe('Sidebar Component', () => {
     const user = userEvent.setup();
     renderSidebar('ADMIN');
     
-    // The settings button has a title
     const profileButton = screen.getAllByTitle(/Configuración/i)[0];
     await act(async () => {
       await user.click(profileButton);

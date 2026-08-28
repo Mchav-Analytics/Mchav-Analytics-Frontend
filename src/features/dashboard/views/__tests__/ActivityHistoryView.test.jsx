@@ -32,7 +32,7 @@ describe('ActivityHistoryView', () => {
   it('renders history when project is selected', async () => {
     render(<ActivityHistoryView selectedProjectId="PROJ-01" projects={[{id_proyecto: 'PROJ-01', nombre: 'Proj 1'}]} />);
     
-    expect(screen.getByText('Historial')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Historial/i })).toBeInTheDocument();
     
     await waitFor(() => {
       expect(projectService.getKpiIssuesDetail).toHaveBeenCalled();
