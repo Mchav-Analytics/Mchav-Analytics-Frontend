@@ -1,41 +1,19 @@
 import React from 'react';
-import { X, Send, ExternalLink, Clock, AlertTriangle, Bell } from 'lucide-react';
+import { X, ExternalLink, Send, Bell, AlertTriangle } from 'lucide-react';
 
-export default function DeveloperModals({
-  replyModalOpen,
-  setReplyModalOpen,
-  activeReplyIssue,
-  quickReplyText,
-  setQuickReplyText,
-  handleSendQuickReply,
-  sendingQuickReply,
-  
-  selectedIssueModal,
-  setSelectedIssueModal,
-  handleUpdateTaskStatus,
-  
-  alertsModalOpen,
-  setAlertsModalOpen,
-  alertsTab,
-  setAlertsTab,
-  helpIssueKey,
-  setHelpIssueKey,
-  assignedIssuesList,
-  helpType,
-  setHelpType,
-  helpMessage,
-  setHelpMessage,
-  handleSubmitHelpRequest,
-  showHelpSuccessToast,
-  submittedHelpRequests,
+export const DeveloperModals = ({
+  replyModalOpen, activeReplyIssue, setReplyModalOpen, quickReplyText, setQuickReplyText, handleSendQuickReply, sendingQuickReply,
+  selectedIssueModal, setSelectedIssueModal,
+  alertsModalOpen, setAlertsModalOpen, alertsTab, setAlertsTab, submittedHelpRequests, showHelpSuccessToast,
+  handleSubmitHelpRequest, helpIssueKey, setHelpIssueKey, assignedIssuesList, helpType, setHelpType, helpMessage, setHelpMessage,
   alerts
-}) {
+}) => {
   return (
     <>
-      {/* MODAL RÁPIDO DE RESPUESTA EN LUGAR DE REDIRECCIÓN */}
+      {/* MODAL RÁPIDO DE RESPUESTA */}
       {replyModalOpen && activeReplyIssue && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-md rounded-2xl shadow-2xl p-6 space-y-4 text-left">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-[95vw] sm:max-w-md max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-4 sm:p-6 space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div>
                 <span className="text-xs font-mono font-bold text-indigo-400">
@@ -73,7 +51,7 @@ export default function DeveloperModals({
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 font-medium"
               />
 
-              <div className="flex items-center justify-between pt-1">
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
                 <a
                   href={`https://beltrancamilo592.atlassian.net/browse/${activeReplyIssue.key_issue || 'MCHAV-128'}`}
                   target="_blank"
@@ -109,10 +87,10 @@ export default function DeveloperModals({
 
       {/* MODAL DE DETALLE DE TAREA */}
       {selectedIssueModal && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-3xl rounded-2xl shadow-2xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto space-y-6 text-left">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-[95vw] sm:max-w-3xl rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 max-h-[90vh] overflow-y-auto space-y-6 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-2 py-0.5 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-indigo-400 border border-slate-700 rounded">
                   {selectedIssueModal.key_issue}
                 </span>
@@ -136,43 +114,31 @@ export default function DeveloperModals({
                 {selectedIssueModal.descripcion || 'Sin descripción detallada de Jira.'}
               </p>
 
-              <div className="grid grid-cols-2 gap-3 text-xs pt-2">
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold block">Prioridad</span>
-                  <strong className="text-slate-900 dark:text-white font-bold">{selectedIssueModal.prioridad}</strong>
+                  <strong className="text-slate-900 dark:text-white font-bold">{selectedIssueModal.prioridad || 'Media'}</strong>
                 </div>
-                <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
                   <span className="text-slate-500 dark:text-slate-400 font-semibold block">Story Points</span>
-                  <strong className="text-slate-900 dark:text-white font-bold">{selectedIssueModal.story_points} SP</strong>
+                  <strong className="text-slate-900 dark:text-white font-bold">{selectedIssueModal.story_points || 0} SP</strong>
+                </div>
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 dark:text-slate-400 font-semibold block">Tiempo de Ciclo</span>
+                  <strong className="text-slate-900 dark:text-white font-bold">
+                    {selectedIssueModal.cycle_time_days > 0 ? `${selectedIssueModal.cycle_time_days} días` : 'En progreso / Reciente'}
+                  </strong>
                 </div>
               </div>
 
-              {/* CONTROLES DE CAMBIO DE ESTADO (EN PROGRESO / REVISIÓN / BLOQUEADA / LISTO) */}
-              <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-[#1a1d40] border border-indigo-200 dark:border-[#33376b] space-y-2 text-left">
-                <label className="text-xs font-extrabold text-slate-800 dark:text-slate-200 block">
-                  Cambiar Estado de la Incidencia:
-                </label>
-                <div className="flex items-center gap-2 flex-wrap">
-                  {[
-                    { key: 'EN PROGRESO', label: 'En Progreso' },
-                    { key: 'EN REVISIÓN', label: 'En Revisión' },
-                    { key: 'BLOQUEADA', label: 'Bloqueada' },
-                    { key: 'LISTO', label: '✅ Marcar como LISTO (Done)' }
-                  ].map((st) => (
-                    <button
-                      key={st.key}
-                      type="button"
-                      onClick={() => handleUpdateTaskStatus(selectedIssueModal.key_issue, st.key, selectedIssueModal.story_points, selectedIssueModal.summary)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-extrabold transition-all cursor-pointer ${
-                        selectedIssueModal.status_actual === st.key
-                          ? 'bg-emerald-600 text-white shadow-md'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-indigo-600 hover:text-white'
-                      }`}
-                    >
-                      {st.label}
-                    </button>
-                  ))}
-                </div>
+              {/* INFORMACIÓN DE SOLO LECTURA / HISTORIAL */}
+              <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#1a1d40]/60 border border-slate-200 dark:border-[#33376b] flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400 font-medium">
+                  Tipo: <strong className="text-slate-800 dark:text-slate-200">{selectedIssueModal.tipo || 'Historia'}</strong>
+                </span>
+                <span className="text-slate-500 dark:text-slate-400 font-medium">
+                  Estado actual en Jira: <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{selectedIssueModal.status_actual}</strong>
+                </span>
               </div>
             </div>
 
@@ -196,14 +162,14 @@ export default function DeveloperModals({
         </div>
       )}
 
-      {/* MODAL DE ALERTAS Y SOLICITAR AYUDA DEL DESARROLLADOR */}
+      {/* MODAL DE ALERTAS Y SOLICITAR AYUDA */}
       {alertsModalOpen && (
-        <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-full max-w-xl rounded-2xl shadow-2xl p-6 space-y-4 text-left">
+        <div className="fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] w-[95vw] sm:max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl p-4 sm:p-6 space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center gap-2">
                 <Bell className="text-amber-400 fill-amber-400" size={18} />
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                   Centro de Alertas & Solicitar Ayuda (Dev Workspace)
                 </h3>
               </div>
@@ -215,11 +181,10 @@ export default function DeveloperModals({
               </button>
             </div>
 
-            {/* PESTAÑAS DEL MODAL */}
-            <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+            <div className="flex items-center gap-2 border-b border-slate-800 pb-2 overflow-x-auto">
               <button
                 onClick={() => setAlertsTab('request_form')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${alertsTab === 'request_form'
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0 ${alertsTab === 'request_form'
                   ? 'bg-indigo-600 text-white'
                   : 'text-slate-400 hover:text-white'
                   }`}
@@ -228,7 +193,7 @@ export default function DeveloperModals({
               </button>
               <button
                 onClick={() => setAlertsTab('sent_requests')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${alertsTab === 'sent_requests'
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0 ${alertsTab === 'sent_requests'
                   ? 'bg-indigo-600 text-white'
                   : 'text-slate-400 hover:text-white'
                   }`}
@@ -237,7 +202,7 @@ export default function DeveloperModals({
               </button>
               <button
                 onClick={() => setAlertsTab('alerts')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer ${alertsTab === 'alerts'
+                className={`px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shrink-0 ${alertsTab === 'alerts'
                   ? 'bg-indigo-600 text-white'
                   : 'text-slate-400 hover:text-white'
                   }`}
@@ -252,10 +217,9 @@ export default function DeveloperModals({
               </div>
             )}
 
-            {/* CONTENIDO PESTAÑA 1: FORMULARIO NUEVA SOLICITUD */}
             {alertsTab === 'request_form' && (
               <form onSubmit={handleSubmitHelpRequest} className="space-y-3.5">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-xs font-semibold text-slate-300">Incidencia Relacionada</label>
                     <select
@@ -315,7 +279,6 @@ export default function DeveloperModals({
               </form>
             )}
 
-            {/* CONTENIDO PESTAÑA 2: SOLICITUDES ENVIADAS */}
             {alertsTab === 'sent_requests' && (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {submittedHelpRequests.map(r => (
@@ -333,7 +296,6 @@ export default function DeveloperModals({
               </div>
             )}
 
-            {/* CONTENIDO PESTAÑA 3: MIS ALERTAS */}
             {alertsTab === 'alerts' && (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                 {alerts && alerts.length > 0 ? alerts.map(a => (
@@ -353,4 +315,4 @@ export default function DeveloperModals({
       )}
     </>
   );
-}
+};
