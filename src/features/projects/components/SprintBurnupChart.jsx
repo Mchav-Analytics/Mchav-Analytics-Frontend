@@ -88,8 +88,8 @@ export const SprintBurnupChart = ({ data }) => {
   };
 
   return (
-    <div className="w-full h-80 sm:h-96">
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="w-full h-[360px] min-h-[360px]">
+      <ResponsiveContainer width="100%" height={360}>
         <ComposedChart
           data={data}
           margin={{ top: 20, right: 30, left: 10, bottom: 20 }}

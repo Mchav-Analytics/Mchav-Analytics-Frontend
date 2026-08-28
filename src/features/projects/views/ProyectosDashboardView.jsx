@@ -2,61 +2,56 @@ import React from 'react';
 import { useProyectosDashboard } from '../hooks/useProyectosDashboard';
 import { useAuth } from '../../auth/context/AuthContext';
 import { ProjectsHeader } from '../components/ProjectsHeader';
-import { ProjectsKpiStrip } from '../components/ProjectsKpiStrip';
 import { ProjectsTable } from '../components/ProjectsTable';
 import { ProjectsCFD } from '../components/ProjectsCFD';
 import { ProjectsBurnup } from '../components/ProjectsBurnup';
 import { ProjectsTeamPerformance } from '../components/ProjectsTeamPerformance';
-import { ProjectsAssignedTeam } from '../components/ProjectsAssignedTeam';
-import { Sparkles, X, FileDown } from 'lucide-react';
-import { MOCK_CFD_DATA, MOCK_BURNUP_DATA } from '../data/mockData';
+import { FileDown, X } from 'lucide-react';
 
-export default function ProyectosDashboardView({ userProfile = null }) {
-  const { 
-    searchTerm, setSearchTerm, 
-    selectedProjectId, setSelectedProjectId, 
-    allProjectsList, 
-    computedMetrics, 
-    selectedProjectObj, 
-    displayProjects, 
-    realCfdData, 
-    showCfdDocModal, setShowCfdDocModal, 
-    realBurnupData, 
-    showBurndownDocModal, setShowBurndownDocModal, 
-    statusDistributionData, 
-    cycleTimeByTypeData, 
-    assignedTeam,
-    toastMsg, setToastMsg
-  } = useProyectosDashboard({ userProfile });
-  
+const ProyectosDashboardView = ({ userProfile }) => {
   const { user } = useAuth();
+  const {
+    searchTerm,
+    setSearchTerm,
+    selectedProjectId,
+    setSelectedProjectId,
+    expandedTeamProjectId,
+    setExpandedTeamProjectId,
+    allProjectsList,
+    selectedProjectObj,
+    displayProjects,
+    activeVelocityData,
+    activePercentilesData,
+    activeCfdData,
+    activeBurnupData,
+    showCfdDocModal,
+    setShowCfdDocModal,
+    showBurndownDocModal,
+    setShowBurndownDocModal,
+    assignedTeam,
+    toastMsg
+  } = useProyectosDashboard({ userProfile });
 
   return (
-    <div className="space-y-6 text-left font-sans animate-in fade-in duration-200 pb-12">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-left font-sans">
+      
       {/* Toast Notificación */}
       {toastMsg && (
-        <div className="fixed top-6 right-6 z-50 bg-slate-900/95 dark:bg-slate-950/95 text-white border border-emerald-500/50 px-5 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-3">
-          <Sparkles className="w-5 h-5 text-emerald-400 animate-pulse" />
-          <span className="text-xs font-bold">{toastMsg}</span>
-          <button type="button" onClick={() => setToastMsg(null)} className="text-slate-400 hover:text-white ml-2">
-            <X size={14} />
-          </button>
+        <div className="fixed top-20 right-6 z-50 bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold animate-bounce flex items-center gap-2">
+          <span>{toastMsg}</span>
         </div>
       )}
 
-      {/* ── HEADER CON CONTROLES GLOBALES DE CONTEXTO ── */}
-      <ProjectsHeader 
-        userProfile={userProfile} 
-        user={user} 
-        selectedProjectId={selectedProjectId} 
-        setSelectedProjectId={setSelectedProjectId} 
-        allProjectsList={allProjectsList} 
+      {/* 1. Header con controles globales */}
+      <ProjectsHeader
+        userProfile={userProfile}
+        user={user}
+        selectedProjectId={selectedProjectId}
+        setSelectedProjectId={setSelectedProjectId}
+        allProjectsList={allProjectsList}
       />
 
-      {/* ── BLOQUE 1: RESUMEN GENERAL (KPI STRIP UNIFICADO CON DIVIDERS 4 COLUMNAS) ── */}
-      <ProjectsKpiStrip computedMetrics={computedMetrics} />
-
-      {/* ── TABLA RESUMEN DE PROYECTOS (UBICADA SOBRE EL BURNDOWN CHART) ── */}
+      {/* 2. Tabla Resumen de Proyectos */}
       <ProjectsTable
         selectedProjectObj={selectedProjectObj}
         searchTerm={searchTerm}
@@ -64,38 +59,35 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         displayProjects={displayProjects}
         selectedProjectId={selectedProjectId}
         setSelectedProjectId={setSelectedProjectId}
+        expandedTeamProjectId={expandedTeamProjectId}
+        setExpandedTeamProjectId={setExpandedTeamProjectId}
+        assignedTeam={assignedTeam}
       />
 
-      {/* ── BLOQUE 2A: DIAGRAMA DE FLUJO ACUMULADO (CFD FULL WIDTH) ── */}
-      <ProjectsCFD 
-        realCfdData={realCfdData} 
-        MOCK_CFD_DATA={MOCK_CFD_DATA} 
-        setShowCfdDocModal={setShowCfdDocModal} 
+      {/* 3. Bloque 2A: Diagrama de Flujo Acumulado (CFD) */}
+      <ProjectsCFD
+        activeCfdData={activeCfdData}
+        setShowCfdDocModal={setShowCfdDocModal}
       />
 
-      {/* ── BLOQUE 2B: SPRINT BURNUP CHART (FULL WIDTH) ── */}
-      <ProjectsBurnup 
-        realBurnupData={realBurnupData} 
-        MOCK_BURNUP_DATA={MOCK_BURNUP_DATA} 
-        setShowBurndownDocModal={setShowBurndownDocModal} 
+      {/* 4. Bloque 2B: Sprint Burnup Chart */}
+      <ProjectsBurnup
+        activeBurnupData={activeBurnupData}
+        setShowBurndownDocModal={setShowBurndownDocModal}
       />
 
-      {/* ── BLOQUE 3: RENDIMIENTO DEL EQUIPO (GRID 2 COLUMNAS) ── */}
-      <ProjectsTeamPerformance 
-        statusDistributionData={statusDistributionData} 
-        computedMetrics={computedMetrics} 
-        cycleTimeByTypeData={cycleTimeByTypeData} 
+      {/* 5. Bloque 3: Velocidad del Equipo & Predictibilidad */}
+      <ProjectsTeamPerformance
+        activeVelocityData={activeVelocityData}
+        activePercentilesData={activePercentilesData}
       />
 
-      {/* ── BLOQUE 4: EQUIPO ASIGNADO AL PROYECTO ── */}
-      <ProjectsAssignedTeam assignedTeam={assignedTeam} />
-
-      {/* FOOTER INSTITUCIONAL */}
+      {/* Footer Institucional */}
       <div className="pt-6 border-t border-slate-200/60 dark:border-slate-800/80 text-center text-xs text-slate-400 font-medium">
         © 2025 MCHAV Analytics. Todos los derechos reservados.
       </div>
 
-      {/* MODAL DOCUMENTACIÓN TÉCNICA BURNUP */}
+      {/* Modal Documentación Técnica Burnup */}
       {showBurndownDocModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4 text-left">
@@ -125,7 +117,7 @@ export default function ProyectosDashboardView({ userProfile = null }) {
         </div>
       )}
 
-      {/* MODAL DOCUMENTACIÓN TÉCNICA CFD */}
+      {/* Modal Documentación Técnica CFD */}
       {showCfdDocModal && (
         <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6 shadow-2xl space-y-4 text-left">
@@ -154,6 +146,9 @@ export default function ProyectosDashboardView({ userProfile = null }) {
           </div>
         </div>
       )}
+
     </div>
   );
-}
+};
+
+export default ProyectosDashboardView;

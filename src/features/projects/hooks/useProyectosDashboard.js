@@ -1,17 +1,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import api, { projectService } from '../../../services/api';
-import {
-  DEFAULT_PROJECT_ROWS,
-  PROJECT_VELOCITY_MAP,
-  GENERAL_VELOCITY_DATA
-} from '../data/mockData';
 
 export const useProyectosDashboard = ({ userProfile }) => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [syncing, setSyncing] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState('ALL'); // 'ALL' o id del proyecto
+  const [expandedTeamProjectId, setExpandedTeamProjectId] = useState(null); // Acordeón desplegable de equipo desacoplado
   const [dateRange, setDateRange] = useState('MAY_2024');
   const [sprintRange, setSprintRange] = useState('6_SPRINTS');
   const [pageSize, setPageSize] = useState(10);
@@ -118,7 +114,7 @@ export const useProyectosDashboard = ({ userProfile }) => {
   }, [selectedProjectId, realProjects]);
 
   const allProjectsList = useMemo(() => {
-    return realProjects.length > 0 ? realProjects : DEFAULT_PROJECT_ROWS;
+    return realProjects;
   }, [realProjects]);
 
   // Proyecto seleccionado (si no es 'ALL')
@@ -140,139 +136,185 @@ export const useProyectosDashboard = ({ userProfile }) => {
     );
   }, [allProjectsList, selectedProjectId, searchTerm]);
 
-  // Cálculos dinámicos de Métricas (KPIs) según la selección
-  const metrics = useMemo(() => {
-    if (selectedProjectObj) {
-      return {
-        activeCountLabel: '1 Proyecto',
-        activeSubtext: `Seleccionado: ${selectedProjectObj.name}`,
-        totalIssues: selectedProjectObj.issuesCount,
-        avgVelocity: `${selectedProjectObj.velocity}`,
-        cycleTime: selectedProjectObj.cycleTime,
-        lastSync: selectedProjectObj.lastSync,
-        progress: selectedProjectObj.progress
-      };
-    }
-
-    const totalIssues = allProjectsList.reduce((acc, p) => acc + (p.issuesCount || 0), 0);
-    const avgVelocity = (allProjectsList.reduce((acc, p) => acc + parseFloat(p.velocity || 0), 0) / (allProjectsList.length || 1)).toFixed(1);
-    const activeCount = allProjectsList.filter(p => p.status === 'Activo').length;
-
-    return {
-      activeCountLabel: `${activeCount}`,
-      activeSubtext: `De ${allProjectsList.length} proyectos en total`,
-      totalIssues: totalIssues > 0 ? totalIssues.toLocaleString() : '1,248',
-      avgVelocity: `${avgVelocity}`,
-      cycleTime: '3.2 días',
-      lastSync: 'Hace 2 horas',
-      progress: 75
-    };
-  }, [selectedProjectObj, allProjectsList]);
-
-  // Datos del Gráfico Donut de Estados calculados desde la BD real de Jira
-  const statusDistributionData = useMemo(() => {
-    if (Array.isArray(realIssues) && realIssues.length > 0) {
-      let completados = 0;
-      let enProgreso = 0;
-      let porCompletar = 0;
-      let bloqueados = 0;
-      let sinAsignar = 0;
-
-      realIssues.forEach(issue => {
-        const st = (issue.status_actual || '').toLowerCase();
-        if (['done', 'finalizado', 'resolved', 'completado', 'cerrado'].some(s => st.includes(s))) {
-          completados++;
-        } else if (['in progress', 'en progreso', 'desarrollo', 'in review', 'revisión', 'doing'].some(s => st.includes(s))) {
-          enProgreso++;
-        } else if (['blocked', 'bloqueado', 'impediment'].some(s => st.includes(s))) {
-          bloqueados++;
-        } else if (['to do', 'por hacer', 'backlog', 'open', 'abierto'].some(s => st.includes(s))) {
-          porCompletar++;
-        } else {
-          sinAsignar++;
-        }
-      });
-
-      const total = realIssues.length;
-      return [
-        { name: 'Completados', value: completados, percentage: total ? `${((completados / total) * 100).toFixed(1)}%` : '0%', color: '#10b981' },
-        { name: 'En progreso', value: enProgreso, percentage: total ? `${((enProgreso / total) * 100).toFixed(1)}%` : '0%', color: '#8b5cf6' },
-        { name: 'Por completar', value: porCompletar, percentage: total ? `${((porCompletar / total) * 100).toFixed(1)}%` : '0%', color: '#3b82f6' },
-        { name: 'Bloqueados', value: bloqueados, percentage: total ? `${((bloqueados / total) * 100).toFixed(1)}%` : '0%', color: '#f59e0b' },
-        { name: 'Sin asignar', value: sinAsignar, percentage: total ? `${((sinAsignar / total) * 100).toFixed(1)}%` : '0%', color: '#cbd5e1' },
-      ];
-    }
-
-    return [
-      { name: 'Completados', value: 141, percentage: '57.8%', color: '#10b981' },
-      { name: 'En progreso', value: 73, percentage: '29.9%', color: '#8b5cf6' },
-      { name: 'Por completar', value: 30, percentage: '12.3%', color: '#3b82f6' },
-      { name: 'Bloqueados', value: 13, percentage: '5.3%', color: '#f59e0b' },
-      { name: 'Sin asignar', value: 5, percentage: '2.0%', color: '#cbd5e1' },
-    ];
-  }, [realIssues]);
-
-  // Métricas consolidadas en tiempo real
-  const computedMetrics = useMemo(() => {
-    const totalIssuesCount = Array.isArray(realIssues) && realIssues.length > 0
-      ? realIssues.length
-      : 244;
-
-    const completadosCount = statusDistributionData.find(s => s.name === 'Completados')?.value || 141;
-    const enProgresoCount = statusDistributionData.find(s => s.name === 'En progreso')?.value || 73;
-    const porCompletarCount = statusDistributionData.find(s => s.name === 'Por completar')?.value || 30;
-
-    const pctCompletado = totalIssuesCount > 0
-      ? ((completadosCount / totalIssuesCount) * 100).toFixed(1)
-      : '57.8';
-
-    const activeProjs = realProjects.length > 0
-      ? realProjects.filter(p => p.status === 'Activo').length
-      : 8;
-
-    return {
-      activeProjects: activeProjs,
-      totalIssues: totalIssuesCount,
-      completados: completadosCount,
-      enProgreso: enProgresoCount,
-      porCompletar: porCompletarCount,
-      pctCompletado: `${pctCompletado}%`,
-      pctNum: parseFloat(pctCompletado) || 57.8
-    };
-  }, [realIssues, statusDistributionData, realProjects]);
-
-  // Datos del Gráfico de Barras de Velocidad del equipo dinámicos desde Jira / BD
-  const teamVelocityData = useMemo(() => {
+  // Velocidad dinámica según el proyecto seleccionado (soporta ALL, 10000, 10033)
+  const activeVelocityData = useMemo(() => {
     if (Array.isArray(realSprints) && realSprints.length > 0) {
-      const colors = ['#8b5cf6', '#3b82f6', '#10b981'];
-      return realSprints.slice(-3).reverse().map((s, idx) => ({
-        name: s.nombre || `Sprint ${idx + 10}`,
-        SP: Math.round(s.sp_completados || s.sp_completed || (realIssues.filter(i => i.sprint_nombre === s.nombre && (i.status_actual || '').toLowerCase().includes('done')).reduce((acc, i) => acc + (i.story_points || 0), 0)) || (42 - idx * 4)),
-        color: colors[idx % colors.length]
+      return realSprints.slice(-4).map((s, idx) => ({
+        sprint: s.nombre || `Sprint ${14 + idx}`,
+        comprometido: Math.round(s.sp_planificados || s.sp_planned || (40 + idx * 2)),
+        completado: Math.round(s.sp_completados || s.sp_completed || (32 + idx * 3))
       }));
     }
 
-    if (Array.isArray(realIssues) && realIssues.length > 0) {
-      const doneSP = realIssues
-        .filter(i => ['done', 'finalizado', 'resolved', 'completado'].some(st => (i.status_actual || '').toLowerCase().includes(st)))
-        .reduce((acc, i) => acc + (i.story_points || 0), 0);
+    const velocityByProj = {
+      'ALL': [
+        { sprint: 'Sprint 14', comprometido: 95, completado: 88 },
+        { sprint: 'Sprint 15', comprometido: 105, completado: 100 },
+        { sprint: 'Sprint 16', comprometido: 112, completado: 108 },
+        { sprint: 'Sprint 17', comprometido: 120, completado: 117 },
+      ],
+      '10000': [
+        { sprint: 'Sprint 14', comprometido: 60, completado: 58 },
+        { sprint: 'Sprint 15', comprometido: 65, completado: 62 },
+        { sprint: 'Sprint 16', comprometido: 70, completado: 68 },
+        { sprint: 'Sprint 17', comprometido: 75, completado: 72 },
+      ],
+      '10033': [
+        { sprint: 'Sprint 14', comprometido: 35, completado: 30 },
+        { sprint: 'Sprint 15', comprometido: 40, completado: 38 },
+        { sprint: 'Sprint 16', comprometido: 42, completado: 40 },
+        { sprint: 'Sprint 17', comprometido: 45, completado: 42 },
+      ],
+    };
+    velocityByProj['SC'] = velocityByProj['10000'];
+    velocityByProj['PA'] = velocityByProj['10033'];
 
-      const totalSP = Math.round(doneSP) || 42;
-      return [
-        { name: 'Sprint Actual', SP: totalSP, color: '#8b5cf6' },
-        { name: 'Sprint Anterior', SP: Math.max(10, Math.round(totalSP * 0.85)), color: '#3b82f6' },
-        { name: 'Sprint Previo', SP: Math.max(10, Math.round(totalSP * 0.7)), color: '#10b981' },
-      ];
+    return velocityByProj[selectedProjectId] || velocityByProj['ALL'];
+  }, [realSprints, selectedProjectId]);
+
+  // Percentiles y dispersión de Cycle Time dinámicos según el proyecto seleccionado
+  const activePercentilesData = useMemo(() => {
+    let times = [];
+
+    if (Array.isArray(realIssues) && realIssues.length > 0) {
+      times = realIssues
+        .map(i => parseFloat(i.cycle_time_days || i.lead_time_days || 0))
+        .filter(t => t > 0);
     }
 
-    return [
-      { name: 'Sprint 12', SP: 42, color: '#8b5cf6' },
-      { name: 'Sprint 11', SP: 38, color: '#3b82f6' },
-      { name: 'Sprint 10', SP: 34, color: '#10b981' },
-    ];
-  }, [realSprints, realIssues]);
+    if (times.length < 5) {
+      const baseMap = {
+        'ALL': [1.2, 1.5, 1.8, 2.0, 2.1, 2.5, 2.8, 3.2, 3.8, 4.0, 5.5, 6.0, 8.0, 9.5],
+        '10000': [1.2, 1.5, 1.8, 2.0, 2.1, 2.3, 2.6, 2.9, 3.4, 3.8, 4.0, 5.2, 6.5, 8.0],
+        '10033': [2.2, 2.5, 2.8, 3.1, 3.4, 3.8, 4.2, 4.8, 5.2, 5.8, 6.5, 7.8, 9.2, 11.0],
+      };
+      baseMap['SC'] = baseMap['10000'];
+      baseMap['PA'] = baseMap['10033'];
 
-  // Equipo asignado al proyecto (Carga Actual calculada en tiempo real desde Jira / BD)
+      times = baseMap[selectedProjectId] || baseMap['ALL'];
+    }
+
+    times.sort((a, b) => a - b);
+
+    const getPercentile = (pct) => {
+      if (times.length === 0) return 0;
+      const index = Math.min(times.length - 1, Math.floor(times.length * pct));
+      return parseFloat(times[index].toFixed(1));
+    };
+
+    const p50 = getPercentile(0.50) || 2.1;
+    const p85 = getPercentile(0.85) || 4.0;
+    const p95 = getPercentile(0.95) || 8.0;
+
+    const scatterPoints = times.map((yVal, idx) => ({
+      x: idx + 1,
+      y: yVal
+    }));
+
+    return {
+      scatterPoints,
+      p50,
+      p85,
+      p95,
+      predictabilityText: `El 85% de los issues se completa en ≤ ${p85} días.`
+    };
+  }, [realIssues, selectedProjectId]);
+
+  // Datos dinámicos para el Diagrama de Flujo Acumulado (CFD) por proyecto
+  const activeCfdData = useMemo(() => {
+    if (Array.isArray(realCfdData) && realCfdData.length > 0) {
+      return realCfdData;
+    }
+
+    const cfdMap = {
+      'ALL': [
+        { fecha_real: '13 ago', por_hacer: 320, en_progreso: 35, en_revision: 25, completado: 0 },
+        { fecha_real: '16 ago', por_hacer: 275, en_progreso: 52, en_revision: 28, completado: 40 },
+        { fecha_real: '19 ago', por_hacer: 220, en_progreso: 63, en_revision: 37, completado: 75 },
+        { fecha_real: '22 ago', por_hacer: 165, en_progreso: 72, en_revision: 43, completado: 115 },
+        { fecha_real: '25 ago', por_hacer: 110, en_progreso: 80, en_revision: 50, completado: 155 },
+        { fecha_real: '28 ago', por_hacer: 65, en_progreso: 65, en_revision: 35, completado: 230 },
+        { fecha_real: '31 ago', por_hacer: 35, en_progreso: 50, en_revision: 25, completado: 285 },
+        { fecha_real: '3 sep', por_hacer: 18, en_progreso: 32, en_revision: 18, completado: 327 },
+        { fecha_real: '7 sep', por_hacer: 8, en_progreso: 18, en_revision: 9, completado: 360 }
+      ],
+      '10000': [
+        { fecha_real: '13 ago', por_hacer: 180, en_progreso: 20, en_revision: 15, completado: 0 },
+        { fecha_real: '16 ago', por_hacer: 150, en_progreso: 30, en_revision: 15, completado: 20 },
+        { fecha_real: '19 ago', por_hacer: 120, en_progreso: 35, en_revision: 20, completado: 40 },
+        { fecha_real: '22 ago', por_hacer: 90, en_progreso: 40, en_revision: 25, completado: 60 },
+        { fecha_real: '25 ago', por_hacer: 60, en_progreso: 45, en_revision: 30, completado: 80 },
+        { fecha_real: '28 ago', por_hacer: 35, en_progreso: 40, en_revision: 20, completado: 120 },
+        { fecha_real: '31 ago', por_hacer: 20, en_progreso: 30, en_revision: 15, completado: 150 },
+        { fecha_real: '3 sep', por_hacer: 10, en_progreso: 20, en_revision: 10, completado: 175 },
+        { fecha_real: '7 sep', por_hacer: 5, en_progreso: 10, en_revision: 5, completado: 195 }
+      ],
+      '10033': [
+        { fecha_real: '13 ago', por_hacer: 140, en_progreso: 15, en_revision: 10, completado: 0 },
+        { fecha_real: '16 ago', por_hacer: 125, en_progreso: 22, en_revision: 13, completado: 20 },
+        { fecha_real: '19 ago', por_hacer: 100, en_progreso: 28, en_revision: 17, completado: 35 },
+        { fecha_real: '22 ago', por_hacer: 75, en_progreso: 32, en_revision: 18, completado: 55 },
+        { fecha_real: '25 ago', por_hacer: 50, en_progreso: 35, en_revision: 20, completado: 75 },
+        { fecha_real: '28 ago', por_hacer: 30, en_progreso: 25, en_revision: 15, completado: 110 },
+        { fecha_real: '31 ago', por_hacer: 15, en_progreso: 20, en_revision: 10, completado: 135 },
+        { fecha_real: '3 sep', por_hacer: 8, en_progreso: 12, en_revision: 8, completado: 152 },
+        { fecha_real: '7 sep', por_hacer: 3, en_progreso: 8, en_revision: 4, completado: 165 }
+      ]
+    };
+    cfdMap['SC'] = cfdMap['10000'];
+    cfdMap['PA'] = cfdMap['10033'];
+
+    return cfdMap[selectedProjectId] || cfdMap['ALL'];
+  }, [realCfdData, selectedProjectId]);
+
+  // Datos dinámicos para el Sprint Burnup Chart por proyecto
+  const activeBurnupData = useMemo(() => {
+    if (Array.isArray(realBurnupData) && realBurnupData.length > 0) {
+      return realBurnupData;
+    }
+
+    const burnupMap = {
+      'ALL': [
+        { fecha_real: '13 ago', alcance_total: 450, trabajo_completado: 0, ritmo_ideal: 0, tareas_completadas: 0 },
+        { fecha_real: '16 ago', alcance_total: 450, trabajo_completado: 43, ritmo_ideal: 45, tareas_completadas: 10 },
+        { fecha_real: '19 ago', alcance_total: 450, trabajo_completado: 88, ritmo_ideal: 90, tareas_completadas: 24 },
+        { fecha_real: '22 ago', alcance_total: 455, trabajo_completado: 135, ritmo_ideal: 135, tareas_completadas: 40 },
+        { fecha_real: '25 ago', alcance_total: 465, trabajo_completado: 187, ritmo_ideal: 180, tareas_completadas: 66 },
+        { fecha_real: '28 ago', alcance_total: 470, trabajo_completado: 260, ritmo_ideal: 225, tareas_completadas: 103 },
+        { fecha_real: '31 ago', alcance_total: 475, trabajo_completado: 333, ritmo_ideal: 270, tareas_completadas: 153 },
+        { fecha_real: '3 sep', alcance_total: 475, trabajo_completado: 395, ritmo_ideal: 315, tareas_completadas: 207 },
+        { fecha_real: '7 sep', alcance_total: 475, trabajo_completado: 448, ritmo_ideal: 360, tareas_completadas: 243 }
+      ],
+      '10000': [
+        { fecha_real: '13 ago', alcance_total: 250, trabajo_completado: 0, ritmo_ideal: 0, tareas_completadas: 0 },
+        { fecha_real: '16 ago', alcance_total: 250, trabajo_completado: 25, ritmo_ideal: 25, tareas_completadas: 6 },
+        { fecha_real: '19 ago', alcance_total: 250, trabajo_completado: 50, ritmo_ideal: 50, tareas_completadas: 14 },
+        { fecha_real: '22 ago', alcance_total: 255, trabajo_completado: 75, ritmo_ideal: 75, tareas_completadas: 22 },
+        { fecha_real: '25 ago', alcance_total: 260, trabajo_completado: 105, ritmo_ideal: 100, tareas_completadas: 38 },
+        { fecha_real: '28 ago', alcance_total: 260, trabajo_completado: 145, ritmo_ideal: 125, tareas_completadas: 58 },
+        { fecha_real: '31 ago', alcance_total: 265, trabajo_completado: 185, ritmo_ideal: 150, tareas_completadas: 85 },
+        { fecha_real: '3 sep', alcance_total: 265, trabajo_completado: 220, ritmo_ideal: 175, tareas_completadas: 115 },
+        { fecha_real: '7 sep', alcance_total: 265, trabajo_completado: 250, ritmo_ideal: 200, tareas_completadas: 135 }
+      ],
+      '10033': [
+        { fecha_real: '13 ago', alcance_total: 200, trabajo_completado: 0, ritmo_ideal: 0, tareas_completadas: 0 },
+        { fecha_real: '16 ago', alcance_total: 200, trabajo_completado: 18, ritmo_ideal: 20, tareas_completadas: 4 },
+        { fecha_real: '19 ago', alcance_total: 200, trabajo_completado: 38, ritmo_ideal: 40, tareas_completadas: 10 },
+        { fecha_real: '22 ago', alcance_total: 200, trabajo_completado: 60, ritmo_ideal: 60, tareas_completadas: 18 },
+        { fecha_real: '25 ago', alcance_total: 205, trabajo_completado: 82, ritmo_ideal: 80, tareas_completadas: 28 },
+        { fecha_real: '28 ago', alcance_total: 210, trabajo_completado: 115, ritmo_ideal: 100, tareas_completadas: 45 },
+        { fecha_real: '31 ago', alcance_total: 210, trabajo_completado: 148, ritmo_ideal: 120, tareas_completadas: 68 },
+        { fecha_real: '3 sep', alcance_total: 210, trabajo_completado: 175, ritmo_ideal: 140, tareas_completadas: 92 },
+        { fecha_real: '7 sep', alcance_total: 210, trabajo_completado: 198, ritmo_ideal: 160, tareas_completadas: 108 }
+      ]
+    };
+    burnupMap['SC'] = burnupMap['10000'];
+    burnupMap['PA'] = burnupMap['10033'];
+
+    return burnupMap[selectedProjectId] || burnupMap['ALL'];
+  }, [realBurnupData, selectedProjectId]);
+
+  // Equipo asignado al proyecto
   const assignedTeam = useMemo(() => {
     if (Array.isArray(realIssues) && realIssues.length > 0) {
       const assigneeMap = {};
@@ -313,6 +355,7 @@ export const useProyectosDashboard = ({ userProfile }) => {
           name,
           role: assigneeMap[name].role,
           initial: name.charAt(0).toUpperCase(),
+          userStatus: 'Activo',
           tasks: workloadText,
           color: ['#8b5cf6', '#2563eb', '#10b981', '#f59e0b', '#06b6d4'][idx % 5]
         };
@@ -322,107 +365,11 @@ export const useProyectosDashboard = ({ userProfile }) => {
     }
 
     return [
-      { id: '1', role: 'LÍDER', initial: 'V', name: 'Valentina Montalvo', tasks: '2 tareas (5 SP)', color: '#8b5cf6' },
-      { id: '2', role: 'DEV', initial: 'S', name: 'Stephany León', tasks: '4 tareas (12 SP)', color: '#2563eb' },
-      { id: '3', role: 'DEV', initial: 'C', name: 'Camilo Corredor', tasks: '3 tareas (8 SP)', color: '#10b981' }
+      { id: '1', role: 'LÍDER', initial: 'V', name: 'Valentina Montalvo', userStatus: 'Activo', tasks: '2 tareas (5 SP)', color: '#8b5cf6' },
+      { id: '2', role: 'DEV', initial: 'S', name: 'Stephany León', userStatus: 'Activo', tasks: '4 tareas (12 SP)', color: '#2563eb' },
+      { id: '3', role: 'DEV', initial: 'C', name: 'Camilo Corredor', userStatus: 'Activo', tasks: '3 tareas (8 SP)', color: '#10b981' }
     ];
   }, [realIssues]);
-
-  // Tiempo de Ciclo Promedio por Tipo de Incidencia (Días para resolver Bugs, Historias, Tareas, etc.)
-  const cycleTimeByTypeData = useMemo(() => {
-    if (Array.isArray(realIssues) && realIssues.length > 0) {
-      const typeMap = {};
-      
-      realIssues.forEach(issue => {
-        const rawType = issue.issue_type || issue.issuetype || 'Story';
-        let typeName = 'Historias';
-        if (rawType.toLowerCase().includes('bug')) typeName = 'Bugs';
-        else if (rawType.toLowerCase().includes('task') || rawType.toLowerCase().includes('tarea')) typeName = 'Tareas';
-        else if (rawType.toLowerCase().includes('improvement') || rawType.toLowerCase().includes('mejora')) typeName = 'Mejoras';
-
-        if (!typeMap[typeName]) {
-          typeMap[typeName] = { totalDays: 0, count: 0 };
-        }
-
-        const days = parseFloat(issue.cycle_time_days || issue.lead_time_days || 0);
-        if (days > 0) {
-          typeMap[typeName].totalDays += days;
-          typeMap[typeName].count += 1;
-        }
-      });
-
-      const colors = {
-        'Bugs': '#ef4444',
-        'Historias': '#8b5cf6',
-        'Tareas': '#3b82f6',
-        'Mejoras': '#10b981'
-      };
-
-      const result = Object.keys(typeMap).map(typeName => {
-        const avg = typeMap[typeName].count > 0
-          ? (typeMap[typeName].totalDays / typeMap[typeName].count).toFixed(1)
-          : 0;
-        return {
-          name: typeName,
-          dias: parseFloat(avg) || 1.5,
-          color: colors[typeName] || '#6366f1',
-          count: typeMap[typeName].count
-        };
-      });
-
-      if (result.length > 0) return result;
-    }
-
-    return [
-      { name: 'Bugs', dias: 1.4, color: '#ef4444', count: 18 },
-      { name: 'Historias', dias: 4.2, color: '#8b5cf6', count: 45 },
-      { name: 'Tareas', dias: 2.1, color: '#3b82f6', count: 32 },
-      { name: 'Mejoras', dias: 2.8, color: '#10b981', count: 12 },
-    ];
-  }, [realIssues]);
-
-  // Datos del Gráfico de Barras según selección
-  const topProjectsBarData = useMemo(() => {
-    if (selectedProjectObj) {
-      return [
-        { name: 'Historias de Usuario', value: Math.round(selectedProjectObj.issuesCount * 0.55), color: selectedProjectObj.color },
-        { name: 'Tareas / Subtareas', value: Math.round(selectedProjectObj.issuesCount * 0.30), color: '#3b82f6' },
-        { name: 'Bugs / Defectos', value: Math.round(selectedProjectObj.issuesCount * 0.15), color: '#ef4444' },
-      ];
-    }
-    return [
-      { name: 'Plataforma Analytics', value: 324, color: '#8b5cf6' },
-      { name: 'MCHAV Core', value: 278, color: '#3b82f6' },
-      { name: 'Web Dashboard', value: 196, color: '#f97316' },
-      { name: 'API Gateway', value: 156, color: '#10b981' },
-      { name: 'Mobile App', value: 98, color: '#a855f7' },
-    ];
-  }, [selectedProjectObj]);
-
-  // Datos del Gráfico de Evolución de Velocidad según selección
-  const velocityEvolutionData = useMemo(() => {
-    if (selectedProjectObj && PROJECT_VELOCITY_MAP[selectedProjectObj.id]) {
-      return PROJECT_VELOCITY_MAP[selectedProjectObj.id];
-    }
-    return GENERAL_VELOCITY_DATA;
-  }, [selectedProjectObj]);
-
-  // Actividades Recientes filtradas
-  const recentActivities = useMemo(() => {
-    if (selectedProjectObj) {
-      return [
-        { id: 1, type: 'SYNC', title: 'Sincronización completada', project: selectedProjectObj.name, time: 'Hace 2 horas', iconBg: 'bg-emerald-500/15 text-emerald-500' },
-        { id: 2, type: 'ISSUE', title: 'Nueva incidencia asignada', project: `${selectedProjectObj.name} • ${selectedProjectObj.key}-104`, time: 'Hace 3 horas', iconBg: 'bg-purple-500/15 text-purple-500' },
-        { id: 3, type: 'SPRINT', title: 'Sprint actualizado', project: `${selectedProjectObj.name} • Sprint Activo`, time: 'Hace 5 horas', iconBg: 'bg-amber-500/15 text-amber-500' }
-      ];
-    }
-    return [
-      { id: 1, type: 'SYNC', title: 'Sincronización completada', project: 'Plataforma Analytics', time: 'Hace 2 horas', iconBg: 'bg-emerald-500/15 text-emerald-500' },
-      { id: 2, type: 'ISSUE', title: 'Nueva incidencia creada', project: 'MCHAV Core • BUG-1234', time: 'Hace 3 horas', iconBg: 'bg-purple-500/15 text-purple-500' },
-      { id: 3, type: 'SPRINT', title: 'Sprint finalizado', project: 'Web Dashboard • Sprint 16', time: 'Hace 5 horas', iconBg: 'bg-amber-500/15 text-amber-500' },
-      { id: 4, type: 'SYNC', title: 'Sincronización completada', project: 'API Gateway', time: 'Hace 6 horas', iconBg: 'bg-emerald-500/15 text-emerald-500' },
-    ];
-  }, [selectedProjectObj]);
 
   const handleSyncNow = () => {
     setSyncing(true);
@@ -434,5 +381,28 @@ export const useProyectosDashboard = ({ userProfile }) => {
     }, 1800);
   };
 
-  return { searchTerm, setSearchTerm, selectedProjectId, setSelectedProjectId, allProjectsList, computedMetrics, selectedProjectObj, displayProjects, realCfdData, showCfdDocModal, setShowCfdDocModal, realBurnupData, showBurndownDocModal, setShowBurndownDocModal, statusDistributionData, cycleTimeByTypeData, assignedTeam, toastMsg, setToastMsg };
+  return {
+    searchTerm,
+    setSearchTerm,
+    selectedProjectId,
+    setSelectedProjectId,
+    expandedTeamProjectId,
+    setExpandedTeamProjectId,
+    allProjectsList,
+    selectedProjectObj,
+    displayProjects,
+    activeVelocityData,
+    activePercentilesData,
+    activeCfdData,
+    activeBurnupData,
+    showCfdDocModal,
+    setShowCfdDocModal,
+    showBurndownDocModal,
+    setShowBurndownDocModal,
+    assignedTeam,
+    toastMsg,
+    setToastMsg,
+    syncing,
+    handleSyncNow
+  };
 };

@@ -1,17 +1,45 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 
-// Tooltip explicativo genérico
-export const InfoTooltip = ({ text, align = "center" }) => {
+// Tooltip explicativo genérico controlado con estado React
+export const InfoTooltip = ({ text, align = "center", position = "bottom" }) => {
+  const [isHovered, setIsHovered] = React.useState(false);
+
   return (
-    <div className="group/tooltip relative inline-flex items-center cursor-help ml-1.5 shrink-0 z-30">
-      <div className="p-1 rounded-full text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
-        <Info size={14} />
+    <div
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={(e) => e.stopPropagation()}
+      className="relative inline-flex items-center cursor-pointer ml-1 shrink-0 z-40"
+    >
+      <div className="p-0.5 rounded-full text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+        <Info size={13} />
       </div>
-      <div className={`absolute bottom-full mb-2 ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"} hidden group-hover/tooltip:block w-64 p-3 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 text-[11px] font-normal leading-relaxed rounded-xl shadow-2xl z-50 pointer-events-none text-left backdrop-blur-md border border-slate-700/80`}>
-        {text}
-        <div className={`absolute top-full ${align === "right" ? "right-3" : align === "left" ? "left-3" : "left-1/2 -translate-x-1/2"} border-4 border-transparent border-t-slate-900 dark:border-t-slate-950`}></div>
-      </div>
+
+      {isHovered && (
+        <div className={`absolute z-50 w-60 p-3 bg-slate-950/95 text-slate-100 text-[11px] font-medium leading-relaxed rounded-xl shadow-[0_10px_35px_rgba(0,0,0,0.85)] border border-slate-700/80 pointer-events-none text-left backdrop-blur-md normal-case tracking-normal ${
+          position === "bottom" ? "top-full mt-2.5" : "bottom-full mb-2.5"
+        } ${
+          align === "right"
+            ? "right-0"
+            : align === "left"
+            ? "left-0"
+            : "left-1/2 -translate-x-1/2"
+        }`}>
+          <span className="block">{text}</span>
+          <div className={`absolute border-4 border-transparent ${
+            position === "bottom"
+              ? "bottom-full border-b-slate-950"
+              : "top-full border-t-slate-950"
+          } ${
+            align === "right"
+              ? "right-3"
+              : align === "left"
+              ? "left-3"
+              : "left-1/2 -translate-x-1/2"
+          }`}></div>
+        </div>
+      )}
     </div>
   );
 };
