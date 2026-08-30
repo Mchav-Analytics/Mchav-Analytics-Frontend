@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { projectService, jqlService, userService } from '../../../services/api';
 
 export function useLeaderDashboard(selectedProjectId) {
-  // Estado para la Calculadora de Capacidad
-  const [showCapacityCalculator, setShowCapacityCalculator] = useState(false);
-  const [devCount, setDevCount] = useState(4);
-  const [sprintDays, setSprintDays] = useState(10);
-  const [vacationDays, setVacationDays] = useState(2);
-  const [sickDays, setSickDays] = useState(0); 
-  const [sickDevsCount, setSickDevsCount] = useState(0); 
-  const [avgDevVelocity, setAvgDevVelocity] = useState(10);
+
 
   // Estados de datos de API reales
   const [velocityData, setVelocityData] = useState([]);
@@ -162,13 +155,6 @@ export function useLeaderDashboard(selectedProjectId) {
   };
 
   return {
-    showCapacityCalculator, setShowCapacityCalculator,
-    devCount, setDevCount,
-    sprintDays, setSprintDays,
-    vacationDays, setVacationDays,
-    sickDays, setSickDays,
-    sickDevsCount, setSickDevsCount,
-    avgDevVelocity, setAvgDevVelocity,
     velocityData, kpis, criticalIssues, teamMembers, geminiInsights, loading,
     toastMessage, setToastMessage, isExportingPdf,
     handleConfirmReassign, handleNotifyDev, handleExportPdf

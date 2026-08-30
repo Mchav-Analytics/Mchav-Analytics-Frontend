@@ -4,7 +4,6 @@ import { useLeaderDashboard } from '../hooks/useLeaderDashboard';
 
 // Components
 import LeaderDashboardHeader from '../components/LeaderDashboardHeader';
-import CapacitySimulator from '../components/CapacitySimulator';
 import GeminiInsightsCard from '../components/GeminiInsightsCard';
 import LiderKpiCards from '../components/LiderKpiCards';
 import LiderVelocityChart from '../components/LiderVelocityChart';
@@ -16,13 +15,7 @@ export default function LiderTecnicoDashboardView({
   isDarkMode = true
 }) {
   const {
-    showCapacityCalculator, setShowCapacityCalculator,
-    devCount, setDevCount,
-    sprintDays, setSprintDays,
-    vacationDays, setVacationDays,
-    sickDays, setSickDays,
-    sickDevsCount, setSickDevsCount,
-    avgDevVelocity, setAvgDevVelocity,
+
     velocityData, kpis, criticalIssues, teamMembers, geminiInsights, loading,
     toastMessage, setToastMessage, isExportingPdf,
     handleConfirmReassign, handleNotifyDev, handleExportPdf
@@ -47,24 +40,11 @@ export default function LiderTecnicoDashboardView({
       {/* ── CABECERA UNIFICADA DE PANEL OPERATIVO ── */}
       <LeaderDashboardHeader 
         selectedProjectId={selectedProjectId}
-        showCapacityCalculator={showCapacityCalculator}
-        setShowCapacityCalculator={setShowCapacityCalculator}
         isExportingPdf={isExportingPdf}
         handleExportPdf={handleExportPdf}
+        setActiveTab={setActiveTab}
       />
 
-      {/* ── PANEL PLEGABLE: SIMULADOR DE CAPACIDAD ── */}
-      {showCapacityCalculator && (
-        <CapacitySimulator 
-          devCount={devCount} setDevCount={setDevCount}
-          sprintDays={sprintDays} setSprintDays={setSprintDays}
-          vacationDays={vacationDays} setVacationDays={setVacationDays}
-          sickDevsCount={sickDevsCount} setSickDevsCount={setSickDevsCount}
-          sickDays={sickDays} setSickDays={setSickDays}
-          avgDevVelocity={avgDevVelocity} setAvgDevVelocity={setAvgDevVelocity}
-          onClose={() => setShowCapacityCalculator(false)}
-        />
-      )}
 
       {/* ── TARJETA DE DIAGNÓSTICO EJECUTIVO IA (GOOGLE GEMINI ENGINE) ── */}
       <GeminiInsightsCard geminiInsights={geminiInsights} />
