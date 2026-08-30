@@ -114,10 +114,10 @@ export default function JqlConsultasView() {
     const headers = ['Clave', 'Tipo', 'Resumen', 'Estado', 'Asignado'];
     const rows = jqlIssues.map(i => [
       `"${i.key || i.key_issue || 'N/A'}"`,
-      `"${i.issue_type || i.tipo || 'Story'}"`,
-      `"${(i.summary || i.resumen || '').replace(/"/g, '""')}"`,
-      `"${i.status_actual || i.estado || 'Abierto'}"`,
-      `"${i.assignee_name || i.asignado || 'Sin Asignar'}"`
+      `"${i.fields?.issuetype?.name || i.issue_type || i.tipo || 'Story'}"`,
+      `"${(i.fields?.summary || i.summary || i.resumen || '').replace(/"/g, '""')}"`,
+      `"${i.fields?.status?.name || i.status_actual || i.estado || 'Abierto'}"`,
+      `"${i.fields?.assignee?.displayName || i.assignee_name || i.asignado || 'Sin Asignar'}"`
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -365,18 +365,18 @@ export default function JqlConsultasView() {
                                   {issue.key || issue.key_issue || 'N/A'}
                                 </td>
                                 <td className="px-4 py-3 font-medium">
-                                  {issue.issue_type || issue.tipo || 'Story'}
+                                  {issue.fields?.issuetype?.name || issue.issue_type || issue.tipo || 'Story'}
                                 </td>
                                 <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white max-w-xs truncate">
-                                  {issue.summary || issue.resumen || 'Sin resumen'}
+                                  {issue.fields?.summary || issue.summary || issue.resumen || 'Sin resumen'}
                                 </td>
                                 <td className="px-4 py-3">
                                   <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                    {issue.status_actual || issue.estado || 'Abierto'}
+                                    {issue.fields?.status?.name || issue.status_actual || issue.estado || 'Abierto'}
                                   </span>
                                 </td>
                                 <td className="px-4 py-3 font-medium">
-                                  {issue.assignee_name || issue.asignado || 'Sin Asignar'}
+                                  {issue.fields?.assignee?.displayName || issue.assignee_name || issue.asignado || 'Sin Asignar'}
                                 </td>
                               </tr>
                             ))
