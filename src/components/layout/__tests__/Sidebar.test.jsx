@@ -57,7 +57,7 @@ describe('Sidebar Component', () => {
 
   it('renders correct navigation items for MANAGER role', () => {
     renderSidebar('MANAGER');
-    expect(screen.getByText(/Panel Operativo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Proyectos/i)).toBeInTheDocument();
     expect(screen.getByText(/Matriz de Rendimiento/i)).toBeInTheDocument();
     expect(screen.queryByText(/Consultas JQL/i)).not.toBeInTheDocument();
   });
@@ -98,16 +98,10 @@ describe('Sidebar Component', () => {
     expect(defaultProps.setIsCollapsed).toHaveBeenCalledWith(true);
   });
 
-  it('opens AiChatModal when the AI assistant button is clicked', async () => {
-    const user = userEvent.setup();
+  it('does not crash if AI assistant button is removed', async () => {
     renderSidebar('ADMIN');
-    
-    const aiButton = screen.getByText(/Consultar a NubI IA/i).closest('button');
-    await act(async () => {
-      await user.click(aiButton);
-    });
-
-    expect(screen.getByTestId('ai-chat-modal')).toBeInTheDocument();
+    // AI Chat button was removed, we just ensure it doesn't crash
+    expect(screen.queryByTestId('ai-chat-modal')).not.toBeInTheDocument();
   });
 
   it('opens ProfileSettingsModal when the settings button is clicked', async () => {

@@ -93,8 +93,8 @@ describe('App Root Component', () => {
     });
 
     expect(screen.getByTestId('main-layout')).toBeInTheDocument();
-    expect(screen.getByTestId('topbar-title')).toHaveTextContent(/Proyectos/i);
-    expect(screen.getByTestId('lider-dashboard')).toBeInTheDocument();
+    expect(screen.getByTestId('topbar-title')).toHaveTextContent(/Proyectos y Equipos/i);
+    expect(screen.getByTestId('proyectos-view')).toBeInTheDocument();
     
     // Verificamos que se haya llamado la API al autenticarse
     expect(jiraService.getMetrics).toHaveBeenCalled();
