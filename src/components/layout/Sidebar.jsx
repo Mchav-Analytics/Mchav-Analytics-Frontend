@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings, Sparkles, Shield, Briefcase, Code } from 'lucide-react';
+import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
 
@@ -138,9 +138,11 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
+        { id: 'dashboard', label: 'Panel Operativo', icon: icons.dashboard },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
+        { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
       ];
     }
@@ -175,12 +177,11 @@ function Sidebar({
 
       {/* ── CABECERA CON LOGO Y BURGER ANIMADO DE COLAPSO (Uiverse) ── */}
       <div className={`flex items-center justify-between w-full ${isCollapsed ? 'flex-col gap-4 justify-center' : ''}`}>
-        <a href="#" onClick={(e) => e.preventDefault()} className={`${isCollapsed ? 'flex justify-center' : ''}`}>
+        <a href="#" onClick={(e) => e.preventDefault()} className={`outline-none ${isCollapsed ? 'flex justify-center' : ''}`}>
           <Logo
             style={{
-              width: isCollapsed ? '36px' : '44px',
-              height: isCollapsed ? '36px' : '44px',
-              borderRadius: '10px',
+              width: isCollapsed ? '48px' : '64px',
+              height: isCollapsed ? '48px' : '64px',
               marginRight: 0,
             }}
           />
@@ -201,6 +202,35 @@ function Sidebar({
       </div>
 
       <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
+
+        {/* ── BOTÓN NUBI IA ── */}
+        <div className={`mb-4 ${isCollapsed ? 'px-2 flex justify-center' : 'px-4'}`}>
+          <button
+            onClick={() => setIsAiChatOpen(true)}
+            className={`group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-[14px] font-extrabold text-white shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-[#4f46e5] via-[#a855f7] to-[#ec4899] overflow-hidden`}
+          >
+            {/* Destello de fondo al hacer hover */}
+            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+            
+            <div className="flex items-center gap-2 relative z-10">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              {!isCollapsed && (
+                <>
+                  <MessageCircle className="w-4 h-4 text-white" />
+                  <span className="tracking-wide">Consultar a NubI IA</span>
+                </>
+              )}
+            </div>
+            
+            {isCollapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#ec4899] text-white font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-fuchsia-500/30 flex items-center gap-2">
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span>Consultar a NubI IA</span>
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-[#4f46e5] rotate-45 rounded-bl-[2px]"></div>
+              </div>
+            )}
+          </button>
+        </div>
 
         {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
         {isRealAdmin && (
@@ -290,75 +320,6 @@ function Sidebar({
         {/* ── FOOTER: PERFIL DE USUARIO, MODO CLARO/OSCURO Y BOTÓN DE CERRAR SESIÓN ── */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
           
-          {/* Selector de Rol de Vista (ADMIN, LÍDER, DEV) */}
-          {!isCollapsed ? (
-            <div className="px-1">
-              <div className="flex items-center justify-between bg-gray-100 dark:bg-slate-800/80 p-1 rounded-xl border border-gray-200 dark:border-slate-700/60 text-[10px] font-extrabold">
-                <button
-                  type="button"
-                  onClick={() => {
-                    switchViewRole('ADMIN');
-                    setActiveTab('proyectos');
-                  }}
-                  className={`flex-1 py-1.5 px-1 rounded-lg transition-all text-center cursor-pointer ${
-                    userRole === 'ADMIN'
-                      ? 'bg-indigo-600 text-white shadow-xs font-black'
-                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                  title="Cambiar a Vista Administrador"
-                >
-                  ADMIN
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    switchViewRole('MANAGER');
-                    setActiveTab('proyectos');
-                  }}
-                  className={`flex-1 py-1.5 px-1 rounded-lg transition-all text-center cursor-pointer ${
-                    userRole === 'MANAGER'
-                      ? 'bg-indigo-600 text-white shadow-xs font-black'
-                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                  title="Cambiar a Vista Líder Técnico"
-                >
-                  LÍDER
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    switchViewRole('DEVELOPER');
-                    setActiveTab('alerts_center');
-                  }}
-                  className={`flex-1 py-1.5 px-1 rounded-lg transition-all text-center cursor-pointer ${
-                    userRole === 'DEVELOPER'
-                      ? 'bg-indigo-600 text-white shadow-xs font-black'
-                      : 'text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
-                  }`}
-                  title="Cambiar a Vista Desarrollador"
-                >
-                  DEV
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex justify-center">
-              <button
-                type="button"
-                onClick={() => {
-                  const nextRole = userRole === 'ADMIN' ? 'MANAGER' : userRole === 'MANAGER' ? 'DEVELOPER' : 'ADMIN';
-                  switchViewRole(nextRole);
-                  if (nextRole === 'DEVELOPER') setActiveTab('alerts_center');
-                  else setActiveTab('proyectos');
-                }}
-                className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 font-black text-[10px] flex items-center justify-center border border-indigo-500/40 hover:bg-indigo-600 hover:text-white transition-all cursor-pointer"
-                title={`Rol actual: ${userRole}. Clic para rotar de rol.`}
-              >
-                {userRole === 'ADMIN' ? 'ADM' : userRole === 'MANAGER' ? 'MGR' : 'DEV'}
-              </button>
-            </div>
-          )}
-
           {/* Switch de Tema Sol / Luna Uiverse (Alineado a la izquierda) */}
           <div className="flex items-center justify-start px-1 py-1">
             <ThemeToggleSwitch isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />

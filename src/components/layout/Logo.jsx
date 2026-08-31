@@ -1,21 +1,18 @@
 // ============================================================================
 // COMPONENTE DE LOGOTIPO OFICIAL DE MCHAV ANALYTICS
 // ============================================================================
-// Carga la imagen oficial logo.jpg de los assets y la renderiza con border-radius y sombra.
 
 import React from 'react';
-import logoImg from '../../assets/logo.jpg';
 
 const Logo = ({ style, className = "", size = 38 }) => (
   <img 
-    src={logoImg} 
+    src="/Logo_sf.png" 
     alt="MCHAV Analytics Logo" 
-    className={`object-cover shadow-sm dark:shadow-md transition-all ${className}`}
+    className={`object-contain transition-all outline-none ${className}`}
     style={{ 
       width: typeof size === 'number' ? `${size}px` : size, 
       height: typeof size === 'number' ? `${size}px` : size, 
-      objectFit: 'cover',
-      borderRadius: '10px',
+      objectFit: 'contain',
       marginRight: '8px',
       ...style 
     }} 
