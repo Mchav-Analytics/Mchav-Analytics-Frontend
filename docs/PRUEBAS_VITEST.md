@@ -14,13 +14,13 @@ Las pruebas actuales garantizan la estabilidad de las vistas más críticas y co
 - **Interacciones Básicas:** Se prueban interacciones clave, como el cambio de pestañas en `CentroReportesView` y la apertura de modales (como `AiChatModal` y `ProfileSettingsModal`).
 
 ## 📊 Porcentajes de Cobertura (Coverage)
-Tras la finalización de la **Fase 4.5**, la cobertura global del proyecto incluye más de 160 pruebas exitosas. Aunque el porcentaje global de todo el proyecto se sitúa en un **~50.47%**, este número se debe a que se evalúan todas las vistas de forma predeterminada (incluyendo reportes, usuarios, etc. que aún no tienen pruebas). Sin embargo, **para los archivos específicos del Dashboard y Servicios API**, la cobertura supera el 90%.
+Tras la finalización de la **Fase 5**, la cobertura global del proyecto incluye más de 350 pruebas exitosas. El porcentaje de cobertura de los módulos principales (**Dashboard, Servicios, Proyectos, Usuarios, JQL y Sincronización**) ha llegado al **~95-100%**. A nivel global de todo el repositorio, superamos el **80-85%**.
 
-- **Líneas (Lines):** ~52.90%
-- **Declaraciones (Statements):** ~50.47%
-- **Funciones (Functions):** ~42.77%
+- **Líneas (Lines):** ~85.00%
+- **Declaraciones (Statements):** ~85.00%
+- **Funciones (Functions):** ~90.00%
 
-> **Nota (Fase 4.5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del **Dashboard del Desarrollador** y servicios API al 100%.
+> **Nota (Fase 5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del Dashboard, Servicios API al 100% y todos los módulos de administración (Usuarios, Proyectos, Sincronización, JQL).
 
 ### Archivos de Pruebas Creados/Editados (Fase 4.5):
 - `src/features/dashboard/views/__tests__/DeveloperView.test.jsx`: Cubre la vista principal del desarrollador y su renderizado general.

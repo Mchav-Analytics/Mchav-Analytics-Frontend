@@ -97,7 +97,7 @@ describe('useJqlConsole', () => {
       setAttribute: vi.fn(),
       click: vi.fn()
     };
-    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
     const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
     const removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => {});
 
