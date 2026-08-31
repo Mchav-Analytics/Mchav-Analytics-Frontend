@@ -14,14 +14,20 @@ Las pruebas actuales garantizan la estabilidad de las vistas más críticas y co
 - **Interacciones Básicas:** Se prueban interacciones clave, como el cambio de pestañas en `CentroReportesView` y la apertura de modales (como `AiChatModal` y `ProfileSettingsModal`).
 
 ## 📊 Porcentajes de Cobertura (Coverage)
-Tras la finalización de las Fases 1 y 2, la cobertura global del proyecto es la siguiente (con más de 118 pruebas exitosas):
+Tras la finalización de la **Fase 4.5**, la cobertura global del proyecto incluye más de 160 pruebas exitosas. Aunque el porcentaje global de todo el proyecto se sitúa en un **~50.47%**, este número se debe a que se evalúan todas las vistas de forma predeterminada (incluyendo reportes, usuarios, etc. que aún no tienen pruebas). Sin embargo, **para los archivos específicos del Dashboard y Servicios API**, la cobertura supera el 90%.
 
-- **Líneas (Lines):** ~40.42%
-- **Declaraciones (Statements):** ~38.29%
-- **Ramas / Condiciones (Branches):** ~26.34%
-- **Funciones (Functions):** ~26.22%
+- **Líneas (Lines):** ~52.90%
+- **Declaraciones (Statements):** ~50.47%
+- **Funciones (Functions):** ~42.77%
 
-> **Nota:** Con la finalización de la **Fase 3**, la cobertura del proyecto ha dado un salto significativo. Se refactorizaron las pruebas de vistas masivas y complejas (como `ProyectosDashboardView.jsx` de más de 1300 líneas y `CentroReportesView.test.jsx`), resolviendo problemas de carga asíncrona de dependencias (imports dinámicos) y errores de timeout (warnings de `act(...)`). La cobertura de estas vistas individuales ha pasado de casi 0% a promedios entre el 40% y el 70%. La **Fase 4** se centrará en pulir componentes individuales, modales y utilidades secundarias para alcanzar la meta global del 90%.
+> **Nota (Fase 4.5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del **Dashboard del Desarrollador** (`DeveloperView`, `DailyFocusView`, `DevAlertsView`, `SprintHealthView`, `TeamMatrixView`, `CapacityCalculatorView`, `LiderTecnicoDashboardView`, etc.). Además, se completaron los tests exhaustivos para los servicios de API (`api.test.js`) cubriendo `developerService`, `alertService`, `automationService` y `aiService` al 100%.
+
+## 🧩 Librerías y Estrategias de Mocking
+Durante esta fase, se consolidó el uso de las siguientes herramientas y técnicas:
+- **Librerías principales:** `vitest` (Framework), `@testing-library/react` (Renderizado del DOM), `@testing-library/user-event` (Simulación de clics y tipeo), y `@testing-library/jest-dom` (Matchers de aserciones como `toBeInTheDocument`).
+- **Mocks de Gráficos:** Para evitar que Vitest intente renderizar SVG o Canvas complejos que causan colapsos, se configuraron mocks globales de librerías como `recharts` y `react-chartjs-2`, reemplazándolos por simples `<div>` con roles identificables (ej. `role="img"`).
+- **Mocks de Hooks:** En lugar de ejecutar toda la lógica de los servicios backend, se implementó `vi.mock` sobre los hooks (`useLeaderDashboard`, `useSprintHealth`, etc.) para devolver estructuras de datos estáticas controladas.
+- **Formularios:** Para testear botones `submit` dentro de formularios sin desencadenar recargas de página, se implementó `fireEvent.submit(button.closest('form'))` asegurando un testeo ágil y confiable.
 
 ## 💻 Comandos Útiles
 
