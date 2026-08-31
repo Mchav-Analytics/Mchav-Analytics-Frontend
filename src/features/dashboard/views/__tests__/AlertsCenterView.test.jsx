@@ -37,6 +37,6 @@ describe('AlertsCenterView', () => {
     render(<AlertsCenterView onNavigateTab={() => {}} />);
     
     // Check if main title is rendered
-    expect(screen.getByRole('heading', { name: /Feedback/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Feedback & Revisiones' })).toBeInTheDocument();
   });
 });

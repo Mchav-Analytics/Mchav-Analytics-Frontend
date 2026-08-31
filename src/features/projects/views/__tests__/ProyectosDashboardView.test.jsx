@@ -84,7 +84,11 @@ vi.mock('../../../../services/api', () => {
       getProjects: vi.fn(),
       updateProject: vi.fn(),
       getKpis: vi.fn(),
-      getKpiIssuesDetail: vi.fn()
+      getKpiIssuesDetail: vi.fn(),
+      getProjectBurnup: vi.fn(),
+      getProjectBurndown: vi.fn(),
+      getProjectCFD: vi.fn(),
+      getSprints: vi.fn()
     },
     userService: {
       getUsers: vi.fn(),
@@ -126,23 +130,26 @@ describe('ProyectosDashboardView', () => {
     projectService.getProjects.mockResolvedValue(mockProjects);
     projectService.getKpis.mockResolvedValue({ total: 10 });
     projectService.getKpiIssuesDetail.mockResolvedValue({ total_issues: 5, issues: [] });
+    projectService.getProjectBurnup.mockResolvedValue([]);
+    projectService.getProjectBurndown.mockResolvedValue([]);
+    projectService.getProjectCFD.mockResolvedValue([]);
+    projectService.getSprints.mockResolvedValue([]);
   });
 
   it('renders correctly and fetches initial data', async () => {
     render(<ProyectosDashboardView />);
-    
-    expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
+    expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
   });
 
   it('filters projects based on search term', async () => {
     const user = userEvent.setup();
     render(<ProyectosDashboardView />);
     
-    expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
+    expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
 
     const searchInput = screen.getByPlaceholderText('Buscar proyecto...');
     await user.type(searchInput, 'ALPHA');
 
-    expect(screen.getByRole('heading', { name: 'Proyectos' })).toBeInTheDocument();
+    expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
   });
 });

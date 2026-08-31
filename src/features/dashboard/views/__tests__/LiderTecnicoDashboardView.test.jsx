@@ -14,7 +14,14 @@ vi.mock('../../../../features/auth/context/AuthContext', () => ({
 
 vi.mock('../../../../services/api', () => ({
   projectService: {
-    getKpiIssuesDetail: vi.fn(() => Promise.resolve({ issues: [] }))
+    getKpiIssuesDetail: vi.fn(() => Promise.resolve({ issues: [] })),
+    getSprintHealth: vi.fn(() => Promise.resolve({})),
+    getDevsPerformance: vi.fn(() => Promise.resolve([])),
+    getProjectMetrics: vi.fn(() => Promise.resolve({})),
+    getKpis: vi.fn(() => Promise.resolve({}))
+  },
+  userService: {
+    getUsers: vi.fn(() => Promise.resolve([]))
   }
 }));
 
