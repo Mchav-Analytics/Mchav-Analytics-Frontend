@@ -137,19 +137,27 @@ describe('ProyectosDashboardView', () => {
   });
 
   it('renders correctly and fetches initial data', async () => {
-    render(<ProyectosDashboardView />);
+    await act(async () => {
+      render(<ProyectosDashboardView />);
+    });
     expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
   });
 
   it('filters projects based on search term', async () => {
     const user = userEvent.setup();
-    render(<ProyectosDashboardView />);
+    
+    await act(async () => {
+      render(<ProyectosDashboardView />);
+    });
     
     expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
 
     const searchInput = screen.getByPlaceholderText('Buscar proyecto...');
-    await user.type(searchInput, 'ALPHA');
+    await act(async () => {
+      await user.type(searchInput, 'ALPHA');
+    });
 
     expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
   });
+
 });

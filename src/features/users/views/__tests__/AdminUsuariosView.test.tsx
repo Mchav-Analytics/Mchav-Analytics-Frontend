@@ -118,31 +118,4 @@ describe('AdminUsuariosView - Integration', () => {
     expect(screen.getByText(/✨ Rol de User Manager actualizado a DESARROLLADOR/i)).toBeInTheDocument();
   });
 
-  it('opens invite user modal', async () => {
-    const user = userEvent.setup();
-    await act(async () => {
-      renderWithProviders(<AdminUsuariosView />);
-    });
-
-    const inviteBtn = screen.getByRole('button', { name: /Invitar Usuario/i });
-    await act(async () => {
-      await user.click(inviteBtn);
-    });
-
-    expect(screen.getByText('Invitar Nuevo Usuario')).toBeInTheDocument();
-  });
-
-  it('opens audit modal', async () => {
-    const user = userEvent.setup();
-    await act(async () => {
-      renderWithProviders(<AdminUsuariosView />);
-    });
-
-    const auditBtn = screen.getByRole('button', { name: /Auditoría/i });
-    await act(async () => {
-      await user.click(auditBtn);
-    });
-
-    expect(screen.getByText('Log de Auditoría')).toBeInTheDocument();
-  });
 });

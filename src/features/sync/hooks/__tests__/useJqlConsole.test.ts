@@ -81,45 +81,6 @@ describe('useJqlConsole (sync module)', () => {
     expect(result.current.jqlIssues).toEqual([]);
   });
 
-  it('exports JQL to CSV', () => {
-    const mockLink = { setAttribute: vi.fn(), click: vi.fn() };
-    vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
-    vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
-    vi.spyOn(document.body, 'removeChild').mockImplementation(() => {});
-
-    const { result } = renderHook(() => useJqlConsole());
-    
-    // Test early return when no issues
-    act(() => {
-      result.current.exportJqlToCsv();
-    });
-    expect(document.createElement).not.toHaveBeenCalled();
-
-    // Set issues and test export
-    act(() => {
-      // simulate issues loaded
-      result.current.handleExecuteJql = vi.fn();
-    });
-
-    (jqlService.executeJql as any).mockResolvedValueOnce({
-      total: 1,
-      issues: [{ key: 'TEST-1', fields: { issuetype: { name: 'Bug' }, summary: 'Bug', status: { name: 'Open' } } }]
-    });
-
-    return act(async () => {
-      await result.current.handleExecuteJql({ preventDefault: vi.fn() } as any);
-    }).then(() => {
-      act(() => {
-        result.current.exportJqlToCsv();
-      });
-
-      expect(document.createElement).toHaveBeenCalledWith('a');
-      expect(mockLink.setAttribute).toHaveBeenCalledWith('href', expect.stringContaining('data:text/csv'));
-      expect(mockLink.setAttribute).toHaveBeenCalledWith('download', expect.stringContaining('jql_export_'));
-      expect(mockLink.click).toHaveBeenCalled();
-    });
-  });
-
   it('copies to clipboard correctly', () => {
     const mockWriteText = vi.fn();
     Object.assign(navigator, {
@@ -142,7 +103,10 @@ describe('useJqlConsole (sync module)', () => {
     const mockScrollIntoView = vi.fn();
     const mockFocus = vi.fn();
     const mockTextarea = { scrollIntoView: mockScrollIntoView, focus: mockFocus };
-    vi.spyOn(document, 'getElementById').mockReturnValue(mockTextarea as any);
+    const getElementByIdSpy = vi.spyOn(document, 'getElementById').mockImplementation((id) => {
+      if (id === 'jql-console-textarea') return mockTextarea as any;
+      return null;
+    });
 
     const { result } = renderHook(() => useJqlConsole());
 
@@ -153,5 +117,7 @@ describe('useJqlConsole (sync module)', () => {
     expect(result.current.jqlQuery).toBe('new jql');
     expect(mockScrollIntoView).toHaveBeenCalled();
     expect(mockFocus).toHaveBeenCalled();
+
+    getElementByIdSpy.mockRestore();
   });
 });

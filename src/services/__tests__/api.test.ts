@@ -518,7 +518,7 @@ describe('API Services', () => {
 
     it('downloadPdfReport uses fetch', async () => {
       const mockLink = { setAttribute: vi.fn(), click: vi.fn(), remove: vi.fn() };
-      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
 
       await import('../api').then(module => {
@@ -530,7 +530,7 @@ describe('API Services', () => {
 
     it('downloadCsvReport creates link', () => {
       const mockLink = { setAttribute: vi.fn(), click: vi.fn(), remove: vi.fn() };
-      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
 
       import('../api').then(module => {
