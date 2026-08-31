@@ -20,7 +20,19 @@ Tras la finalización de la **Fase 4.5**, la cobertura global del proyecto inclu
 - **Declaraciones (Statements):** ~50.47%
 - **Funciones (Functions):** ~42.77%
 
-> **Nota (Fase 4.5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del **Dashboard del Desarrollador** (`DeveloperView`, `DailyFocusView`, `DevAlertsView`, `SprintHealthView`, `TeamMatrixView`, `CapacityCalculatorView`, `LiderTecnicoDashboardView`, etc.). Además, se completaron los tests exhaustivos para los servicios de API (`api.test.js`) cubriendo `developerService`, `alertService`, `automationService` y `aiService` al 100%.
+> **Nota (Fase 4.5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del **Dashboard del Desarrollador** y servicios API al 100%.
+
+### Archivos de Pruebas Creados/Editados (Fase 4.5):
+- `src/features/dashboard/views/__tests__/DeveloperView.test.jsx`: Cubre la vista principal del desarrollador y su renderizado general.
+- `src/features/dashboard/views/__tests__/DailyFocusView.test.jsx`: Cubre la vista de enfoque diario y sus interacciones.
+- `src/features/dashboard/views/__tests__/DevAlertsView.test.jsx`: Cubre la vista del centro de alertas y manejo de estados vacíos.
+- `src/features/dashboard/views/__tests__/SprintHealthView.test.jsx`: Cubre los componentes de diagnóstico y salud del sprint.
+- `src/features/dashboard/views/__tests__/TeamMatrixView.test.jsx`: Cubre la tabla de métricas comparativas del equipo.
+- `src/features/dashboard/views/__tests__/CapacityCalculatorView.test.jsx`: Cubre la herramienta de simulación de capacidad y el formulario.
+- `src/features/dashboard/views/__tests__/DevWorkloadView.test.jsx`: Cubre el análisis de carga de trabajo.
+- `src/features/dashboard/views/__tests__/LiderTecnicoDashboardView.test.jsx`: Cubre la vista principal del rol de líder técnico.
+- `src/features/dashboard/components/__tests__/ProjectComponents.test.jsx`: Cubre los sub-componentes gráficos pequeños (como `DashboardTrends` y `DashboardPerformance`).
+- `src/services/__tests__/api.test.js`: Modificado para cubrir exhaustivamente los endpoints que usan estos componentes (`developerService`, `alertService`, etc.).
 
 ## 🧩 Librerías y Estrategias de Mocking
 Durante esta fase, se consolidó el uso de las siguientes herramientas y técnicas:
