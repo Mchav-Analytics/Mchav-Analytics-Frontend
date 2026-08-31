@@ -217,23 +217,23 @@ export const ProjectMetrics = ({
                   </div>
                 </div>
 
-                {/* Progreso de tareas (Burndown) */}
+                {/* Progreso de tareas (Burnup) */}
                 <div className="p-6 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm dark:shadow-[0_8px_30px_rgba(25,28,61,0.5)] space-y-4 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas</h3>
-                      <MetricInfoTooltip align="left" text="Muestra cómo va disminuyendo el trabajo pendiente día a día comparado con la meta ideal." />
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">Progreso de tareas (Burnup)</h3>
+                      <MetricInfoTooltip align="left" text="Muestra el avance acumulado del trabajo completado comparado con el alcance total y la meta ideal." />
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Compara el trabajo que aún falta por hacer contra el ritmo ideal de entrega.</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Compara el trabajo completado contra el alcance total y el ritmo ideal de entrega.</p>
                   </div>
 
                   <div className="h-64 w-full pt-2">
                     <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={activeMetrics.burndown} margin={{ top: 15, right: 15, left: 15, bottom: 5 }}>
+                      <ComposedChart data={activeMetrics.burnup || activeMetrics.burndown} margin={{ top: 15, right: 15, left: 15, bottom: 5 }}>
                         <defs>
-                          <linearGradient id="colorBurndownReal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#6366f1" stopOpacity={0.5} />
-                            <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
+                          <linearGradient id="colorBurnupReal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.5} />
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
                           </linearGradient>
                         </defs>
                         <XAxis
@@ -255,12 +255,12 @@ export const ProjectMetrics = ({
                           contentStyle={tooltipStyle}
                           formatter={(value, name) => [
                             `${value} unidades de trabajo`,
-                            name === 'real' || name === 'REAL' ? 'Lo que realmente falta por hacer' : 'Lo que debería faltar hoy'
+                            name === 'real' || name === 'REAL' ? 'Trabajo completado acumulado' : 'Ritmo ideal de entrega'
                           ]}
                           labelFormatter={(label) => `Progreso - Día ${String(label).replace('D', '')}`}
                         />
-                        <Area type="monotone" dataKey="real" stroke="#818cf8" strokeWidth={3} fillOpacity={1} fill="url(#colorBurndownReal)" dot={{ r: 4, fill: '#818cf8', stroke: '#ffffff', strokeWidth: 2 }} name="REAL" />
-                        <Line type="monotone" dataKey="ideal" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
+                        <Area type="monotone" dataKey="real" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorBurnupReal)" dot={{ r: 4, fill: '#10b981', stroke: '#ffffff', strokeWidth: 2 }} name="REAL" />
+                        <Line type="monotone" dataKey="ideal" stroke="#6366f1" strokeDasharray="4 4" strokeWidth={2} dot={false} name="IDEAL" />
                       </ComposedChart>
                     </ResponsiveContainer>
                   </div>

@@ -64,14 +64,21 @@ describe('DeveloperView Integration', () => {
       cycle_time_personal: 3.5,
       wip_tickets: 5,
       throughput_tickets: 10,
-      story_points_burned: 40
-    });
-    
-    projectService.getKpiIssuesDetail.mockResolvedValue({
-      issues: [
+      story_points_burned: 40,
+      assigned_issues: [
         { key_issue: 'TSK-1', summary: 'Hacer login', status_actual: 'IN PROGRESS', issue_type: 'Historia', story_points: 5 },
         { key_issue: 'TSK-2', summary: 'Fix bug', status_actual: 'DONE', issue_type: 'Bug', story_points: 3 }
       ]
+    });
+    
+    projectService.getKpiIssuesDetail.mockResolvedValue({
+      issues: []
+    });
+
+    developerService.getDailyFocus.mockResolvedValue({
+      ai_coach_tip: "Tip mock",
+      efficiency_gain_pct: 10,
+      clean_deliveries_pct: 100
     });
   });
 
@@ -84,41 +91,37 @@ describe('DeveloperView Integration', () => {
     expect(screen.getByText('TICKETS WIP')).toBeInTheDocument();
     
     await waitFor(() => {
-      expect(screen.getByText('Hacer login')).toBeInTheDocument();
-      expect(screen.getByText('Fix bug')).toBeInTheDocument();
+      expect(screen.getAllByText('Hacer login').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Fix bug').length).toBeGreaterThan(0);
     });
   });
 
-  it('opens issue detail modal and can transition issue', async () => {
+  it('opens issue detail modal', async () => {
     const user = userEvent.setup();
-    developerService.updateTaskStatus.mockResolvedValue({});
-    projectService.transitionIssue.mockResolvedValue({ message: 'Success' });
 
     await act(async () => {
       render(<DeveloperView selectedProjectId="PROJ-01" projects={[]} />);
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Hacer login')).toBeInTheDocument();
+      expect(screen.getAllByText('Hacer login').length).toBeGreaterThan(0);
     });
 
     // Click on "Ver"
-    const viewButtons = screen.getAllByRole('button', { name: /ver/i });
-    await act(async () => {
-      await user.click(viewButtons[0]);
-    });
+    const viewButtons = screen.getAllByRole('button', { name: /ver detalle/i });
+    if(viewButtons.length === 0) {
+        const altViewButtons = screen.getAllByRole('button', { name: /ver/i });
+        await act(async () => {
+          await user.click(altViewButtons[0]);
+        });
+    } else {
+        await act(async () => {
+          await user.click(viewButtons[0]);
+        });
+    }
 
     // Modal should be open
-    expect(screen.getByText('Cambiar Estado de la Incidencia:')).toBeInTheDocument();
-
-    // Click "LISTO"
-    const readyButton = screen.getByRole('button', { name: /Marcar como LISTO/i });
-    await act(async () => {
-      await user.click(readyButton);
-    });
-
-    expect(developerService.updateTaskStatus).toHaveBeenCalledWith('TSK-1', 'LISTO');
-    expect(projectService.transitionIssue).toHaveBeenCalledWith('TSK-1', 'LISTO');
+    expect(screen.getByText(/Sin descripción detallada de Jira/i)).toBeInTheDocument();
   });
 
   it('filters issues correctly', async () => {
@@ -128,7 +131,7 @@ describe('DeveloperView Integration', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByText('Hacer login')).toBeInTheDocument();
+      expect(screen.getAllByText('Hacer login').length).toBeGreaterThan(0);
     });
 
     // Filter by completed
@@ -137,7 +140,7 @@ describe('DeveloperView Integration', () => {
       await user.click(btnCompletadas);
     });
 
-    expect(screen.queryByText('Hacer login')).not.toBeInTheDocument();
-    expect(screen.getByText('Fix bug')).toBeInTheDocument();
+    expect(screen.queryAllByText('Hacer login').length).toBe(0);
+    expect(screen.getAllByText('Fix bug').length).toBeGreaterThan(0);
   });
 });

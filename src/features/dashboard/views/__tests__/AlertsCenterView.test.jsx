@@ -12,6 +12,10 @@ vi.mock('../../../../features/auth/context/AuthContext', () => ({
 }));
 
 vi.mock('../../../../services/api', () => ({
+  default: {
+    get: vi.fn().mockResolvedValue({ data: [] }),
+    post: vi.fn().mockResolvedValue({ data: {} }),
+  },
   jiraService: {
     triggerSync: vi.fn()
   }
@@ -33,6 +37,6 @@ describe('AlertsCenterView', () => {
     render(<AlertsCenterView onNavigateTab={() => {}} />);
     
     // Check if main title is rendered
-    expect(screen.getByText('Centro de Actividad')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Feedback & Revisiones' })).toBeInTheDocument();
   });
 });
