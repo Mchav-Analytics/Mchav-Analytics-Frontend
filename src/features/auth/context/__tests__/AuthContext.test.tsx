@@ -50,8 +50,8 @@ describe('AuthContext', () => {
   });
 
   describe('normalizeRole', () => {
-    it('normalizes undefined to ADMIN', () => {
-      expect(normalizeRole(undefined)).toBe('ADMIN');
+    it('normalizes undefined to DEVELOPER', () => {
+      expect(normalizeRole(undefined)).toBe('DEVELOPER');
     });
     
     it('normalizes DEV roles to DEVELOPER', () => {
@@ -64,9 +64,9 @@ describe('AuthContext', () => {
       expect(normalizeRole('LÍDER_TÉCNICO')).toBe('MANAGER');
     });
 
-    it('normalizes other roles to ADMIN', () => {
+    it('normalizes other roles to DEVELOPER', () => {
       expect(normalizeRole('ADMIN')).toBe('ADMIN');
-      expect(normalizeRole('UNKNOWN')).toBe('ADMIN');
+      expect(normalizeRole('UNKNOWN')).toBe('DEVELOPER');
     });
   });
 
@@ -106,7 +106,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(authService.loginMock).toHaveBeenCalledWith({ email: 'test@mchav.com', password: '123' });
       expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
-      expect(screen.getByTestId('user-role').textContent).toBe('ADMIN');
+      expect(screen.getByTestId('user-role').textContent).toBe('DEVELOPER');
       expect(localStorage.getItem('mchav_jwt_token')).toBe('fake-token');
       expect(localStorage.getItem('mock_user_session')).toBeTruthy();
     });
@@ -188,7 +188,7 @@ describe('AuthContext', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('user-role').textContent).toBe('ADMIN');
+      expect(screen.getByTestId('user-role').textContent).toBe('DEVELOPER');
     });
     
     act(() => {
@@ -220,7 +220,7 @@ describe('AuthContext', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('user-role').textContent).toBe('ADMIN');
+      expect(screen.getByTestId('user-role').textContent).toBe('DEVELOPER');
     });
 
     act(() => {

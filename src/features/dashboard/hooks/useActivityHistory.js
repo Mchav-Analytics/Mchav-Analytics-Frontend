@@ -3,7 +3,7 @@ import { useAuth } from '../../auth/context/AuthContext';
 import { projectService } from '../../../services/api';
 import { 
   ShieldCheck, Zap, GitPullRequest, Bug, BookOpen, 
-  Code2, Target, Users2, Star, CheckCircle2, Activity, Flame, TrendingUp
+  Code2, Target, Users2, Star, CheckCircle2, Activity, Flame, TrendingUp, Sparkles
 } from 'lucide-react';
 
 export const useActivityHistory = ({ projects, selectedProjectId }) => {
