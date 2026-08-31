@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings, Sparkles } from 'lucide-react';
+import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
 
@@ -177,12 +177,11 @@ function Sidebar({
 
       {/* ── CABECERA CON LOGO Y BURGER ANIMADO DE COLAPSO (Uiverse) ── */}
       <div className={`flex items-center justify-between w-full ${isCollapsed ? 'flex-col gap-4 justify-center' : ''}`}>
-        <a href="#" onClick={(e) => e.preventDefault()} className={`${isCollapsed ? 'flex justify-center' : ''}`}>
+        <a href="#" onClick={(e) => e.preventDefault()} className={`outline-none ${isCollapsed ? 'flex justify-center' : ''}`}>
           <Logo
             style={{
-              width: isCollapsed ? '36px' : '44px',
-              height: isCollapsed ? '36px' : '44px',
-              borderRadius: '10px',
+              width: isCollapsed ? '48px' : '64px',
+              height: isCollapsed ? '48px' : '64px',
               marginRight: 0,
             }}
           />
@@ -203,6 +202,35 @@ function Sidebar({
       </div>
 
       <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
+
+        {/* ── BOTÓN NUBI IA ── */}
+        <div className={`mb-4 ${isCollapsed ? 'px-2 flex justify-center' : 'px-4'}`}>
+          <button
+            onClick={() => setIsAiChatOpen(true)}
+            className={`group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-[14px] font-extrabold text-white shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-[#4f46e5] via-[#a855f7] to-[#ec4899] overflow-hidden`}
+          >
+            {/* Destello de fondo al hacer hover */}
+            <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
+            
+            <div className="flex items-center gap-2 relative z-10">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+              {!isCollapsed && (
+                <>
+                  <MessageCircle className="w-4 h-4 text-white" />
+                  <span className="tracking-wide">Consultar a NubI IA</span>
+                </>
+              )}
+            </div>
+            
+            {isCollapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#ec4899] text-white font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-fuchsia-500/30 flex items-center gap-2">
+                <Sparkles className="w-3 h-3 text-amber-300" />
+                <span>Consultar a NubI IA</span>
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-[#4f46e5] rotate-45 rounded-bl-[2px]"></div>
+              </div>
+            )}
+          </button>
+        </div>
 
         {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
         {isRealAdmin && (

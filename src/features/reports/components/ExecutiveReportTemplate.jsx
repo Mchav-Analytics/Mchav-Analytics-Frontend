@@ -1,11 +1,9 @@
 import React, { forwardRef } from 'react';
-import Logo from '../../../components/layout/Logo';
 import { Activity, Clock, CheckCircle, AlertTriangle, Zap } from 'lucide-react';
 import LiderVelocityChart from '../../dashboard/components/LiderVelocityChart';
 import { SprintBurndownChart } from '../../projects/components/SprintBurndownChart';
-import CriticalIssuesList from '../../dashboard/components/CriticalIssuesList';
 
-const ExecutiveReportTemplate = forwardRef(({ reportType, filters }, ref) => {
+const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, projectName = "MCHAV Analytics" }, ref) => {
   // Datos de ejemplo basados en los KPIs estándar
   const stats = {
     velocity: 42,
@@ -14,7 +12,7 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters }, ref) => {
     bugs: 12
   };
 
-  const dates = "01 de julio — 31 de julio de 2026";
+  const dates = "2026-08-25 al 2026-08-25";
   const titleMap = {
     general: "REPORTE EJECUTIVO DE MÉTRICAS",
     proyecto: "REPORTE DE ESTADO DEL PROYECTO",
@@ -24,144 +22,248 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters }, ref) => {
 
   return (
     <div className="hidden">
-      <div ref={ref} className="bg-white text-slate-900 p-12 w-[210mm] min-h-[297mm] mx-auto print:p-8 print:w-full font-sans">
+      <div ref={ref} className="bg-white text-slate-900 w-[210mm] mx-auto print:w-[210mm] font-sans relative">
         
-        {/* ENCABEZADO */}
-        <header className="flex justify-between items-start border-b-2 border-slate-200 pb-6 mb-8">
-          <div className="flex items-center gap-4">
-            <Logo size={48} className="print:shadow-none" />
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 uppercase">Mchav Analytics</h1>
-              <h2 className="text-lg font-bold text-indigo-600 uppercase">{titleMap[reportType] || titleMap.general}</h2>
-            </div>
-          </div>
-          <div className="text-right text-sm text-slate-500">
-            <p><strong>Proyecto:</strong> MCHAV Analytics</p>
-            <p><strong>Período analizado:</strong> {dates}</p>
-            <p className="mt-2 text-xs uppercase bg-slate-100 px-3 py-1 rounded inline-block font-bold">
-              Corte histórico: {new Date().toLocaleDateString('es-ES')}
-            </p>
-          </div>
-        </header>
-
-        {/* 1. INTRODUCCIÓN Y METODOLOGÍA */}
-        <section className="mb-10">
-          <div className="flex gap-6 mb-6">
-            <div className="flex-1 bg-slate-50 p-5 rounded-xl border border-slate-100">
-              <h3 className="text-xs font-bold uppercase text-slate-400 mb-2">1. Objetivo y Contexto</h3>
-              <p className="text-sm text-slate-700">Evaluar el comportamiento mediante indicadores de rendimiento, flujo y calidad, identificando tendencias, fortalezas y puntos de atención. Los valores corresponden al estado histórico de la información durante el período analizado en Jira Cloud.</p>
-            </div>
-            <div className="flex-1 flex flex-col justify-center gap-2">
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-sm font-medium text-slate-500">Incidencias analizadas</span>
-                <span className="text-sm font-bold">86</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-sm font-medium text-slate-500">Sprints incluidos</span>
-                <span className="text-sm font-bold">2</span>
-              </div>
-              <div className="flex justify-between border-b pb-2">
-                <span className="text-sm font-medium text-slate-500">Story Points</span>
-                <span className="text-sm font-bold">84 SP planificados</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 2. RESUMEN DE RESULTADOS */}
-        <section className="mb-10">
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-lg font-black text-slate-800">2. Resumen de resultados</h3>
-            <span className="ml-auto flex items-center gap-1 text-xs font-bold px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full">
-              <CheckCircle className="w-3 h-3" /> ESTADO GENERAL: SALUDABLE
-            </span>
-          </div>
-          
-          <div className="grid grid-cols-4 gap-4 mb-4">
-            <div className="border border-slate-200 rounded-lg p-4 bg-white">
-              <div className="flex items-center gap-2 mb-2 text-indigo-500"><Zap className="w-4 h-4" /><span className="text-xs font-bold uppercase">Velocity</span></div>
-              <div className="text-2xl font-black">{stats.velocity} SP</div>
-              <div className="text-xs font-bold text-emerald-600">↑ 12% vs. período anterior</div>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-4 bg-white">
-              <div className="flex items-center gap-2 mb-2 text-indigo-500"><CheckCircle className="w-4 h-4" /><span className="text-xs font-bold uppercase">Throughput</span></div>
-              <div className="text-2xl font-black">{stats.throughput}</div>
-              <div className="text-xs font-bold text-emerald-600">↑ 8% vs. período anterior</div>
-            </div>
-            <div className="border border-slate-200 rounded-lg p-4 bg-white">
-              <div className="flex items-center gap-2 mb-2 text-indigo-500"><Clock className="w-4 h-4" /><span className="text-xs font-bold uppercase">Cycle Time</span></div>
-              <div className="text-2xl font-black">{stats.cycleTime} d</div>
-              <div className="text-xs font-bold text-emerald-600">↓ 8% vs. período anterior</div>
-            </div>
-            <div className="border border-red-100 rounded-lg p-4 bg-red-50/30">
-              <div className="flex items-center gap-2 mb-2 text-red-500"><AlertTriangle className="w-4 h-4" /><span className="text-xs font-bold uppercase">Bugs</span></div>
-              <div className="text-2xl font-black">{stats.bugs}</div>
-              <div className="text-xs font-bold text-red-600">↑ 20% vs. período anterior</div>
-            </div>
-          </div>
-          
-          <div className="bg-slate-50 p-4 rounded-lg text-sm border border-slate-100 text-slate-700">
-            <strong>Lectura ejecutiva:</strong> El proyecto muestra una mejora en su capacidad de entrega y velocidad. Sin embargo, el incremento de bugs y del Lead Time requiere seguimiento.
-          </div>
-        </section>
-
-        {/* 3. RENDIMIENTO Y FLUJO (Reutilizando gráficas existentes) */}
-        <section className="mb-10" style={{ pageBreakInside: 'avoid' }}>
-          <h3 className="text-lg font-black text-slate-800 mb-4">3. Rendimiento y Flujo</h3>
-          <div className="grid grid-cols-2 gap-6">
-            <div className="border border-slate-200 rounded-xl p-4">
-              <h4 className="text-sm font-bold mb-4 text-center text-slate-600">Velocity Histórica</h4>
-              <div className="h-[200px]">
-                <LiderVelocityChart velocityData={[{ sprint: 'Sprint 1', expected: 40, completed: 35 }, { sprint: 'Sprint 2', expected: 45, completed: 45 }]} isDarkMode={false} />
-              </div>
-            </div>
-            <div className="border border-slate-200 rounded-xl p-4">
-              <h4 className="text-sm font-bold mb-4 text-center text-slate-600">Burndown Sprint Actual</h4>
-              <div className="h-[200px]">
-                <SprintBurndownChart data={[{ date: '01/07', ideal: 50, actual: 50 }, { date: '05/07', ideal: 40, actual: 42 }, { date: '10/07', ideal: 30, actual: 35 }]} />
-              </div>
-            </div>
-          </div>
-        </section>
+        {/* RESET MARGINS FOR PRINT */}
+        <style type="text/css" media="print">
+          {`
+            @page {
+              size: A4;
+              margin: 0 !important;
+            }
+            body {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              margin: 0 !important;
+              padding: 0 !important;
+            }
+          `}
+        </style>
         
-        {/* 4. CALIDAD E INCIDENCIAS (Reutilizando CriticalIssuesList) */}
-        <section className="mb-10" style={{ pageBreakInside: 'avoid' }}>
-          <h3 className="text-lg font-black text-slate-800 mb-4">4. Calidad e Incidencias Críticas</h3>
-          <div className="border border-slate-200 rounded-xl overflow-hidden p-4">
-            <CriticalIssuesList criticalIssues={[{ key: 'MCHAV-101', priority: 'High', summary: 'Error de login', assignee: 'Dev 1', sp: 5 }]} teamMembers={[{ name: 'Dev 1' }, { name: 'Dev 2' }]} handleNotifyDev={() => {}} handleConfirmReassign={() => {}} />
-          </div>
-        </section>
-
-        {/* 5. CONCLUSIONES */}
-        <section style={{ pageBreakInside: 'avoid' }}>
-          <h3 className="text-lg font-black text-slate-800 mb-4">5. Conclusiones y Recomendaciones</h3>
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-100 text-slate-600 uppercase text-xs">
-              <tr>
-                <th className="px-4 py-2 rounded-tl-lg">Recomendación</th>
-                <th className="px-4 py-2">Acción sugerida</th>
-                <th className="px-4 py-2 rounded-tr-lg">Prioridad</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              <tr>
-                <td className="px-4 py-3 font-medium">01 · Priorizar bugs críticos</td>
-                <td className="px-4 py-3 text-slate-600">Atender los defectos críticos antes de incrementar el volumen de trabajo.</td>
-                <td className="px-4 py-3"><span className="px-2 py-1 bg-red-100 text-red-700 font-bold rounded text-xs">ALTA</span></td>
-              </tr>
-              <tr>
-                <td className="px-4 py-3 font-medium">02 · Revisar tiempos de espera</td>
-                <td className="px-4 py-3 text-slate-600">Analizar incidencias con mayor Lead Time para detectar cuellos de botella.</td>
-                <td className="px-4 py-3"><span className="px-2 py-1 bg-amber-100 text-amber-700 font-bold rounded text-xs">MEDIA</span></td>
-              </tr>
-            </tbody>
-          </table>
+        {/* ==========================================
+            PÁGINA 1: PORTADA
+           ========================================== */}
+        <div className="relative w-[210mm] h-[297mm] overflow-hidden break-after-page flex flex-col items-center justify-center bg-white">
           
-          <div className="mt-8 pt-4 border-t border-slate-200 text-center text-xs text-slate-400">
-            Generado por MCHAV Analytics · Reporte Interno Confidencial
+          {/* ONDAS SUPERIOR IZQUIERDA (Tres capas) */}
+          <div className="absolute top-0 left-0 w-[800px] h-[600px] z-0 pointer-events-none">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full">
+              {/* Capa 1: Gris/Azul claro (más exterior) */}
+              <path d="M0,0 L65,0 C30,20 15,50 0,85 Z" fill="#e2e8f0" opacity="0.6"/>
+              {/* Capa 2: Azul medio */}
+              <path d="M0,0 L45,0 C20,15 10,35 0,65 Z" fill="#60a5fa" opacity="0.3"/>
+              {/* Capa 3: Azul oscuro MCHAV */}
+              <path d="M0,0 L30,0 C12,10 5,25 0,45 Z" fill="#243b67" />
+            </svg>
           </div>
-        </section>
 
+          {/* DOTS TOP RIGHT (Tramado de puntos) */}
+          <div className="absolute top-0 right-0 w-[400px] h-[400px] z-0 pointer-events-none opacity-15" style={{
+              backgroundImage: 'radial-gradient(#243b67 1.5px, transparent 1.5px)',
+              backgroundSize: '10px 10px',
+              maskImage: 'radial-gradient(ellipse at top right, black 0%, transparent 70%)',
+              WebkitMaskImage: 'radial-gradient(ellipse at top right, black 0%, transparent 70%)'
+          }}></div>
+
+          {/* ONDAS INFERIOR DERECHA (Tres capas) */}
+          <div className="absolute bottom-0 right-0 w-[800px] h-[600px] z-0 pointer-events-none">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="w-full h-full transform rotate-180">
+              {/* Capa 1: Gris/Azul claro */}
+              <path d="M0,0 L65,0 C30,20 15,50 0,85 Z" fill="#e2e8f0" opacity="0.6"/>
+              {/* Capa 2: Azul medio */}
+              <path d="M0,0 L45,0 C20,15 10,35 0,65 Z" fill="#60a5fa" opacity="0.3"/>
+              {/* Capa 3: Azul oscuro MCHAV */}
+              <path d="M0,0 L30,0 C12,10 5,25 0,45 Z" fill="#243b67" />
+            </svg>
+          </div>
+
+          {/* CONTENIDO DE LA PORTADA */}
+          <div className="relative z-10 flex flex-col items-center justify-center w-full px-16 -mt-20">
+            
+            {/* LOGO */}
+            <div className="mb-20">
+                <img src="/Logo_sf.png" alt="MCHAV Analytics" className="h-[280px] object-contain drop-shadow-sm" />
+            </div>
+
+            {/* TÍTULO DEL REPORTE */}
+            <h1 className="text-3xl font-black text-[#243b67] uppercase tracking-[0.15em] text-center mb-24 leading-snug max-w-2xl">
+              {titleMap[reportType] || titleMap.general}
+            </h1>
+
+            {/* METADATA */}
+            <div className="flex flex-col items-center justify-center gap-10 w-full">
+              
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Nombre del Proyecto</span>
+                <span className="text-lg font-bold text-[#1e293b]">{projectName}</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Período Evaluado</span>
+                <span className="text-lg font-bold text-[#1e293b]">{dates}</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Fecha de Emisión</span>
+                <span className="text-lg font-bold text-[#1e293b]">{new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Generado Por</span>
+                <span className="text-lg font-bold text-[#1e293b]">{user?.nombre || 'Administrador del Sistema'}</span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+        {/* ==========================================
+            PÁGINA 2+: CONTENIDO DEL REPORTE
+           ========================================== */}
+        <div className="relative w-[210mm] min-h-[297mm] bg-white px-16 py-16 flex flex-col">
+            
+            {/* ENCABEZADO SIMPLE PÁGINAS INTERNAS */}
+            <header className="flex justify-between items-center border-b border-slate-200 pb-6 mb-10">
+              <div className="flex items-center gap-4">
+                <img src="/Logo_sf.png" alt="Logo Pequeño" className="h-10 object-contain" />
+                <div>
+                  <h2 className="text-sm font-black text-[#243b67] uppercase tracking-widest">{titleMap[reportType] || titleMap.general}</h2>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">{projectName}</p>
+                </div>
+              </div>
+              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider text-right">
+                Período: {dates}<br/>
+                Emitido: {new Date().toLocaleDateString('es-ES')}
+              </div>
+            </header>
+
+            {/* 1. INTRODUCCIÓN Y METODOLOGÍA */}
+            <section className="mb-10">
+              <div className="flex gap-8">
+                <div className="flex-1">
+                  <h3 className="text-xs font-black uppercase text-[#243b67] tracking-widest mb-3 border-b border-slate-100 pb-2">1. Objetivo y Contexto</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">
+                    Evaluación del comportamiento mediante indicadores de rendimiento, flujo y calidad, identificando tendencias, fortalezas y puntos de atención. Los valores corresponden al estado histórico de la información durante el período analizado.
+                  </p>
+                </div>
+                <div className="flex-[0.8] flex flex-col justify-center gap-3 border-l border-slate-100 pl-8">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Incidencias analizadas</span>
+                    <span className="text-sm font-black text-slate-800">86</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Sprints incluidos</span>
+                    <span className="text-sm font-black text-slate-800">2</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Story Points</span>
+                    <span className="text-sm font-black text-slate-800">84 planificados</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* 2. RESUMEN DE RESULTADOS */}
+            <section className="mb-10">
+              <div className="flex items-center gap-3 mb-5">
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">2. Resumen de resultados</h3>
+                <div className="h-px bg-slate-200 flex-1"></div>
+                <span className="flex items-center gap-1.5 text-[10px] font-black tracking-wider px-3 py-1.5 border border-slate-300 text-slate-700 rounded uppercase">
+                  Estado: Saludable
+                </span>
+              </div>
+              
+              <table className="w-full text-sm text-left border-b border-slate-200">
+                <thead className="border-b-2 border-slate-800 text-slate-800 uppercase text-[10px] tracking-widest font-black">
+                  <tr>
+                    <th className="px-2 py-3">Métrica</th>
+                    <th className="px-2 py-3">Valor Actual</th>
+                    <th className="px-2 py-3">Variación vs. Ant.</th>
+                    <th className="px-2 py-3">Tendencia</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="px-2 py-3 font-bold text-slate-700">Velocity</td>
+                    <td className="px-2 py-3 font-black text-slate-900">{stats.velocity} SP</td>
+                    <td className="px-2 py-3 font-bold text-slate-700">↑ 12%</td>
+                    <td className="px-2 py-3 text-slate-500 text-xs">Mejora continua</td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-3 font-bold text-slate-700">Throughput</td>
+                    <td className="px-2 py-3 font-black text-slate-900">{stats.throughput}</td>
+                    <td className="px-2 py-3 font-bold text-slate-700">↑ 8%</td>
+                    <td className="px-2 py-3 text-slate-500 text-xs">Estable</td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-3 font-bold text-slate-700">Cycle Time</td>
+                    <td className="px-2 py-3 font-black text-slate-900">{stats.cycleTime} d</td>
+                    <td className="px-2 py-3 font-bold text-slate-700">↓ 8%</td>
+                    <td className="px-2 py-3 text-slate-500 text-xs">Optimizado</td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-3 font-bold text-slate-700">Bugs Detectados</td>
+                    <td className="px-2 py-3 font-black text-slate-900">{stats.bugs}</td>
+                    <td className="px-2 py-3 font-bold text-slate-700">↑ 20%</td>
+                    <td className="px-2 py-3 text-slate-500 text-xs">Requiere atención en QA</td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+
+            {/* 3. RENDIMIENTO Y FLUJO (Reutilizando gráficas existentes) */}
+            <section className="mb-10" style={{ pageBreakInside: 'avoid' }}>
+              <div className="flex items-center gap-3 mb-5">
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">3. Rendimiento y Flujo</h3>
+                <div className="h-px bg-slate-200 flex-1"></div>
+              </div>
+              <div className="grid grid-cols-2 gap-6">
+                <div className="border border-slate-200 p-5">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest mb-4 text-center text-slate-700">Velocity Histórica</h4>
+                  <div className="h-[200px]">
+                    <LiderVelocityChart velocityData={[{ sprint: 'Sprint 1', expected: 40, completed: 35 }, { sprint: 'Sprint 2', expected: 45, completed: 45 }]} isDarkMode={false} />
+                  </div>
+                </div>
+                <div className="border border-slate-200 p-5">
+                  <h4 className="text-[11px] font-black uppercase tracking-widest mb-4 text-center text-slate-700">Burndown Sprint Actual</h4>
+                  <div className="h-[200px]">
+                    <SprintBurndownChart data={[{ date: '01/07', ideal: 50, actual: 50 }, { date: '05/07', ideal: 40, actual: 42 }, { date: '10/07', ideal: 30, actual: 35 }]} />
+                  </div>
+                </div>
+              </div>
+            </section>
+            
+            {/* 4. CONCLUSIONES */}
+            <section className="mt-auto" style={{ pageBreakInside: 'avoid' }}>
+              <div className="flex items-center gap-3 mb-5">
+                <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">4. Conclusiones y Recomendaciones</h3>
+                <div className="h-px bg-slate-200 flex-1"></div>
+              </div>
+              <table className="w-full text-sm text-left border-b border-slate-200">
+                <thead className="border-b-2 border-slate-800 text-slate-800 uppercase text-[10px] tracking-widest">
+                  <tr>
+                    <th className="px-2 py-3 font-bold">Recomendación</th>
+                    <th className="px-2 py-3 font-bold">Acción sugerida</th>
+                    <th className="px-2 py-3 font-bold">Prioridad</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  <tr>
+                    <td className="px-2 py-3.5 font-bold text-slate-800">01 · Priorizar bugs críticos</td>
+                    <td className="px-2 py-3.5 text-slate-600 text-xs">Atender los defectos críticos antes de incrementar el volumen de trabajo.</td>
+                    <td className="px-2 py-3.5"><span className="font-black text-slate-800 text-[10px] tracking-wider uppercase">Alta</span></td>
+                  </tr>
+                  <tr>
+                    <td className="px-2 py-3.5 font-bold text-slate-800">02 · Revisar tiempos de espera</td>
+                    <td className="px-2 py-3.5 text-slate-600 text-xs">Analizar incidencias con mayor Lead Time para detectar cuellos de botella.</td>
+                    <td className="px-2 py-3.5"><span className="font-black text-slate-800 text-[10px] tracking-wider uppercase">Media</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </section>
+
+        </div>
       </div>
     </div>
   );

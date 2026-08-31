@@ -120,7 +120,7 @@ export default function JqlConsultasView() {
       `"${i.assignee_name || i.asignado || 'Sin Asignar'}"`
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const csvContent = 'data:text/csv;charset=utf-8,﻿' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -136,339 +136,266 @@ export default function JqlConsultasView() {
     item.type.toLowerCase().includes(dictionarySearch.toLowerCase())
   );
 
+  const [showAuditDrawer, setShowAuditDrawer] = useState(false);
+
   return (
     <div className="space-y-6 text-left font-sans animate-in fade-in duration-200 pb-10">
       
-      {/* ENCABEZADO DE SECCIÓN DEDICADA */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-3xl shadow-xl border border-indigo-500/20">
+      {/* 1. ENCABEZADO ORGÁNICO E INTEGRADO (Sin fondo de tarjeta azul) */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 px-2">
         <div className="space-y-1">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 shadow-inner">
-              <Code2 size={22} />
+          <div className="flex items-center gap-3">
+            <div className="text-indigo-600 dark:text-indigo-400">
+              <Code2 size={28} strokeWidth={2.5} />
             </div>
-            <h1 className="text-xl font-black tracking-tight text-white">Consola de Consultas JQL & Sintaxis Jira</h1>
+            <h1 className="text-2xl font-black tracking-tight text-slate-800 dark:text-white">
+              Consultas JQL
+            </h1>
           </div>
-          <p className="text-xs text-indigo-200/80 pl-11">
-            Motor de consulta analítica en tiempo real con validador sintáctico del backend de FastAPI para Jira Cloud.
+          <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+            Motor de consulta analítica y validación en tiempo real.
           </p>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
-            ADMIN ACCESS ONLY
-          </span>
+        <div className="flex items-center gap-4 shrink-0">
+          <button 
+            onClick={() => setShowAuditDrawer(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl transition-all font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-sm"
+          >
+            <RefreshCcw size={14} /> Historial de Consultas
+          </button>
         </div>
       </div>
 
-      {/* GRID PRINCIPAL DE CONSOLA Y DICCIONARIO */}
+      {/* ÁREA SUPERIOR: CONSOLA FULL WIDTH */}
+      <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-8 shadow-2xl space-y-6">
+        <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <Terminal className="text-indigo-600 dark:text-indigo-400" size={22} />
+            <div>
+              <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                CONSULTA JQL
+              </h2>
+            </div>
+          </div>
+          <button 
+            onClick={() => setJqlQuery('')}
+            className="text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+          >
+            [Limpiar]
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+            Presets Rápidos
+          </label>
+          <div className="flex flex-wrap gap-2">
+            <button onClick={() => setJqlQuery('project = "10000"')} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 hover:bg-indigo-100 transition-colors border border-indigo-100 dark:border-indigo-800/50">[Incidencias]</button>
+            <button onClick={() => setJqlQuery('project = "10000" AND status in ("In Progress", "En curso")')} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 hover:bg-indigo-100 transition-colors border border-indigo-100 dark:border-indigo-800/50">[En progreso]</button>
+            <button onClick={() => setJqlQuery('project = "10000" AND issuetype in (Bug, Error) AND status != Done')} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 hover:bg-indigo-100 transition-colors border border-indigo-100 dark:border-indigo-800/50">[Bugs]</button>
+            <button onClick={() => setJqlQuery('project = "10000" AND priority in (High, Highest)')} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 hover:bg-indigo-100 transition-colors border border-indigo-100 dark:border-indigo-800/50">[Alta prioridad]</button>
+          </div>
+        </div>
+
+        <form onSubmit={handleExecuteJql} className="space-y-4">
+          <textarea
+            id="jql-console-textarea"
+            rows={5}
+            value={jqlQuery}
+            onChange={(e) => setJqlQuery(e.target.value)}
+            placeholder='project = "10000" AND status = "In Progress"'
+            className="w-full bg-slate-950 text-emerald-400 border-2 border-slate-800 rounded-2xl p-5 text-sm font-mono outline-none focus:border-indigo-500 shadow-inner leading-relaxed resize-none"
+          />
+
+          {jqlSuccess && (
+            <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-xs">
+              <CheckCircle2 size={16} />
+              ✓ Sintaxis válida ({jqlIssues.length} resultados)
+            </div>
+          )}
+          
+          {jqlError && (
+            <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold text-xs">
+              <AlertTriangle size={16} />
+              ✕ {jqlError}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={isExecutingJql}
+              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-6 py-3 text-xs rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
+            >
+              {isExecutingJql ? (
+                <><RefreshCcw size={16} className="animate-spin" /> Ejecutando...</>
+              ) : (
+                <><Play size={16} fill="currentColor" /> ▶ Ejecutar consulta</>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* ÁREA INFERIOR: DICCIONARIO Y RESULTADOS (SIDE-BY-SIDE) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* COLUMNA IZQUIERDA (8 COLS): CONSOLA DE CONSULTA JQL REAL */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-8 shadow-2xl space-y-5">
-            
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-              <div className="flex items-center gap-3">
-                <Terminal className="text-indigo-600 dark:text-indigo-400" size={22} />
-                <div>
-                  <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    Consola JQL Real con Validador Sintáctico
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Inspecciona comillas, paréntesis y nombres de campo con el backend antes de consultar Jira.
-                  </p>
+        {/* DICCIONARIO DE CAMPOS JQL (IZQUIERDA, 4 COLUMNAS) */}
+        <div className="lg:col-span-4 bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-6 shadow-2xl space-y-4">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+            <BookOpen className="text-indigo-600 dark:text-indigo-400" size={18} />
+            <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+              Diccionario JQL
+            </h3>
+          </div>
+
+          <div className="relative">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={dictionarySearch}
+              onChange={(e) => setDictionarySearch(e.target.value)}
+              placeholder="Buscar campo (ej. assignee)..."
+              className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none"
+            />
+          </div>
+
+          <div className="space-y-2.5 max-h-[400px] overflow-y-auto pr-1">
+            {filteredDictionary.map((item, idx) => (
+              <div 
+                key={idx}
+                onClick={() => setJqlQuery(item.example)}
+                className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all cursor-pointer group"
+                title="Clic para probar este ejemplo"
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-mono font-black text-xs text-indigo-600 dark:text-indigo-400 group-hover:underline">
+                    {item.field}
+                  </span>
+                  <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                    {item.type}
+                  </span>
                 </div>
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">{item.description}</p>
+                <code className="block text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-1.5 truncate">
+                  {item.example}
+                </code>
               </div>
-              <span className="text-[10px] font-bold px-2.5 py-1 rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
-                POST /api/v1/jql/execute
-              </span>
-            </div>
-
-            {/* CONSULTAS RÁPIDAS (PRESETS) */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                Consultas Recomendadas (Presets Rápidos)
-              </label>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000"')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  Todas las Incidencias
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND status in ("In Progress", "En curso")')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  En Progreso
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND status in ("To Do", "Por hacer", "Pendiente")')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  Pendientes (To Do)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND status in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer"
-                >
-                  Completadas (Done)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND priority in (High, Highest, Alta) AND status not in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
-                >
-                  Alta Prioridad
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND assignee is EMPTY AND status not in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800/50 hover:bg-amber-100 transition-colors cursor-pointer"
-                >
-                  Sin Asignar
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND issuetype in (Bug, Error) AND status not in ("Done", "Finalizado", "Completado")')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-rose-50 dark:bg-rose-950/50 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/50 hover:bg-rose-100 transition-colors cursor-pointer"
-                >
-                  Bugs Activos
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setJqlQuery('project = "10000" AND updated >= -7d ORDER BY updated DESC')}
-                  className="px-2.5 py-1 text-[11px] font-bold rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-                >
-                  Actualizadas 7 días
-                </button>
-              </div>
-            </div>
-
-            {/* FORMULARIO EDITOR CONSOLA JQL */}
-            <form onSubmit={handleExecuteJql} className="space-y-4">
-              <div>
-                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block mb-2">
-                  Editor de Consulta JQL
-                </label>
-                <textarea
-                  id="jql-console-textarea"
-                  rows={4}
-                  value={jqlQuery}
-                  onChange={(e) => setJqlQuery(e.target.value)}
-                  placeholder='project = "MCHAV" AND assignee = currentUser() AND status = "In Progress"'
-                  className="w-full bg-slate-950 text-emerald-400 border border-slate-800 rounded-2xl p-4 text-xs font-mono outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner leading-relaxed"
-                />
-              </div>
-
-              {jqlSuccess && (
-                <div className="p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle2 size={18} className="text-emerald-500" />
-                    <span>{jqlSuccess}</span>
-                  </div>
-                  {jqlIssues.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={exportJqlToCsv}
-                      className="px-3 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-extrabold transition-all shadow cursor-pointer flex items-center gap-1.5"
-                    >
-                      <Download size={13} /> Exportar CSV
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {jqlError && (
-                <div className="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2">
-                  <AlertTriangle size={18} className="shrink-0 text-rose-500" />
-                  <span className="break-all">{jqlError}</span>
-                </div>
-              )}
-
-              <div className="flex items-center justify-between gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setShowDictionaryTable(!showDictionaryTable)}
-                  className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/60 text-xs font-bold transition-all shadow-xs cursor-pointer"
-                >
-                  <BookOpen size={15} />
-                  <span>{showDictionaryTable ? 'Ocultar Guía de Sintaxis' : 'Ver Guía de Sintaxis JQL'}</span>
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isExecutingJql}
-                  className="flex items-center gap-2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 shadow-lg hover:shadow-indigo-500/25 text-white font-extrabold px-5 py-2.5 text-xs rounded-xl transition-all shadow-md cursor-pointer disabled:opacity-50"
-                >
-                  {isExecutingJql ? (
-                    <>
-                      <RefreshCcw size={15} className="animate-spin" /> Validando Sintaxis...
-                    </>
-                  ) : (
-                    <>
-                      <Play size={15} fill="currentColor" /> Validar y Ejecutar JQL
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-
-            {/* TABLA PREVISUALIZACIÓN DE RESULTADOS JQL */}
-            {jqlSuccess && (() => {
-              const jqlTotalPages = Math.max(1, Math.ceil(jqlIssues.length / jqlPageSize));
-              const startIdx = (jqlCurrentPage - 1) * jqlPageSize;
-              const paginatedJqlIssues = jqlIssues.slice(startIdx, startIdx + jqlPageSize);
-
-              return (
-                <div className="mt-6 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900/50 shadow-xs">
-                  <button
-                    type="button"
-                    onClick={() => setShowJqlTable(!showJqlTable)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-slate-50 dark:bg-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                  >
-                    <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider flex items-center gap-2">
-                      <Terminal size={15} className="text-indigo-500" /> Previsualización de Resultados
-                      <span className="ml-2 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50">
-                        {jqlIssues.length} {jqlIssues.length === 1 ? 'incidencia' : 'incidencias'}
-                      </span>
-                    </span>
-                  </button>
-
-                  {showJqlTable && (
-                    <div className="overflow-x-auto border-t border-slate-200 dark:border-slate-800">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 dark:bg-slate-800/90 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider border-b border-slate-200 dark:border-slate-800">
-                            <th className="px-4 py-3">Clave</th>
-                            <th className="px-4 py-3">Tipo</th>
-                            <th className="px-4 py-3">Resumen</th>
-                            <th className="px-4 py-3">Estado</th>
-                            <th className="px-4 py-3">Asignado a</th>
-                          </tr>
-                        </thead>
-                        <tbody className="text-xs text-slate-700 dark:text-slate-300 divide-y divide-slate-100 dark:divide-slate-800">
-                          {paginatedJqlIssues.length === 0 ? (
-                            <tr>
-                              <td colSpan={5} className="px-4 py-6 text-center text-slate-500 dark:text-slate-400">
-                                No se encontraron incidencias para esta consulta.
-                              </td>
-                            </tr>
-                          ) : (
-                            paginatedJqlIssues.map((issue, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/50 transition-colors">
-                                <td className="px-4 py-3 font-mono font-extrabold text-indigo-600 dark:text-indigo-400">
-                                  {issue.key || issue.key_issue || 'N/A'}
-                                </td>
-                                <td className="px-4 py-3 font-medium">
-                                  {issue.issue_type || issue.tipo || 'Story'}
-                                </td>
-                                <td className="px-4 py-3 font-semibold text-slate-900 dark:text-white max-w-xs truncate">
-                                  {issue.summary || issue.resumen || 'Sin resumen'}
-                                </td>
-                                <td className="px-4 py-3">
-                                  <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                                    {issue.status_actual || issue.estado || 'Abierto'}
-                                  </span>
-                                </td>
-                                <td className="px-4 py-3 font-medium">
-                                  {issue.assignee_name || issue.asignado || 'Sin Asignar'}
-                                </td>
-                              </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
+            ))}
           </div>
         </div>
 
-        {/* COLUMNA DERECHA (4 COLS): DICCIONARIO & AUDITORÍA DE CONSULTAS JQL */}
-        <div className="lg:col-span-4 space-y-6">
+        {/* RESULTADOS O ESTADO VACÍO (DERECHA, 8 COLUMNAS) */}
+        <div className="lg:col-span-8 bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] shadow-2xl p-8 min-h-[500px]">
           
-          {/* DICCIONARIO DE CAMPOS JQL */}
-          <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <BookOpen className="text-indigo-600 dark:text-indigo-400" size={18} />
-              <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
-                Diccionario de Campos JQL
-              </h3>
+          {!jqlSuccess && !jqlError ? (
+            <div className="h-full flex flex-col items-center justify-center text-center space-y-4 py-10 opacity-70">
+               <div className="w-16 h-16 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+                  <Database size={24} />
+               </div>
+               <div>
+                  <h3 className="text-base font-bold text-slate-700 dark:text-slate-300 mb-1">Tu consulta aparecerá aquí</h3>
+                  <p className="text-xs text-slate-500">Ejecuta una consulta JQL para explorar las incidencias encontradas.</p>
+               </div>
             </div>
+          ) : (
+            <div className="space-y-4">
+               <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
+                 <h3 className="text-base font-black text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                   RESULTADOS DE LA CONSULTA
+                 </h3>
+                 <div className="flex items-center gap-4">
+                    <span className="text-xs font-bold text-slate-500">{jqlIssues.length} incidencias</span>
+                    <button onClick={exportJqlToCsv} className="p-2 text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 dark:bg-indigo-900/30 dark:hover:bg-indigo-900/50 dark:text-indigo-400 transition-colors">
+                       <Download size={16} />
+                    </button>
+                 </div>
+               </div>
 
-            <div className="relative">
-              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input
-                type="text"
-                value={dictionarySearch}
-                onChange={(e) => setDictionarySearch(e.target.value)}
-                placeholder="Buscar campo (ej. assignee, status)..."
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none"
-              />
+               <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900/50 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                  <span className="text-indigo-600 dark:text-indigo-400">{jqlIssues.length} resultados</span>
+                  <span className="w-1 h-1 rounded-full bg-slate-300"></span>
+                  <span>● {jqlIssues.filter(i => (i.status_actual || i.estado)?.toLowerCase().includes('do')).length} To Do</span>
+                  <span>● {jqlIssues.filter(i => (i.status_actual || i.estado)?.toLowerCase().includes('progress')).length} Progress</span>
+                  <span>● {jqlIssues.filter(i => (i.status_actual || i.estado)?.toLowerCase().includes('done')).length} Done</span>
+               </div>
+
+               <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
+                 <table className="w-full text-left border-collapse">
+                   <thead>
+                     <tr className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-[10px] uppercase font-extrabold tracking-wider border-b border-slate-200 dark:border-slate-700">
+                       <th className="px-4 py-3">KEY</th>
+                       <th className="px-4 py-3">RESUMEN</th>
+                       <th className="px-4 py-3">ESTADO</th>
+                       <th className="px-4 py-3">PRIORIDAD</th>
+                     </tr>
+                   </thead>
+                   <tbody className="text-xs text-slate-700 dark:text-slate-300 divide-y divide-slate-100 dark:divide-slate-800/50">
+                     {jqlIssues.slice(0, 15).map((issue, idx) => (
+                       <tr key={idx} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                         <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">
+                           {issue.key || issue.key_issue || 'N/A'}
+                         </td>
+                         <td className="px-4 py-3 font-medium max-w-sm truncate text-slate-900 dark:text-slate-100">
+                           {issue.summary || issue.resumen || 'Sin resumen'}
+                         </td>
+                         <td className="px-4 py-3">
+                           <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">
+                             {issue.status_actual || issue.estado || 'Abierto'}
+                           </span>
+                         </td>
+                         <td className="px-4 py-3 font-medium text-slate-500">
+                           {issue.priority || 'Media'}
+                         </td>
+                       </tr>
+                     ))}
+                     {jqlIssues.length === 0 && (
+                       <tr><td colSpan={4} className="px-4 py-6 text-center text-slate-500">No hay incidencias.</td></tr>
+                     )}
+                   </tbody>
+                 </table>
+               </div>
+               {jqlIssues.length > 15 && <p className="text-xs text-center text-slate-500 mt-2">Mostrando los primeros 15 resultados.</p>}
             </div>
-
-            <div className="space-y-2.5 max-h-[320px] overflow-y-auto pr-1">
-              {filteredDictionary.map((item, idx) => (
-                <div 
-                  key={idx}
-                  onClick={() => setJqlQuery(item.example)}
-                  className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 hover:border-indigo-300 dark:hover:border-indigo-500/50 transition-all cursor-pointer group"
-                >
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono font-black text-xs text-indigo-600 dark:text-indigo-400 group-hover:underline">
-                      {item.field}
-                    </span>
-                    <span className="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-slate-200/70 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                      {item.type}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">{item.description}</p>
-                  <code className="block text-[10px] font-mono text-emerald-600 dark:text-emerald-400 mt-1.5 truncate">
-                    {item.example}
-                  </code>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* HISTORIAL / AUDITORÍA DE CONSULTAS JQL */}
-          <div className="bg-white/80 dark:bg-[#191c3d]/80 backdrop-blur-xl border border-slate-200/50 dark:border-[#33376b]/50 rounded-[2rem] p-6 shadow-2xl space-y-3">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-              <h3 className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">
-                <FileCode2 size={16} className="text-indigo-500" />
-                <span>Auditoría de Consultas JQL</span>
-              </h3>
-              <span className="text-[10px] font-bold text-slate-400">Últimas 10</span>
-            </div>
-
-            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-              {jqlAuditLog.map(item => (
-                <div key={item.id} className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200/60 dark:border-slate-800/60 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-[10px] font-bold text-indigo-600 dark:text-indigo-400 truncate max-w-[180px]">
-                      {item.query}
-                    </span>
-                    <span className="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">
-                      {item.count} res ({item.timeMs}ms)
-                    </span>
-                  </div>
-                  <span className="text-[9px] text-slate-400 block">{item.date}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
+          )}
         </div>
 
       </div>
+
+      {/* MODAL / DRAWER DE HISTORIAL DE CONSULTAS */}
+      {showAuditDrawer && (
+        <div className="fixed inset-0 z-50 flex justify-end">
+          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" onClick={() => setShowAuditDrawer(false)}></div>
+          <div className="relative w-full max-w-md bg-white dark:bg-[#191c3d] h-full shadow-2xl border-l border-slate-200 dark:border-[#33376b] flex flex-col animate-in slide-in-from-right duration-300">
+            <div className="p-6 border-b border-slate-100 dark:border-[#33376b] flex items-center gap-3">
+              <button onClick={() => setShowAuditDrawer(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+                <ChevronLeft size={20} className="text-slate-500" />
+              </button>
+              <h3 className="text-sm font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider">
+                HISTORIAL DE CONSULTAS
+              </h3>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">RECIENTES</h4>
+                {jqlAuditLog.map(item => (
+                  <div key={item.id} className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 space-y-2 cursor-pointer hover:border-indigo-300 transition-colors" onClick={() => { setJqlQuery(item.query); setShowAuditDrawer(false); }}>
+                    <code className="block text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 break-all">
+                      {item.query}
+                    </code>
+                    <div className="flex items-center justify-between text-[10px] font-bold text-slate-500">
+                      <span className="text-emerald-600 dark:text-emerald-400">{item.count} resultados · {item.timeMs}ms</span>
+                      <span>{item.date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
