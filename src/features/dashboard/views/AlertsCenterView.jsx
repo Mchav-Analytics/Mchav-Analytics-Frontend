@@ -3,7 +3,8 @@ import { Sparkles, X } from 'lucide-react';
 import { useAlertsCenter } from '../hooks/useAlertsCenter';
 import { AlertsCenterHeader } from '../components/AlertsCenterHeader';
 import { AlertsCenterList } from '../components/AlertsCenterList';
-import { AlertsCenterFilters } from '../components/AlertsCenterFilters';
+import { AlertsCenterWidgets } from '../components/AlertsCenterWidgets';
+import { AlertsCenterBottomWidgets } from '../components/AlertsCenterBottomWidgets';
 import { AlertsCenterModal } from '../components/AlertsCenterModal';
 
 export default function AlertsCenterView({ selectedProjectId = null }) {
@@ -24,6 +25,7 @@ export default function AlertsCenterView({ selectedProjectId = null }) {
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
+      {/* Toast Notification */}
       {toastMessage && (
         <div className="fixed top-6 right-6 z-50 bg-slate-900/95 border border-indigo-500/50 text-indigo-200 px-6 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <Sparkles className="w-5 h-5 text-indigo-400" />
@@ -34,6 +36,7 @@ export default function AlertsCenterView({ selectedProjectId = null }) {
         </div>
       )}
 
+      {/* Header, Filter Pills & Summary Metric Cards */}
       <AlertsCenterHeader 
         setShowCreateModal={setShowCreateModal}
         handleExportCSV={handleExportCSV}
@@ -42,6 +45,7 @@ export default function AlertsCenterView({ selectedProjectId = null }) {
         inProgressCount={inProgressCount}
       />
 
+      {/* Main Grid: Feed List (8 cols) + Sidebar Widgets (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <AlertsCenterList 
           statusTab={statusTab} setStatusTab={setStatusTab}
@@ -57,15 +61,13 @@ export default function AlertsCenterView({ selectedProjectId = null }) {
           setSidebarStatus={setSidebarStatus}
         />
 
-        <AlertsCenterFilters 
-          sidebarProject={sidebarProject} setSidebarProject={setSidebarProject}
-          sidebarCategory={sidebarCategory} setSidebarCategory={setSidebarCategory}
-          sidebarPriority={sidebarPriority} setSidebarPriority={setSidebarPriority}
-          sidebarStatus={sidebarStatus} setSidebarStatus={setSidebarStatus}
-          categoryCounts={categoryCounts}
-        />
+        <AlertsCenterWidgets categoryCounts={categoryCounts} />
       </div>
 
+      {/* 4 Bottom Metric Widgets */}
+      <AlertsCenterBottomWidgets />
+
+      {/* Modal for Creating New Feedback */}
       <AlertsCenterModal 
         showCreateModal={showCreateModal} setShowCreateModal={setShowCreateModal}
         formTitle={formTitle} setFormTitle={setFormTitle}

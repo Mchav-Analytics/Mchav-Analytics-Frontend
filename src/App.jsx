@@ -420,7 +420,7 @@ function MainAppContent() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs', 'reports_center'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
       handleSyncNow={handleSyncNow}
       topbarTitle={headerDetails.title}
