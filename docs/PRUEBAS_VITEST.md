@@ -65,6 +65,22 @@ Este comando ejecuta todos los tests y, al finalizar, genera una tabla detallada
 
 ---
 
+# Pruebas Añadidas (Módulos de Usuarios y Sincronización)
+
+Se ha ampliado significativamente la cobertura de pruebas unitarias y de integración para garantizar la robustez de los módulos de administración:
+
+## 🛠️ Sincronización (`src/features/sync/`)
+- **`useSystemSync.test.ts`**: Valida los estados de conexión, filtrado temporal de logs y la llamada manual de sincronización en segundo plano.
+- **`SystemSyncTab.test.tsx`**: Prueba el renderizado del layout principal y simula las interacciones (clics en detalles y botón de descarga de JSON), asegurando su correcto funcionamiento con `userEvent` y mocks sobre el DOM.
+- **Componentes (`SyncLogsViewer.test.tsx`, `SystemSyncControlPanel.test.tsx`)**: Se incluyeron pruebas de paginación para la tabla de logs, configuración CRON y activación/desactivación del modo automático.
+
+## 👥 Usuarios (`src/features/users/`)
+- **`AdminUserTable.test.tsx`**: Validamos que las tablas mapean correctamente las cuentas, manejan el paginado y permiten cambiar roles mediante el `<select>` y desactivar usuarios de manera dinámica.
+- **`AdminUserModals.test.tsx`**: Aseguramos que los modales (Configuración RBAC, Invitar Usuario y Ventana Flotante de Auditoría) se comporten como se espera frente a datos incompletos (errores de validación) o filtrado de logs específicos.
+- **`AdminUserFilters.test.tsx` y `AdminRolesSummary.test.tsx`**: Verifican que la búsqueda por texto (inputs) y el filtrado rápido mediante clic en los resúmenes de roles reaccionen y propaguen el estado correctamente.
+
+---
+
 # Pruebas End-to-End (E2E) con Playwright
 
 Además de las pruebas unitarias con Vitest, el proyecto cuenta con pruebas de integración reales utilizando **Playwright**. Estas pruebas simulan a un usuario real interactuando con la aplicación en un entorno de navegador completo.
