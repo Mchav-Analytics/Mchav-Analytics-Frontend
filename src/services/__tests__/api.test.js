@@ -357,4 +357,187 @@ describe('API Services', () => {
       expect(res).toEqual([{ text: 'Prompt 1' }]);
     });
   });
+
+  describe('Remaining projectService functions', () => {
+    it('getProjectCFD handles project only', async () => {
+      api.get.mockResolvedValueOnce({ data: { series: [] } });
+      await projectService.getProjectCFD('PROJ-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/projects/PROJ-1/cfd');
+    });
+
+    it('getProjectCFD handles sprint', async () => {
+      api.get.mockResolvedValueOnce({ data: { series: [] } });
+      await projectService.getProjectCFD('PROJ-1', 'SPRINT-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/projects/PROJ-1/sprints/SPRINT-1/cfd');
+    });
+
+    it('getProjectBurnup handles project only', async () => {
+      api.get.mockResolvedValueOnce({ data: { series: [] } });
+      await projectService.getProjectBurnup('PROJ-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/projects/PROJ-1/burnup');
+    });
+
+    it('getProjectBurnup handles sprint', async () => {
+      api.get.mockResolvedValueOnce({ data: { series: [] } });
+      await projectService.getProjectBurnup('PROJ-1', 'SPRINT-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/projects/PROJ-1/sprints/SPRINT-1/burnup');
+    });
+
+    it('getPercentiles calls GET with days', async () => {
+      api.get.mockResolvedValueOnce({ data: [] });
+      await projectService.getPercentiles('PROJ-1', 15);
+      expect(api.get).toHaveBeenCalledWith('/api/v1/projects/PROJ-1/percentiles?days=15');
+    });
+  });
+
+  describe('Remaining developerService functions', () => {
+    it('getDevelopers calls GET /developers', async () => {
+      api.get.mockResolvedValueOnce({ data: [] });
+      await developerService.getDevelopers('PROJ-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/developers', { params: { proyecto_id: 'PROJ-1' } });
+    });
+
+    it('getDevelopers handles error', async () => {
+      api.get.mockRejectedValueOnce(new Error('error'));
+      const res = await developerService.getDevelopers('PROJ-1');
+      expect(res.length).toBeGreaterThan(0); // mock fallback
+    });
+
+    it('getDeveloperScorecard calls GET for specific dev', async () => {
+      api.get.mockResolvedValueOnce({ data: { cycle_time_personal: 1.5 } });
+      await developerService.getDeveloperScorecard('DEV-1', 'PROJ-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/developers/DEV-1/scorecard', { params: { proyecto_id: 'PROJ-1' } });
+    });
+
+    it('getDeveloperScorecard handles error', async () => {
+      api.get.mockRejectedValueOnce(new Error('error'));
+      // fallback calls getMyScorecard which will also error if we don't mock it, but we let it fall back
+      api.get.mockResolvedValueOnce({ data: { cycle_time_personal: 2.0 } }); // mock for getMyScorecard
+      const res = await developerService.getDeveloperScorecard('DEV-1', 'PROJ-1');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/developers/me/scorecard', { params: { proyecto_id: 'PROJ-1' } });
+    });
+
+    it('createAgendaTask calls POST', async () => {
+      api.post.mockResolvedValueOnce({ data: { id: 1 } });
+      await developerService.createAgendaTask({ task: '1' });
+      expect(api.post).toHaveBeenCalledWith('/api/v1/developers/me/agenda-tasks', { task: '1' });
+    });
+
+    it('updateTaskStatus calls PATCH', async () => {
+      api.patch.mockResolvedValueOnce({ data: { id: 1 } });
+      await developerService.updateTaskStatus(1, 'DONE');
+      expect(api.patch).toHaveBeenCalledWith('/api/v1/developers/me/agenda-tasks/1', { status: 'DONE' });
+    });
+
+    it('createNote calls POST', async () => {
+      api.post.mockResolvedValueOnce({ data: { id: 1 } });
+      await developerService.createNote('2023-01-01', 'note');
+      expect(api.post).toHaveBeenCalledWith('/api/v1/developers/me/notes', { date: '2023-01-01', text: 'note' });
+    });
+
+    it('deleteNote calls DELETE', async () => {
+      api.delete.mockResolvedValueOnce({ data: { success: true } });
+      await developerService.deleteNote(1);
+      expect(api.delete).toHaveBeenCalledWith('/api/v1/developers/me/notes/1');
+    });
+
+    it('getNotesByDate calls GET', async () => {
+      api.get.mockResolvedValueOnce({ data: [] });
+      await developerService.getNotesByDate('2023-01-01');
+      expect(api.get).toHaveBeenCalledWith('/api/v1/developers/me/notes', { params: { date: '2023-01-01' } });
+    });
+  });
+
+  describe('userService functions', () => {
+    it('getUsers calls GET /users', async () => {
+      api.get.mockResolvedValueOnce({ data: [] });
+      await userService.getUsers();
+      expect(api.get).toHaveBeenCalledWith('/api/v1/users');
+    });
+
+    it('getRoles calls GET /roles', async () => {
+      api.get.mockResolvedValueOnce({ data: [] });
+      await userService.getRoles();
+      expect(api.get).toHaveBeenCalledWith('/api/v1/users/roles');
+    });
+
+    it('updateUserStatus calls PUT', async () => {
+      api.put.mockResolvedValueOnce({ data: {} });
+      await userService.updateUserStatus('U1', false);
+      expect(api.put).toHaveBeenCalledWith('/api/v1/users/U1/status', { activo: false });
+    });
+
+    it('updateUserRole calls PUT', async () => {
+      api.put.mockResolvedValueOnce({ data: {} });
+      await userService.updateUserRole('U1', 'R1');
+      expect(api.put).toHaveBeenCalledWith('/api/v1/users/U1/role', { id_rol: 'R1' });
+    });
+
+    it('assignUserProjects calls POST', async () => {
+      api.post.mockResolvedValueOnce({ data: {} });
+      await userService.assignUserProjects('U1', ['P1']);
+      expect(api.post).toHaveBeenCalledWith('/api/v1/users/U1/projects', { id_proyectos: ['P1'] });
+    });
+  });
+
+  describe('automationService additional functions', () => {
+    it('getSchedulerJobs calls GET', async () => {
+      api.get.mockResolvedValueOnce({ data: [] });
+      await automationService.getSchedulerJobs();
+      expect(api.get).toHaveBeenCalledWith('/api/v1/automation/schedulers');
+    });
+
+    it('toggleJobState calls PUT', async () => {
+      api.put.mockResolvedValueOnce({ data: {} });
+      await automationService.toggleJobState('J1');
+      expect(api.put).toHaveBeenCalledWith('/api/v1/automation/schedulers/J1/toggle');
+    });
+
+    it('triggerJobManual calls POST', async () => {
+      api.post.mockResolvedValueOnce({ data: {} });
+      await automationService.triggerJobManual('J1');
+      expect(api.post).toHaveBeenCalledWith('/api/v1/automation/schedulers/J1/trigger');
+    });
+  });
+
+  describe('reportService functions', () => {
+    beforeEach(() => {
+      vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+        ok: true,
+        blob: () => Promise.resolve(new Blob())
+      })));
+      vi.stubGlobal('URL', {
+        createObjectURL: vi.fn(),
+        revokeObjectURL: vi.fn()
+      });
+    });
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('downloadPdfReport uses fetch', async () => {
+      const mockLink = { setAttribute: vi.fn(), click: vi.fn(), remove: vi.fn() };
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+      vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
+
+      await import('../api').then(module => {
+        module.reportService.downloadPdfReport('P1');
+      });
+      
+      expect(fetch).toHaveBeenCalled();
+    });
+
+    it('downloadCsvReport creates link', () => {
+      const mockLink = { setAttribute: vi.fn(), click: vi.fn(), remove: vi.fn() };
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
+      vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
+
+      import('../api').then(module => {
+        module.reportService.downloadCsvReport('P1', []);
+      });
+      
+      expect(document.createElement).toHaveBeenCalledWith('a');
+    });
+  });
 });

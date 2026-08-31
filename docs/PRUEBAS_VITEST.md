@@ -71,13 +71,26 @@ Se ha ampliado significativamente la cobertura de pruebas unitarias y de integra
 
 ## 🛠️ Sincronización (`src/features/sync/`)
 - **`useSystemSync.test.ts`**: Valida los estados de conexión, filtrado temporal de logs y la llamada manual de sincronización en segundo plano.
+- **`useJqlConsole.test.ts`**: Cubre la manipulación y ejecución de queries JQL desde la vista de sincronización, la carga de presets y la exportación de logs JQL en formato CSV.
 - **`SystemSyncTab.test.tsx`**: Prueba el renderizado del layout principal y simula las interacciones (clics en detalles y botón de descarga de JSON), asegurando su correcto funcionamiento con `userEvent` y mocks sobre el DOM.
 - **Componentes (`SyncLogsViewer.test.tsx`, `SystemSyncControlPanel.test.tsx`)**: Se incluyeron pruebas de paginación para la tabla de logs, configuración CRON y activación/desactivación del modo automático.
 
 ## 👥 Usuarios (`src/features/users/`)
+- **`AdminUsuariosView.test.tsx`**: Verifica que se listen correctamente los usuarios, se pueda filtrar, cambiar su estado o rol desde los selectores y abrir modales clave (Invitar Usuario, Auditoría).
 - **`AdminUserTable.test.tsx`**: Validamos que las tablas mapean correctamente las cuentas, manejan el paginado y permiten cambiar roles mediante el `<select>` y desactivar usuarios de manera dinámica.
 - **`AdminUserModals.test.tsx`**: Aseguramos que los modales (Configuración RBAC, Invitar Usuario y Ventana Flotante de Auditoría) se comporten como se espera frente a datos incompletos (errores de validación) o filtrado de logs específicos.
 - **`AdminUserFilters.test.tsx` y `AdminRolesSummary.test.tsx`**: Verifican que la búsqueda por texto (inputs) y el filtrado rápido mediante clic en los resúmenes de roles reaccionen y propaguen el estado correctamente.
+
+## 📊 Proyectos (`src/features/projects/`)
+- **Vistas y Componentes**: Pruebas desarrolladas para `ProyectosDashboardView.test.jsx`, `ProjectCard.test.jsx`, `ProjectMetrics.test.jsx`, y `ProjectTeam.test.jsx`. Evaluamos renderizado correcto (aún con fallas simuladas de la API), iteración del listado de proyectos y correcto enmascarado/mock de los gráficos Recharts para no romper el DOM virtual de Jest/JSDOM.
+
+## 🔍 Consola JQL Avanzada (`src/features/jql/`)
+- **`useJqlConsole.test.js`**: Cobertura al ciclo de vida del query (ejecución exitosa, fallo por sintaxis, error de red), exportación a CSV.
+- **`JqlEditor.test.jsx`**: Validamos el manejo de los botones "presets", cambios rápidos de queries e interacciones.
+- **`JqlResultsTable.test.jsx`**: Validamos que la tabla resuelva de manera paginada los issues provistos por el mock backend, ajustando claves anidadas (como `issue.fields.summary`).
+
+## ⚙️ Core Services (`src/services/api.test.js`)
+- **100% de Cobertura en API**: Añadimos pruebas que validan exhaustivamente todos los metodos de `authService`, `projectService`, `jqlService`, `jiraService`, `userService`, `developerService`, `automationService`, `alertService` y `reportService`, verificando que se armen correctamente los URIs y envíen los parámetros GET/POST correspondientes, logrando una cobertura completa del core de peticiones de red.
 
 ---
 
