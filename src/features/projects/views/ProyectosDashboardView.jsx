@@ -64,6 +64,10 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab }) => {
         expandedTeamProjectId={expandedTeamProjectId}
         setExpandedTeamProjectId={setExpandedTeamProjectId}
         assignedTeam={assignedTeam}
+        onNavigateToHealth={(projId) => {
+          if (setSelectedProjectId) setSelectedProjectId(projId);
+          if (setActiveTab) setActiveTab('sprint_health');
+        }}
       />
 
       {/* 3. Bloque 2A: Diagrama de Flujo Acumulado (CFD) */}

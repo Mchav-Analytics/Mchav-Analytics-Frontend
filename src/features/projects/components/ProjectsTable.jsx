@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, ChevronDown, Activity } from 'lucide-react';
 import { InfoTooltip } from './Tooltips';
 import { ProjectsAssignedTeam } from './ProjectsAssignedTeam';
 
@@ -12,7 +12,8 @@ export const ProjectsTable = ({
   setSelectedProjectId,
   expandedTeamProjectId,
   setExpandedTeamProjectId,
-  assignedTeam
+  assignedTeam,
+  onNavigateToHealth
 }) => {
   return (
     <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4">
@@ -192,21 +193,39 @@ export const ProjectsTable = ({
                       {proj.lastSync}
                     </td>
 
-                    {/* Botón Ver equipo */}
+                    {/* Botones de Acción: Salud del Sprint & Flow + Ver equipo */}
                     <td className="py-3 pl-2 text-center">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setExpandedTeamProjectId(expandedTeamProjectId === proj.id ? null : proj.id);
-                        }}
-                        className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all ${expandedTeamProjectId === proj.id
-                            ? 'bg-indigo-600 text-white shadow-xs'
-                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-indigo-50 dark:hover:bg-indigo-500/20'
-                          }`}
-                      >
-                        {expandedTeamProjectId === proj.id ? 'Ocultar equipo' : 'Ver equipo'}
-                      </button>
+                      <div className="flex items-center justify-center gap-1.5 flex-nowrap">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (setSelectedProjectId) setSelectedProjectId(proj.id);
+                            if (onNavigateToHealth) {
+                              onNavigateToHealth(proj.id);
+                            }
+                          }}
+                          className="px-2.5 py-1 rounded-lg text-[10px] font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs border border-indigo-500 flex items-center gap-1 cursor-pointer whitespace-nowrap transition-all"
+                          title={`Ver análisis de Salud del Sprint & Flow para el proyecto ${proj.name}`}
+                        >
+                          <Activity size={12} />
+                          <span>Salud del Sprint & Flow</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpandedTeamProjectId(expandedTeamProjectId === proj.id ? null : proj.id);
+                          }}
+                          className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all whitespace-nowrap border ${expandedTeamProjectId === proj.id
+                              ? 'bg-slate-700 text-white border-slate-600 shadow-xs'
+                              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-indigo-50 dark:hover:bg-indigo-500/20'
+                            }`}
+                        >
+                          {expandedTeamProjectId === proj.id ? 'Ocultar equipo' : 'Ver equipo'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
 
