@@ -9,6 +9,7 @@ import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext'
 import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
+import LiderNotificationBell from '../../features/dashboard/components/LiderNotificationBell';
 
 function Sidebar({
   activeTab,
@@ -351,6 +352,9 @@ function Sidebar({
               </div>
 
               <div className="flex items-center gap-1.5 shrink-0">
+                {/* BOTÓN NOTIFICACIONES (LIDER NOTIFICATION BELL) */}
+                <LiderNotificationBell onNavigateTab={setActiveTab} />
+
                 {/* BOTÓN CONFIGURACIÓN / SETTINGS */}
                 <button
                   type="button"
@@ -375,6 +379,9 @@ function Sidebar({
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2 pt-2">
+              {/* BOTÓN NOTIFICACIONES EN MODO COLAPSADO */}
+              <LiderNotificationBell onNavigateTab={setActiveTab} />
+
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}

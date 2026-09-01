@@ -1,6 +1,5 @@
 import React from 'react';
 import { Trophy, Sliders, BookOpen, Users } from 'lucide-react';
-import LiderNotificationBell from './LiderNotificationBell';
 
 export default function TeamMatrixHeader({
   selectedProjectId,
@@ -75,8 +74,6 @@ export default function TeamMatrixHeader({
           <Sliders size={15} />
           <span>Configurar Umbrales</span>
         </button>
-
-        <LiderNotificationBell />
       </div>
 
     </div>

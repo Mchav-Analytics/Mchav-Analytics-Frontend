@@ -1,6 +1,5 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
-import LiderNotificationBell from './LiderNotificationBell';
 import { useProjectsData } from '../../../hooks/useProjectsData';
 
 export default function SprintHealthHeader({ 
@@ -72,7 +71,6 @@ export default function SprintHealthHeader({
             </span>
           </div>
         </div>
-        <LiderNotificationBell />
       </div>
     </div>
   );
