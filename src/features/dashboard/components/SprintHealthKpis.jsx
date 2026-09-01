@@ -21,15 +21,15 @@ export default function SprintHealthKpis({ metrics, warning }) {
         
         {/* KPI 1: CONFIABILIDAD DEL COMPROMISO */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-2 text-slate-500 dark:text-slate-400">
-            <div className="flex items-center flex-wrap gap-1 min-w-0">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
+              <Target size={18} />
+            </div>
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                 Confiabilidad del Compromiso
               </span>
               <MetricInfoTooltip align="left" text="Mide el porcentaje de Story Points realmente entregados frente a los comprometidos al iniciar el sprint. Es la métrica principal de estabilidad operativa." />
-            </div>
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0">
-              <Target size={18} />
             </div>
           </div>
           <div className="space-y-1">
@@ -44,15 +44,15 @@ export default function SprintHealthKpis({ metrics, warning }) {
 
         {/* KPI 2: VARIACIÓN DEL ALCANCE (SCOPE CREEP) */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-2 text-slate-500 dark:text-slate-400">
-            <div className="flex items-center flex-wrap gap-1 min-w-0">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
+              <AlertTriangle size={18} />
+            </div>
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                 Variación del Alcance
               </span>
               <MetricInfoTooltip align="left" text="Porcentaje de Story Points añadidos a mitad del sprint después de la planificación inicial. Un valor >15% indica alteraciones o emergencias no previstas." />
-            </div>
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0">
-              <AlertTriangle size={18} />
             </div>
           </div>
           <div className="space-y-1">
@@ -67,15 +67,15 @@ export default function SprintHealthKpis({ metrics, warning }) {
 
         {/* KPI 3: TASA DE INCOMPLETOS (CARRYOVER) */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-2 text-slate-500 dark:text-slate-400">
-            <div className="flex items-center flex-wrap gap-1 min-w-0">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Tasa de Incompletos (Carryover)
-              </span>
-              <MetricInfoTooltip align="right" text="Porcentaje de Story Points planificados que no lograron completarse a tiempo y deben ser trasladados (Carryover) al siguiente sprint." />
-            </div>
+          <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
               <Layers size={18} />
+            </div>
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
+                Tasa de Incompletos
+              </span>
+              <MetricInfoTooltip align="right" text="Porcentaje de Story Points planificados que no lograron completarse a tiempo y deben ser trasladados (Carryover) al siguiente sprint." />
             </div>
           </div>
           <div className="space-y-1">
@@ -90,15 +90,15 @@ export default function SprintHealthKpis({ metrics, warning }) {
 
         {/* KPI 4: EFICIENCIA DEL FLUJO */}
         <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-start justify-between gap-2 text-slate-500 dark:text-slate-400">
-            <div className="flex items-center flex-wrap gap-1 min-w-0">
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shrink-0">
+              <Zap size={18} />
+            </div>
+            <div className="flex items-center gap-1 min-w-0 flex-1">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
                 Eficiencia del Flujo
               </span>
               <MetricInfoTooltip align="right" text="Proporción del tiempo en que las tareas estuvieron en desarrollo activo (In Progress) vs. el tiempo total incluyendo colas de espera (Review, QA, Bloqueos)." />
-            </div>
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shrink-0">
-              <Zap size={18} />
             </div>
           </div>
           <div className="space-y-1">
