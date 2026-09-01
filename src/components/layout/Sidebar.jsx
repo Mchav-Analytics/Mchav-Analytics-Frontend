@@ -195,18 +195,18 @@ function Sidebar({
         </div>
       </div>
 
-      {/* ── CABECERA CON LOGO ── */}
-      <div className={`flex items-center w-full pb-2 ${isCollapsed ? 'justify-center' : 'justify-start px-2'}`}>
+      {/* ── CABECERA CON LOGO CENTRADO Y AMPLIADO ── */}
+      <div className="flex items-center justify-center w-full py-1">
         <button 
           type="button" 
           onClick={() => setActiveTab('proyectos')} 
-          className="outline-none cursor-pointer border-none bg-transparent flex items-center justify-center"
+          className="outline-none cursor-pointer border-none bg-transparent flex items-center justify-center transition-transform hover:scale-105"
           title="Ir a Inicio / Proyectos"
         >
           <Logo
             style={{
-              width: isCollapsed ? '48px' : '64px',
-              height: isCollapsed ? '48px' : '64px',
+              width: isCollapsed ? '52px' : '96px',
+              height: isCollapsed ? '52px' : '96px',
               marginRight: 0,
             }}
           />
