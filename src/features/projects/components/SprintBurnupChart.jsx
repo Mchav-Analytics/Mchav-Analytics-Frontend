@@ -11,7 +11,7 @@ import {
   Legend
 } from 'recharts';
 
-export const SprintBurnupChart = ({ data }) => {
+export const SprintBurnupChart = ({ data, isAnimationActive = true, width, height }) => {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
@@ -87,12 +87,17 @@ export const SprintBurnupChart = ({ data }) => {
     return null;
   };
 
+  const chartProps = width && height ? { width, height } : {};
+  const Wrapper = width && height ? React.Fragment : ResponsiveContainer;
+  const wrapperProps = width && height ? {} : { width: "100%", height: 360 };
+
   return (
-    <div className="w-full h-[360px] min-h-[360px]">
-      <ResponsiveContainer width="100%" height={360}>
+    <div className={`w-full ${height ? '' : 'h-[360px] min-h-[360px]'}`}>
+      <Wrapper {...wrapperProps}>
         <ComposedChart
           data={data}
           margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+          {...chartProps}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
           
@@ -129,6 +134,7 @@ export const SprintBurnupChart = ({ data }) => {
 
           {/* Barras de Tareas entregadas por día */}
           <Bar 
+            isAnimationActive={isAnimationActive}
             yAxisId="right"
             dataKey="tareas_completadas" 
             fill="#fbbf24" 
@@ -139,6 +145,7 @@ export const SprintBurnupChart = ({ data }) => {
 
           {/* Alcance Total (Línea superior Ámbar) */}
           <Line 
+            isAnimationActive={isAnimationActive}
             yAxisId="left"
             type="stepAfter" 
             dataKey="alcance_total" 
@@ -151,6 +158,7 @@ export const SprintBurnupChart = ({ data }) => {
 
           {/* Ritmo Ideal (Línea de Proyección Indigo) */}
           <Line 
+            isAnimationActive={isAnimationActive}
             yAxisId="left"
             type="monotone" 
             dataKey="ritmo_ideal" 
@@ -163,6 +171,7 @@ export const SprintBurnupChart = ({ data }) => {
 
           {/* Trabajo Real Completado (Línea Esmeralda) */}
           <Line 
+            isAnimationActive={isAnimationActive}
             yAxisId="left"
             type="monotone" 
             dataKey="trabajo_completado" 
@@ -173,7 +182,7 @@ export const SprintBurnupChart = ({ data }) => {
             name="Trabajo Completado"
           />
         </ComposedChart>
-      </ResponsiveContainer>
+      </Wrapper>
     </div>
   );
 };

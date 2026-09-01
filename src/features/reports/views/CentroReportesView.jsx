@@ -2,7 +2,7 @@ import React, {useState, useEffect, useRef} from 'react';
 import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft } from 'lucide-react';
 import api, { projectService } from '../../../services/api';
 import { useReactToPrint } from 'react-to-print';
-import ExecutiveReportTemplate from '../components/ExecutiveReportTemplate';
+import DynamicAIReportTemplate from '../components/DynamicAIReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
 
 export default function CentroReportesView({ selectedProjectId }) {
@@ -37,6 +37,18 @@ export default function CentroReportesView({ selectedProjectId }) {
     onAfterPrint: () => setShowNubi(true)
   });
   const [reportData, setReportData] = useState(null);
+  const [shouldPrint, setShouldPrint] = useState(false);
+
+  useEffect(() => {
+    if (shouldPrint && reportData) {
+      // Damos un respiro largo (1500ms) para garantizar renderizado
+      const timer = setTimeout(() => {
+        handlePrint();
+        setShouldPrint(false);
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldPrint, reportData, handlePrint]);
   
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
@@ -118,16 +130,100 @@ export default function CentroReportesView({ selectedProjectId }) {
     fetchData();
   }, []);
 
-  const handleGenerateLiveReport = () => {
+  const handleGenerateLiveReport = async () => {
     setIsGenerating(true);
-    setTimeout(() => {
+    
+    try {
+      // 1. Determinar el proyecto a consultar
+      const projectId = reportType === 'general' 
+        ? (selectedGeneralProjects.length > 0 ? selectedGeneralProjects[0] : null) 
+        : reportParam;
+        
+      if (!projectId) {
+        throw new Error("Por favor selecciona un proyecto.");
+      }
+
+      // 2. Preparar parámetros de consulta según el tipo de reporte
+      let params = {};
+      let minimumRequired = 5;
+      let targetName = 'General';
+
+      if (reportType === 'sprint') {
+        const sprint = dbSprints.find(s => s.id_sprint === reportParam);
+        if (sprint) {
+          params.sprint_id = sprint.id_sprint;
+          targetName = sprint.nombre_sprint || sprint.nombre || sprint.id_sprint;
+        }
+        minimumRequired = 3;
+      } else if (reportType === 'desarrollador') {
+        const dev = dbUsers.find(u => u.id_usuario === reportParam);
+        if (dev) {
+          params.assignee_id = dev.id_usuario;
+          targetName = dev.nombre;
+        }
+        minimumRequired = 2;
+      } else if (reportType === 'proyecto') {
+        const proj = dbProjects.find(p => p.id_proyecto === projectId);
+        if (proj) targetName = proj.nombre;
+        minimumRequired = 5;
+      }
+
+      // 3. Obtener el conteo de tickets (issues-detail)
+      const detailRes = await projectService.getKpiIssuesDetail(projectId, params);
+      const totalRecords = detailRes?.total_issues || detailRes?.issues?.length || 0;
+
+      // 4. Validar las reglas de negocio
+      if (totalRecords < minimumRequired) {
+        alert(`No hay suficientes registros para este reporte.\n\nSe requieren al menos ${minimumRequired} tickets, pero solo se encontraron ${totalRecords} para ${targetName}.\n\nIntenta sincronizar nuevamente o selecciona otro filtro.`);
+        setIsGenerating(false);
+        return;
+      }
+
+      // 5. Cargar KPIs reales
+      const kpis = await projectService.getKpis(projectId, params.sprint_id);
+      
+      // 6. Generar Insights con IA
+      let aiInsightsData = null;
+      try {
+        const metricsData = {
+          velocity: kpis?.metrics?.completed_sp || 0,
+          throughput: totalRecords,
+          cycleTime: kpis?.metrics?.avg_cycle_time || 0,
+          blockedDays: kpis?.metrics?.blocked_days || 0,
+          bugs: kpis?.metrics?.bugs_count || 0,
+          totalScope: Math.max(kpis?.metrics?.completed_sp || 0, 40),
+          sprintHealth: kpis?.health_score || 0,
+          p50: kpis?.metrics?.avg_cycle_time > 0 ? kpis?.metrics?.avg_cycle_time : 2.5,
+          p85: (kpis?.metrics?.avg_cycle_time > 0 ? kpis?.metrics?.avg_cycle_time : 2.5) * 1.5,
+          p95: (kpis?.metrics?.avg_cycle_time > 0 ? kpis?.metrics?.avg_cycle_time : 2.5) * 2.0
+        };
+        const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
+        if (aiResponse.data && aiResponse.data.data) {
+          aiInsightsData = aiResponse.data.data;
+        }
+      } catch (e) {
+        console.error("Error al generar AI insights:", e);
+      }
+
       setIsGenerating(false);
       setReportData({
-          month: "Reporte en Vivo", pointsCompleted: 145, sprintHealth: 92, totalIssues: 42, blockedDays: 2
+          month: "Reporte en Vivo", 
+          pointsCompleted: kpis?.metrics?.completed_sp || 0, 
+          sprintHealth: kpis?.health_score || 0, 
+          totalIssues: totalRecords, 
+          blockedDays: kpis?.metrics?.blocked_days || 0,
+          targetName: targetName,
+          kpis: kpis,
+          aiInsights: aiInsightsData
       });
-      // Option 3: Direct Download
-      handlePrint();
-    }, 1500);
+      
+      setShouldPrint(true);
+      
+    } catch (error) {
+      console.error("Error al generar reporte:", error);
+      alert(error.message || "Error al conectar con el servidor. Intenta de nuevo.");
+      setIsGenerating(false);
+    }
   };
 
   const renderGeneracion = () => (
@@ -335,10 +431,11 @@ export default function CentroReportesView({ selectedProjectId }) {
             </div>
 
             <button 
-              onClick={handleGenerateLiveReport} disabled={isGenerating}
-              className="absolute bottom-0 right-0 px-10 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-bold flex items-center gap-3 transition-all shadow-[0_4px_20px_rgba(79,70,229,0.4)]"
+              onClick={handleGenerateLiveReport} 
+              disabled={isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '')}
+              className={`absolute bottom-0 right-0 px-10 py-4 ${isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '') ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_20px_rgba(79,70,229,0.4)]'} text-white rounded-xl font-bold flex items-center gap-3 transition-all`}
             >
-              Generar reporte &rarr;
+              Generar reporte (V3) &rarr;
             </button>
           </div>
         </div>
@@ -981,7 +1078,7 @@ export default function CentroReportesView({ selectedProjectId }) {
       )}
 
       {/* Plantilla oculta para el PDF */}
-      <ExecutiveReportTemplate ref={reportRef} reportType={reportType} filters={{}} user={useAuth().user} />
+      <DynamicAIReportTemplate ref={reportRef} reportType={reportType} filters={{}} user={useAuth().user} reportData={reportData} aiInsights={reportData?.aiInsights} />
     </div>
   );
 }

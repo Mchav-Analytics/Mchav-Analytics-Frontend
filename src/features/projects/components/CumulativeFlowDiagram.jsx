@@ -10,7 +10,7 @@ import {
   Legend
 } from 'recharts';
 
-export const CumulativeFlowDiagram = ({ data }) => {
+export const CumulativeFlowDiagram = ({ data, isAnimationActive = true, width, height }) => {
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
@@ -93,12 +93,17 @@ export const CumulativeFlowDiagram = ({ data }) => {
     return null;
   };
 
+  const chartProps = width && height ? { width, height } : {};
+  const Wrapper = width && height ? React.Fragment : ResponsiveContainer;
+  const wrapperProps = width && height ? {} : { width: "100%", height: 360 };
+
   return (
-    <div className="w-full h-[360px] min-h-[360px]">
-      <ResponsiveContainer width="100%" height={360}>
+    <div className={`w-full ${height ? '' : 'h-[360px] min-h-[360px]'}`}>
+      <Wrapper {...wrapperProps}>
         <AreaChart
           data={data}
           margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+          {...chartProps}
         >
           <defs>
             <linearGradient id="colorCompletado" x1="0" y1="0" x2="0" y2="1">
@@ -143,6 +148,7 @@ export const CumulativeFlowDiagram = ({ data }) => {
 
           {/* Área apilada 1: Completado */}
           <Area
+            isAnimationActive={isAnimationActive}
             type="monotone"
             dataKey="completado"
             stackId="1"
@@ -154,6 +160,7 @@ export const CumulativeFlowDiagram = ({ data }) => {
 
           {/* Área apilada 2: En Revisión */}
           <Area
+            isAnimationActive={isAnimationActive}
             type="monotone"
             dataKey="en_revision"
             stackId="1"
@@ -165,6 +172,7 @@ export const CumulativeFlowDiagram = ({ data }) => {
 
           {/* Área apilada 3: En Progreso */}
           <Area
+            isAnimationActive={isAnimationActive}
             type="monotone"
             dataKey="en_progreso"
             stackId="1"
@@ -176,6 +184,7 @@ export const CumulativeFlowDiagram = ({ data }) => {
 
           {/* Área apilada 4: Por Hacer */}
           <Area
+            isAnimationActive={isAnimationActive}
             type="monotone"
             dataKey="por_hacer"
             stackId="1"
@@ -185,7 +194,7 @@ export const CumulativeFlowDiagram = ({ data }) => {
             name="Por Hacer"
           />
         </AreaChart>
-      </ResponsiveContainer>
+      </Wrapper>
     </div>
   );
 };
