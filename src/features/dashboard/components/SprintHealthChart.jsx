@@ -99,9 +99,12 @@ export default function SprintHealthChart({ stages, insight, metrics, isDark }) 
       {/* CUELLO DE BOTELLA CLAVE E INSIGHT ANALÍTICO */}
       <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
         <div className="space-y-3">
-          <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
-            <Info size={18} />
+          <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
             <span>Identificación de Cuellos de Botella</span>
+            <MetricInfoTooltip 
+              align="right" 
+              text="Analiza automáticamente qué etapa del flujo de trabajo (Desarrollo, Code Review, QA o Colas de espera) concentra la mayor acumulación de días y retrasos en el sprint para emitir recomendaciones de optimización." 
+            />
           </div>
 
           <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-2">
