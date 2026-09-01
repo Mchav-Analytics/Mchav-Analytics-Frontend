@@ -461,9 +461,9 @@ export const developerService = {
       };
     }
   },
-  async getTeamMatrix(projectId = 'PROJ-01', sprintId = null) {
+  async getTeamMatrix(projectId = 'PROJ-01', sprintId = null, extraParams = {}) {
     try {
-      const params = { proyecto_id: projectId };
+      const params = { proyecto_id: projectId, ...extraParams };
       if (sprintId) params.sprint_id = sprintId;
       const response = await api.get(`/api/v1/developers/matrix`, { params });
       return response.data;
@@ -481,6 +481,17 @@ export const developerService = {
         },
         developers: []
       };
+    }
+  },
+  async saveMatrixConfig(projectId = 'PROJ-01', configData = {}) {
+    try {
+      const response = await api.post(`/api/v1/developers/matrix/config`, configData, {
+        params: { proyecto_id: projectId }
+      });
+      return response.data;
+    } catch (err) {
+      console.error("Error guardando configuración permanente de la matriz...", err);
+      throw err;
     }
   },
   // STUBS PARA LA AGENDA DIARIA

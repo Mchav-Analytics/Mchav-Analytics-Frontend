@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTeamMatrix } from '../hooks/useTeamMatrix';
+import { useProjectsData } from '../../../hooks/useProjectsData';
 
 // Componentes extraídos
 import TeamMatrixHeader from '../components/TeamMatrixHeader';
@@ -7,8 +8,21 @@ import TeamMatrixNav from '../components/TeamMatrixNav';
 import TeamMatrixKpis from '../components/TeamMatrixKpis';
 import FourQuadrantChart from '../components/FourQuadrantChart';
 import TeamMatrixLeaderboard from '../components/TeamMatrixLeaderboard';
+import MatrixSettingsModal from '../components/MatrixSettingsModal';
+import MatrixMethodologyGuide from '../components/MatrixMethodologyGuide';
 
-function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard, onNavigateToHealth, isDarkMode }) {
+function TeamMatrixView({
+  selectedProjectId: initialProjectId = 'PROJ-01',
+  onSelectDevForScorecard,
+  onNavigateToHealth,
+  isDarkMode
+}) {
+  const [currentProjectId, setCurrentProjectId] = useState(initialProjectId);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isGuideOpen, setIsGuideOpen] = useState(false);
+
+  const { projects: allProjects } = useProjectsData();
+
   const {
     loading,
     selectedDevDetail,
@@ -16,8 +30,13 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
     teamSummary,
     developers,
     topPerformer,
-    conteo
-  } = useTeamMatrix(selectedProjectId);
+    conteo,
+    activeThreshold,
+    activeWeights,
+    activeModelName,
+    saveConfig,
+    applyPreview
+  } = useTeamMatrix(currentProjectId);
 
   if (loading) {
     return (
@@ -30,18 +49,28 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
     );
   }
 
+  const selectedProjObj = allProjects.find(p => (p.id || p.id_proyecto) === currentProjectId);
+  const selectedProjName = selectedProjObj?.name || selectedProjObj?.nombre || currentProjectId;
+
   return (
     <div className="space-y-6 pb-12 font-sans text-left">
 
       {/* BARRA SUPERIOR DE MATRIZ DE EQUIPO */}
-      <TeamMatrixHeader />
+      <TeamMatrixHeader
+        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenGuide={() => setIsGuideOpen(true)}
+      />
 
-      {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO */}
+      {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO POR EQUIPO (PROYECTO JIRA) */}
       <TeamMatrixNav 
-        selectedProjectId={selectedProjectId}
+        selectedProjectId={currentProjectId}
+        onSelectProject={(newId) => setCurrentProjectId(newId)}
+        allProjects={allProjects}
         onNavigateToHealth={onNavigateToHealth}
         onSelectDevForScorecard={onSelectDevForScorecard}
         topPerformer={topPerformer}
+        qualityThreshold={activeThreshold}
+        activeModelName={activeModelName}
       />
 
       {/* TARJETAS DE KPIS COMPARATIVOS */}
@@ -51,11 +80,12 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
         conteo={conteo}
       />
 
-      {/* SECCIÓN DEL GRÁFICO DE 4 CUADRANTES */}
+      {/* SECCIÓN DEL GRÁFICO DE 4 CUADRANTES CON UMBRAL DINÁMICO */}
       <div className="space-y-3">
         <FourQuadrantChart
           developers={developers}
           isDarkMode={isDarkMode}
+          qualityThreshold={activeThreshold}
           onSelectDev={(dev) => {
             setSelectedDevDetail(dev);
             if (onSelectDevForScorecard) onSelectDevForScorecard(dev.assignee_id);
@@ -70,8 +100,26 @@ function TeamMatrixView({ selectedProjectId = 'PROJ-01', onSelectDevForScorecard
         onSelectDevForScorecard={onSelectDevForScorecard}
       />
 
+      {/* MODAL DE CONFIGURACIÓN DE UMBRALES Y PONDERACIONES */}
+      <MatrixSettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        initialThreshold={activeThreshold}
+        initialWeights={activeWeights}
+        selectedProjectName={selectedProjName}
+        onSaveConfig={(cfgData) => saveConfig(cfgData)}
+        onApplyPreview={(previewData) => applyPreview(previewData)}
+      />
+
+      {/* MODAL DE METODOLOGÍA Y ESPECIFICACIÓN DE FÓRMULAS */}
+      <MatrixMethodologyGuide
+        isOpen={isGuideOpen}
+        onClose={() => setIsGuideOpen(false)}
+      />
+
     </div>
   );
 }
 
 export default TeamMatrixView;
+

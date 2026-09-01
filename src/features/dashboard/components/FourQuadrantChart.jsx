@@ -19,7 +19,7 @@ import {
   LabelList
 } from 'recharts';
 
-function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode }) {
+function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityThreshold = 80 }) {
   const [selectedQuadrant, setSelectedQuadrant] = useState('ALL');
   const [viewMode, setViewMode] = useState('CHART'); // 'CHART' | 'TABLE'
 
@@ -393,13 +393,13 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode }) {
               
               {/* ÁREAS SOMBREADAS DE LOS 4 CUADRANTES (ZONAS DE SALUD) */}
               {/* Cuadrante 1: ESTRELLA (Top Right) */}
-              <ReferenceArea x1={75} x2={100} y1={70} y2={100} fill="#10b981" fillOpacity={isDark ? 0.07 : 0.04} />
+              <ReferenceArea x1={qualityThreshold} x2={100} y1={70} y2={100} fill="#10b981" fillOpacity={isDark ? 0.07 : 0.04} />
               {/* Cuadrante 2: ALTO VOLUMEN (Top Left) */}
-              <ReferenceArea x1={40} x2={75} y1={70} y2={100} fill="#f59e0b" fillOpacity={isDark ? 0.07 : 0.04} />
+              <ReferenceArea x1={40} x2={qualityThreshold} y1={70} y2={100} fill="#f59e0b" fillOpacity={isDark ? 0.07 : 0.04} />
               {/* Cuadrante 3: METÓDICO (Bottom Right) */}
-              <ReferenceArea x1={75} x2={100} y1={40} y2={70} fill="#6366f1" fillOpacity={isDark ? 0.07 : 0.04} />
+              <ReferenceArea x1={qualityThreshold} x2={100} y1={40} y2={70} fill="#6366f1" fillOpacity={isDark ? 0.07 : 0.04} />
               {/* Cuadrante 4: ATASCADO (Bottom Left) */}
-              <ReferenceArea x1={40} x2={75} y1={40} y2={70} fill="#f43f5e" fillOpacity={isDark ? 0.07 : 0.04} />
+              <ReferenceArea x1={40} x2={qualityThreshold} y1={40} y2={70} fill="#f43f5e" fillOpacity={isDark ? 0.07 : 0.04} />
 
               <CartesianGrid strokeDasharray="3 3" stroke="#475569" opacity={0.3} />
               
@@ -430,8 +430,8 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode }) {
 
               <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#6366f1' }} />
 
-              {/* Ejes Umbral de Cuadrantes (Intersección en Calidad=75, Score=70) */}
-              <ReferenceLine x={75} stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" label={{ value: 'Umbral Calidad 75%', position: 'top', fill: '#38bdf8', fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} />
+              {/* Ejes Umbral de Cuadrantes (Intersección en Calidad=qualityThreshold, Score=70) */}
+              <ReferenceLine x={qualityThreshold} stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" label={{ value: `Umbral Calidad ${qualityThreshold}%`, position: 'top', fill: '#38bdf8', fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} />
               <ReferenceLine y={70} stroke="#a855f7" strokeWidth={2} strokeDasharray="4 4" label={{ value: 'Promedio Score 70 pts', position: 'insideTopRight', fill: '#e9d5ff', fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} />
 
               <Scatter 
