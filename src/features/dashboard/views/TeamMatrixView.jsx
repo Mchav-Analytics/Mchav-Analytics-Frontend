@@ -124,12 +124,14 @@ function TeamMatrixView({
       />
 
       {/* MODAL DE DIAGNÓSTICO E INTEGRACIÓN NUBI IA POR DESARROLLADOR */}
-      <NubiDevAnalysisModal
-        isOpen={!!aiAnalysisDev}
-        onClose={() => setAiAnalysisDev(null)}
-        developer={aiAnalysisDev}
-        onSelectDevForScorecard={onSelectDevForScorecard}
-      />
+      {aiAnalysisDev && (
+        <NubiDevAnalysisModal
+          isOpen={Boolean(aiAnalysisDev)}
+          onClose={() => setAiAnalysisDev(null)}
+          developer={aiAnalysisDev}
+          onSelectDevForScorecard={onSelectDevForScorecard}
+        />
+      )}
 
     </div>
   );

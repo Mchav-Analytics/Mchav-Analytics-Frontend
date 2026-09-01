@@ -112,9 +112,12 @@ export default function TeamMatrixLeaderboard({
                     <td className="px-4 py-4 text-center">
                       <button
                         type="button"
-                        onClick={() => onOpenAiAnalysis && onOpenAiAnalysis(dev)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onOpenAiAnalysis) onOpenAiAnalysis(dev);
+                        }}
                         className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800/60 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer group mx-auto"
-                        title={`Ver análisis Nubi IA personalizado para ${dev.nombre}`}
+                        title={`Ver análisis Nubi IA personalizado para ${dev.nombre || 'Desarrollador'}`}
                       >
                         <Sparkles className="w-3.5 h-3.5 text-purple-500 group-hover:scale-110 transition-transform animate-pulse" />
                         <span>Análisis Nubi IA</span>

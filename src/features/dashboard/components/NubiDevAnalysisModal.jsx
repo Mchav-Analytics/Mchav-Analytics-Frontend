@@ -12,7 +12,7 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
   const oportunidades = ai.oportunidades || [];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fadeIn">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fadeIn">
       <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] text-left">
         
         {/* ENCABEZADO MODAL CON DEGRADADO NUBI IA */}
