@@ -498,6 +498,7 @@ function MainAppContent() {
       {activeTab === 'team_devs' && (
         <TeamDevScorecardsView
           selectedProjectId={selectedProjectId}
+          onSelectProject={(projId) => setSelectedProjectId(projId)}
           onNavigateToMatrix={() => setActiveTab('team_matrix')}
           onNavigateToHealth={() => setActiveTab('sprint_health')}
           onNavigateToAlerts={() => setActiveTab('alerts_center')}
@@ -507,6 +508,7 @@ function MainAppContent() {
       {activeTab === 'team_matrix' && (
         <TeamMatrixView
           selectedProjectId={selectedProjectId}
+          onSelectProject={(projId) => setSelectedProjectId(projId)}
           isDarkMode={isDarkMode}
           onSelectDevForScorecard={(assigneeId) => {
             setActiveTab('team_devs');

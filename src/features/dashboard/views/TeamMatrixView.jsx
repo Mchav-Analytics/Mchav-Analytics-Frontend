@@ -13,17 +13,23 @@ import MatrixMethodologyGuide from '../components/MatrixMethodologyGuide';
 import NubiDevAnalysisModal from '../components/NubiDevAnalysisModal';
 
 function TeamMatrixView({
-  selectedProjectId: initialProjectId = 'PROJ-01',
+  selectedProjectId = 'PROJ-01',
+  onSelectProject,
   onSelectDevForScorecard,
   onNavigateToHealth,
   isDarkMode
 }) {
-  const [currentProjectId, setCurrentProjectId] = useState(initialProjectId);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
   const [aiAnalysisDev, setAiAnalysisDev] = useState(null);
 
   const { dbProjects: allProjects = [] } = useProjectsData();
+
+  const handleSelectProject = (newId) => {
+    if (onSelectProject) {
+      onSelectProject(newId);
+    }
+  };
 
   const {
     loading,
@@ -38,29 +44,29 @@ function TeamMatrixView({
     activeModelName,
     saveConfig,
     applyPreview
-  } = useTeamMatrix(currentProjectId);
+  } = useTeamMatrix(selectedProjectId);
 
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-medium text-slate-400">Generando Matriz Comparativa de Equipo...</p>
+          <p className="text-sm font-medium text-slate-400">Calculando métricas de la Matriz 4 Cuadrantes para {selectedProjectId}...</p>
         </div>
       </div>
     );
   }
 
-  const selectedProjObj = allProjects.find(p => (p.id || p.id_proyecto) === currentProjectId);
-  const selectedProjName = selectedProjObj?.name || selectedProjObj?.nombre || currentProjectId;
+  const selectedProjObj = allProjects.find(p => (p.id || p.id_proyecto) === selectedProjectId);
+  const selectedProjName = selectedProjObj?.name || selectedProjObj?.nombre || selectedProjectId;
 
   return (
     <div className="space-y-6 pb-12 font-sans text-left">
 
       {/* BARRA SUPERIOR DE MATRIZ DE EQUIPO CON SELECTOR DE EQUIPO JIRA */}
       <TeamMatrixHeader
-        selectedProjectId={currentProjectId}
-        onSelectProject={(newId) => setCurrentProjectId(newId)}
+        selectedProjectId={selectedProjectId}
+        onSelectProject={handleSelectProject}
         allProjects={allProjects}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenGuide={() => setIsGuideOpen(true)}
@@ -68,8 +74,8 @@ function TeamMatrixView({
 
       {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO POR EQUIPO (PROYECTO JIRA) */}
       <TeamMatrixNav 
-        selectedProjectId={currentProjectId}
-        onSelectProject={(newId) => setCurrentProjectId(newId)}
+        selectedProjectId={selectedProjectId}
+        onSelectProject={handleSelectProject}
         allProjects={allProjects}
         onNavigateToHealth={onNavigateToHealth}
         onSelectDevForScorecard={onSelectDevForScorecard}

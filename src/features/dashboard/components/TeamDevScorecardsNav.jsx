@@ -1,10 +1,15 @@
 import React from 'react';
 import LastSyncBadge from './LastSyncBadge';
+import { useProjectsData } from '../../../hooks/useProjectsData';
 
 export default function TeamDevScorecardsNav({ 
   selectedProjectId, 
   onNavigateToMatrix 
 }) {
+  const { dbProjects: allProjects = [] } = useProjectsData();
+  const foundProj = allProjects.find(p => String(p.id || p.id_proyecto) === String(selectedProjectId));
+  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' ? 'MCHAV Core' : selectedProjectId);
+
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
       <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
@@ -14,7 +19,7 @@ export default function TeamDevScorecardsNav({
         >
           <span>Matriz 4 Cuadrantes</span>
         </button>
-        <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
+        <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-default">
           <span>Scorecards Desarrolladores</span>
         </button>
       </div>
@@ -22,7 +27,9 @@ export default function TeamDevScorecardsNav({
       <div className="flex items-center gap-3 text-xs text-slate-400 shrink-0">
         <LastSyncBadge />
         <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
-        <span className="font-semibold text-slate-800 dark:text-slate-300">Proyecto: {selectedProjectId}</span>
+        <span className="font-semibold text-slate-800 dark:text-slate-300">
+          Proyecto Activo: <span className="font-bold text-indigo-600 dark:text-indigo-400">{projectNameDisplay}</span>
+        </span>
       </div>
     </div>
   );

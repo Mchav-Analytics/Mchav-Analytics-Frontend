@@ -8,7 +8,7 @@ import TeamDevSelector from '../components/TeamDevSelector';
 import TeamDevScorecardsDashboard from '../components/TeamDevScorecardsDashboard';
 import TeamDevAssignedIssues from '../components/TeamDevAssignedIssues';
 
-export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, onNavigateToHealth, onNavigateToAlerts }) {
+export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', onSelectProject, onNavigateToMatrix, onNavigateToHealth, onNavigateToAlerts }) {
   const {
     developers,
     selectedDev,
@@ -30,11 +30,16 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
     <div className="w-full max-w-full overflow-x-hidden space-y-8 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
       {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
-      <TeamDevScorecardsHeader onNavigateToMatrix={onNavigateToMatrix} />
+      <TeamDevScorecardsHeader 
+        selectedProjectId={selectedProjectId}
+        onSelectProject={onSelectProject}
+        onNavigateToMatrix={onNavigateToMatrix} 
+      />
 
       {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO */}
       <TeamDevScorecardsNav 
         selectedProjectId={selectedProjectId}
+        onSelectProject={onSelectProject}
         onNavigateToMatrix={onNavigateToMatrix}
         onNavigateToHealth={onNavigateToHealth}
       />
