@@ -1,17 +1,18 @@
 import React from 'react';
-import { Trophy, ChevronRight } from 'lucide-react';
+import { Trophy, ChevronRight, Sparkles } from 'lucide-react';
 
 export default function TeamMatrixLeaderboard({ 
   developers, 
   teamSummary, 
-  onSelectDevForScorecard 
+  onSelectDevForScorecard,
+  onOpenAiAnalysis
 }) {
   return (
     <div className="space-y-4 pt-4">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Trophy size={20} className="text-amber-500 dark:text-amber-400" />
-          Ranking General & Explicación de Rendimiento por Desarrollador
+          Ranking General & Diagnóstico Nubi IA por Desarrollador
         </h2>
         <span className="text-xs text-slate-500 dark:text-slate-400">Puntuación ponderada de 0 a 100 puntos</span>
       </div>
@@ -28,7 +29,7 @@ export default function TeamMatrixLeaderboard({
                 <th className="px-4 py-3 text-center">Throughput</th>
                 <th className="px-4 py-3 text-center">Cycle Time</th>
                 <th className="px-4 py-3 text-center">Calidad %</th>
-                <th className="px-4 py-3">Razones & Explicación del Puntaje</th>
+                <th className="px-4 py-3 text-center">Diagnóstico IA</th>
                 <th className="px-4 py-3 text-center">Acción</th>
               </tr>
             </thead>
@@ -107,13 +108,17 @@ export default function TeamMatrixLeaderboard({
                       <span className="font-bold text-cyan-600 dark:text-cyan-300">{dev.quality_pct}%</span>
                     </td>
 
-                    {/* EXPLICACIÓN DE RESULTADOS */}
-                    <td className="px-4 py-4 max-w-sm">
-                      <ul className="space-y-1 text-[11px] text-slate-600 dark:text-slate-300 list-disc list-inside">
-                        {(dev.explicacion_razones || []).map((razon, idx) => (
-                          <li key={idx} className="leading-snug">{razon}</li>
-                        ))}
-                      </ul>
+                    {/* BOTÓN NUBI IA PARA DIAGNÓSTICO PERSONALIZADO */}
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => onOpenAiAnalysis && onOpenAiAnalysis(dev)}
+                        className="px-3 py-1.5 rounded-xl bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-700 dark:text-purple-300 border border-purple-200/90 dark:border-purple-800/60 text-xs font-bold inline-flex items-center justify-center gap-1.5 transition-all shadow-xs cursor-pointer group mx-auto"
+                        title={`Ver análisis Nubi IA personalizado para ${dev.nombre}`}
+                      >
+                        <Sparkles className="w-3.5 h-3.5 text-purple-500 group-hover:scale-110 transition-transform animate-pulse" />
+                        <span>Análisis Nubi IA</span>
+                      </button>
                     </td>
 
                     {/* ACCIÓN: VER SCORECARD */}

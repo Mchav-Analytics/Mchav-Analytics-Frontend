@@ -10,6 +10,7 @@ import FourQuadrantChart from '../components/FourQuadrantChart';
 import TeamMatrixLeaderboard from '../components/TeamMatrixLeaderboard';
 import MatrixSettingsModal from '../components/MatrixSettingsModal';
 import MatrixMethodologyGuide from '../components/MatrixMethodologyGuide';
+import NubiDevAnalysisModal from '../components/NubiDevAnalysisModal';
 
 function TeamMatrixView({
   selectedProjectId: initialProjectId = 'PROJ-01',
@@ -20,6 +21,7 @@ function TeamMatrixView({
   const [currentProjectId, setCurrentProjectId] = useState(initialProjectId);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const [aiAnalysisDev, setAiAnalysisDev] = useState(null);
 
   const { dbProjects: allProjects = [] } = useProjectsData();
 
@@ -96,11 +98,12 @@ function TeamMatrixView({
         />
       </div>
 
-      {/* TABLA DE LEADERBOARD DE EQUIPO CON EXPLICACIÓN DE RESULTADOS */}
+      {/* TABLA DE LEADERBOARD DE EQUIPO CON BOTÓN DE ANÁLISIS NUBI IA */}
       <TeamMatrixLeaderboard 
         developers={developers}
         teamSummary={teamSummary}
         onSelectDevForScorecard={onSelectDevForScorecard}
+        onOpenAiAnalysis={(dev) => setAiAnalysisDev(dev)}
       />
 
       {/* MODAL DE CONFIGURACIÓN DE UMBRALES Y PONDERACIONES */}
@@ -118,6 +121,14 @@ function TeamMatrixView({
       <MatrixMethodologyGuide
         isOpen={isGuideOpen}
         onClose={() => setIsGuideOpen(false)}
+      />
+
+      {/* MODAL DE DIAGNÓSTICO E INTEGRACIÓN NUBI IA POR DESARROLLADOR */}
+      <NubiDevAnalysisModal
+        isOpen={!!aiAnalysisDev}
+        onClose={() => setAiAnalysisDev(null)}
+        developer={aiAnalysisDev}
+        onSelectDevForScorecard={onSelectDevForScorecard}
       />
 
     </div>
