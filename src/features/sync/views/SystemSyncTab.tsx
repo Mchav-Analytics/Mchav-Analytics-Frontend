@@ -6,8 +6,7 @@
 // lanzar sincronizaciones manuales en segundo plano y descargar logs JSON.
 
 import React from 'react';
-import { RefreshCcw, FileDown } from 'lucide-react';
-import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
+import { RefreshCcw } from 'lucide-react';
 import { useSystemSync } from '../hooks/useSystemSync';
 
 // Componentes extraídos
@@ -85,19 +84,6 @@ export default function SystemSyncTab() {
               Sincronización del Sistema
             </h1>
           </div>
-        </div>
-
-        <div className="flex items-center gap-2.5 shrink-0">
-          <LiderNotificationBell />
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
-            title="Exportar reporte de sincronización"
-          >
-            <FileDown size={15} />
-            <span>Exportar Reporte</span>
-          </button>
         </div>
       </div>
 
