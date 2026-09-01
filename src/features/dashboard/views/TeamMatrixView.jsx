@@ -55,8 +55,11 @@ function TeamMatrixView({
   return (
     <div className="space-y-6 pb-12 font-sans text-left">
 
-      {/* BARRA SUPERIOR DE MATRIZ DE EQUIPO */}
+      {/* BARRA SUPERIOR DE MATRIZ DE EQUIPO CON SELECTOR DE EQUIPO JIRA */}
       <TeamMatrixHeader
+        selectedProjectId={currentProjectId}
+        onSelectProject={(newId) => setCurrentProjectId(newId)}
+        allProjects={allProjects}
         onOpenSettings={() => setIsSettingsOpen(true)}
         onOpenGuide={() => setIsGuideOpen(true)}
       />

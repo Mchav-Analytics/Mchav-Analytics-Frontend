@@ -184,7 +184,6 @@ describe('TeamMatrixNav Component', () => {
     );
     
     expect(screen.getByText('Matriz 4 Cuadrantes')).toBeInTheDocument();
-    expect(screen.getByText('Proyecto: TEST-99')).toBeInTheDocument();
     expect(screen.getByText('Andres (95 pts)')).toBeInTheDocument();
     
     const healthBtn = screen.getByText('Salud del Sprint & Flow');

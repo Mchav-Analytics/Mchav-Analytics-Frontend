@@ -1,10 +1,7 @@
 import React from 'react';
-import { Trophy, Users, ShieldCheck } from 'lucide-react';
+import { Trophy, ShieldCheck } from 'lucide-react';
 
 export default function TeamMatrixNav({ 
-  selectedProjectId,
-  onSelectProject,
-  allProjects = [],
   onNavigateToHealth, 
   onSelectDevForScorecard,
   topPerformer,
@@ -14,27 +11,8 @@ export default function TeamMatrixNav({
   return (
     <div className="w-full flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-2xl shadow-sm dark:shadow-lg backdrop-blur-md overflow-hidden transition-all">
       
-      {/* SECTOR IZQUIERDO: SELECTOR DE PROYECTO (EQUIPO JIRA) + BOTONES DE NAVEGACIÓN */}
+      {/* SECTOR IZQUIERDO: BOTONES DE NAVEGACIÓN */}
       <div className="flex items-center gap-2 overflow-x-auto w-full xl:w-auto pb-2 xl:pb-0 custom-scrollbar flex-nowrap shrink-0 max-w-full">
-        
-        {/* SELECTOR DE EQUIPO (PROYECTO JIRA) */}
-        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/90 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 shrink-0">
-          <Users className="w-3.5 h-3.5 text-indigo-500 shrink-0" />
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">Equipo:</span>
-          <select
-            value={selectedProjectId}
-            onChange={(e) => onSelectProject && onSelectProject(e.target.value)}
-            className="bg-transparent text-xs font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer max-w-[130px] sm:max-w-[200px] truncate"
-          >
-            <option value="PROJ-01">Proyecto PROJ-01 (MCHAV Core)</option>
-            {allProjects.map((p) => (
-              <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto}>
-                {p.name || p.nombre || p.id_proyecto}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {/* BOTONES DE VISTA */}
         <button className="px-3 py-1.5 text-[11px] sm:text-xs font-bold bg-indigo-600 text-white rounded-xl shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer shrink-0 whitespace-nowrap">
           <span>Matriz 4 Cuadrantes</span>
