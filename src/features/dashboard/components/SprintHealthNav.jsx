@@ -1,5 +1,6 @@
 import React from 'react';
 import { Layers } from 'lucide-react';
+import LastSyncBadge from './LastSyncBadge';
 
 export default function SprintHealthNav({ 
   sprints, 
@@ -35,10 +36,7 @@ export default function SprintHealthNav({
           )}
         </div>
 
-        <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          ETL Sync Activa
-        </span>
+        <LastSyncBadge />
       </div>
     </div>
   );

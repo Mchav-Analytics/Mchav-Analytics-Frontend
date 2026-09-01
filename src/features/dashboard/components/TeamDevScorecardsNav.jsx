@@ -1,10 +1,9 @@
 import React from 'react';
-import LiderNotificationBell from './LiderNotificationBell';
+import LastSyncBadge from './LastSyncBadge';
 
 export default function TeamDevScorecardsNav({ 
   selectedProjectId, 
-  onNavigateToMatrix, 
-  onNavigateToHealth 
+  onNavigateToMatrix 
 }) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
@@ -21,11 +20,7 @@ export default function TeamDevScorecardsNav({
       </div>
 
       <div className="flex items-center gap-3 text-xs text-slate-400 shrink-0">
-        <LiderNotificationBell />
-        <span className="flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-200 dark:border-emerald-800/40 font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse"></span>
-          ETL Sync Activa
-        </span>
+        <LastSyncBadge />
         <span className="hidden md:inline text-slate-300 dark:text-slate-600">|</span>
         <span className="font-semibold text-slate-800 dark:text-slate-300">Proyecto: {selectedProjectId}</span>
       </div>
