@@ -1,12 +1,17 @@
 import React from 'react';
 import { Activity } from 'lucide-react';
 import LiderNotificationBell from './LiderNotificationBell';
+import { useProjectsData } from '../../../hooks/useProjectsData';
 
 export default function SprintHealthHeader({ 
   selectedProjectId, 
   onNavigateToMatrix,
   healthScore 
 }) {
+  const { dbProjects: allProjects = [] } = useProjectsData();
+  const foundProj = allProjects.find(p => String(p.id || p.id_proyecto) === String(selectedProjectId));
+  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' ? 'MCHAV Core' : selectedProjectId);
+
   const getScoreColor = (score) => {
     if (score >= 80) return { text: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/40', stroke: '#10b981' };
     if (score >= 60) return { text: 'text-amber-400', bg: 'bg-amber-500/20', border: 'border-amber-500/40', stroke: '#f59e0b' };
@@ -32,11 +37,11 @@ export default function SprintHealthHeader({
               Predictability Engine
             </span>
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              • Proyecto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{selectedProjectId}</strong>
+              • Proyecto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{projectNameDisplay} {selectedProjectId && selectedProjectId !== projectNameDisplay ? `(${selectedProjectId})` : ''}</strong>
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-            Salud del Sprint
+            Salud del Sprint & Flow — {projectNameDisplay}
           </h1>
         </div>
       </div>
