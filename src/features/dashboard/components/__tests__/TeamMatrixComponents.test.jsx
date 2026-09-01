@@ -16,18 +16,12 @@ vi.mock('../LiderNotificationBell', () => ({
 }));
 
 describe('TeamMatrixHeader Component', () => {
-  it('renders correctly and handles PDF export', () => {
+  it('renders correctly', () => {
     render(<TeamMatrixHeader />);
     
     expect(screen.getAllByText('Matriz de Rendimiento').length).toBeGreaterThan(0);
     expect(screen.getByText('Cuadrantes')).toBeInTheDocument();
     expect(screen.getByTestId('mock-notification-bell')).toBeInTheDocument();
-    
-    const exportBtn = screen.getByText('Exportar PDF');
-    expect(exportBtn).toBeInTheDocument();
-    
-    fireEvent.click(exportBtn);
-    expect(window.print).toHaveBeenCalled();
   });
 });
 

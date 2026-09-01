@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trophy, FileDown, Sliders, BookOpen } from 'lucide-react';
+import { Trophy, Sliders, BookOpen } from 'lucide-react';
 import LiderNotificationBell from './LiderNotificationBell';
 
 export default function TeamMatrixHeader({ onOpenSettings, onOpenGuide }) {
@@ -29,7 +29,7 @@ export default function TeamMatrixHeader({ onOpenSettings, onOpenGuide }) {
         </div>
       </div>
 
-      {/* Lado Derecho: Acciones de Configuración + Bell Popup + Exportar PDF */}
+      {/* Lado Derecho: Acciones de Configuración + Bell Popup */}
       <div className="flex items-center gap-2.5 flex-wrap shrink-0">
         <button
           type="button"
@@ -52,16 +52,6 @@ export default function TeamMatrixHeader({ onOpenSettings, onOpenGuide }) {
         </button>
 
         <LiderNotificationBell />
-
-        <button
-          type="button"
-          onClick={() => window.print()}
-          className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
-          title="Exportar reporte consolidado en PDF"
-        >
-          <FileDown size={15} />
-          <span>Exportar PDF</span>
-        </button>
       </div>
 
     </div>
