@@ -7,7 +7,7 @@ import SprintHealthNav from '../components/SprintHealthNav';
 import SprintHealthKpis from '../components/SprintHealthKpis';
 import SprintHealthChart from '../components/SprintHealthChart';
 
-export default function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToMatrix, onNavigateToScorecards, isDarkMode }) {
+export default function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToProjects, onNavigateToMatrix, onNavigateToScorecards, isDarkMode }) {
   const {
     loading,
     sprints,
@@ -46,6 +46,7 @@ export default function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavi
       {/* 1. CABECERA PRINCIPAL DE SALUD DEL SPRINT */}
       <SprintHealthHeader 
         selectedProjectId={selectedProjectId}
+        onNavigateToProjects={onNavigateToProjects}
         onNavigateToMatrix={onNavigateToMatrix}
         healthScore={healthScore}
       />

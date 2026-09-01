@@ -1,15 +1,24 @@
 import React from 'react';
-import { Activity } from 'lucide-react';
+import { Activity, ArrowLeft } from 'lucide-react';
 import { useProjectsData } from '../../../hooks/useProjectsData';
 
 export default function SprintHealthHeader({ 
   selectedProjectId, 
+  onNavigateToProjects,
   onNavigateToMatrix,
   healthScore 
 }) {
   const { dbProjects: allProjects = [] } = useProjectsData();
   const foundProj = allProjects.find(p => String(p.id || p.id_proyecto) === String(selectedProjectId));
   const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' ? 'MCHAV Core' : selectedProjectId);
+
+  const handleBackToProjects = () => {
+    if (onNavigateToProjects) {
+      onNavigateToProjects();
+    } else if (onNavigateToMatrix) {
+      onNavigateToMatrix();
+    }
+  };
 
   const getScoreColor = (score) => {
     if (score >= 80) return { text: 'text-emerald-400', bg: 'bg-emerald-500/20', border: 'border-emerald-500/40', stroke: '#10b981' };
@@ -27,7 +36,7 @@ export default function SprintHealthHeader({
         </div>
         <div className="space-y-0.5 text-left">
           <div className="flex items-center gap-1.5 text-[13px] mb-2 font-medium">
-            <span className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline transition-all" onClick={onNavigateToMatrix}>Matriz de Rendimiento</span>
+            <span className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline transition-all" onClick={handleBackToProjects}>Proyectos</span>
             <span className="text-slate-400 dark:text-slate-500 mx-0.5">&gt;</span>
             <span className="text-slate-900 dark:text-white font-bold">Salud del Sprint</span>
           </div>
@@ -45,7 +54,17 @@ export default function SprintHealthHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-4 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
+        <button
+          type="button"
+          onClick={handleBackToProjects}
+          className="px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700/90 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 text-xs font-extrabold shadow-xs transition-all flex items-center gap-2 cursor-pointer shrink-0"
+          title="Volver al menú de proyectos"
+        >
+          <ArrowLeft size={15} className="text-indigo-600 dark:text-indigo-400" />
+          <span>Volver a Proyectos</span>
+        </button>
+
         <div className={`flex items-center gap-3 p-2.5 px-4 rounded-2xl border shadow-md ${scoreTheme.bg} ${scoreTheme.border}`}>
           <div className="relative w-11 h-11 flex items-center justify-center">
             <svg className="w-11 h-11 transform -rotate-90">

@@ -521,6 +521,7 @@ function MainAppContent() {
         <SprintHealthView
           selectedProjectId={selectedProjectId}
           isDarkMode={isDarkMode}
+          onNavigateToProjects={() => setActiveTab('proyectos')}
           onNavigateToMatrix={() => setActiveTab('team_matrix')}
           onNavigateToScorecards={() => setActiveTab('team_devs')}
         />
