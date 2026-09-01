@@ -26,7 +26,7 @@ export default function SprintHealthNav({
               className="bg-transparent text-xs font-bold text-slate-800 dark:text-white outline-none cursor-pointer pr-1"
             >
               {sprints.map((s) => (
-                <option key={s.id_sprint} value={s.id_sprint} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-white">
+                <option key={s.id_sprint} value={s.id_sprint} className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-bold">
                   {s.nombre || s.nombre_sprint || s.id_sprint}
                 </option>
               ))}

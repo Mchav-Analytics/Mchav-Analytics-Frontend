@@ -46,9 +46,9 @@ export default function TeamMatrixHeader({
             onChange={(e) => onSelectProject && onSelectProject(e.target.value)}
             className="bg-transparent text-xs font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer max-w-[140px] sm:max-w-[220px] truncate"
           >
-            <option value="PROJ-01">Proyecto PROJ-01 (MCHAV Core)</option>
+            <option value="PROJ-01" className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">Proyecto PROJ-01 (MCHAV Core)</option>
             {allProjects.map((p) => (
-              <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto}>
+              <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto} className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
                 {p.name || p.nombre || p.id_proyecto}
               </option>
             ))}

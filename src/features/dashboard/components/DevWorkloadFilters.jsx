@@ -29,12 +29,12 @@ export const DevWorkloadFilters = ({
           onChange={(e) => setStatusFilter(e.target.value)} 
           className="flex-1 sm:flex-none bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors shadow-xs"
         >
-          <option value="TODOS" className="dark:bg-[#141738]">Todos los Estados</option>
-          <option value="POR HACER" className="dark:bg-[#141738]">Por Hacer</option>
-          <option value="EN CURSO" className="dark:bg-[#141738]">En Curso</option>
-          <option value="EN REVISIÓN" className="dark:bg-[#141738]">En Revisión</option>
-          <option value="BLOQUEADA" className="dark:bg-[#141738]">Bloqueadas</option>
-          <option value="FINALIZADO" className="dark:bg-[#141738]">Finalizados</option>
+          <option value="TODOS" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Todos los Estados</option>
+          <option value="POR HACER" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Por Hacer</option>
+          <option value="EN CURSO" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">En Curso</option>
+          <option value="EN REVISIÓN" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">En Revisión</option>
+          <option value="BLOQUEADA" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Bloqueadas</option>
+          <option value="FINALIZADO" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Finalizados</option>
         </select>
 
         <select 
@@ -42,11 +42,11 @@ export const DevWorkloadFilters = ({
           onChange={(e) => setPriorityFilter(e.target.value)} 
           className="flex-1 sm:flex-none bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors shadow-xs"
         >
-          <option value="TODAS" className="dark:bg-[#141738]">Todas las Prioridades</option>
-          <option value="Crítica" className="dark:bg-[#141738]">Crítica</option>
-          <option value="Alta" className="dark:bg-[#141738]">Alta</option>
-          <option value="Media" className="dark:bg-[#141738]">Media</option>
-          <option value="Baja" className="dark:bg-[#141738]">Baja</option>
+          <option value="TODAS" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Todas las Prioridades</option>
+          <option value="Crítica" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Crítica</option>
+          <option value="Alta" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Alta</option>
+          <option value="Media" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Media</option>
+          <option value="Baja" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Baja</option>
         </select>
 
         <select 
@@ -54,10 +54,10 @@ export const DevWorkloadFilters = ({
           onChange={(e) => setSortBy(e.target.value)} 
           className="flex-1 sm:flex-none bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-2.5 py-2 text-xs font-medium text-slate-700 dark:text-slate-200 outline-none cursor-pointer hover:border-indigo-400 dark:hover:border-indigo-500 transition-colors shadow-xs"
         >
-          <option value="RECENT" className="dark:bg-[#141738]">Más recientes</option>
-          <option value="OLDEST" className="dark:bg-[#141738]">Más antiguas</option>
-          <option value="SP_DESC" className="dark:bg-[#141738]">Mayor SP</option>
-          <option value="PRIORITY" className="dark:bg-[#141738]">Mayor Prioridad</option>
+          <option value="RECENT" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Más recientes</option>
+          <option value="OLDEST" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Más antiguas</option>
+          <option value="SP_DESC" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Mayor SP</option>
+          <option value="PRIORITY" className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-medium">Mayor Prioridad</option>
         </select>
 
         {hasActiveFilters && (
