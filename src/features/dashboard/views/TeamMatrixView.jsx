@@ -21,7 +21,7 @@ function TeamMatrixView({
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
-  const { projects: allProjects } = useProjectsData();
+  const { dbProjects: allProjects = [] } = useProjectsData();
 
   const {
     loading,
