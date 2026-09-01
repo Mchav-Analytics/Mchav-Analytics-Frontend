@@ -18,86 +18,12 @@ export const AlertsCenterList = ({
     return filteredItems.slice(start, start + itemsPerPage);
   }, [filteredItems, currentPage]);
 
+  const pendingItemsCount = React.useMemo(() => filteredItems.filter(i => i.status === 'PENDIENTE').length, [filteredItems]);
+  const inProgressItemsCount = React.useMemo(() => filteredItems.filter(i => i.status === 'EN_PROCESO').length, [filteredItems]);
+  const resolvedItemsCount = React.useMemo(() => filteredItems.filter(i => i.status === 'RESUELTO').length, [filteredItems]);
+
   return (
     <div className="lg:col-span-8 space-y-4">
-      {/* ── TOP CONTROL TABS & SEARCH BAR ── */}
-      <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-3.5 rounded-2xl shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Status Filter Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1 sm:pb-0">
-          <button
-            type="button"
-            onClick={() => { setStatusTab('ALL'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-              statusTab === 'ALL'
-                ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            Todos <span className="ml-1 text-[11px] opacity-75">(17)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setStatusTab('PENDING'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-              statusTab === 'PENDING'
-                ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            Pendientes <span className="ml-1 text-[11px] opacity-75">(3)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setStatusTab('IN_PROGRESS'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-              statusTab === 'IN_PROGRESS'
-                ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            En proceso <span className="ml-1 text-[11px] opacity-75">(2)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setStatusTab('RESOLVED'); setCurrentPage(1); }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all cursor-pointer whitespace-nowrap ${
-              statusTab === 'RESOLVED'
-                ? 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 shadow-xs'
-                : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            Resueltos <span className="ml-1 text-[11px] opacity-75">(12)</span>
-          </button>
-        </div>
-
-        {/* Search & Sort Controls */}
-        <div className="flex items-center gap-3 shrink-0">
-          <div className="relative">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Buscar feedback..."
-              value={searchTerm}
-              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl outline-none focus:border-indigo-500 w-36 sm:w-44 transition-colors"
-            />
-          </div>
-
-          <select
-            value={sortBy}
-            onChange={e => setSortBy(e.target.value)}
-            className="bg-slate-50 dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl px-3 py-1.5 outline-none cursor-pointer"
-          >
-            <option value="recent">Más recientes</option>
-            <option value="priority">Por Prioridad</option>
-            <option value="project">Por Proyecto</option>
-          </select>
-        </div>
-      </div>
-
       {/* ── FEED CARDS LIST ── */}
       <div className="space-y-3.5">
         {displayedItems.length === 0 ? (

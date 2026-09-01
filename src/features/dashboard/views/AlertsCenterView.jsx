@@ -7,7 +7,7 @@ import { AlertsCenterWidgets } from '../components/AlertsCenterWidgets';
 import { AlertsCenterBottomWidgets } from '../components/AlertsCenterBottomWidgets';
 import { AlertsCenterModal } from '../components/AlertsCenterModal';
 
-export default function AlertsCenterView({ selectedProjectId = null }) {
+export default function AlertsCenterView({ selectedProjectId = null, onNavigateTab }) {
   const {
     toastMessage, setToastMessage,
     showCreateModal, setShowCreateModal,
@@ -43,6 +43,14 @@ export default function AlertsCenterView({ selectedProjectId = null }) {
         pendingCount={pendingCount}
         resolvedCount={resolvedCount}
         inProgressCount={inProgressCount}
+        statusTab={statusTab}
+        setStatusTab={setStatusTab}
+        sidebarProject={sidebarProject}
+        setSidebarProject={setSidebarProject}
+        sidebarCategory={sidebarCategory}
+        setSidebarCategory={setSidebarCategory}
+        sidebarPriority={sidebarPriority}
+        setSidebarPriority={setSidebarPriority}
       />
 
       {/* Main Grid: Feed List (8 cols) + Sidebar Widgets (4 cols) */}
@@ -61,11 +69,20 @@ export default function AlertsCenterView({ selectedProjectId = null }) {
           setSidebarStatus={setSidebarStatus}
         />
 
-        <AlertsCenterWidgets categoryCounts={categoryCounts} />
+        <AlertsCenterWidgets 
+          categoryCounts={categoryCounts}
+          sidebarCategory={sidebarCategory}
+          setSidebarCategory={setSidebarCategory}
+          setStatusTab={setStatusTab}
+        />
       </div>
 
       {/* 4 Bottom Metric Widgets */}
-      <AlertsCenterBottomWidgets />
+      <AlertsCenterBottomWidgets 
+        setStatusTab={setStatusTab}
+        setSidebarCategory={setSidebarCategory}
+        onNavigateTab={onNavigateTab}
+      />
 
       {/* Modal for Creating New Feedback */}
       <AlertsCenterModal 

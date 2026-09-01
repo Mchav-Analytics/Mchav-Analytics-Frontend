@@ -10,9 +10,9 @@ const RESOLUTION_TIME_DATA = [
   { name: '4 Ago', val: 4.2 },
 ];
 
-export const AlertsCenterBottomWidgets = () => {
+export const AlertsCenterBottomWidgets = ({ setStatusTab, setSidebarCategory, onNavigateTab }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-2">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
       {/* ── CARD 1: ACTIVIDAD RECIENTE ── */}
       <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-4">
         <div className="space-y-3">
@@ -62,9 +62,21 @@ export const AlertsCenterBottomWidgets = () => {
           </div>
         </div>
 
-        <a href="#" onClick={e => e.preventDefault()} className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-2">
+        <button 
+          type="button" 
+          onClick={() => {
+            if (setStatusTab) setStatusTab('ALL');
+            if (setSidebarCategory) setSidebarCategory('ALL');
+            if (onNavigateTab) {
+              onNavigateTab('activity_history');
+            } else {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+          }} 
+          className="text-left text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-2 cursor-pointer"
+        >
           Ver toda la actividad
-        </a>
+        </button>
       </div>
 
       {/* ── CARD 2: TIEMPO PROMEDIO DE RESOLUCIÓN ── */}
@@ -96,87 +108,6 @@ export const AlertsCenterBottomWidgets = () => {
             </ResponsiveContainer>
           </div>
         </div>
-      </div>
-
-      {/* ── CARD 3: FEEDBACK SIN ACTIVIDAD ── */}
-      <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-4">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-              Feedback sin actividad
-            </h3>
-            <Info size={13} className="text-slate-400" />
-          </div>
-
-          <div className="flex items-baseline gap-2 mt-3">
-            <span className="text-3xl font-black text-slate-900 dark:text-white">
-              2
-            </span>
-            <span className="text-xs font-medium text-slate-500 dark:text-slate-400 leading-tight">
-              llevan más de 7 días sin actualización
-            </span>
-          </div>
-        </div>
-
-        <div>
-          <button
-            type="button"
-            className="px-4 py-2 rounded-xl bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700/40 text-xs font-bold hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors cursor-pointer"
-          >
-            Ver feedback
-          </button>
-        </div>
-      </div>
-
-      {/* ── CARD 4: TOP COLABORADORES ── */}
-      <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-4">
-        <div className="space-y-3">
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-              Top colaboradores
-            </h3>
-            <Info size={13} className="text-slate-400" />
-          </div>
-
-          <div className="space-y-2 pt-1">
-            {/* User 1 */}
-            <div className="flex items-center justify-between text-xs font-bold">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
-                  CC
-                </div>
-                <span className="text-slate-800 dark:text-slate-200">Camila Corredor</span>
-              </div>
-              <span className="text-slate-900 dark:text-white font-black">5</span>
-            </div>
-
-            {/* User 2 */}
-            <div className="flex items-center justify-between text-xs font-bold">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-pink-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
-                  VH
-                </div>
-                <span className="text-slate-800 dark:text-slate-200">Valentina Hoyos</span>
-              </div>
-              <span className="text-slate-900 dark:text-white font-black">4</span>
-            </div>
-
-            {/* User 3 */}
-            <div className="flex items-center justify-between text-xs font-bold">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
-                  MA
-                </div>
-                <span className="text-slate-800 dark:text-slate-200">Mike Andrés</span>
-              </div>
-              <span className="text-slate-900 dark:text-white font-black">3</span>
-            </div>
-          </div>
-        </div>
-
-        <a href="#" onClick={e => e.preventDefault()} className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-2">
-          Ver ranking completo
-        </a>
       </div>
     </div>
   );

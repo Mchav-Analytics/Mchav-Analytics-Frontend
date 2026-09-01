@@ -2,7 +2,19 @@ import React from 'react';
 import { Plus, FileDown, MessageSquare, Clock, CheckCircle2, TrendingUp, Calendar, Folder, Filter, Check } from 'lucide-react';
 
 export const AlertsCenterHeader = ({ 
-  setShowCreateModal, handleExportCSV, pendingCount = 3, resolvedCount = 12, inProgressCount = 2 
+  setShowCreateModal, 
+  handleExportCSV, 
+  pendingCount = 3, 
+  resolvedCount = 12, 
+  inProgressCount = 2,
+  statusTab = 'ALL',
+  setStatusTab,
+  sidebarProject = 'ALL',
+  setSidebarProject,
+  sidebarCategory = 'ALL',
+  setSidebarCategory,
+  sidebarPriority = 'ALL',
+  setSidebarPriority
 }) => {
   return (
     <div className="space-y-6">
@@ -54,29 +66,79 @@ export const AlertsCenterHeader = ({
 
       {/* ── FILTER DROPDOWNS BAR ── */}
       <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
-        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer hover:border-indigo-500/40 transition-colors shrink-0">
-          <Calendar size={15} className="text-slate-400" />
-          <span>Últimos 30 días</span>
-          <span className="text-[10px] text-slate-400 ml-1">▼</span>
-        </div>
-
-        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer hover:border-indigo-500/40 transition-colors shrink-0">
+        {/* Proyecto Selector */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
           <Folder size={15} className="text-slate-400" />
-          <span>Todos los proyectos</span>
-          <span className="text-[10px] text-slate-400 ml-1">▼</span>
+          <select
+            value={sidebarProject || 'ALL'}
+            onChange={e => setSidebarProject && setSidebarProject(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-white dark:bg-slate-900">Todos los proyectos</option>
+            <option value="Sistema Analytics MCHAV" className="bg-white dark:bg-slate-900">Sistema Analytics MCHAV</option>
+            <option value="Portal de Clientes & Seguridad" className="bg-white dark:bg-slate-900">Portal de Clientes & Seguridad</option>
+            <option value="API Gateway ETL" className="bg-white dark:bg-slate-900">API Gateway ETL</option>
+          </select>
         </div>
 
-        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer hover:border-indigo-500/40 transition-colors shrink-0">
+        {/* Categoría Selector */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
           <Filter size={15} className="text-slate-400" />
-          <span>Más filtros</span>
-          <span className="text-[10px] text-slate-400 ml-1">▼</span>
+          <select
+            value={sidebarCategory || 'ALL'}
+            onChange={e => setSidebarCategory && setSidebarCategory(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-white dark:bg-slate-900">Todas las categorías</option>
+            <option value="Código" className="bg-white dark:bg-slate-900">Código</option>
+            <option value="Documentación" className="bg-white dark:bg-slate-900">Documentación</option>
+            <option value="Procesos" className="bg-white dark:bg-slate-900">Procesos</option>
+            <option value="UI/UX" className="bg-white dark:bg-slate-900">UI/UX</option>
+            <option value="Arquitectura" className="bg-white dark:bg-slate-900">Arquitectura</option>
+          </select>
         </div>
+
+        {/* Prioridad Selector */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
+          <Calendar size={15} className="text-slate-400" />
+          <select
+            value={sidebarPriority || 'ALL'}
+            onChange={e => setSidebarPriority && setSidebarPriority(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-white dark:bg-slate-900">Todas las prioridades</option>
+            <option value="ALTA" className="bg-white dark:bg-slate-900">Alta prioridad</option>
+            <option value="MEDIA" className="bg-white dark:bg-slate-900">Media prioridad</option>
+            <option value="BAJA" className="bg-white dark:bg-slate-900">Baja prioridad</option>
+          </select>
+        </div>
+
+        {/* Botón de Limpieza rápida */}
+        {(sidebarProject !== 'ALL' || sidebarCategory !== 'ALL' || sidebarPriority !== 'ALL') && (
+          <button
+            type="button"
+            onClick={() => {
+              if (setSidebarProject) setSidebarProject('ALL');
+              if (setSidebarCategory) setSidebarCategory('ALL');
+              if (setSidebarPriority) setSidebarPriority('ALL');
+            }}
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-extrabold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+          >
+            Limpiar filtros
+          </button>
+        )}
       </div>
 
-      {/* ── 4 SUMMARY METRIC CARDS ── */}
+      {/* ── 4 SUMMARY METRIC CARDS (CLICKEABLES) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* CARD 1: PENDIENTES */}
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-indigo-500/50 transition-all">
+        <div 
+          onClick={() => setStatusTab && setStatusTab('PENDING')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'PENDING' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-indigo-500/50 transition-all cursor-pointer`}
+          title="Filtrar por items Pendientes"
+        >
           <div className="flex items-start justify-between">
             <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30 shrink-0">
               <MessageSquare size={20} />
@@ -97,7 +159,6 @@ export const AlertsCenterHeader = ({
             </p>
           </div>
 
-          {/* Sparkline Decorativo */}
           <div className="absolute right-4 bottom-4 flex items-end gap-1 h-8 opacity-70 group-hover:opacity-100 transition-opacity">
             <div className="w-1.5 h-3 bg-indigo-200 dark:bg-indigo-900/60 rounded-t-sm"></div>
             <div className="w-1.5 h-5 bg-indigo-300 dark:bg-indigo-700/70 rounded-t-sm"></div>
@@ -107,7 +168,13 @@ export const AlertsCenterHeader = ({
         </div>
 
         {/* CARD 2: EN PROCESO */}
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-amber-500/50 transition-all">
+        <div 
+          onClick={() => setStatusTab && setStatusTab('IN_PROGRESS')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'IN_PROGRESS' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-amber-500/50 transition-all cursor-pointer`}
+          title="Filtrar por items En Proceso"
+        >
           <div className="flex items-start justify-between">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center border border-amber-200 dark:border-amber-500/30 shrink-0">
               <Clock size={20} />
@@ -128,7 +195,6 @@ export const AlertsCenterHeader = ({
             </p>
           </div>
 
-          {/* Sparkline Decorativo */}
           <div className="absolute right-4 bottom-4 flex items-end gap-1 h-8 opacity-70 group-hover:opacity-100 transition-opacity">
             <div className="w-1.5 h-4 bg-amber-200 dark:bg-amber-900/60 rounded-t-sm"></div>
             <div className="w-1.5 h-6 bg-amber-300 dark:bg-amber-700/70 rounded-t-sm"></div>
@@ -138,7 +204,13 @@ export const AlertsCenterHeader = ({
         </div>
 
         {/* CARD 3: RESUELTOS */}
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-emerald-500/50 transition-all">
+        <div 
+          onClick={() => setStatusTab && setStatusTab('RESOLVED')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'RESOLVED' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-emerald-500/50 transition-all cursor-pointer`}
+          title="Filtrar por items Resueltos"
+        >
           <div className="flex items-start justify-between">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-500/30 shrink-0">
               <CheckCircle2 size={20} />
@@ -159,7 +231,6 @@ export const AlertsCenterHeader = ({
             </p>
           </div>
 
-          {/* Sparkline Decorativo */}
           <div className="absolute right-4 bottom-4 flex items-end gap-1 h-8 opacity-70 group-hover:opacity-100 transition-opacity">
             <div className="w-1.5 h-3 bg-emerald-200 dark:bg-emerald-900/60 rounded-t-sm"></div>
             <div className="w-1.5 h-4 bg-emerald-300 dark:bg-emerald-700/70 rounded-t-sm"></div>
@@ -169,7 +240,13 @@ export const AlertsCenterHeader = ({
         </div>
 
         {/* CARD 4: PROGRESO DE MEJORA */}
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-emerald-500/50 transition-all">
+        <div 
+          onClick={() => setStatusTab && setStatusTab('ALL')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'ALL' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-emerald-500/50 transition-all cursor-pointer`}
+          title="Ver todos los ítems"
+        >
           <div className="flex items-start justify-between">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-500/30 shrink-0">
               <TrendingUp size={20} />
@@ -190,7 +267,6 @@ export const AlertsCenterHeader = ({
               </span>
             </div>
 
-            {/* Barra de progreso */}
             <div className="w-full bg-slate-100 dark:bg-[#1a1e3b] h-2 rounded-full mt-2.5 overflow-hidden">
               <div className="bg-emerald-500 h-full rounded-full w-[68%] transition-all duration-500"></div>
             </div>
