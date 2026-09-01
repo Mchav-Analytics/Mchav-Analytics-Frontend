@@ -5,76 +5,79 @@ import api from '../../../services/api';
 const INITIAL_FEEDBACK_ITEMS = [
   {
     id: 'fb-1',
-    title: 'Mejorar documentación de APIs',
-    summary: 'La documentación de los endpoints necesita más ejemplos y casos de uso prácticos para la integración de servicios backend.',
+    title: 'Refactorizar módulo de autenticación',
+    summary: 'El código actual tiene alta complejidad en tokens JWT. Revisar patrones de diseño y matriz de permisos RBAC.',
     category: 'Código',
-    tags: ['Backend', 'API Service'],
+    tags: ['#Código', 'Alta prioridad'],
     status: 'PENDIENTE',
-    priority: 'MEDIA',
+    priority: 'ALTA',
     project: 'Sistema Analytics MCHAV',
     timeAgo: 'Hace 2 días',
-    author: 'Julián Torres',
-    avatar: 'J',
+    author: 'Camila C.',
+    avatar: 'CC',
     comments: [
-      { id: 1, author: 'Carlos Pérez', text: 'Se agregarán ejemplos de Swagger en el próximo sprint.', time: 'Hace 1 día' }
+      { id: 1, author: 'Valentina H.', text: 'Revisaremos la refactorización en la reunión técnica.', time: 'Hace 1 día' },
+      { id: 2, author: 'Camila C.', text: 'Tengo preparado el borrador de los middleware.', time: 'Hace 1 hora' }
     ]
   },
   {
     id: 'fb-2',
-    title: 'Refactorizar módulo de autenticación',
-    summary: 'El código actual tiene alta complejidad en tokens JWT. Revisar patrones de diseño y matriz de permisos RBAC.',
-    category: 'Código',
-    tags: ['Backend', 'Auth Service'],
-    status: 'PENDIENTE',
-    priority: 'ALTA',
+    title: 'Mejorar documentación de APIs',
+    summary: 'La documentación de los endpoints necesita más ejemplos y casos de uso prácticos para la integración de servicios backend.',
+    category: 'Documentación',
+    tags: ['#Documentación', 'Media prioridad'],
+    status: 'EN_PROCESO',
+    priority: 'MEDIA',
     project: 'Portal de Clientes & Seguridad',
     timeAgo: 'Hace 2 días',
-    author: 'Clara Gómez',
-    avatar: 'C',
-    comments: []
+    author: 'Valentina H.',
+    avatar: 'VH',
+    comments: [
+      { id: 1, author: 'Mike A.', text: 'Agregando spec OpenAPI 3.0.', time: 'Hace 5 horas' }
+    ]
   },
   {
     id: 'fb-3',
     title: 'Optimizar consultas de base de datos',
     summary: 'Algunas consultas de la BD pueden optimizarse para mejorar la velocidad de carga de reportes ejecutivos.',
     category: 'Procesos',
-    tags: ['Backend', 'Database'],
+    tags: ['#Rendimiento', 'Baja prioridad'],
     status: 'RESUELTO',
     priority: 'BAJA',
     project: 'API Gateway ETL',
     timeAgo: 'Hace 5 días',
-    author: 'Carlos Pérez',
-    avatar: 'C',
-    comments: [
-      { id: 1, author: 'Mauricio Salamanca', text: 'Índices agregados correctamente en MySQL.', time: 'Hace 3 días' }
-    ]
+    author: 'Mike A.',
+    avatar: 'MA',
+    comments: []
   },
   {
     id: 'fb-4',
     title: 'Mejorar manejo de errores en frontend',
     summary: 'Implementar mejores mensajes de error para el usuario final e integración de alertas en tiempo real.',
     category: 'UI/UX',
-    tags: ['Frontend', 'UI/UX'],
+    tags: ['#UI/UX', 'Media prioridad'],
     status: 'EN_PROCESO',
     priority: 'MEDIA',
     project: 'Sistema Analytics MCHAV',
     timeAgo: 'Hace 1 día',
-    author: 'Diana Patarroyo',
-    avatar: 'D',
-    comments: []
+    author: 'Valentina H.',
+    avatar: 'VH',
+    comments: [
+      { id: 1, author: 'Camila C.', text: 'Integrado con el sistema de Toast global.', time: 'Hace 3 horas' }
+    ]
   },
   {
     id: 'fb-5',
-    title: 'Actualizar dependencias del proyecto',
-    summary: 'Algunas dependencias tienen versiones más recientes disponibles con parches de seguridad recomendados.',
-    category: 'Procesos',
-    tags: ['DevOps', 'Dependencias'],
-    status: 'RESUELTO',
-    priority: 'BAJA',
-    project: 'API Gateway ETL',
-    timeAgo: 'Hace 1 semana',
-    author: 'Andrés Torres',
-    avatar: 'A',
+    title: 'Auditoría de seguridad de endpoints REST',
+    summary: 'Verificar la expiración adecuada de tokens y sanitización de entradas en endpoints públicos.',
+    category: 'Código',
+    tags: ['#Código', 'Alta prioridad'],
+    status: 'PENDIENTE',
+    priority: 'ALTA',
+    project: 'Portal de Clientes & Seguridad',
+    timeAgo: 'Hace 3 días',
+    author: 'Camila C.',
+    avatar: 'CC',
     comments: []
   },
   {
@@ -82,29 +85,29 @@ const INITIAL_FEEDBACK_ITEMS = [
     title: 'Estandarización de componentes de UI',
     summary: 'Uniformar colores de botones y estados hover en el sistema de diseño de la consola.',
     category: 'UI/UX',
-    tags: ['Frontend', 'Diseño'],
+    tags: ['#UI/UX', 'Media prioridad'],
     status: 'PENDIENTE',
     priority: 'MEDIA',
     project: 'Sistema Analytics MCHAV',
-    timeAgo: 'Hace 3 días',
-    author: 'Eduardo Martínez',
-    avatar: 'E',
+    timeAgo: 'Hace 4 días',
+    author: 'Valentina H.',
+    avatar: 'VH',
     comments: []
   },
-  {
-    id: 'fb-7',
-    title: 'Revisión de arquitectura WebSockets',
-    summary: 'Evaluar la resiliencia de la conexión en tiempo real ante desconexiones de red.',
-    category: 'Arquitectura',
-    tags: ['Arquitectura', 'WebSockets'],
-    status: 'EN_PROCESO',
-    priority: 'ALTA',
-    project: 'API Gateway ETL',
-    timeAgo: 'Hace 4 días',
-    author: 'Fernando Ruiz',
-    avatar: 'F',
+  ...Array.from({ length: 11 }, (_, i) => ({
+    id: `fb-res-${i + 1}`,
+    title: `Mejora de arquitectura y rendimiento #${i + 1}`,
+    summary: `Refactorización completada satisfactoriamente en el sprint previo para optimizar el rendimiento general.`,
+    category: i % 4 === 0 ? 'Código' : i % 4 === 1 ? 'Procesos' : i % 4 === 2 ? 'Documentación' : 'UI/UX',
+    tags: ['#Optimización', 'Completado'],
+    status: 'RESUELTO',
+    priority: i % 3 === 0 ? 'ALTA' : i % 3 === 1 ? 'MEDIA' : 'BAJA',
+    project: 'Sistema Analytics MCHAV',
+    timeAgo: `Hace ${i + 6} días`,
+    author: i % 2 === 0 ? 'Camila C.' : 'Mike A.',
+    avatar: i % 2 === 0 ? 'CC' : 'MA',
     comments: []
-  }
+  }))
 ];
 
 export const useAlertsCenter = ({ selectedProjectId }) => {

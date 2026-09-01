@@ -46,11 +46,11 @@ function MainLayout({
   const handleRoleSwitch = (newRole) => {
     switchViewRole(newRole);
     if (newRole === 'MANAGER') {
-      setActiveTab('dashboard');
+      setActiveTab('proyectos');
     } else if (newRole === 'DEVELOPER') {
       setActiveTab('developer');
     } else {
-      setActiveTab('usuarios');
+      setActiveTab('proyectos');
     }
   };
 
@@ -72,9 +72,9 @@ function MainLayout({
       {/* Contenido Principal */}
       <main className="main-content flex flex-col flex-1 min-h-screen overflow-x-hidden">
         
-        {/* BARRA SUPERIOR DE CONMUTACIÓN DE ROLES RÁPIDA PARA ADMINISTRADOR */}
-        {isRealAdmin && (
-          <div className="sticky top-0 z-40 px-6 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between shadow-sm">
+        {/* BARRA SUPERIOR DE CONMUTACIÓN DE VISTAS Y ROLES RÁPIDA */}
+        {user && (
+          <div className="sticky top-0 z-40 px-4 sm:px-6 py-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2 shadow-sm">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
               <span className="text-xs font-extrabold tracking-wide uppercase text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
@@ -96,6 +96,7 @@ function MainLayout({
                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/30 scale-[1.02]'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/80'
                 }`}
+                title="Ir a la Vista de Administrador"
               >
                 <Shield size={14} />
                 <span>Vista Admin</span>
@@ -109,6 +110,7 @@ function MainLayout({
                     ? 'bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-md shadow-purple-500/30 scale-[1.02]'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/80'
                 }`}
+                title="Ir a la Vista de Líder Técnico"
               >
                 <Briefcase size={14} />
                 <span>Vista Líder Técnico</span>
@@ -122,6 +124,7 @@ function MainLayout({
                     ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md shadow-blue-500/30 scale-[1.02]'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/70 dark:hover:bg-slate-800/80'
                 }`}
+                title="Ir a la Vista de Desarrollador"
               >
                 <Code size={14} />
                 <span>Vista Desarrollador</span>

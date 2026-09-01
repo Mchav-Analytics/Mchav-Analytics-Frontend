@@ -420,7 +420,7 @@ function MainAppContent() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs'].includes(activeTab) ? setSelectedProjectId : null}
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs', 'reports_center'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
       handleSyncNow={handleSyncNow}
       topbarTitle={headerDetails.title}
@@ -430,8 +430,12 @@ function MainAppContent() {
       alerts={alerts}
       setAlerts={setAlerts}
     >
-      {(activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history' || activeTab === 'proyectos') && (
-        <ProyectosDashboardView userProfile={user} />
+      {(activeTab === 'proyectos' || activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
+        <ProyectosDashboardView 
+          userProfile={user} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab} 
+        />
       )}
 
       {activeTab === 'capacity_calculator' && (
@@ -521,7 +525,10 @@ function MainAppContent() {
       )}
 
       {activeTab === 'alerts_center' && (
-        <AlertsCenterView selectedProjectId={selectedProjectId} />
+        <AlertsCenterView 
+          selectedProjectId={selectedProjectId} 
+          onNavigateTab={setActiveTab} 
+        />
       )}
 
       {activeTab === 'sincronizacion' && (

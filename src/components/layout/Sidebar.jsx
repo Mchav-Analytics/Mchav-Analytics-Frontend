@@ -138,18 +138,17 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
-        { id: 'dashboard', label: 'Panel Operativo', icon: icons.dashboard },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-        { id: 'sprint_health', label: 'Salud del Sprint', icon: icons.reporting },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+        { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
       ];
     }
 
     return [
-      { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+      { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
       { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
@@ -177,7 +176,12 @@ function Sidebar({
 
       {/* ── CABECERA CON LOGO Y BURGER ANIMADO DE COLAPSO (Uiverse) ── */}
       <div className={`flex items-center justify-between w-full ${isCollapsed ? 'flex-col gap-4 justify-center' : ''}`}>
-        <a href="#" onClick={(e) => e.preventDefault()} className={`outline-none ${isCollapsed ? 'flex justify-center' : ''}`}>
+        <button 
+          type="button" 
+          onClick={() => setActiveTab('proyectos')} 
+          className={`outline-none cursor-pointer border-none bg-transparent ${isCollapsed ? 'flex justify-center' : ''}`}
+          title="Ir a Inicio / Proyectos"
+        >
           <Logo
             style={{
               width: isCollapsed ? '48px' : '64px',
@@ -185,7 +189,7 @@ function Sidebar({
               marginRight: 0,
             }}
           />
-        </a>
+        </button>
 
         {/* Botón Burger Animado */}
         <label className="burger" htmlFor="sidebar-burger-toggle" title={isCollapsed ? 'Expandir panel' : 'Colapsar panel'}>
@@ -204,28 +208,32 @@ function Sidebar({
       <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
 
         {/* ── BOTÓN NUBI IA ── */}
-        <div className={`mb-4 ${isCollapsed ? 'px-2 flex justify-center' : 'px-4'}`}>
+        <div className={`mb-4 ${isCollapsed ? 'px-2 flex justify-center' : 'px-3'}`}>
           <button
+            type="button"
             onClick={() => setIsAiChatOpen(true)}
-            className={`group relative flex items-center justify-center gap-2 w-full py-2.5 rounded-[14px] font-extrabold text-white shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-[#4f46e5] via-[#a855f7] to-[#ec4899] overflow-hidden`}
+            className="group relative flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-[14px] font-extrabold text-xs text-white shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-[#4f46e5] via-[#a855f7] to-[#ec4899] overflow-hidden cursor-pointer whitespace-nowrap"
+            title="Consultar a Nubi IA"
           >
             {/* Destello de fondo al hacer hover */}
             <div className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ease-in-out"></div>
             
-            <div className="flex items-center gap-2 relative z-10">
-              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse" />
+            <div className="flex items-center justify-center gap-1.5 relative z-10 whitespace-nowrap">
+              <Sparkles className="w-4 h-4 text-amber-300 animate-pulse shrink-0" />
               {!isCollapsed && (
                 <>
-                  <MessageCircle className="w-4 h-4 text-white" />
-                  <span className="tracking-wide">Consultar a NubI IA</span>
+                  <MessageCircle className="w-3.5 h-3.5 text-white shrink-0" />
+                  <span className="tracking-tight text-[11px] sm:text-xs font-black whitespace-nowrap truncate">
+                    Consultar a Nubi IA
+                  </span>
                 </>
               )}
             </div>
             
             {isCollapsed && (
               <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#4f46e5] to-[#ec4899] text-white font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-fuchsia-500/30 flex items-center gap-2">
-                <Sparkles className="w-3 h-3 text-amber-300" />
-                <span>Consultar a NubI IA</span>
+                <Sparkles className="w-3 h-3 text-amber-300 shrink-0" />
+                <span>Consultar a Nubi IA</span>
                 <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-[#4f46e5] rotate-45 rounded-bl-[2px]"></div>
               </div>
             )}
@@ -233,60 +241,58 @@ function Sidebar({
         </div>
 
         {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
-        {isRealAdmin && (
-          <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center' : 'grid grid-cols-3 gap-1'}`}>
-            <button
-              type="button"
-              onClick={() => {
-                switchViewRole('ADMIN');
-                setActiveTab('usuarios');
-              }}
-              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                userRole === 'ADMIN'
-                  ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-              }`}
-              title="Cambiar a Vista Administrador"
-            >
-              <Shield size={13} />
-              {!isCollapsed && <span>Admin</span>}
-            </button>
+        <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center' : 'grid grid-cols-3 gap-1'}`}>
+          <button
+            type="button"
+            onClick={() => {
+              switchViewRole('ADMIN');
+              setActiveTab('proyectos');
+            }}
+            className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              userRole === 'ADMIN'
+                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+            }`}
+            title="Cambiar a Vista Administrador"
+          >
+            <Shield size={13} />
+            {!isCollapsed && <span>Admin</span>}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                switchViewRole('MANAGER');
-                setActiveTab('dashboard');
-              }}
-              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                userRole === 'MANAGER'
-                  ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/30'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-              }`}
-              title="Cambiar a Vista Líder Técnico"
-            >
-              <Briefcase size={13} />
-              {!isCollapsed && <span>Líder</span>}
-            </button>
+          <button
+            type="button"
+            onClick={() => {
+              switchViewRole('MANAGER');
+              setActiveTab('proyectos');
+            }}
+            className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              userRole === 'MANAGER'
+                ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/30'
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+            }`}
+            title="Cambiar a Vista Líder Técnico"
+          >
+            <Briefcase size={13} />
+            {!isCollapsed && <span>Líder</span>}
+          </button>
 
-            <button
-              type="button"
-              onClick={() => {
-                switchViewRole('DEVELOPER');
-                setActiveTab('developer');
-              }}
-              className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
-                userRole === 'DEVELOPER'
-                  ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                  : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-              }`}
-              title="Cambiar a Vista Desarrollador"
-            >
-              <Code size={13} />
-              {!isCollapsed && <span>Dev</span>}
-            </button>
-          </div>
-        )}
+          <button
+            type="button"
+            onClick={() => {
+              switchViewRole('DEVELOPER');
+              setActiveTab('developer');
+            }}
+            className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+              userRole === 'DEVELOPER'
+                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
+                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
+            }`}
+            title="Cambiar a Vista Desarrollador"
+          >
+            <Code size={13} />
+            {!isCollapsed && <span>Dev</span>}
+          </button>
+        </div>
 
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM ── */}
         <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>

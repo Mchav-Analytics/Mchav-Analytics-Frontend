@@ -1,34 +1,62 @@
 import React from 'react';
-import { Plus, FileDown, MessageSquare, CheckCircle2, TrendingUp, Users } from 'lucide-react';
-import { MetricInfoTooltip } from './MetricInfoTooltip';
+import { Plus, FileDown, MessageSquare, Clock, CheckCircle2, TrendingUp, Calendar, Folder, Filter, Check } from 'lucide-react';
 
 export const AlertsCenterHeader = ({ 
-  setShowCreateModal, handleExportCSV, pendingCount, resolvedCount, inProgressCount 
+  setShowCreateModal, 
+  handleExportCSV, 
+  pendingCount = 3, 
+  resolvedCount = 12, 
+  inProgressCount = 2,
+  statusTab = 'ALL',
+  setStatusTab,
+  sidebarProject = 'ALL',
+  setSidebarProject,
+  sidebarCategory = 'ALL',
+  setSidebarCategory,
+  sidebarPriority = 'ALL',
+  setSidebarPriority
 }) => {
   return (
-    <>
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-6 rounded-2xl shadow-sm">
-        <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Feedback & Revisiones</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
-            Seguimiento de feedback, revisiones y acciones de mejora del equipo.
-          </p>
+    <div className="space-y-6">
+      {/* ── TOP HEADER ROW ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30 shrink-0 shadow-xs">
+            <MessageSquare size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              Feedback & Revisiones
+            </h1>
+            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
+              Gestiona observaciones, acciones y mejoras del equipo.
+            </p>
+          </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              Última sincronización <strong className="font-extrabold text-slate-900 dark:text-white">Hoy, 8:30 a. m.</strong>
+            </span>
+            <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shrink-0">
+              <Check size={10} strokeWidth={3} />
+            </div>
+          </div>
+
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2 cursor-pointer active:scale-95"
           >
-            <Plus size={16} />
+            <Plus size={16} strokeWidth={2.5} />
             <span>Nuevo Feedback</span>
           </button>
 
           <button
             type="button"
             onClick={handleExportCSV}
-            className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1a1e3b] hover:bg-slate-200 dark:hover:bg-[#252a4e] text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-[#33376b] text-xs font-bold transition-colors flex items-center gap-2 cursor-pointer"
+            className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#13162b] hover:bg-slate-50 dark:hover:bg-[#1a1e3b] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#252a4e] text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer"
           >
             <FileDown size={16} />
             <span>Exportar</span>
@@ -36,71 +64,219 @@ export const AlertsCenterHeader = ({
         </div>
       </div>
 
+      {/* ── FILTER DROPDOWNS BAR ── */}
+      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
+        {/* Proyecto Selector */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
+          <Folder size={15} className="text-slate-400" />
+          <select
+            value={sidebarProject || 'ALL'}
+            onChange={e => setSidebarProject && setSidebarProject(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-white dark:bg-slate-900">Todos los proyectos</option>
+            <option value="Sistema Analytics MCHAV" className="bg-white dark:bg-slate-900">Sistema Analytics MCHAV</option>
+            <option value="Portal de Clientes & Seguridad" className="bg-white dark:bg-slate-900">Portal de Clientes & Seguridad</option>
+            <option value="API Gateway ETL" className="bg-white dark:bg-slate-900">API Gateway ETL</option>
+          </select>
+        </div>
+
+        {/* Categoría Selector */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
+          <Filter size={15} className="text-slate-400" />
+          <select
+            value={sidebarCategory || 'ALL'}
+            onChange={e => setSidebarCategory && setSidebarCategory(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-white dark:bg-slate-900">Todas las categorías</option>
+            <option value="Código" className="bg-white dark:bg-slate-900">Código</option>
+            <option value="Documentación" className="bg-white dark:bg-slate-900">Documentación</option>
+            <option value="Procesos" className="bg-white dark:bg-slate-900">Procesos</option>
+            <option value="UI/UX" className="bg-white dark:bg-slate-900">UI/UX</option>
+            <option value="Arquitectura" className="bg-white dark:bg-slate-900">Arquitectura</option>
+          </select>
+        </div>
+
+        {/* Prioridad Selector */}
+        <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
+          <Calendar size={15} className="text-slate-400" />
+          <select
+            value={sidebarPriority || 'ALL'}
+            onChange={e => setSidebarPriority && setSidebarPriority(e.target.value)}
+            className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
+          >
+            <option value="ALL" className="bg-white dark:bg-slate-900">Todas las prioridades</option>
+            <option value="ALTA" className="bg-white dark:bg-slate-900">Alta prioridad</option>
+            <option value="MEDIA" className="bg-white dark:bg-slate-900">Media prioridad</option>
+            <option value="BAJA" className="bg-white dark:bg-slate-900">Baja prioridad</option>
+          </select>
+        </div>
+
+        {/* Botón de Limpieza rápida */}
+        {(sidebarProject !== 'ALL' || sidebarCategory !== 'ALL' || sidebarPriority !== 'ALL') && (
+          <button
+            type="button"
+            onClick={() => {
+              if (setSidebarProject) setSidebarProject('ALL');
+              if (setSidebarCategory) setSidebarCategory('ALL');
+              if (setSidebarPriority) setSidebarPriority('ALL');
+            }}
+            className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-extrabold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+
+      {/* ── 4 SUMMARY METRIC CARDS (CLICKEABLES) ── */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex items-start justify-between relative overflow-hidden group">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Feedback Pendiente</span>
-              <MetricInfoTooltip text="Items de feedback recibidos pendientes por revisar o asignar." />
+        {/* CARD 1: PENDIENTES */}
+        <div 
+          onClick={() => setStatusTab && setStatusTab('PENDING')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'PENDING' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-indigo-500/50 transition-all cursor-pointer`}
+          title="Filtrar por items Pendientes"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 dark:bg-indigo-500/20 dark:text-indigo-400 flex items-center justify-center border border-indigo-200 dark:border-indigo-500/30 shrink-0">
+              <MessageSquare size={20} />
             </div>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{pendingCount}</p>
-            <p className="text-[11px] font-semibold text-indigo-500 dark:text-indigo-400 mt-1">
-              +2 desde la semana pasada
+          </div>
+          
+          <div className="mt-3">
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-400 tracking-wider uppercase">
+              PENDIENTES
+            </span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {pendingCount}
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 mt-1 flex items-center gap-1">
+              <span>↓ 1 vs. período anterior</span>
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-indigo-500/15 text-indigo-400 flex items-center justify-center border border-indigo-500/30 shrink-0">
-            <MessageSquare size={20} />
+
+          <div className="absolute right-4 bottom-4 flex items-end gap-1 h-8 opacity-70 group-hover:opacity-100 transition-opacity">
+            <div className="w-1.5 h-3 bg-indigo-200 dark:bg-indigo-900/60 rounded-t-sm"></div>
+            <div className="w-1.5 h-5 bg-indigo-300 dark:bg-indigo-700/70 rounded-t-sm"></div>
+            <div className="w-1.5 h-4 bg-indigo-400 dark:bg-indigo-600/80 rounded-t-sm"></div>
+            <div className="w-1.5 h-7 bg-indigo-600 dark:bg-indigo-400 rounded-t-sm"></div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex items-start justify-between relative overflow-hidden group">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Feedback Resuelto</span>
-              <MetricInfoTooltip text="Acciones de mejora atendidas e implementadas." />
+        {/* CARD 2: EN PROCESO */}
+        <div 
+          onClick={() => setStatusTab && setStatusTab('IN_PROGRESS')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'IN_PROGRESS' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-amber-500/50 transition-all cursor-pointer`}
+          title="Filtrar por items En Proceso"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-500 dark:bg-amber-500/20 dark:text-amber-400 flex items-center justify-center border border-amber-200 dark:border-amber-500/30 shrink-0">
+              <Clock size={20} />
             </div>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{resolvedCount}</p>
-            <p className="text-[11px] font-semibold text-emerald-500 dark:text-emerald-400 mt-1">
-              +5 desde la semana pasada
+          </div>
+          
+          <div className="mt-3">
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-400 tracking-wider uppercase">
+              EN PROCESO
+            </span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {inProgressCount}
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+              <span>— vs. período anterior</span>
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center border border-emerald-500/30 shrink-0">
-            <CheckCircle2 size={20} />
+
+          <div className="absolute right-4 bottom-4 flex items-end gap-1 h-8 opacity-70 group-hover:opacity-100 transition-opacity">
+            <div className="w-1.5 h-4 bg-amber-200 dark:bg-amber-900/60 rounded-t-sm"></div>
+            <div className="w-1.5 h-6 bg-amber-300 dark:bg-amber-700/70 rounded-t-sm"></div>
+            <div className="w-1.5 h-5 bg-amber-400 dark:bg-amber-600/80 rounded-t-sm"></div>
+            <div className="w-1.5 h-7 bg-amber-500 dark:bg-amber-400 rounded-t-sm"></div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex items-start justify-between relative overflow-hidden group">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Acciones en Proceso</span>
-              <MetricInfoTooltip text="Planes de mejora técnica actualmente en ejecución." />
+        {/* CARD 3: RESUELTOS */}
+        <div 
+          onClick={() => setStatusTab && setStatusTab('RESOLVED')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'RESOLVED' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-emerald-500/50 transition-all cursor-pointer`}
+          title="Filtrar por items Resueltos"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-500/30 shrink-0">
+              <CheckCircle2 size={20} />
             </div>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">{inProgressCount || 5}</p>
-            <p className="text-[11px] font-semibold text-amber-500 dark:text-amber-400 mt-1">
-              En seguimiento
+          </div>
+          
+          <div className="mt-3">
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-400 tracking-wider uppercase">
+              RESUELTOS
+            </span>
+            <div className="flex items-baseline gap-2 mt-1">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {resolvedCount}
+              </span>
+            </div>
+            <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-1 flex items-center gap-1">
+              <span>↑ 4 vs. período anterior</span>
             </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 text-amber-400 flex items-center justify-center border border-amber-500/30 shrink-0">
-            <TrendingUp size={20} />
+
+          <div className="absolute right-4 bottom-4 flex items-end gap-1 h-8 opacity-70 group-hover:opacity-100 transition-opacity">
+            <div className="w-1.5 h-3 bg-emerald-200 dark:bg-emerald-900/60 rounded-t-sm"></div>
+            <div className="w-1.5 h-4 bg-emerald-300 dark:bg-emerald-700/70 rounded-t-sm"></div>
+            <div className="w-1.5 h-6 bg-emerald-400 dark:bg-emerald-600/80 rounded-t-sm"></div>
+            <div className="w-1.5 h-8 bg-emerald-500 dark:bg-emerald-400 rounded-t-sm"></div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex items-start justify-between relative overflow-hidden group">
-          <div className="space-y-1">
-            <div className="flex items-center gap-1">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Mejora del Equipo</span>
-              <MetricInfoTooltip text="Porcentaje de feedback convertido en refactorizaciones de valor." />
+        {/* CARD 4: PROGRESO DE MEJORA */}
+        <div 
+          onClick={() => setStatusTab && setStatusTab('ALL')}
+          className={`bg-white dark:bg-[#13162b] border ${
+            statusTab === 'ALL' ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-slate-200 dark:border-[#252a4e]'
+          } p-5 rounded-2xl shadow-sm relative overflow-hidden flex flex-col justify-between group hover:border-emerald-500/50 transition-all cursor-pointer`}
+          title="Ver todos los ítems"
+        >
+          <div className="flex items-start justify-between">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 dark:bg-emerald-500/20 dark:text-emerald-400 flex items-center justify-center border border-emerald-200 dark:border-emerald-500/30 shrink-0">
+              <TrendingUp size={20} />
             </div>
-            <p className="text-2xl font-black text-slate-900 dark:text-white">50%</p>
-            <p className="text-[11px] font-semibold text-slate-400 mt-1">
-              Basado en feedback aplicado
-            </p>
           </div>
-          <div className="w-10 h-10 rounded-xl bg-teal-500/15 text-teal-400 flex items-center justify-center border border-teal-500/30 shrink-0">
-            <Users size={20} />
+          
+          <div className="mt-3">
+            <span className="text-[11px] font-black text-slate-400 dark:text-slate-400 tracking-wider uppercase">
+              PROGRESO DE MEJORA
+            </span>
+            
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                68%
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 text-[11px] font-extrabold">
+                ↑ 12%
+              </span>
+            </div>
+
+            <div className="w-full bg-slate-100 dark:bg-[#1a1e3b] h-2 rounded-full mt-2.5 overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full w-[68%] transition-all duration-500"></div>
+            </div>
+
+            <p className="text-[10px] font-medium text-slate-400 mt-2">
+              Basado en acciones completadas este período.
+            </p>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
