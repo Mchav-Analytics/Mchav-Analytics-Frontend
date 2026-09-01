@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X, Sparkles, CheckCircle2, AlertTriangle, Lightbulb, Trophy, ShieldCheck, ChevronRight, BarChart3, Bot } from 'lucide-react';
 
 function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorecard }) {
@@ -11,9 +12,15 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
   const fortalezas = ai.fortalezas || developer.explicacion_razones || [];
   const oportunidades = ai.oportunidades || [];
 
-  return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] text-left">
+  const modalContent = (
+    <div 
+      className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md transition-all"
+      onClick={onClose}
+    >
+      <div 
+        className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh] text-left relative z-[100000]"
+        onClick={(e) => e.stopPropagation()}
+      >
         
         {/* ENCABEZADO MODAL CON DEGRADADO NUBI IA */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-indigo-900/90 via-[#1e1b4b] to-purple-900/90 text-white relative overflow-hidden">
@@ -37,7 +44,7 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
 
           <button
             onClick={onClose}
-            className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all relative z-10"
+            className="p-2 text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition-all relative z-10 cursor-pointer"
           >
             <X className="w-5 h-5" />
           </button>
@@ -162,7 +169,7 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
               {/* Throughput */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-700 dark:text-slate-300">1. Throughput ({developer.throughput_issues} tickets)</span>
+                  <span className="text-slate-700 dark:text-slate-300">1. Throughput ({developer.throughput_issues || 0} tickets)</span>
                   <span className="text-indigo-600 dark:text-indigo-400 font-bold">{desglose.tp_score || 0} / 100</span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -173,7 +180,7 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
               {/* Velocity SP */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-700 dark:text-slate-300">2. Velocidad ({developer.velocity_sp} SP)</span>
+                  <span className="text-slate-700 dark:text-slate-300">2. Velocidad ({developer.velocity_sp || 0} SP)</span>
                   <span className="text-indigo-600 dark:text-indigo-400 font-bold">{desglose.sp_score || 0} / 100</span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -184,7 +191,7 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
               {/* Cycle Time */}
               <div className="space-y-1">
                 <div className="flex justify-between text-xs font-semibold">
-                  <span className="text-slate-700 dark:text-slate-300">3. Cycle Time ({developer.cycle_time_dias}d)</span>
+                  <span className="text-slate-700 dark:text-slate-300">3. Cycle Time ({developer.cycle_time_dias || 0}d)</span>
                   <span className="text-indigo-600 dark:text-indigo-400 font-bold">{desglose.ct_score || 0} / 100</span>
                 </div>
                 <div className="w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
@@ -222,7 +229,7 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
         <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#141738]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all"
+            className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer"
           >
             Cerrar
           </button>
@@ -242,6 +249,9 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 export default NubiDevAnalysisModal;
+
