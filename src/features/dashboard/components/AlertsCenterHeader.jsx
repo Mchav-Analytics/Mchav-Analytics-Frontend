@@ -52,15 +52,6 @@ export const AlertsCenterHeader = ({
             <Plus size={16} strokeWidth={2.5} />
             <span>Nuevo Feedback</span>
           </button>
-
-          <button
-            type="button"
-            onClick={handleExportCSV}
-            className="px-4 py-2.5 rounded-xl bg-white dark:bg-[#13162b] hover:bg-slate-50 dark:hover:bg-[#1a1e3b] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#252a4e] text-xs font-bold transition-all shadow-xs flex items-center gap-2 cursor-pointer"
-          >
-            <FileDown size={16} />
-            <span>Exportar</span>
-          </button>
         </div>
       </div>
 
