@@ -40,37 +40,17 @@ describe('LeaderDashboardHeader Component', () => {
     expect(screen.getByText('Panel Operativo del Sprint Activo')).toBeInTheDocument();
     expect(screen.getByText('TEST-123')).toBeInTheDocument();
     expect(screen.getByText('Planificar Capacidad')).toBeInTheDocument();
-    expect(screen.getByText('Exportar PDF')).toBeInTheDocument();
   });
 
   it('handles button clicks correctly', () => {
     const props = {
       selectedProjectId: 'TEST-123',
-      isExportingPdf: false,
-      handleExportPdf: vi.fn(),
       setActiveTab: vi.fn()
     };
     render(<LeaderDashboardHeader {...props} />);
 
     fireEvent.click(screen.getByText('Planificar Capacidad'));
     expect(props.setActiveTab).toHaveBeenCalledWith('capacidad');
-
-    fireEvent.click(screen.getByText('Exportar PDF'));
-    expect(props.handleExportPdf).toHaveBeenCalled();
-  });
-
-  it('disables export button while exporting', () => {
-    const props = {
-      selectedProjectId: 'TEST-123',
-      isExportingPdf: true,
-      handleExportPdf: vi.fn(),
-      setActiveTab: vi.fn()
-    };
-    render(<LeaderDashboardHeader {...props} />);
-
-    const exportBtn = screen.getByText('Generando...');
-    expect(exportBtn).toBeInTheDocument();
-    expect(exportBtn).toBeDisabled();
   });
 });
 

@@ -1,11 +1,8 @@
 import React from 'react';
-import { BarChart2, ShieldCheck, Calculator, FileDown } from 'lucide-react';
-import LiderNotificationBell from './LiderNotificationBell';
+import { BarChart2, ShieldCheck, Calculator } from 'lucide-react';
 
 export default function LeaderDashboardHeader({ 
   selectedProjectId, 
-  isExportingPdf, 
-  handleExportPdf,
   setActiveTab
 }) {
   return (
@@ -31,8 +28,6 @@ export default function LeaderDashboardHeader({
       </div>
 
       <div className="flex items-center gap-2.5 shrink-0">
-        <LiderNotificationBell />
-
         <button
           type="button"
           onClick={() => setActiveTab && setActiveTab('capacidad')}
@@ -40,15 +35,6 @@ export default function LeaderDashboardHeader({
         >
           <Calculator size={14} className="text-cyan-600 dark:text-cyan-400" /> 
           Planificar Capacidad
-        </button>
-        <button
-          type="button"
-          onClick={handleExportPdf}
-          disabled={isExportingPdf}
-          className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0 disabled:opacity-50"
-        >
-          <FileDown size={15} /> 
-          {isExportingPdf ? 'Generando...' : 'Exportar PDF'}
         </button>
       </div>
     </div>

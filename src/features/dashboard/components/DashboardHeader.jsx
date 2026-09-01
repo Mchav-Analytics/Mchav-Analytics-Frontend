@@ -1,8 +1,7 @@
 import React from 'react';
-import { BarChart3, FileDown } from 'lucide-react';
-import LiderNotificationBell from './LiderNotificationBell';
+import { BarChart3 } from 'lucide-react';
 
-export default function DashboardHeader({ onNavigateTab, handleExportPDF }) {
+export default function DashboardHeader({ onNavigateTab }) {
   return (
     <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4">
       
@@ -23,20 +22,6 @@ export default function DashboardHeader({ onNavigateTab, handleExportPDF }) {
         </div>
       </div>
 
-      {/* Lado Derecho: Bell Popup + Exportar PDF */}
-      <div className="flex items-center gap-2.5 shrink-0">
-        <LiderNotificationBell onNavigateTab={onNavigateTab} />
-
-        <button
-          type="button"
-          onClick={handleExportPDF}
-          className="px-4 py-2.5 rounded-2xl bg-[#5b36f5] hover:bg-indigo-600 text-white text-xs font-extrabold shadow-md flex items-center gap-2 cursor-pointer transition-all shrink-0"
-          title="Exportar reporte consolidado en PDF"
-        >
-          <FileDown size={15} />
-          <span>Exportar PDF</span>
-        </button>
-      </div>
     </div>
   );
 }
