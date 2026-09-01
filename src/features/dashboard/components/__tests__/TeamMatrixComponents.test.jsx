@@ -186,10 +186,6 @@ describe('TeamMatrixNav Component', () => {
     expect(screen.getByText('Matriz 4 Cuadrantes')).toBeInTheDocument();
     expect(screen.getByText('Andres (95 pts)')).toBeInTheDocument();
     
-    const healthBtn = screen.getByText('Salud del Sprint & Flow');
-    fireEvent.click(healthBtn);
-    expect(onNavigateToHealth).toHaveBeenCalled();
-    
     const scorecardBtn = screen.getByText('Scorecards Desarrolladores');
     fireEvent.click(scorecardBtn);
     expect(onSelectDevForScorecard).toHaveBeenCalledWith(null);

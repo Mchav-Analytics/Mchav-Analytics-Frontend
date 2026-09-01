@@ -15,12 +15,6 @@ export default function TeamDevScorecardsNav({
         >
           <span>Matriz 4 Cuadrantes</span>
         </button>
-        <button 
-          onClick={onNavigateToHealth}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-white bg-slate-100 dark:bg-[#12142e] hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-[#33376b] flex items-center gap-1.5 cursor-pointer"
-        >
-          <span>Salud del Sprint & Flow</span>
-        </button>
         <button className="px-3 py-1.5 text-xs font-bold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-pointer">
           <span>Scorecards Desarrolladores</span>
         </button>
