@@ -50,16 +50,16 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-slate-800">
             <div className="flex items-center gap-3.5">
               <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-black text-base shadow-md shrink-0">
-                {developer.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                {developer.nombre ? developer.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'DEV'}
               </div>
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
-                  <h4 className="font-extrabold text-slate-900 dark:text-white text-base">{developer.nombre}</h4>
+                  <h4 className="font-extrabold text-slate-900 dark:text-white text-base">{developer.nombre || 'Desarrollador'}</h4>
                   <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                    Posición #{developer.rank_posicion}
+                    Posición #{developer.rank_posicion || 1}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400">{developer.email}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{developer.email || 'Desarrollador MCHAV'}</p>
               </div>
             </div>
 

@@ -57,11 +57,11 @@ export default function TeamMatrixLeaderboard({
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-r from-teal-500 to-indigo-600 flex items-center justify-center text-white font-bold text-xs shadow-md shrink-0">
-                          {dev.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                          {dev.nombre ? dev.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'DEV'}
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 dark:text-white text-sm">{dev.nombre}</span>
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{dev.email}</span>
+                          <span className="font-bold text-slate-900 dark:text-white text-sm">{dev.nombre || 'Desarrollador'}</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">{dev.email || ''}</span>
                         </div>
                       </div>
                     </td>
