@@ -169,18 +169,38 @@ function Sidebar({
 
   return (
     <aside
-      className={`flex flex-col h-full py-4 bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative z-50 ${
-        isCollapsed ? 'w-[72px] px-3 items-center overflow-visible' : 'w-64 px-5 overflow-y-auto'
+      className={`flex flex-col h-full py-4 bg-white border-r rtl:border-r-0 rtl:border-l dark:bg-[#0f172a] dark:border-slate-800 transition-all duration-300 relative z-50 overflow-visible ${
+        isCollapsed ? 'w-[72px] px-3 items-center' : 'w-64 px-5'
       }`}
       style={{ flexShrink: 0 }}
     >
+      {/* ── BOTÓN FLOTANTE EN EL CENTRO VERTICAL DERECHO PARA COLAPSAR Y EXPANDIR EL PANEL ── */}
+      <div className="absolute top-1/2 -translate-y-1/2 -right-3.5 z-[60]">
+        <div className="p-2 rounded-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-lg hover:shadow-indigo-500/20 hover:border-indigo-500/50 transition-all flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95">
+          <label 
+            className="burger" 
+            htmlFor="sidebar-burger-toggle" 
+            title={isCollapsed ? 'Expandir panel' : 'Colapsar panel'}
+          >
+            <input
+              type="checkbox"
+              id="sidebar-burger-toggle"
+              checked={!isCollapsed}
+              onChange={() => setIsCollapsed(!isCollapsed)}
+            />
+            <span></span>
+            <span></span>
+            <span></span>
+          </label>
+        </div>
+      </div>
 
-      {/* ── CABECERA CON LOGO Y BURGER ANIMADO DE COLAPSO (Uiverse) ── */}
-      <div className={`flex items-center justify-between w-full ${isCollapsed ? 'flex-col gap-4 justify-center' : ''}`}>
+      {/* ── CABECERA CON LOGO ── */}
+      <div className={`flex items-center w-full pb-2 ${isCollapsed ? 'justify-center' : 'justify-start px-2'}`}>
         <button 
           type="button" 
           onClick={() => setActiveTab('proyectos')} 
-          className={`outline-none cursor-pointer border-none bg-transparent ${isCollapsed ? 'flex justify-center' : ''}`}
+          className="outline-none cursor-pointer border-none bg-transparent flex items-center justify-center"
           title="Ir a Inicio / Proyectos"
         >
           <Logo
@@ -191,19 +211,6 @@ function Sidebar({
             }}
           />
         </button>
-
-        {/* Botón Burger Animado */}
-        <label className="burger" htmlFor="sidebar-burger-toggle" title={isCollapsed ? 'Expandir panel' : 'Colapsar panel'}>
-          <input
-            type="checkbox"
-            id="sidebar-burger-toggle"
-            checked={!isCollapsed}
-            onChange={() => setIsCollapsed(!isCollapsed)}
-          />
-          <span></span>
-          <span></span>
-          <span></span>
-        </label>
       </div>
 
       <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
