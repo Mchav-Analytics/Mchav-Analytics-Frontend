@@ -8,7 +8,7 @@ import { ProjectsBurnup } from '../components/ProjectsBurnup';
 import { ProjectsTeamPerformance } from '../components/ProjectsTeamPerformance';
 import { FileDown, X, BookOpen, Layers, Activity, TrendingUp, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
-const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab }) => {
+const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selectedProjectId: globalSelectedProjectId, setSelectedProjectId: globalSetSelectedProjectId }) => {
   const { user } = useAuth();
   const {
     searchTerm,
@@ -30,7 +30,7 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab }) => {
     setShowBurndownDocModal,
     assignedTeam,
     toastMsg
-  } = useProyectosDashboard({ userProfile });
+  } = useProyectosDashboard({ userProfile, selectedProjectId: globalSelectedProjectId, setSelectedProjectId: globalSetSelectedProjectId });
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-left font-sans">

@@ -2,11 +2,19 @@ import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
 import api, { projectService } from '../../../services/api';
 
-export const useProyectosDashboard = ({ userProfile }) => {
+export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSelectedProjectId, setSelectedProjectId: parentSetSelectedProjectId }) => {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [syncing, setSyncing] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState('ALL'); // 'ALL' o id del proyecto
+  const [internalSelectedProjectId, setInternalSelectedProjectId] = useState(parentSelectedProjectId || 'ALL');
+
+  const selectedProjectId = parentSelectedProjectId !== undefined && parentSelectedProjectId !== 'ALL' ? parentSelectedProjectId : internalSelectedProjectId;
+  const setSelectedProjectId = (newId) => {
+    setInternalSelectedProjectId(newId);
+    if (parentSetSelectedProjectId) {
+      parentSetSelectedProjectId(newId);
+    }
+  };
   const [expandedTeamProjectId, setExpandedTeamProjectId] = useState(null); // Acordeón desplegable de equipo desacoplado
   const [dateRange, setDateRange] = useState('MAY_2024');
   const [sprintRange, setSprintRange] = useState('6_SPRINTS');

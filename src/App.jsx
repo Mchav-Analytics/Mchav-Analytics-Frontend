@@ -434,7 +434,9 @@ function MainAppContent() {
         <ProyectosDashboardView 
           userProfile={user} 
           activeTab={activeTab} 
-          setActiveTab={setActiveTab} 
+          setActiveTab={setActiveTab}
+          selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
         />
       )}
 
