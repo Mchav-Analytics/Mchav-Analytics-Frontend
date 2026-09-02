@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import api, { authService, jiraService, jqlService, projectService, developerService, alertService, automationService, aiService, BACKEND_URL } from '../api';
+import api, { authService, jiraService, jqlService, projectService, developerService, alertService, automationService, aiService, userService, reportService, BACKEND_URL } from '../api';
 
 // Mock del almacenamiento local para interceptores
 const localStorageMock = (() => {
@@ -530,12 +530,10 @@ describe('API Services', () => {
 
     it('downloadCsvReport creates link', () => {
       const mockLink = { setAttribute: vi.fn(), click: vi.fn(), remove: vi.fn() };
-      vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
+      vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
       vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
 
-      import('../api').then(module => {
-        module.reportService.downloadCsvReport('P1', []);
-      });
+      reportService.downloadCsvReport('P1', []);
       
       expect(document.createElement).toHaveBeenCalledWith('a');
     });

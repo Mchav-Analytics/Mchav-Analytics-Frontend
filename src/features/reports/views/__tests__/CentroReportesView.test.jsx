@@ -13,11 +13,14 @@ vi.mock('react-to-print', () => ({
   useReactToPrint: () => vi.fn()
 }));
 
-vi.mock('../../../../services/api', () => ({
-  default: {
-    get: vi.fn(),
-  }
-}));
+vi.mock('../../../../services/api', async (importOriginal) => {
+  const actual = await importOriginal();
+  return {
+    ...actual,
+    default: { get: vi.fn() },
+    projectService: { getSprints: vi.fn(() => Promise.resolve([])) }
+  };
+});
 
 // Mock fetch for history
 global.fetch = vi.fn();
@@ -56,13 +59,13 @@ describe('CentroReportesView', () => {
       render(<CentroReportesView selectedProjectId="PROJ-01" />);
     });
     
-    const histTab = screen.getByText('Historial Inmutable');
+    const histTab = screen.getByText('Historial');
     
     await act(async () => {
       fireEvent.click(histTab);
     });
     
-    expect(screen.getByText('Reconstruir Histórico')).toBeInTheDocument();
+    expect(screen.getByText('Consultar Historial')).toBeInTheDocument();
   });
 
   it('can change report type to developer and load users', async () => {
