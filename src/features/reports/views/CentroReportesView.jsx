@@ -148,11 +148,21 @@ export default function CentroReportesView({ selectedProjectId }) {
       let minimumRequired = 5;
       let targetName = 'General';
 
+      // Extraer nombre del proyecto real siempre
+      let realProjectName = 'MCHAV Analytics';
+      const currentProj = dbProjects.find(p => p.id_proyecto === (reportType === 'proyecto' ? projectId : selectedProjectId));
+      if (currentProj) {
+        realProjectName = currentProj.nombre || currentProj.name || 'MCHAV Analytics';
+      }
+
+      let sprintName = 'Sprint Actual';
+
       if (reportType === 'sprint') {
         const sprint = dbSprints.find(s => s.id_sprint === reportParam);
         if (sprint) {
           params.sprint_id = sprint.id_sprint;
           targetName = sprint.nombre_sprint || sprint.nombre || sprint.id_sprint;
+          sprintName = targetName;
         }
         minimumRequired = 3;
       } else if (reportType === 'desarrollador') {
@@ -163,8 +173,7 @@ export default function CentroReportesView({ selectedProjectId }) {
         }
         minimumRequired = 2;
       } else if (reportType === 'proyecto') {
-        const proj = dbProjects.find(p => p.id_proyecto === projectId);
-        if (proj) targetName = proj.nombre;
+        targetName = realProjectName;
         minimumRequired = 5;
       }
 
@@ -186,6 +195,7 @@ export default function CentroReportesView({ selectedProjectId }) {
       let aiInsightsData = null;
       try {
         const metricsData = {
+          reportType: reportType || 'sprint',
           velocity: kpis?.metrics?.completed_sp || 0,
           throughput: totalRecords,
           cycleTime: kpis?.metrics?.avg_cycle_time || 0,
@@ -213,6 +223,8 @@ export default function CentroReportesView({ selectedProjectId }) {
           totalIssues: totalRecords, 
           blockedDays: kpis?.metrics?.blocked_days || 0,
           targetName: targetName,
+          projectName: realProjectName,
+          sprintName: sprintName,
           kpis: kpis,
           aiInsights: aiInsightsData
       });
