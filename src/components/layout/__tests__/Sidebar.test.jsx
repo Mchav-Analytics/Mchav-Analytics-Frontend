@@ -115,4 +115,76 @@ describe('Sidebar Component', () => {
 
     expect(screen.getByTestId('profile-modal')).toBeInTheDocument();
   });
+
+  it('opens ProfileSettingsModal when clicking the user profile container', async () => {
+    const user = userEvent.setup();
+    renderSidebar('ADMIN');
+    
+    const profileContainer = screen.getByTitle('Ver Ajustes de Perfil');
+    await act(async () => {
+      await user.click(profileContainer);
+    });
+
+    expect(screen.getByTestId('profile-modal')).toBeInTheDocument();
+  });
+
+  it('opens ProfileSettingsModal and logs out from collapsed view', async () => {
+    const user = userEvent.setup();
+    renderSidebar('ADMIN', { isCollapsed: true });
+    
+    const settingsBtn = screen.getByTitle('Configuración de Perfil');
+    await act(async () => {
+      await user.click(settingsBtn);
+    });
+    expect(screen.getByTestId('profile-modal')).toBeInTheDocument();
+
+    const logoutBtn = screen.getByTitle('Cerrar Sesión');
+    await act(async () => {
+      await user.click(logoutBtn);
+    });
+    expect(mockLogout).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls switchViewRole for all three roles', async () => {
+    const user = userEvent.setup();
+    const switchRoleMock = vi.fn();
+    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+      user: { rol: 'ADMIN', nombre: 'John Doe', email: 'admin@test.com' },
+      logout: mockLogout,
+      switchViewRole: switchRoleMock,
+      isRealAdmin: true
+    });
+    render(<Sidebar {...defaultProps} />);
+    
+    const adminBtn = screen.getByTitle('Cambiar a Vista Administrador');
+    const leaderBtn = screen.getByTitle('Cambiar a Vista Líder Técnico');
+    const devBtn = screen.getByTitle('Cambiar a Vista Desarrollador');
+
+    await act(async () => {
+      await user.click(adminBtn);
+    });
+    expect(switchRoleMock).toHaveBeenCalledWith('ADMIN');
+
+    await act(async () => {
+      await user.click(leaderBtn);
+    });
+    expect(switchRoleMock).toHaveBeenCalledWith('MANAGER');
+
+    await act(async () => {
+      await user.click(devBtn);
+    });
+    expect(switchRoleMock).toHaveBeenCalledWith('DEVELOPER');
+  });
+
+  it('opens AI Chat Modal when clicking Nubi IA', async () => {
+    const user = userEvent.setup();
+    renderSidebar('ADMIN');
+    
+    const aiBtn = screen.getByTitle('Consultar a Nubi IA');
+    await act(async () => {
+      await user.click(aiBtn);
+    });
+
+    expect(screen.getByTestId('ai-chat-modal')).toBeInTheDocument();
+  });
 });
