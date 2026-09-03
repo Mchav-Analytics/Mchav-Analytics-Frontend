@@ -426,9 +426,9 @@ export default function CentroReportesView({ selectedProjectId }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ml-0 md:ml-12 mb-20 flex-1">
               {(reportType === 'proyecto' 
-                ? ['Resumen ejecutivo', 'KPIs del proyecto', 'Velocidad por sprint', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
+                ? ['Contexto General', 'Estado de Entrega y Burnup', 'Flujo Operativo (CFD)', 'Predictibilidad y Riesgos', 'Conclusiones Estratégicas', 'Plan de Acción']
                 : reportType === 'sprint'
-                ? ['Resumen del sprint', 'Burndown del sprint', 'Tareas completadas vs pendientes', 'Distribución por desarrollador', 'Bugs reportados', 'Retrospectiva y mejoras']
+                ? ['KPIs de Rendimiento', 'Análisis de Cumplimiento', 'Sprint Burnup', 'Flujo Acumulado (CFD)', 'Predictibilidad (Scatter)', 'Veredicto del Sprint']
                 : reportType === 'desarrollador'
                 ? ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo']
                 : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
@@ -447,7 +447,7 @@ export default function CentroReportesView({ selectedProjectId }) {
               disabled={isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '')}
               className={`absolute bottom-0 right-0 px-10 py-4 ${isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '') ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_20px_rgba(79,70,229,0.4)]'} text-white rounded-xl font-bold flex items-center gap-3 transition-all`}
             >
-              Generar reporte (V3) &rarr;
+              Generar reporte &rarr;
             </button>
           </div>
         </div>

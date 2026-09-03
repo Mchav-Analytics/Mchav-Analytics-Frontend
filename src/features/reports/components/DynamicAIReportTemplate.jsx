@@ -136,11 +136,18 @@ const PROSE = `
   prose-ul:my-2 prose-ol:my-2
 `;
 
-function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
-  // Dividir el texto por las secciones enumeradas
-  const pages = markdownText.split(/(?=(?:^|\n)# 0\d —)/gi).filter(Boolean);
+function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, reportType) {
+  const isProyecto = reportType === 'proyecto';
+  const isDesarrollador = reportType === 'desarrollador';
 
-  // Limpiar cualquier tag residual de [GRAFICA_*] que la IA haya incluido por error
+  // Dividir según el formato del reporte
+  const splitRegex = isProyecto 
+    ? /(?=(?:^|\n)(?:\*\*)?\[PROYECTO_\d\])/gi 
+    : /(?=(?:^|\n)# 0\d —)/gi;
+  
+  const pages = markdownText.split(splitRegex).filter(Boolean);
+
+  // Limpiar tags residuales
   const cleanText = (text) => text
     .replace(/\[GRAFICA_BURNUP\]/gi, '')
     .replace(/\[GRAFICA_FLUJO\]/gi, '')
@@ -148,15 +155,27 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
     .replace(/\[GRAFICA_PREDICTIBILIDAD\]/gi, '');
 
   return pages.map((pageText, pageIndex) => {
-    const sectionMatch = pageText.match(/^# 0(\d) —/i);
-    const sectionNum = sectionMatch ? parseInt(sectionMatch[1], 10) : null;
+    // Detectar número de sección según formato
+    let sectionNum = null;
+    if (isProyecto) {
+      const match = pageText.match(/\[PROYECTO_(\d)\]/i);
+      if (match) sectionNum = parseInt(match[1], 10);
+    } else {
+      const sectionMatch = pageText.match(/^# 0(\d) —/i);
+      sectionNum = sectionMatch ? parseInt(sectionMatch[1], 10) : null;
+    }
 
     let trimmed = cleanText(pageText).trim();
     if (!trimmed) return null;
 
-    // Quitar '# 0X —' visualmente
-    trimmed = trimmed.replace(/^#\s*0\d\s*—\s*/gi, '# ');
-    trimmed = trimmed.replace(/^#\s*ACTO\s*\d*:?\s*/gi, '# ');
+    // Limpiar prefijos de título para formato limpio
+    if (isProyecto) {
+      // Eliminar el tag [PROYECTO_X] para que no se vea en el PDF final, dejando solo el texto del título como H3
+      trimmed = trimmed.replace(/^(?:#+\s*|\*\*)?\[PROYECTO_\d\]\s*(.*?)(?:\*\*)?$/gmi, '### $1');
+    } else {
+      trimmed = trimmed.replace(/^#\s*0\d\s*—\s*/gi, '# ');
+      trimmed = trimmed.replace(/^#\s*ACTO\s*\d*:?\s*/gi, '# ');
+    }
 
     // Extraer %%HIGHLIGHT%%
     const highlightMatch = trimmed.match(/%%HIGHLIGHT%%\s*(.*?)\s*(?:%%\/?HIGHLIGHT%%|%%)/is);
@@ -169,11 +188,20 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
     // Separar título del contenido
     let lines = trimmed.split('\n');
     let title = '';
-    if (lines.length > 0 && lines[0].startsWith('# ')) {
+    if (lines.length > 0 && (lines[0].startsWith('# ') || lines[0].startsWith('### '))) {
       title = lines[0];
       lines.shift();
       trimmed = lines.join('\n');
     }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // MAPEO DE GRÁFICAS POR TIPO DE REPORTE
+    // Sprint:    sección 4 → Burnup, sección 5 → CFD, sección 7 → Scatter
+    // Proyecto:  ACTO 2 → Burnup, ACTO 3 → CFD, ACTO 4 → Scatter
+    // ═══════════════════════════════════════════════════════════════════════
+    const showBurnup = isProyecto ? sectionNum === 2 : sectionNum === 4;
+    const showCFD = isProyecto ? sectionNum === 3 : sectionNum === 5;
+    const showScatter = isProyecto ? sectionNum === 4 : sectionNum === 7;
 
     return (
       <div key={`section-${pageIndex}`} style={{ 
@@ -185,12 +213,12 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
         pageBreakInside: 'avoid',
         breakInside: 'avoid',
       }}>
-        {/* Separador visual entre secciones */}
+        {/* Separador entre secciones */}
         {pageIndex > 0 && (
           <div style={{ borderTop: '1px solid #e2e8f0', marginBottom: '30px' }} />
         )}
 
-        {/* ENCABEZADO DE SECCIÓN */}
+        {/* ENCABEZADO */}
         {title && (
           <div className={PROSE} style={{ marginBottom: highlightText ? '5px' : '15px' }}>
             <ReactMarkdown>{title}</ReactMarkdown>
@@ -206,14 +234,14 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
             borderLeft: '5px solid #6366f1', 
             borderRadius: '0 8px 8px 0',
           }}>
-            <p style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0, lineHeight: 1.3, letterSpacing: '-0.01em' }}>
+            <p style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a', margin: 0, lineHeight: 1.3 }}>
               {highlightText}
             </p>
           </div>
         )}
 
-        {/* ═══ SECCIÓN 2: Resultado General — KPIs gigantes ═══ */}
-        {sectionNum === 2 && (
+        {/* ═══ KPIs (Solo Sprint, sección 2) ═══ */}
+        {!isProyecto && sectionNum === 2 && (
           <div style={{ display: 'flex', gap: '20px', margin: '20px 0', alignItems: 'center', justifyContent: 'space-around', background: '#f8fafc', padding: '30px 15px', borderRadius: '12px' }}>
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '42px', fontWeight: 900, color: '#3b82f6', margin: 0, lineHeight: 1 }}>
@@ -239,8 +267,8 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
           </div>
         )}
 
-        {/* ═══ SECCIÓN 3: Planificado vs Entregado — Tabla comparativa ═══ */}
-        {sectionNum === 3 && (
+        {/* ═══ Tabla comparativa (Solo Sprint, sección 3) ═══ */}
+        {!isProyecto && sectionNum === 3 && (
           <div style={{ margin: '20px 0', pageBreakInside: 'avoid' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', fontFamily: '"Times New Roman", serif' }}>
               <thead>
@@ -280,55 +308,58 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope) {
           <ReactMarkdown>{trimmed}</ReactMarkdown>
         </div>
 
-        {/* ═══ SECCIÓN 4: Burnup — evidencia visual del comportamiento ═══ */}
-        {sectionNum === 4 && (
+        {/* ═══ GRÁFICA BURNUP ═══ */}
+        {showBurnup && (
           <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
             <GraficaBurnup data={chartData.burnupData} />
           </div>
         )}
 
-        {/* ═══ SECCIÓN 5: Flujo + tabla de métricas de flujo ═══ */}
-        {sectionNum === 5 && (
+        {/* ═══ GRÁFICA CFD ═══ */}
+        {showCFD && (
           <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
             <GraficaFlujo data={chartData.cfdData} />
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', fontFamily: '"Times New Roman", serif', marginTop: '20px' }}>
-              <thead>
-                <tr style={{ background: '#1e293b' }}>
-                  <th style={{ padding: '8px 15px', textAlign: 'left', color: 'white', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>Indicador de Flujo</th>
-                  <th style={{ padding: '8px 15px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>Valor</th>
-                  <th style={{ padding: '8px 15px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>Interpretación</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>Cycle Time Promedio</td>
-                  <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: '#3b82f6' }}>{stats.cycleTime} días</td>
-                  <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>{stats.cycleTime <= 3 ? 'Dentro del rango saludable' : stats.cycleTime <= 7 ? 'Requiere monitoreo' : 'Fuera de rango óptimo'}</td>
-                </tr>
-                <tr style={{ background: 'white', borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>Throughput</td>
-                  <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: '#3b82f6' }}>{stats.throughput} tickets</td>
-                  <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>Volumen de entrega del período</td>
-                </tr>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                  <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>Días de Bloqueo</td>
-                  <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: stats.blockedDays > 5 ? '#ef4444' : '#10b981' }}>{stats.blockedDays || 0} días</td>
-                  <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>{stats.blockedDays > 5 ? 'Impacto significativo en el flujo' : 'Impacto controlado'}</td>
-                </tr>
-              </tbody>
-            </table>
+            {/* Tabla de flujo solo para sprint */}
+            {!isProyecto && (
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', fontFamily: '"Times New Roman", serif', marginTop: '20px' }}>
+                <thead>
+                  <tr style={{ background: '#1e293b' }}>
+                    <th style={{ padding: '8px 15px', textAlign: 'left', color: 'white', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>Indicador de Flujo</th>
+                    <th style={{ padding: '8px 15px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>Valor</th>
+                    <th style={{ padding: '8px 15px', textAlign: 'center', color: 'white', fontWeight: 700, fontSize: '10px', textTransform: 'uppercase' }}>Interpretación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>Cycle Time Promedio</td>
+                    <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: '#3b82f6' }}>{stats.cycleTime} días</td>
+                    <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>{stats.cycleTime <= 3 ? 'Dentro del rango saludable' : stats.cycleTime <= 7 ? 'Requiere monitoreo' : 'Fuera de rango óptimo'}</td>
+                  </tr>
+                  <tr style={{ background: 'white', borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>Throughput</td>
+                    <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: '#3b82f6' }}>{stats.throughput} tickets</td>
+                    <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>Volumen de entrega del período</td>
+                  </tr>
+                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                    <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>Días de Bloqueo</td>
+                    <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: stats.blockedDays > 5 ? '#ef4444' : '#10b981' }}>{stats.blockedDays || 0} días</td>
+                    <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b', fontSize: '10px' }}>{stats.blockedDays > 5 ? 'Impacto significativo en el flujo' : 'Impacto controlado'}</td>
+                  </tr>
+                </tbody>
+              </table>
+            )}
           </div>
         )}
 
-        {/* ═══ SECCIÓN 7: Patrones — Scatter de predictibilidad ═══ */}
-        {sectionNum === 7 && (
+        {/* ═══ GRÁFICA SCATTER (Predictibilidad) ═══ */}
+        {showScatter && (
           <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
             <GraficaPredictibilidad data={chartData.percentilesData} />
           </div>
         )}
 
-        {/* ═══ SECCIÓN 8: Conclusión — veredicto final ═══ */}
-        {sectionNum === 8 && (
+        {/* ═══ Veredicto final (Solo Sprint, sección 8) ═══ */}
+        {!isProyecto && sectionNum === 8 && (
           <div style={{ margin: '30px 0', textAlign: 'center', background: '#f8fafc', padding: '35px', borderRadius: '16px', pageBreakInside: 'avoid' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px', lineHeight: 1 }}>
                {(stats.velocity / totalScope) >= 0.9 ? '🟢' : (stats.velocity / totalScope) >= 0.7 ? '🟡' : '🔴'}
@@ -409,7 +440,7 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
   const markdownText = aiInsights?.markdown || 'Generando análisis inteligente... Si ves este mensaje, la conexión con IA falló o los datos no cargaron.';
 
   return (
-    <div style={{ position: 'absolute', left: '-9999px', top: 0, width: '210mm', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', width: '210mm', height: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: -1 }}>
       <div ref={ref} className="bg-white text-black w-full mx-auto font-serif text-[12pt] leading-loose">
         <style type="text/css" media="print">{`
           @page { 
@@ -476,11 +507,11 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>
               {[
                 { label: 'Proyecto', value: projectName },
-                { label: 'Sprint', value: sprintName },
+                reportType === 'sprint' ? { label: 'Sprint', value: sprintName } : null,
                 { label: 'Período', value: dates },
                 { label: 'Fecha de Emisión', value: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) },
                 { label: 'Generado Por', value: user?.nombre || 'MCHAV Analytics' },
-              ].map(({ label, value }) => (
+              ].filter(Boolean).map(({ label, value }) => (
                 <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{label}</span>
                   <span style={{ fontSize: '14px', fontWeight: 700, color: '#1e293b' }}>{value}</span>
@@ -506,7 +537,7 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
           )}
 
           {/* Contenido: Markdown + gráficas intercaladas + KPIs nativos */}
-          {renderMarkdownWithCharts(markdownText, chartData, stats, totalScope)}
+          {renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, reportType)}
         </div>
       </div>
     </div>
