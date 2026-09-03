@@ -55,9 +55,6 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
         setActiveTab={setActiveTab}
       />
 
-      {/* 1B. Tarjetas de Métricas Ejecutivas del Proyecto Seleccionado */}
-      <SprintHealthKpis metrics={activeHealthMetrics} />
-
       {/* 2. Tabla Resumen de Proyectos */}
       <ProjectsTable
         selectedProjectObj={selectedProjectObj}
@@ -74,6 +71,9 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
           if (setActiveTab) setActiveTab('sprint_health');
         }}
       />
+
+      {/* 2B. Tarjetas de Métricas Ejecutivas del Proyecto Seleccionado */}
+      <SprintHealthKpis metrics={activeHealthMetrics} />
 
       {/* 3. Bloque 2A: Diagrama de Flujo Acumulado (CFD) */}
       <ProjectsCFD
