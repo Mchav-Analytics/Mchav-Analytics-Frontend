@@ -168,6 +168,22 @@ export default function LiderNotificationBell({
       });
   };
 
+  const [opensUpward, setOpensUpward] = useState(false);
+  const buttonTriggerRef = useRef(null);
+
+  const handleToggleOpen = () => {
+    if (!isOpen && buttonTriggerRef.current) {
+      const rect = buttonTriggerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      if (rect.top > windowHeight * 0.45) {
+        setOpensUpward(true);
+      } else {
+        setOpensUpward(false);
+      }
+    }
+    setIsOpen(!isOpen);
+  };
+
   const filteredNotifications = notifications.filter(notif => {
     if (activeFilterTab === 'ALERTAS_IA') return notif.type === 'NUBI_ALERT' || notif.nubiDiagnosis;
     if (activeFilterTab === 'CRITICAS') return notif.severity === 'CRITICAL' || notif.type === 'CRITICAL' || notif.type === 'BUG' || notif.type === 'SYNC_FAIL';
@@ -178,8 +194,9 @@ export default function LiderNotificationBell({
     <div className={`relative inline-block ${className}`} ref={popoverRef}>
       {/* BOTÓN DE CAMPANA DE NOTIFICACIONES CON PULSO EN TIEMPO REAL */}
       <button
+        ref={buttonTriggerRef}
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggleOpen}
         className="p-2.5 rounded-2xl bg-white dark:bg-[#141738] hover:bg-slate-100 dark:hover:bg-[#1a1e47] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#272b5c] transition-all cursor-pointer relative flex items-center justify-center shadow-xs"
         title={`Notificaciones & Alertas IA Nubi - Rol ${activeRole}`}
       >
@@ -193,7 +210,11 @@ export default function LiderNotificationBell({
 
       {/* POPUP EMERGENTE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] sm:w-[420px] max-w-md bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-3.5 animate-in fade-in zoom-in-95 duration-150 text-left">
+        <div className={`absolute right-0 w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
+          opensUpward
+            ? 'bottom-full mb-3 animate-in fade-in slide-in-from-bottom-2 duration-200'
+            : 'top-full mt-3 animate-in fade-in slide-in-from-top-2 duration-200'
+        }`}>
           
           {/* CABECERA CON ACCIÓN DE ESCANEO DE IA NUBI */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">
@@ -316,11 +337,11 @@ export default function LiderNotificationBell({
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-1">
-                        <h4 className="font-extrabold text-xs text-slate-900 dark:text-white truncate flex items-center gap-1.5">
-                          <span>{notif.title}</span>
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white whitespace-normal leading-snug break-words flex-1">
+                          {notif.title}
                         </h4>
-                        <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                        <span className="text-[10px] font-mono text-slate-400 shrink-0 pt-0.5">
                           {notif.time}
                         </span>
                       </div>
