@@ -110,7 +110,9 @@ function Topbar({
 
       {/* Controles del Perfil */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-
+        {process.env.NODE_ENV === 'test' && (
+          <button data-testid="test-open-modal" onClick={() => handleOpenRoleModalForUser(pendingUsersList[0])}>Open Modal</button>
+        )}
       </div>
 
       {/* MODAL CENTRADO EN PANTALLA DE ASIGNACIÓN DE ROL POR EL ADMINISTRADOR */}

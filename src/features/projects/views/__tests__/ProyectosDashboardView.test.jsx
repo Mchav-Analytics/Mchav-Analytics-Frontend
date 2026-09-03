@@ -1,166 +1,138 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProyectosDashboardView from '../ProyectosDashboardView';
-import { projectService, userService } from '../../../../services/api';
-import { useProjectsData } from '../../../../hooks/useProjectsData';
+import { useProyectosDashboard } from '../../hooks/useProyectosDashboard';
+import { useAuth } from '../../../auth/context/AuthContext';
 
 // Mock Auth
 vi.mock('../../../auth/context/AuthContext', () => ({
   useAuth: vi.fn(() => ({ 
-    user: { email: 'admin@test.com', rol: 'ADMIN', nombre: 'Test Admin' },
-    token: 'mock-token' 
+    user: { email: 'admin@test.com', rol: 'ADMIN', nombre: 'Test Admin' }
   }))
 }));
 
-// Mock hooks
-vi.mock('../../../../hooks/useProjectsData', () => ({
-  useProjectsData: vi.fn()
+// Mock hook
+vi.mock('../../hooks/useProyectosDashboard', () => ({
+  useProyectosDashboard: vi.fn()
 }));
 
-// ResizeObserver mock
-global.ResizeObserver = class ResizeObserver {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
-};
-
-// Component Mocks
-vi.mock('../../dashboard/components/LiderNotificationBell', () => ({
-  default: () => <div data-testid="lider-bell-mock">LiderNotificationBell</div>
+// Mock child components to isolate View testing
+vi.mock('../../components/ProjectsHeader', () => ({
+  ProjectsHeader: () => <div data-testid="projects-header-mock">ProjectsHeader</div>
 }));
 
-vi.mock('../components/SprintBurndownChart', () => ({
-  SprintBurndownChart: () => <div data-testid="sprint-burndown-mock">SprintBurndownChart</div>
+vi.mock('../../components/ProjectsTable', () => ({
+  ProjectsTable: () => <div data-testid="projects-table-mock">ProjectsTable</div>
 }));
 
-vi.mock('../components/SprintBurnupChart', () => ({
-  SprintBurnupChart: () => <div data-testid="sprint-burnup-mock">SprintBurnupChart</div>
+vi.mock('../../components/ProjectsCFD', () => ({
+  ProjectsCFD: ({ setShowCfdDocModal }) => (
+    <div data-testid="projects-cfd-mock">
+      ProjectsCFD
+      <button data-testid="open-cfd-modal" onClick={() => setShowCfdDocModal(true)}>Open CFD</button>
+    </div>
+  )
 }));
 
-vi.mock('../components/ProjectMetrics', () => ({
-  ProjectMetrics: () => <div data-testid="project-metrics-mock">ProjectMetrics</div>
+vi.mock('../../components/ProjectsBurnup', () => ({
+  ProjectsBurnup: ({ setShowBurndownDocModal }) => (
+    <div data-testid="projects-burnup-mock">
+      ProjectsBurnup
+      <button data-testid="open-burnup-modal" onClick={() => setShowBurndownDocModal(true)}>Open Burnup</button>
+    </div>
+  )
 }));
 
-vi.mock('../../dashboard/components/PercentilesChart', () => ({
-  default: () => <div data-testid="percentiles-chart-mock">PercentilesChart</div>
+vi.mock('../../components/ProjectsTeamPerformance', () => ({
+  ProjectsTeamPerformance: () => <div data-testid="projects-team-mock">ProjectsTeamPerformance</div>
 }));
 
-// Mock Recharts to avoid rendering SVG/Canvas complexity in jsdom
-vi.mock('recharts', () => {
-  return {
-    ResponsiveContainer: ({ children }) => <div data-testid="recharts-responsive-container">{children}</div>,
-    BarChart: ({ children }) => <div>{children}</div>,
-    LineChart: ({ children }) => <div>{children}</div>,
-    AreaChart: ({ children }) => <div>{children}</div>,
-    PieChart: ({ children }) => <div>{children}</div>,
-    ComposedChart: ({ children }) => <div>{children}</div>,
-    ScatterChart: ({ children }) => <div>{children}</div>,
-    Bar: () => null,
-    Line: () => null,
-    Area: () => null,
-    Pie: () => null,
-    Scatter: () => null,
-    ReferenceLine: () => null,
-    XAxis: () => null,
-    YAxis: () => null,
-    CartesianGrid: () => null,
-    Tooltip: () => null,
-    Legend: () => null,
-    Cell: () => null
-  };
-});
-
-// API mocks
-vi.mock('../../../../services/api', () => {
-  return {
-    default: {
-      get: vi.fn(),
-      post: vi.fn(),
-      put: vi.fn(),
-      delete: vi.fn(),
-    },
-    projectService: {
-      getAllProjects: vi.fn(),
-      getProjects: vi.fn(),
-      updateProject: vi.fn(),
-      getKpis: vi.fn(),
-      getKpiIssuesDetail: vi.fn(),
-      getProjectBurnup: vi.fn(),
-      getProjectBurndown: vi.fn(),
-      getProjectCFD: vi.fn(),
-      getSprints: vi.fn()
-    },
-    userService: {
-      getUsers: vi.fn(),
-    }
-  };
-});
 
 describe('ProyectosDashboardView', () => {
-  const mockProjects = [
-    { id_proyecto: 'P1', key_proyecto: 'KEY-1', nombre: 'Proyecto ALPHA', estado: 'ACTIVE' },
-    { id_proyecto: 'P2', key_proyecto: 'KEY-2', nombre: 'Proyecto BETA', estado: 'INACTIVE' }
-  ];
-
-  const mockUsers = [
-    { id_usuario: 'U1', nombre: 'Lead 1', rol: 'Líder Técnico', email: 'lead1@test.com' },
-    { id_usuario: 'U2', nombre: 'Dev 1', rol: 'Desarrollador', email: 'dev1@test.com' }
-  ];
+  const defaultHookValues = {
+    searchTerm: '',
+    setSearchTerm: vi.fn(),
+    selectedProjectId: null,
+    setSelectedProjectId: vi.fn(),
+    expandedTeamProjectId: null,
+    setExpandedTeamProjectId: vi.fn(),
+    allProjectsList: [],
+    selectedProjectObj: null,
+    displayProjects: [],
+    activeVelocityData: [],
+    activePercentilesData: [],
+    activeCfdData: [],
+    activeBurnupData: [],
+    showCfdDocModal: false,
+    setShowCfdDocModal: vi.fn(),
+    showBurndownDocModal: false,
+    setShowBurndownDocModal: vi.fn(),
+    assignedTeam: [],
+    toastMsg: ''
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
-    // Default localStorage
-    localStorage.clear();
-    
-    // Mock useProjectsData
-    useProjectsData.mockReturnValue({
-      dbUsers: mockUsers,
-      dbProjects: mockProjects,
-      developers: [mockUsers[1]],
-      assignedDevs: [],
-      unassignedDevs: [mockUsers[1]],
-      assignProjectId: {},
-      setAssignProjectId: vi.fn(),
-      handleAssignProject: vi.fn()
-    });
-
-    // Default API resolves
-    userService.getUsers.mockResolvedValue(mockUsers);
-    projectService.getProjects.mockResolvedValue(mockProjects);
-    projectService.getKpis.mockResolvedValue({ total: 10 });
-    projectService.getKpiIssuesDetail.mockResolvedValue({ total_issues: 5, issues: [] });
-    projectService.getProjectBurnup.mockResolvedValue([]);
-    projectService.getProjectBurndown.mockResolvedValue([]);
-    projectService.getProjectCFD.mockResolvedValue([]);
-    projectService.getSprints.mockResolvedValue([]);
+    useProyectosDashboard.mockReturnValue(defaultHookValues);
   });
 
-  it('renders correctly and fetches initial data', async () => {
-    await act(async () => {
-      render(<ProyectosDashboardView />);
-    });
-    expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
+  it('renders correctly with child components', () => {
+    render(<ProyectosDashboardView />);
+    
+    expect(screen.getByTestId('projects-header-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('projects-table-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('projects-cfd-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('projects-burnup-mock')).toBeInTheDocument();
+    expect(screen.getByTestId('projects-team-mock')).toBeInTheDocument();
+    expect(screen.getByText(/Todos los derechos reservados/i)).toBeInTheDocument();
   });
 
-  it('filters projects based on search term', async () => {
-    const user = userEvent.setup();
-    
-    await act(async () => {
-      render(<ProyectosDashboardView />);
-    });
-    
-    expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
-
-    const searchInput = screen.getByPlaceholderText('Buscar proyecto...');
-    await act(async () => {
-      await user.type(searchInput, 'ALPHA');
+  it('displays toast message when toastMsg is provided', () => {
+    useProyectosDashboard.mockReturnValue({
+      ...defaultHookValues,
+      toastMsg: 'Test Toast Message'
     });
 
-    expect(screen.getByText(/Bienvenido de nuevo/i)).toBeInTheDocument();
+    render(<ProyectosDashboardView />);
+    expect(screen.getByText('Test Toast Message')).toBeInTheDocument();
   });
 
+  it('renders and closes Burnup Documentation modal', () => {
+    const setShowBurndownDocModalMock = vi.fn();
+    useProyectosDashboard.mockReturnValue({
+      ...defaultHookValues,
+      showBurndownDocModal: true,
+      setShowBurndownDocModal: setShowBurndownDocModalMock
+    });
+
+    render(<ProyectosDashboardView />);
+    
+    expect(screen.getByText('Justificación Técnica: Burnup')).toBeInTheDocument();
+    expect(screen.getByText('1. Alcance Total vs. Trabajo Completado')).toBeInTheDocument();
+
+    const closeBtnPanel = screen.getByText('Cerrar panel');
+    fireEvent.click(closeBtnPanel);
+    expect(setShowBurndownDocModalMock).toHaveBeenCalledWith(false);
+  });
+
+  it('renders and closes CFD Documentation modal', () => {
+    const setShowCfdDocModalMock = vi.fn();
+    useProyectosDashboard.mockReturnValue({
+      ...defaultHookValues,
+      showCfdDocModal: true,
+      setShowCfdDocModal: setShowCfdDocModalMock
+    });
+
+    render(<ProyectosDashboardView />);
+    
+    expect(screen.getByText('Justificación Técnica: CFD')).toBeInTheDocument();
+    expect(screen.getByText('1. Áreas Apiladas por Estado')).toBeInTheDocument();
+
+    const closeBtnPanel = screen.getByText('Cerrar panel');
+    fireEvent.click(closeBtnPanel);
+    expect(setShowCfdDocModalMock).toHaveBeenCalledWith(false);
+  });
 });
+

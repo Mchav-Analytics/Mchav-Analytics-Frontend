@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import api, { authService, jiraService, jqlService, projectService, developerService, alertService, automationService, aiService, userService, reportService, BACKEND_URL } from '../api';
 
 // Mock del almacenamiento local para interceptores
@@ -7,6 +7,7 @@ const localStorageMock = (() => {
   return {
     getItem: vi.fn(key => store[key] || null),
     setItem: vi.fn((key, value) => { store[key] = value.toString(); }),
+    removeItem: vi.fn(key => { delete store[key]; }),
     clear: vi.fn(() => { store = {}; })
   };
 })();
@@ -22,7 +23,12 @@ vi.mock('axios', () => {
     patch: vi.fn(),
     defaults: { withCredentials: true },
     interceptors: {
-      request: { use: vi.fn(), eject: vi.fn() },
+      request: {
+        use: vi.fn((fn) => {
+          (axiosInstance as any).__requestInterceptor = fn;
+        }),
+        eject: vi.fn()
+      },
       response: { use: vi.fn(), eject: vi.fn() }
     }
   };
@@ -528,6 +534,19 @@ describe('API Services', () => {
       expect(fetch).toHaveBeenCalled();
     });
 
+    it('downloadPdfReport uses window.open on fetch failure', async () => {
+      global.fetch = vi.fn(() => Promise.reject(new Error('Network error')));
+      const openSpy = vi.spyOn(window, 'open').mockImplementation(() => {});
+      
+      await import('../api').then(module => {
+        module.reportService.downloadPdfReport('P1');
+      });
+      
+      await new Promise(process.nextTick);
+      expect(openSpy).toHaveBeenCalled();
+      openSpy.mockRestore();
+    });
+
     it('downloadCsvReport creates link', () => {
       const mockLink = { setAttribute: vi.fn(), click: vi.fn(), remove: vi.fn() };
       vi.spyOn(document, 'createElement').mockReturnValue(mockLink as any);
@@ -536,6 +555,26 @@ describe('API Services', () => {
       reportService.downloadCsvReport('P1', []);
       
       expect(document.createElement).toHaveBeenCalledWith('a');
+    });
+  });
+
+  describe('Axios Interceptors', () => {
+    it('adds token to headers if present', () => {
+      window.localStorage.setItem('mchav_jwt_token', 'my-token');
+      const config = { headers: {} };
+      const interceptorFn = (api as any).__requestInterceptor;
+      const newConfig = interceptorFn(config);
+      
+      expect(newConfig.headers.Authorization).toBe('Bearer my-token');
+    });
+
+    it('does not add token to headers if not present', () => {
+      window.localStorage.removeItem('mchav_jwt_token');
+      const config = { headers: {} };
+      const interceptorFn = (api as any).__requestInterceptor;
+      const newConfig = interceptorFn(config);
+      
+      expect(newConfig.headers.Authorization).toBeUndefined();
     });
   });
 });

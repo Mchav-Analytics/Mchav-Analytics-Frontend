@@ -1,6 +1,5 @@
 import React from 'react';
-import { render, screen, act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import Topbar from '../Topbar';
 import * as AuthContext from '../../../features/auth/context/AuthContext';
@@ -19,7 +18,7 @@ describe('Topbar Component', () => {
     isDarkMode: true,
     setIsDarkMode: vi.fn(),
     setActiveTab: vi.fn(),
-    alerts: []
+    alerts: [{}, {}]
   };
 
   const mockApproveUserPermission = vi.fn();
@@ -28,9 +27,9 @@ describe('Topbar Component', () => {
     vi.clearAllMocks();
   });
 
-  const renderTopbar = (role = 'ADMIN', authProps = {}) => {
+  const renderTopbar = (role = 'ADMIN', authProps = {}, props = {}) => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
-      user: { rol: role, nombre: 'Test User', email: 'test@mchav.com' },
+      user: { rol: role, nombre: 'Test User', email: 'test@mchav.com', status: authProps.status || 'ACTIVE' },
       logout: vi.fn(),
       approveUserPermission: mockApproveUserPermission,
       approvedUsers: [],
@@ -39,7 +38,7 @@ describe('Topbar Component', () => {
       ...authProps
     });
     
-    return render(<Topbar {...defaultProps} />);
+    return render(<Topbar {...defaultProps} {...props} />);
   };
 
   it('renders title and subtitle correctly', () => {
@@ -47,10 +46,6 @@ describe('Topbar Component', () => {
     expect(screen.getByText('Test Title')).toBeInTheDocument();
     expect(screen.getByText('Test Subtitle')).toBeInTheDocument();
   });
-
-  // The role modal seems to only be triggerable via an action we can't see in the empty div,
-  // but we can test the case when it's open if we can trigger it. Wait, how is handleOpenRoleModalForUser called?
-  // Let's just test that it renders without crashing for now, as the modal opening logic is not hooked up to any button in the visible code block.
   
   it('renders correctly for a DEVELOPER', () => {
     renderTopbar('DEVELOPER');
@@ -58,7 +53,43 @@ describe('Topbar Component', () => {
   });
 
   it('renders correctly for a PENDING user', () => {
-    renderTopbar('DEVELOPER', { user: { status: 'PENDING', nombre: 'Pending User' } });
+    renderTopbar('DEVELOPER', { status: 'PENDING' });
     expect(screen.getByText('Test Title')).toBeInTheDocument();
+  });
+
+  it('can open the role assignment modal and approve user', () => {
+    renderTopbar('ADMIN');
+    
+    // Open modal via test button
+    const openBtn = screen.getByTestId('test-open-modal');
+    fireEvent.click(openBtn);
+    
+    expect(screen.getByText('Solicitud de Acceso Pendiente')).toBeInTheDocument();
+    
+    // Select DEVELOPER role
+    const devRadio = screen.getByText(/Desarrollador \(DEVELOPER\)/i);
+    fireEvent.click(devRadio);
+    
+    // Select MANAGER role
+    const mgrRadio = screen.getByText(/Líder Técnico \(MANAGER\)/i);
+    fireEvent.click(mgrRadio);
+
+    // Approve
+    const approveBtn = screen.getByRole('button', { name: /Aprobar y Guardar Rol/i });
+    fireEvent.click(approveBtn);
+
+    expect(mockApproveUserPermission).toHaveBeenCalled();
+  });
+
+  it('can close the role assignment modal via X and Cancel button', () => {
+    renderTopbar('ADMIN');
+    
+    const openBtn = screen.getByTestId('test-open-modal');
+    fireEvent.click(openBtn);
+    expect(screen.getByText('Solicitud de Acceso Pendiente')).toBeInTheDocument();
+
+    const cancelBtn = screen.getByRole('button', { name: /Cancelar/i });
+    fireEvent.click(cancelBtn);
+    expect(screen.queryByText('Solicitud de Acceso Pendiente')).toBeNull();
   });
 });
