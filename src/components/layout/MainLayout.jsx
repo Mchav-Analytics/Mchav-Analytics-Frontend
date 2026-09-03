@@ -46,11 +46,11 @@ function MainLayout({
   const handleRoleSwitch = (newRole) => {
     switchViewRole(newRole);
     if (newRole === 'MANAGER') {
-      setActiveTab('dashboard');
+      setActiveTab('proyectos');
     } else if (newRole === 'DEVELOPER') {
       setActiveTab('developer');
     } else {
-      setActiveTab('usuarios');
+      setActiveTab('proyectos');
     }
   };
 
@@ -72,8 +72,6 @@ function MainLayout({
       {/* Contenido Principal */}
       <main className="main-content flex flex-col flex-1 min-h-screen overflow-x-hidden">
         
-
-
         <div className="dashboard-inner pt-4 flex-1">
           {children}
         </div>

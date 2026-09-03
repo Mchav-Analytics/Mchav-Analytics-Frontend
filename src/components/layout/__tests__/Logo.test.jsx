@@ -10,7 +10,7 @@ describe('Logo Component', () => {
     const imgElement = screen.getByRole('img');
     expect(imgElement).toBeInTheDocument();
     expect(imgElement).toHaveAttribute('alt', 'MCHAV Analytics Logo');
-    expect(imgElement).toHaveStyle({ width: '38px', height: '38px', borderRadius: '10px' });
+    expect(imgElement).toHaveStyle({ width: '38px', height: '38px', marginRight: '8px', objectFit: 'contain' });
   });
 
   it('applies custom size and className props', () => {

@@ -96,4 +96,37 @@ describe('SystemSyncTab - Integration', () => {
 
     expect(jiraService.triggerSync).toHaveBeenCalled();
   });
+
+  it('handles inline functions for showing log details and downloading logs', async () => {
+    const user = userEvent.setup();
+    const createElementSpy = vi.spyOn(document, 'createElement');
+    const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+    
+    await act(async () => {
+      render(<SystemSyncTab />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('120')).toBeInTheDocument();
+    });
+
+    // Test Show Detail
+    const showDetailsButtons = screen.getAllByTitle('Ver detalles');
+    await act(async () => {
+      await user.click(showDetailsButtons[0]);
+    });
+    expect(screen.getByText(/Tarea completada con éxito. ID: 1 | Issues Procesados: 120/)).toBeInTheDocument();
+
+    // Test Download Log
+    const downloadButtons = screen.getAllByTitle('Descargar log');
+    await act(async () => {
+      await user.click(downloadButtons[0]);
+    });
+    
+    expect(createElementSpy).toHaveBeenCalledWith('a');
+    expect(appendChildSpy).toHaveBeenCalled();
+
+    createElementSpy.mockRestore();
+    appendChildSpy.mockRestore();
+  });
 });

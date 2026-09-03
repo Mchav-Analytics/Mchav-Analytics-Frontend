@@ -77,4 +77,33 @@ describe('Componente: JqlEditor (Fase 4.4)', () => {
     
     expect(defaultProps.handleExecuteJql).toHaveBeenCalled();
   });
+
+  it('debe llamar a setJqlQuery con presets rápidos al hacer clic en los botones', () => {
+    render(<JqlEditor {...defaultProps} />);
+    
+    const presets = [
+      { name: 'Todas las Incidencias', expected: 'project = "10000"' },
+      { name: 'En Progreso', expected: 'project = "10000" AND status in ("In Progress", "En curso")' },
+      { name: 'Pendientes (To Do)', expected: 'project = "10000" AND status in ("To Do", "Por hacer", "Pendiente")' },
+      { name: 'Completadas (Done)', expected: 'project = "10000" AND status in ("Done", "Finalizado", "Completado")' },
+      { name: 'Alta Prioridad', expected: 'project = "10000" AND priority in (High, Highest, Alta) AND status not in ("Done", "Finalizado", "Completado")' },
+      { name: 'Sin Asignar', expected: 'project = "10000" AND assignee is EMPTY AND status not in ("Done", "Finalizado", "Completado")' },
+      { name: 'Bugs Activos', expected: 'project = "10000" AND issuetype in (Bug, Error) AND status not in ("Done", "Finalizado", "Completado")' },
+      { name: 'Actualizadas 7 días', expected: 'project = "10000" AND updated >= -7d ORDER BY updated DESC' },
+    ];
+
+    presets.forEach(preset => {
+      const button = screen.getByRole('button', { name: preset.name });
+      fireEvent.click(button);
+      expect(defaultProps.setJqlQuery).toHaveBeenCalledWith(preset.expected);
+    });
+  });
+
+  it('debe cambiar el estado de ver diccionario al hacer clic en el botón', () => {
+    render(<JqlEditor {...defaultProps} showDictionaryTable={false} />);
+    
+    const toggleDictionaryBtn = screen.getByRole('button', { name: /Ver Guía de Sintaxis JQL/i });
+    fireEvent.click(toggleDictionaryBtn);
+    expect(defaultProps.setShowDictionaryTable).toHaveBeenCalledWith(true);
+  });
 });

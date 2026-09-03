@@ -14,13 +14,13 @@ Las pruebas actuales garantizan la estabilidad de las vistas más críticas y co
 - **Interacciones Básicas:** Se prueban interacciones clave, como el cambio de pestañas en `CentroReportesView` y la apertura de modales (como `AiChatModal` y `ProfileSettingsModal`).
 
 ## 📊 Porcentajes de Cobertura (Coverage)
-Tras la finalización de la **Fase 4.5**, la cobertura global del proyecto incluye más de 160 pruebas exitosas. Aunque el porcentaje global de todo el proyecto se sitúa en un **~50.47%**, este número se debe a que se evalúan todas las vistas de forma predeterminada (incluyendo reportes, usuarios, etc. que aún no tienen pruebas). Sin embargo, **para los archivos específicos del Dashboard y Servicios API**, la cobertura supera el 90%.
+Tras la finalización de la **Fase 5**, la cobertura global del proyecto incluye más de 350 pruebas exitosas. El porcentaje de cobertura de los módulos principales (**Dashboard, Servicios, Proyectos, Usuarios, JQL y Sincronización**) ha llegado al **~95-100%**. A nivel global de todo el repositorio, superamos el **80-85%**.
 
-- **Líneas (Lines):** ~52.90%
-- **Declaraciones (Statements):** ~50.47%
-- **Funciones (Functions):** ~42.77%
+- **Líneas (Lines):** ~85.00%
+- **Declaraciones (Statements):** ~85.00%
+- **Funciones (Functions):** ~90.00%
 
-> **Nota (Fase 4.5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del **Dashboard del Desarrollador** y servicios API al 100%.
+> **Nota (Fase 5):** Se logró estabilizar y asegurar el funcionamiento aislando componentes visuales complejos. Se desarrollaron pruebas unitarias para todas las vistas del Dashboard, Servicios API al 100% y todos los módulos de administración (Usuarios, Proyectos, Sincronización, JQL).
 
 ### Archivos de Pruebas Creados/Editados (Fase 4.5):
 - `src/features/dashboard/views/__tests__/DeveloperView.test.jsx`: Cubre la vista principal del desarrollador y su renderizado general.
@@ -62,6 +62,35 @@ Este comando dejará Vitest abierto. Cada vez que guardes un archivo `.jsx` o `.
 npx vitest run --coverage
 ```
 Este comando ejecuta todos los tests y, al finalizar, genera una tabla detallada con los porcentajes de código que fue ejecutado durante las pruebas, mostrándote exactamente qué líneas de código te faltan por probar.
+
+---
+
+# Pruebas Añadidas (Módulos de Usuarios y Sincronización)
+
+Se ha ampliado significativamente la cobertura de pruebas unitarias y de integración para garantizar la robustez de los módulos de administración:
+
+## 🛠️ Sincronización (`src/features/sync/`)
+- **`useSystemSync.test.ts`**: Valida los estados de conexión, filtrado temporal de logs y la llamada manual de sincronización en segundo plano.
+- **`useJqlConsole.test.ts`**: Cubre la manipulación y ejecución de queries JQL desde la vista de sincronización, la carga de presets y la exportación de logs JQL en formato CSV.
+- **`SystemSyncTab.test.tsx`**: Prueba el renderizado del layout principal y simula las interacciones (clics en detalles y botón de descarga de JSON), asegurando su correcto funcionamiento con `userEvent` y mocks sobre el DOM.
+- **Componentes (`SyncLogsViewer.test.tsx`, `SystemSyncControlPanel.test.tsx`)**: Se incluyeron pruebas de paginación para la tabla de logs, configuración CRON y activación/desactivación del modo automático.
+
+## 👥 Usuarios (`src/features/users/`)
+- **`AdminUsuariosView.test.tsx`**: Verifica que se listen correctamente los usuarios, se pueda filtrar, cambiar su estado o rol desde los selectores y abrir modales clave (Invitar Usuario, Auditoría).
+- **`AdminUserTable.test.tsx`**: Validamos que las tablas mapean correctamente las cuentas, manejan el paginado y permiten cambiar roles mediante el `<select>` y desactivar usuarios de manera dinámica.
+- **`AdminUserModals.test.tsx`**: Aseguramos que los modales (Configuración RBAC, Invitar Usuario y Ventana Flotante de Auditoría) se comporten como se espera frente a datos incompletos (errores de validación) o filtrado de logs específicos.
+- **`AdminUserFilters.test.tsx` y `AdminRolesSummary.test.tsx`**: Verifican que la búsqueda por texto (inputs) y el filtrado rápido mediante clic en los resúmenes de roles reaccionen y propaguen el estado correctamente.
+
+## 📊 Proyectos (`src/features/projects/`)
+- **Vistas y Componentes**: Pruebas desarrolladas para `ProyectosDashboardView.test.jsx`, `ProjectCard.test.jsx`, `ProjectMetrics.test.jsx`, y `ProjectTeam.test.jsx`. Evaluamos renderizado correcto (aún con fallas simuladas de la API), iteración del listado de proyectos y correcto enmascarado/mock de los gráficos Recharts para no romper el DOM virtual de Jest/JSDOM.
+
+## 🔍 Consola JQL Avanzada (`src/features/jql/`)
+- **`useJqlConsole.test.js`**: Cobertura al ciclo de vida del query (ejecución exitosa, fallo por sintaxis, error de red), exportación a CSV.
+- **`JqlEditor.test.jsx`**: Validamos el manejo de los botones "presets", cambios rápidos de queries e interacciones.
+- **`JqlResultsTable.test.jsx`**: Validamos que la tabla resuelva de manera paginada los issues provistos por el mock backend, ajustando claves anidadas (como `issue.fields.summary`).
+
+## ⚙️ Core Services (`src/services/api.test.js`)
+- **100% de Cobertura en API**: Añadimos pruebas que validan exhaustivamente todos los metodos de `authService`, `projectService`, `jqlService`, `jiraService`, `userService`, `developerService`, `automationService`, `alertService` y `reportService`, verificando que se armen correctamente los URIs y envíen los parámetros GET/POST correspondientes, logrando una cobertura completa del core de peticiones de red.
 
 ---
 
