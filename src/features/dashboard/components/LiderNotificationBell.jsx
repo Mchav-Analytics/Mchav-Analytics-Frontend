@@ -125,6 +125,7 @@ export default function LiderNotificationBell({
     } else if (onNavigateToHub) {
       onNavigateToHub('alerts_center');
     }
+    window.dispatchEvent(new CustomEvent('navigateTab', { detail: { tab: 'alerts_center' } }));
   };
 
   const handleNavigate = (tabName) => {
@@ -134,6 +135,7 @@ export default function LiderNotificationBell({
     } else if (onNavigateToHub) {
       onNavigateToHub(tabName);
     }
+    window.dispatchEvent(new CustomEvent('navigateTab', { detail: { tab: tabName } }));
   };
 
   const handleOpenTask = (issueKey) => {
@@ -145,6 +147,7 @@ export default function LiderNotificationBell({
     } else {
       handleNavigate('developer');
     }
+    window.dispatchEvent(new CustomEvent('navigateTab', { detail: { tab: 'dev_workload' } }));
   };
 
   const handleRetrySync = (id) => {

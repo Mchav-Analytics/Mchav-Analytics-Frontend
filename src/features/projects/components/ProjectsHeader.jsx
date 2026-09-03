@@ -2,13 +2,12 @@ import React from 'react';
 import { 
   Filter, 
   FolderKanban, 
-  LayoutDashboard, 
   Target, 
-  Activity, 
   Bell, 
   FileText, 
   Code 
 } from 'lucide-react';
+import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
 
 export const ProjectsHeader = ({ 
   userProfile, 
@@ -41,6 +40,9 @@ export const ProjectsHeader = ({
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
+          {/* Botón de Campana de Notificaciones & Alertas IA Nubi */}
+          <LiderNotificationBell onNavigateTab={setActiveTab} />
+
           <div className="relative">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-xl shadow-2xs">
               <Filter size={14} className="text-slate-400" />
