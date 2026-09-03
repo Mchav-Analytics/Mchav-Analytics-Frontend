@@ -102,4 +102,93 @@ describe('CentroReportesView', () => {
       expect(generateBtn).not.toBeDisabled();
     }, { timeout: 3500 });
   });
+
+  it('filters general projects correctly', async () => {
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
+    
+    // Cambiar a "Resumen General"
+    const generalCard = screen.getByText('Resumen General');
+    await act(async () => {
+      fireEvent.click(generalCard);
+    });
+
+    const searchInput = screen.getByPlaceholderText('Buscar proyecto...');
+    await act(async () => {
+      fireEvent.change(searchInput, { target: { value: 'Inexistente' } });
+    });
+
+    expect(screen.getByText('No se encontraron proyectos.')).toBeInTheDocument();
+  });
+
+  it('fetches history successfully', async () => {
+    global.fetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve({ success: true })
+    });
+
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
+    
+    const histTab = screen.getByText('Historial');
+    await act(async () => {
+      fireEvent.click(histTab);
+    });
+
+    // Seleccionar mes para habilitar fetch
+    const monthSelects = screen.getAllByRole('combobox').filter(sel => sel.innerHTML.includes('Mes...'));
+    if (monthSelects.length > 0) {
+      await act(async () => {
+        fireEvent.change(monthSelects[0], { target: { value: '01' } });
+      });
+    }
+
+    const loadMonthBtn = screen.getByText('Cargar mes →');
+    await act(async () => {
+      fireEvent.click(loadMonthBtn);
+    });
+
+    expect(global.fetch).toHaveBeenCalled();
+  });
+
+  it('handles custom ranges and sprint comparisons', async () => {
+    await act(async () => {
+      render(<CentroReportesView selectedProjectId="PROJ-01" />);
+    });
+    
+    const histTab = screen.getByText('Historial');
+    await act(async () => {
+      fireEvent.click(histTab);
+    });
+
+    // Cambiar tipo de reporte a Sprint en Rango Personalizado
+    const typeSelects = screen.getAllByRole('combobox');
+    const rangoSelect = typeSelects.find(s => s.value === 'Resumen General' && s.nextElementSibling?.className.includes('emerald-500'));
+    
+    if (rangoSelect) {
+      await act(async () => {
+        fireEvent.change(rangoSelect, { target: { value: 'Sprint' } });
+      });
+    }
+
+    // Click en "Comparar con otro Sprint"
+    const compareLabel = screen.getByText('Comparar con otro Sprint');
+    await act(async () => {
+      fireEvent.click(compareLabel);
+    });
+
+    expect(screen.getByText('2. Sprint Base')).toBeInTheDocument();
+    expect(screen.getByText('3. Sprint a Comparar')).toBeInTheDocument();
+    
+    // Toggle full history
+    const historyLabel = screen.getByText('Consultar Historial Completo');
+    await act(async () => {
+      fireEvent.click(historyLabel);
+    });
+    
+    const loadRangeBtn = screen.getByText('Consultar historial completo →');
+    expect(loadRangeBtn).toBeInTheDocument();
+  });
 });

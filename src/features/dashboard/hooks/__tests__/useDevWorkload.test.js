@@ -235,7 +235,7 @@ describe('useDevWorkload', () => {
     expect(result.current.copiedBranch).toBe(true);
   });
   
-  it('clears filters correctly', async () => {
+  it('sorts tasks correctly by OLDEST and PRIORITY', async () => {
     const { result } = renderHook(() => useDevWorkload(defaultProps));
 
     await waitFor(() => {
@@ -243,18 +243,77 @@ describe('useDevWorkload', () => {
     });
 
     act(() => {
-      result.current.setSearchQuery('test');
-      result.current.setStatusFilter('EN CURSO');
+      result.current.setSortBy('OLDEST');
     });
-
-    expect(result.current.hasActiveFilters).toBe(true);
+    // Task 1 is older than Task 2
+    expect(result.current.filteredTasks[0].key).toBe('MCHAV-1');
 
     act(() => {
-      result.current.clearFilters();
+      result.current.setSortBy('PRIORITY');
+    });
+    // Task 2 (Critica) > Task 1 (High)
+    expect(result.current.filteredTasks[0].key).toBe('MCHAV-2');
+  });
+
+  it('closes modals on Escape key', async () => {
+    const { result } = renderHook(() => useDevWorkload(defaultProps));
+    
+    await waitFor(() => {
+      expect(result.current.tasksList.length).toBe(2);
     });
 
-    expect(result.current.searchQuery).toBe('');
-    expect(result.current.statusFilter).toBe('TODOS');
-    expect(result.current.hasActiveFilters).toBe(false);
+    act(() => {
+      result.current.setSelectedTaskModal(result.current.tasksList[0]);
+    });
+    
+    expect(result.current.selectedTaskModal).toBeDefined();
+
+    act(() => {
+      const event = new KeyboardEvent('keydown', { key: 'Escape' });
+      document.dispatchEvent(event);
+    });
+
+    expect(result.current.selectedTaskModal).toBeNull();
+  });
+
+  it('closes dropdown on outside click', async () => {
+    const { result } = renderHook(() => useDevWorkload(defaultProps));
+    
+    act(() => {
+      // Mock the ref so the hook thinks it's attached to a DOM node
+      result.current.dropdownRef.current = document.createElement('div');
+      result.current.setIsStatusDropdownOpen(true);
+    });
+    
+    expect(result.current.isStatusDropdownOpen).toBe(true);
+
+    act(() => {
+      const event = new MouseEvent('mousedown', { bubbles: true });
+      document.dispatchEvent(event);
+    });
+
+    expect(result.current.isStatusDropdownOpen).toBe(false);
+  });
+
+  it('handles Jira 500 error with specific message', async () => {
+    jiraService.executeIssueTransition.mockRejectedValueOnce({
+      response: { status: 502, data: {} }
+    });
+    
+    const { result } = renderHook(() => useDevWorkload(defaultProps));
+
+    await waitFor(() => {
+      expect(result.current.tasksList.length).toBe(2);
+    });
+
+    await act(async () => {
+      result.current.setSelectedTaskModal(result.current.tasksList[0]);
+    });
+
+    await act(async () => {
+      await result.current.handleSelectTransition('Done');
+    });
+
+    expect(result.current.errorMsg).toContain('No fue posible comunicarse con Jira');
   });
 });

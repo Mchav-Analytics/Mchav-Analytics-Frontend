@@ -134,33 +134,38 @@ describe('LiderNotificationBell', () => {
         onOpenTask={onOpenTask}
       />
     );
-    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
-
     // Ver tarea
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Ver tarea'));
     expect(onOpenTask).toHaveBeenCalledWith('T-1');
 
     // Ver usuarios
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Ver usuarios'));
     expect(onNavigateTab).toHaveBeenCalledWith('usuarios');
 
     // Responder
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Responder'));
     expect(onNavigateTab).toHaveBeenCalledWith('alerts_center');
 
     // Ver bug
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Ver bug'));
     expect(onNavigateTab).toHaveBeenCalledWith('team_matrix');
 
     // Revisar
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Revisar'));
     expect(onNavigateTab).toHaveBeenCalledWith('alerts_center');
 
     // Ver informe
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Ver informe'));
     expect(onNavigateTab).toHaveBeenCalledWith('sprint_health');
     
     // Ir al Centro de Actividad completo
+    fireEvent.click(screen.getByTitle('Notificaciones - Rol ADMIN'));
     fireEvent.click(screen.getByText('Ir al Centro de Actividad completo'));
     expect(onNavigateTab).toHaveBeenCalledWith('alerts_center');
   });

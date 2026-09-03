@@ -3,8 +3,8 @@ import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import MainLayout from '../MainLayout';
-import { userService } from '../../../services/api';
-import * as AuthContext from '../../features/auth/context/AuthContext';
+import { authService } from '../../../services/api';
+import * as AuthContext from '../../../features/auth/context/AuthContext';
 
 vi.mock('../Sidebar', () => ({
   default: () => <div data-testid="sidebar">Sidebar Mock</div>,
@@ -14,7 +14,7 @@ vi.mock('../Topbar', () => ({
   default: () => <div data-testid="topbar">Topbar Mock</div>,
 }));
 
-vi.mock('../../services/api', () => ({
+vi.mock('../../../services/api', () => ({
   authService: {
     getCurrentUser: vi.fn(),
   }
