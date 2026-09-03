@@ -203,17 +203,50 @@ export default function LiderNotificationBell({
 
   return (
     <div className={`relative inline-block ${className}`} ref={popoverRef}>
-      {/* BOTÓN DE CAMPANA DE NOTIFICACIONES CON PULSO EN TIEMPO REAL */}
+      {/* BOTÓN ULTRA-PREMIUM DE CAMPANA DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
       <button
         ref={buttonTriggerRef}
         type="button"
         onClick={handleToggleOpen}
-        className="p-2.5 rounded-2xl bg-white dark:bg-[#141738] hover:bg-slate-100 dark:hover:bg-[#1a1e47] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#272b5c] transition-all cursor-pointer relative flex items-center justify-center shadow-xs"
-        title={`Notificaciones & Alertas IA Nubi - Rol ${activeRole}`}
+        className={`group relative px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl transition-all duration-300 cursor-pointer flex items-center gap-2 border shadow-xs hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95 ${
+          isOpen
+            ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/30'
+            : 'bg-white dark:bg-[#141738] hover:bg-slate-50 dark:hover:bg-[#1a1e47] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-[#272b5c]'
+        }`}
+        title={`Alertas Nubi AI & Notificaciones - Rol ${activeRole}`}
       >
-        <Bell size={18} className="text-slate-700 dark:text-slate-200" />
+        {/* Ícono de Campana con destello de IA Nubi */}
+        <div className="relative flex items-center justify-center">
+          <Bell
+            size={18}
+            className={`transition-transform duration-300 group-hover:rotate-12 ${
+              isOpen ? 'text-white' : 'text-slate-700 dark:text-slate-200'
+            }`}
+          />
+          <Sparkles
+            size={10}
+            className={`absolute -top-1.5 -left-1.5 transition-opacity ${
+              isOpen ? 'text-amber-300 opacity-100' : 'text-indigo-500 dark:text-indigo-400 opacity-80 group-hover:opacity-100 animate-pulse'
+            }`}
+          />
+        </div>
+
+        {/* Texto de Alertas IA */}
+        <span className={`text-[11px] font-extrabold hidden sm:inline-block tracking-tight transition-colors ${
+          isOpen ? 'text-white' : 'text-slate-800 dark:text-slate-100'
+        }`}>
+          Alertas IA
+        </span>
+
+        {/* Insignia / Contador Dinámico */}
         {unreadCount > 0 && (
-          <span className={`absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full ${criticalCount > 0 ? 'bg-rose-500 animate-bounce' : 'bg-indigo-600'} text-white font-black text-[10px] flex items-center justify-center shadow-md`}>
+          <span className={`min-w-[20px] h-5 px-1.5 rounded-full font-black text-[10px] flex items-center justify-center shadow-md ring-2 transition-all ${
+            isOpen
+              ? 'bg-white text-indigo-700 ring-indigo-400'
+              : criticalCount > 0
+              ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white ring-white dark:ring-[#141738] animate-bounce shadow-rose-500/40'
+              : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white ring-white dark:ring-[#141738]'
+          }`}>
             {unreadCount}
           </span>
         )}
