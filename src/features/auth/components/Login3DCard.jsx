@@ -90,15 +90,6 @@ export default function Login3DCard({
                     </svg>
                     <span>Continuar con Atlassian (Jira)</span>
                   </button>
-
-                  {/* Acceso de Desarrollo Directo */}
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); handleLocalDevLogin(); }}
-                    className="w-full h-10 rounded-xl bg-slate-900/80 hover:bg-slate-800 border border-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer"
-                  >
-                    <span>⚡ Acceso Rápido Desarrollo (Demo)</span>
-                  </button>
                 </div>
 
                 <div
