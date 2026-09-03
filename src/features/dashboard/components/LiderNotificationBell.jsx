@@ -169,16 +169,27 @@ export default function LiderNotificationBell({
   };
 
   const [opensUpward, setOpensUpward] = useState(false);
+  const [alignLeft, setAlignLeft] = useState(false);
   const buttonTriggerRef = useRef(null);
 
   const handleToggleOpen = () => {
     if (!isOpen && buttonTriggerRef.current) {
       const rect = buttonTriggerRef.current.getBoundingClientRect();
       const windowHeight = window.innerHeight;
+      const windowWidth = window.innerWidth;
+      
+      // Abrir hacia arriba si está en la parte inferior
       if (rect.top > windowHeight * 0.45) {
         setOpensUpward(true);
       } else {
         setOpensUpward(false);
+      }
+
+      // Alinear a la izquierda (left-0) si está en la mitad izquierda de la pantalla (ej. Sidebar)
+      if (rect.left < windowWidth * 0.5) {
+        setAlignLeft(true);
+      } else {
+        setAlignLeft(false);
       }
     }
     setIsOpen(!isOpen);
@@ -210,7 +221,9 @@ export default function LiderNotificationBell({
 
       {/* POPUP EMERGENTE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
       {isOpen && (
-        <div className={`absolute right-0 w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
+        <div className={`absolute w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
+          alignLeft ? 'left-0' : 'right-0'
+        } ${
           opensUpward
             ? 'bottom-full mb-3 animate-in fade-in slide-in-from-bottom-2 duration-200'
             : 'top-full mt-3 animate-in fade-in slide-in-from-top-2 duration-200'
