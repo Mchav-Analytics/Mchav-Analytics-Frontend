@@ -74,18 +74,21 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
       <ProjectsCFD
         activeCfdData={activeCfdData}
         setShowCfdDocModal={setShowCfdDocModal}
+        selectedProjectObj={selectedProjectObj}
       />
 
       {/* 4. Bloque 2B: Sprint Burnup Chart */}
       <ProjectsBurnup
         activeBurnupData={activeBurnupData}
         setShowBurndownDocModal={setShowBurndownDocModal}
+        selectedProjectObj={selectedProjectObj}
       />
 
       {/* 5. Bloque 3: Velocidad del Equipo & Predictibilidad */}
       <ProjectsTeamPerformance
         activeVelocityData={activeVelocityData}
         activePercentilesData={activePercentilesData}
+        selectedProjectObj={selectedProjectObj}
       />
 
       {/* Footer Institucional */}

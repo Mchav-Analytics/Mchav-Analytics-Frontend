@@ -3,7 +3,7 @@ import { InfoTooltip, EnrichedChartTooltip } from './Tooltips';
 import { CheckCircle2 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, ScatterChart, Scatter, ReferenceLine, Cell } from 'recharts';
 
-export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesData }) => {
+export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesData, selectedProjectObj }) => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       
@@ -13,8 +13,13 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesD
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-              VELOCIDAD DEL EQUIPO (STORY POINTS)
+            <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span>VELOCIDAD DEL EQUIPO (STORY POINTS)</span>
+              {selectedProjectObj && (
+                <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                  {selectedProjectObj.key}
+                </span>
+              )}
             </h3>
             <InfoTooltip text="Muestra la comparación entre los Story Points comprometidos y completados por el equipo al cierre de cada sprint." />
           </div>

@@ -3,7 +3,7 @@ import { ChevronRight, ChevronUp, BookOpen, Layers, AlertCircle, TrendingUp, Spa
 import { InfoTooltip } from './Tooltips';
 import { CumulativeFlowDiagram } from './CumulativeFlowDiagram';
 
-export const ProjectsCFD = ({ activeCfdData, setShowCfdDocModal }) => {
+export const ProjectsCFD = ({ activeCfdData, setShowCfdDocModal, selectedProjectObj }) => {
   const [showDetail, setShowDetail] = useState(false);
 
   const handleToggleDetail = () => {
@@ -17,8 +17,13 @@ export const ProjectsCFD = ({ activeCfdData, setShowCfdDocModal }) => {
       {/* Header CFD */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-            Diagrama de Flujo Acumulado (CFD)
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>Diagrama de Flujo Acumulado (CFD)</span>
+            {selectedProjectObj && (
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                {selectedProjectObj.name} ({selectedProjectObj.key})
+              </span>
+            )}
           </h3>
           <InfoTooltip
             text="Muestra la cantidad acumulada de tareas/puntos por estado (Por Hacer, En Progreso, En Revisión, Completado) para detectar cuellos de botella y medir estabilidad del WIP."

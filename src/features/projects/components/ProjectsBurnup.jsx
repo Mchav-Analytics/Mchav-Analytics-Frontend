@@ -3,7 +3,7 @@ import { ChevronRight, ChevronUp, Activity, TrendingUp, ShieldCheck, Sparkles } 
 import { InfoTooltip } from './Tooltips';
 import { SprintBurnupChart } from './SprintBurnupChart';
 
-export const ProjectsBurnup = ({ activeBurnupData, setShowBurndownDocModal }) => {
+export const ProjectsBurnup = ({ activeBurnupData, setShowBurndownDocModal, selectedProjectObj }) => {
   const [showDetail, setShowDetail] = useState(false);
 
   const handleToggleDetail = () => {
@@ -17,8 +17,13 @@ export const ProjectsBurnup = ({ activeBurnupData, setShowBurndownDocModal }) =>
       {/* Header Burnup */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-3">
         <div className="flex items-center gap-3">
-          <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
-            Sprint Burnup Chart
+          <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+            <span>Sprint Burnup Chart</span>
+            {selectedProjectObj && (
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                {selectedProjectObj.name} ({selectedProjectObj.key})
+              </span>
+            )}
           </h3>
           <InfoTooltip
             text="Seguimiento del trabajo completado acumulado frente al alcance total del sprint para identificar cambios de alcance (Scope Creep)."
