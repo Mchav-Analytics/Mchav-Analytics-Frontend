@@ -447,6 +447,56 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
     }, 1800);
   };
 
+  // Métricas de Salud del Sprint dinámicas según proyecto seleccionado
+  const activeHealthMetrics = useMemo(() => {
+    const projKey = selectedProjectObj?.key || selectedProjectId;
+    const map = {
+      'ALL': {
+        commitment_reliability_pct: 93.3,
+        sp_completed: 94.0,
+        sp_planned: 100.0,
+        scope_creep_pct: 2.0,
+        sp_added_mid_sprint: 2.0,
+        carryover_pct: 6.7,
+        sp_carryover: 6.0,
+        flow_efficiency_pct: 80.0,
+        active_dev_days: 30.5,
+        waiting_queue_days: 7.4
+      },
+      '10000': {
+        commitment_reliability_pct: 96.7,
+        sp_completed: 58.0,
+        sp_planned: 60.0,
+        scope_creep_pct: 3.3,
+        sp_added_mid_sprint: 2.0,
+        carryover_pct: 3.3,
+        sp_carryover: 2.0,
+        flow_efficiency_pct: 85.0,
+        active_dev_days: 18.0,
+        waiting_queue_days: 3.2
+      },
+      '10033': {
+        commitment_reliability_pct: 90.0,
+        sp_completed: 44.0,
+        sp_planned: 48.0,
+        scope_creep_pct: 0.0,
+        sp_added_mid_sprint: 0.0,
+        carryover_pct: 10.0,
+        sp_carryover: 4.0,
+        flow_efficiency_pct: 75.0,
+        active_dev_days: 14.5,
+        waiting_queue_days: 4.8
+      }
+    };
+    map['SC'] = map['10000'];
+    map['PA'] = map['10033'];
+    map['MA'] = map['10000'];
+    map['PROJ-01'] = map['10000'];
+    map['PROJ-02'] = map['10033'];
+
+    return map[selectedProjectId] || map[projKey] || map['ALL'];
+  }, [selectedProjectId, selectedProjectObj]);
+
   return {
     searchTerm,
     setSearchTerm,
@@ -461,6 +511,7 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
     activePercentilesData,
     activeCfdData,
     activeBurnupData,
+    activeHealthMetrics,
     showCfdDocModal,
     setShowCfdDocModal,
     showBurndownDocModal,

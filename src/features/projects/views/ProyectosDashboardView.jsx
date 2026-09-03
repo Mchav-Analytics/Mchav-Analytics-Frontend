@@ -6,6 +6,7 @@ import { ProjectsTable } from '../components/ProjectsTable';
 import { ProjectsCFD } from '../components/ProjectsCFD';
 import { ProjectsBurnup } from '../components/ProjectsBurnup';
 import { ProjectsTeamPerformance } from '../components/ProjectsTeamPerformance';
+import SprintHealthKpis from '../../dashboard/components/SprintHealthKpis';
 import { FileDown, X, BookOpen, Layers, Activity, TrendingUp, AlertCircle, ShieldCheck, Sparkles } from 'lucide-react';
 
 const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selectedProjectId: globalSelectedProjectId, setSelectedProjectId: globalSetSelectedProjectId }) => {
@@ -24,6 +25,7 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
     activePercentilesData,
     activeCfdData,
     activeBurnupData,
+    activeHealthMetrics,
     showCfdDocModal,
     setShowCfdDocModal,
     showBurndownDocModal,
@@ -52,6 +54,9 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
+
+      {/* 1B. Tarjetas de Métricas Ejecutivas del Proyecto Seleccionado */}
+      <SprintHealthKpis metrics={activeHealthMetrics} />
 
       {/* 2. Tabla Resumen de Proyectos */}
       <ProjectsTable
