@@ -3,15 +3,15 @@ import { Info } from 'lucide-react';
 
 export const InfoTooltip = ({ text, align = "center" }) => {
   return (
-    <div className="group/tooltip relative inline-flex items-center cursor-help ml-1 shrink-0 z-30">
-      <div className="p-0.5 rounded-full text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+    <span className="group/tooltip relative inline-flex items-center cursor-help ml-1 shrink-0 z-30">
+      <span className="p-0.5 rounded-full text-slate-400 hover:text-indigo-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer inline-flex items-center">
         <Info size={13} />
-      </div>
-      <div className={`absolute bottom-full mb-2 ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"} hidden group-hover/tooltip:block w-60 p-2.5 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 text-[11px] font-normal leading-relaxed rounded-xl shadow-2xl z-50 pointer-events-none text-left backdrop-blur-md border border-slate-700/80`}>
+      </span>
+      <span className={`absolute bottom-full mb-2 ${align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"} hidden group-hover/tooltip:block w-60 p-2.5 bg-slate-900/95 dark:bg-slate-950/95 text-slate-100 text-[11px] font-normal leading-relaxed rounded-xl shadow-2xl z-50 pointer-events-none text-left backdrop-blur-md border border-slate-700/80`}>
         {text}
-        <div className={`absolute top-full ${align === "right" ? "right-3" : align === "left" ? "left-3" : "left-1/2 -translate-x-1/2"} border-4 border-transparent border-t-slate-900 dark:border-t-slate-950`}></div>
-      </div>
-    </div>
+        <span className={`absolute top-full ${align === "right" ? "right-3" : align === "left" ? "left-3" : "left-1/2 -translate-x-1/2"} border-4 border-transparent border-t-slate-900 dark:border-t-slate-950`}></span>
+      </span>
+    </span>
   );
 };
 

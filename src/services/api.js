@@ -24,6 +24,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn("401 Unauthorized: sesión no válida o expirada.");
+      localStorage.removeItem('mchav_jwt_token');
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const authService = {
   getLoginUrl() {
     return `${BACKEND_URL}/api/v1/auth/login`;

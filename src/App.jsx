@@ -199,8 +199,12 @@ function MainAppContent() {
         evaluateAlerts(data, kpis); // Evaluar alertas con nuevas métricas
       })
       .catch(err => {
-        console.error("Error fetching general metrics:", err);
-        setMetricsError("Error al conectar con el servidor backend de métricas.");
+        if (err.response?.status === 401) {
+          console.warn("401 Unauthorized: El token de sesión no es válido o requiere re-autenticación.");
+        } else {
+          console.error("Error fetching general metrics:", err);
+          setMetricsError("Error al conectar con el servidor backend de métricas.");
+        }
         setMetricsLoading(false);
       });
   };
