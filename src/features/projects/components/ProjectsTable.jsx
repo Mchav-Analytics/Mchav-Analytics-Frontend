@@ -87,12 +87,6 @@ export const ProjectsTable = ({
                   <InfoTooltip text="Porcentaje global de completitud de tareas." align="center" />
                 </span>
               </th>
-              <th className="py-3.5 px-3 text-right">
-                <span className="flex items-center justify-end">
-                  Última Sync
-                  <InfoTooltip text="Tiempo transcurrido desde la última sincronización con Jira." align="right" />
-                </span>
-              </th>
               <th className="py-3.5 pl-3 text-center">
                 <span className="flex items-center justify-center">
                   Acción
@@ -104,7 +98,7 @@ export const ProjectsTable = ({
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs font-semibold text-slate-700 dark:text-slate-300">
             {displayProjects.length === 0 ? (
               <tr>
-                <td colSpan={9} className="py-8 text-center text-slate-400 font-medium text-xs">
+                <td colSpan={8} className="py-8 text-center text-slate-400 font-medium text-xs">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="w-5 h-5 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     <span>Cargando proyectos reales desde Jira Cloud...</span>
@@ -188,11 +182,6 @@ export const ProjectsTable = ({
                       </div>
                     </td>
 
-                    {/* Última Sync */}
-                    <td className="py-3 px-2 text-right text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-                      {proj.lastSync}
-                    </td>
-
                     {/* Botones de Acción: Salud del Sprint & Flow + Ver equipo */}
                     <td className="py-3 pl-2 text-center">
                       <div className="flex items-center justify-center gap-1.5 flex-nowrap">
@@ -232,7 +221,7 @@ export const ProjectsTable = ({
                   {/* Sub-fila acordeón equipo asignado */}
                   {expandedTeamProjectId === proj.id && (
                     <tr className="bg-slate-50/80 dark:bg-[#181f36]/70">
-                      <td colSpan={9} className="p-3 sm:p-4">
+                      <td colSpan={8} className="p-3 sm:p-4">
                         <ProjectsAssignedTeam assignedTeam={assignedTeam} />
                       </td>
                     </tr>
