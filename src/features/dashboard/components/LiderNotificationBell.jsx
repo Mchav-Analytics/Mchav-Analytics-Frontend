@@ -50,6 +50,8 @@ export default function LiderNotificationBell({
   const activeRole = rawRole.includes('ADMIN') ? 'ADMIN' : rawRole.includes('MANAG') || rawRole.includes('LIDER') ? 'MANAGER' : 'DEVELOPER';
 
   const [isOpen, setIsOpen] = useState(false);
+  const [opensUpward, setOpensUpward] = useState(false);
+  const [alignLeft, setAlignLeft] = useState(true);
   const [activeFilterTab, setActiveFilterTab] = useState('TODAS'); // 'TODAS' | 'ALERTAS_IA' | 'CRITICAS'
   const [syncingId, setSyncingId] = useState(null);
   const [syncMsg, setSyncMsg] = useState('');
@@ -107,6 +109,17 @@ export default function LiderNotificationBell({
   }, []);
 
   const handleToggleOpen = () => {
+    if (!isOpen && buttonTriggerRef.current) {
+      const rect = buttonTriggerRef.current.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const windowWidth = window.innerWidth;
+      
+      // Abrir hacia arriba si está en la mitad inferior de la pantalla (ej. Footer de la Sidebar)
+      setOpensUpward(rect.top > windowHeight * 0.4);
+
+      // Alinear a la izquierda (left-0) si está en la mitad izquierda de la pantalla
+      setAlignLeft(rect.left < windowWidth * 0.5);
+    }
     setIsOpen(prev => !prev);
   };
 
@@ -241,9 +254,13 @@ export default function LiderNotificationBell({
 
       {/* POPUP EMERGENTE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
       {isOpen && (
-        <div className={`absolute w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
-          isCollapsed ? 'left-full top-0 ml-3' : 'left-0 top-full mt-3'
-        } animate-in fade-in slide-in-from-top-2 duration-200`}>
+        <div className={`absolute w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[99999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
+          isCollapsed
+            ? opensUpward ? 'left-full bottom-0 ml-3' : 'left-full top-0 ml-3'
+            : opensUpward
+            ? 'bottom-full mb-3' + (alignLeft ? ' left-0' : ' right-0')
+            : 'top-full mt-3' + (alignLeft ? ' left-0' : ' right-0')
+        }`}>
           
           {/* CABECERA CON ACCIÓN DE ESCANEO DE IA NUBI */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">
