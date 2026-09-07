@@ -41,7 +41,8 @@ export default function LiderNotificationBell({
   onNavigateTab = undefined, 
   dynamicNotifications = EMPTY_ARRAY, 
   onOpenTask = undefined,
-  metricsData = undefined
+  metricsData = undefined,
+  isCollapsed = false
 }) {
   const { user } = useAuth();
 
@@ -54,6 +55,7 @@ export default function LiderNotificationBell({
   const [syncMsg, setSyncMsg] = useState('');
   const [scanningNubi, setScanningNubi] = useState(false);
   const popoverRef = useRef(null);
+  const buttonTriggerRef = useRef(null);
 
   // Generación de Alertas en Tiempo Real de la IA de Nubi
   const [nubiAlerts, setNubiAlerts] = useState(() => generateNubiMetricAlerts(metricsData || {}));
@@ -100,99 +102,65 @@ export default function LiderNotificationBell({
         setIsOpen(false);
       }
     }
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isOpen]);
-
-  const handleMarkAllRead = () => {
-    const ids = notifications.map(n => n.id);
-    markAllNotificationsAsRead(ids);
-  };
-
-  const handleMarkSingleRead = (id) => {
-    markNotificationAsRead(id);
-    setNubiAlerts(prev => prev.map(a => a.id === id ? { ...a, isRead: true } : a));
-  };
-
-  const handleGoToHub = () => {
-    setIsOpen(false);
-    if (onNavigateTab) {
-      onNavigateTab('alerts_center');
-    } else if (onNavigateToHub) {
-      onNavigateToHub('alerts_center');
-    }
-    window.dispatchEvent(new CustomEvent('navigateTab', { detail: { tab: 'alerts_center' } }));
-  };
-
-  const handleNavigate = (tabName) => {
-    setIsOpen(false);
-    if (onNavigateTab) {
-      onNavigateTab(tabName);
-    } else if (onNavigateToHub) {
-      onNavigateToHub(tabName);
-    }
-    window.dispatchEvent(new CustomEvent('navigateTab', { detail: { tab: tabName } }));
-  };
-
-  const handleOpenTask = (issueKey) => {
-    setIsOpen(false);
-    if (onOpenTask && issueKey) {
-      onOpenTask(issueKey);
-    } else if (onNavigateTab) {
-      onNavigateTab('dev_workload');
-    } else {
-      handleNavigate('developer');
-    }
-    window.dispatchEvent(new CustomEvent('navigateTab', { detail: { tab: 'dev_workload' } }));
-  };
-
-  const handleRetrySync = (id) => {
-    setSyncingId(id);
-    jiraService.triggerSync()
-      .then(() => {
-        setSyncMsg('✨ Sincronización completada con éxito');
-        markNotificationAsRead(id);
-        setTimeout(() => setSyncMsg(''), 3000);
-      })
-      .catch((err) => {
-        console.error("Error al reintentar sync:", err);
-        setSyncMsg('⚠️ Error al sincronizar con Jira');
-        setTimeout(() => setSyncMsg(''), 3000);
-      })
-      .finally(() => {
-        setSyncingId(null);
-      });
-  };
-
-  const [opensUpward, setOpensUpward] = useState(false);
-  const [alignLeft, setAlignLeft] = useState(false);
-  const buttonTriggerRef = useRef(null);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleToggleOpen = () => {
-    if (!isOpen && buttonTriggerRef.current) {
-      const rect = buttonTriggerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const windowWidth = window.innerWidth;
-      
-      // Abrir hacia arriba si está en la parte inferior
-      if (rect.top > windowHeight * 0.45) {
-        setOpensUpward(true);
-      } else {
-        setOpensUpward(false);
-      }
+    setIsOpen(prev => !prev);
+  };
 
-      // Alinear a la izquierda (left-0) si está en la mitad izquierda de la pantalla (ej. Sidebar)
-      if (rect.left < windowWidth * 0.5) {
-        setAlignLeft(true);
-      } else {
-        setAlignLeft(false);
-      }
+  const handleMarkAsRead = (id) => {
+    markNotificationAsRead(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
+  };
+
+  const handleMarkAllAsRead = () => {
+    markAllNotificationsAsRead();
+    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const handleSyncIssue = async (e, issueKey, notifId) => {
+    e.stopPropagation();
+    if (!issueKey) return;
+    setSyncingId(notifId);
+    setSyncMsg(`Sincronizando ${issueKey}...`);
+    try {
+      await jiraService.triggerSync();
+      setSyncMsg(`¡${issueKey} sincronizado con éxito!`);
+      handleMarkAsRead(notifId);
+    } catch (err) {
+      console.error("Error sincronizando issue:", err);
+      setSyncMsg(`Error al sincronizar ${issueKey}`);
+    } finally {
+      setTimeout(() => {
+        setSyncingId(null);
+        setSyncMsg('');
+      }, 3000);
     }
-    setIsOpen(!isOpen);
+  };
+
+  const handleNotificationClick = (notif) => {
+    handleMarkAsRead(notif.id);
+    setIsOpen(false);
+
+    if (notif.issueKey && onOpenTask) {
+      onOpenTask(notif.issueKey);
+      return;
+    }
+
+    if (notif.targetTab && onNavigateTab) {
+      onNavigateTab(notif.targetTab);
+      return;
+    }
+
+    if (onNavigateToHub) {
+      onNavigateToHub();
+      return;
+    }
+    if (onNavigateTab) {
+      onNavigateTab('alerts_center');
+    }
   };
 
   const filteredNotifications = notifications.filter(notif => {
@@ -208,7 +176,11 @@ export default function LiderNotificationBell({
         ref={buttonTriggerRef}
         type="button"
         onClick={handleToggleOpen}
-        className={`group relative px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-2xl transition-all duration-300 cursor-pointer flex items-center gap-2 border shadow-xs hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95 ${
+        className={`group relative transition-all duration-300 cursor-pointer flex items-center justify-center border shadow-xs hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95 ${
+          isCollapsed 
+            ? 'w-10 h-10 rounded-xl p-0' 
+            : 'px-3 py-2 sm:px-3.5 sm:py-2.5 gap-2 rounded-2xl'
+        } ${
           isOpen
             ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/30'
             : 'bg-white dark:bg-[#141738] hover:bg-slate-50 dark:hover:bg-[#1a1e47] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-[#272b5c]'
@@ -231,16 +203,22 @@ export default function LiderNotificationBell({
           />
         </div>
 
-        {/* Texto de Alertas IA */}
-        <span className={`text-[11px] font-extrabold hidden sm:inline-block tracking-tight transition-colors ${
-          isOpen ? 'text-white' : 'text-slate-800 dark:text-slate-100'
-        }`}>
-          Alertas IA
-        </span>
+        {/* Texto de Alertas IA (Solo si NO está colapsado) */}
+        {!isCollapsed && (
+          <span className={`text-[11px] font-extrabold tracking-tight transition-colors ${
+            isOpen ? 'text-white' : 'text-slate-800 dark:text-slate-100'
+          }`}>
+            Alertas IA
+          </span>
+        )}
 
         {/* Insignia / Contador Dinámico */}
         {unreadCount > 0 && (
-          <span className={`min-w-[20px] h-5 px-1.5 rounded-full font-black text-[10px] flex items-center justify-center shadow-md ring-2 transition-all ${
+          <span className={`font-black text-[10px] flex items-center justify-center shadow-md ring-2 transition-all ${
+            isCollapsed
+              ? 'absolute -top-1 -right-1 min-w-[18px] h-4 px-1 rounded-full text-[9px] z-10'
+              : 'min-w-[20px] h-5 px-1.5 rounded-full'
+          } ${
             isOpen
               ? 'bg-white text-indigo-700 ring-indigo-400'
               : criticalCount > 0
@@ -250,17 +228,22 @@ export default function LiderNotificationBell({
             {unreadCount}
           </span>
         )}
+
+        {/* Tooltip flotante en modo colapsado */}
+        {isCollapsed && (
+          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
+            <span>Alertas IA {unreadCount > 0 ? `(${unreadCount})` : ''}</span>
+            <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+          </div>
+        )}
       </button>
 
       {/* POPUP EMERGENTE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
       {isOpen && (
         <div className={`absolute w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[9999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
-          alignLeft ? 'left-0' : 'right-0'
-        } ${
-          opensUpward
-            ? 'bottom-full mb-3 animate-in fade-in slide-in-from-bottom-2 duration-200'
-            : 'top-full mt-3 animate-in fade-in slide-in-from-top-2 duration-200'
-        }`}>
+          isCollapsed ? 'left-full top-0 ml-3' : 'left-0 top-full mt-3'
+        } animate-in fade-in slide-in-from-top-2 duration-200`}>
           
           {/* CABECERA CON ACCIÓN DE ESCANEO DE IA NUBI */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">

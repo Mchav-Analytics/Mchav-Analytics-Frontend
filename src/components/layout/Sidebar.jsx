@@ -207,8 +207,8 @@ function Sidebar({
         >
           <Logo
             style={{
-              width: isCollapsed ? '52px' : '96px',
-              height: isCollapsed ? '52px' : '96px',
+              width: isCollapsed ? '44px' : '96px',
+              height: isCollapsed ? '44px' : '96px',
               marginRight: 0,
             }}
           />
@@ -218,11 +218,13 @@ function Sidebar({
       <div className="flex flex-col justify-between flex-1 mt-1.5 min-h-0">
 
         {/* ── BOTÓN NUBI IA ── */}
-        <div className={`mb-4 ${isCollapsed ? 'px-2 flex justify-center' : 'px-3'}`}>
+        <div className={`mb-4 ${isCollapsed ? 'px-1 flex justify-center' : 'px-3'}`}>
           <button
             type="button"
             onClick={() => setIsAiChatOpen(true)}
-            className="group relative flex items-center justify-center gap-1.5 w-full py-2.5 px-3 rounded-[14px] font-extrabold text-xs text-white shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-[#4f46e5] via-[#a855f7] to-[#ec4899] overflow-hidden cursor-pointer whitespace-nowrap"
+            className={`group relative flex items-center justify-center rounded-[14px] font-extrabold text-xs text-white shadow-md shadow-fuchsia-500/20 hover:shadow-lg hover:shadow-fuchsia-500/30 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-r from-[#4f46e5] via-[#a855f7] to-[#ec4899] overflow-hidden cursor-pointer whitespace-nowrap ${
+              isCollapsed ? 'w-10 h-10 p-0' : 'w-full py-2.5 px-3 gap-1.5'
+            }`}
             title="Consultar a Nubi IA"
           >
             {/* Destello de fondo al hacer hover */}
@@ -251,14 +253,16 @@ function Sidebar({
         </div>
 
         {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
-        <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center' : 'grid grid-cols-3 gap-1'}`}>
+        <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center w-full' : 'grid grid-cols-3 gap-1'}`}>
           <button
             type="button"
             onClick={() => {
               switchViewRole('ADMIN');
               setActiveTab('proyectos');
             }}
-            className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+            className={`group relative rounded-xl text-[10px] font-extrabold flex items-center justify-center transition-all cursor-pointer ${
+              isCollapsed ? 'w-8 h-8 p-0' : 'py-1.5 px-2 gap-1'
+            } ${
               userRole === 'ADMIN'
                 ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
                 : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -267,6 +271,13 @@ function Sidebar({
           >
             <Shield size={13} />
             {!isCollapsed && <span>Admin</span>}
+            {isCollapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#191c3d]/95 text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl border border-indigo-200/30 dark:border-[#3b3f78] flex items-center gap-2">
+                <Shield size={12} className="text-indigo-400" />
+                <span>Vista Administrador</span>
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-900/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/30 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+              </div>
+            )}
           </button>
 
           <button
@@ -275,7 +286,9 @@ function Sidebar({
               switchViewRole('MANAGER');
               setActiveTab('proyectos');
             }}
-            className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+            className={`group relative rounded-xl text-[10px] font-extrabold flex items-center justify-center transition-all cursor-pointer ${
+              isCollapsed ? 'w-8 h-8 p-0' : 'py-1.5 px-2 gap-1'
+            } ${
               userRole === 'MANAGER'
                 ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/30'
                 : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -284,6 +297,13 @@ function Sidebar({
           >
             <Briefcase size={13} />
             {!isCollapsed && <span>Líder</span>}
+            {isCollapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#191c3d]/95 text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl border border-purple-200/30 dark:border-[#3b3f78] flex items-center gap-2">
+                <Briefcase size={12} className="text-purple-400" />
+                <span>Vista Líder Técnico</span>
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-900/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-purple-200/30 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+              </div>
+            )}
           </button>
 
           <button
@@ -292,7 +312,9 @@ function Sidebar({
               switchViewRole('DEVELOPER');
               setActiveTab('developer');
             }}
-            className={`py-1.5 px-2 rounded-xl text-[10px] font-extrabold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+            className={`group relative rounded-xl text-[10px] font-extrabold flex items-center justify-center transition-all cursor-pointer ${
+              isCollapsed ? 'w-8 h-8 p-0' : 'py-1.5 px-2 gap-1'
+            } ${
               userRole === 'DEVELOPER'
                 ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
                 : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
@@ -301,6 +323,13 @@ function Sidebar({
           >
             <Code size={13} />
             {!isCollapsed && <span>Dev</span>}
+            {isCollapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#191c3d]/95 text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl border border-blue-200/30 dark:border-[#3b3f78] flex items-center gap-2">
+                <Code size={12} className="text-blue-400" />
+                <span>Vista Desarrollador</span>
+                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-900/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-blue-200/30 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+              </div>
+            )}
           </button>
         </div>
 
@@ -336,8 +365,8 @@ function Sidebar({
         {/* ── FOOTER: PERFIL DE USUARIO, MODO CLARO/OSCURO Y BOTÓN DE CERRAR SESIÓN ── */}
         <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-800 space-y-3">
           
-          {/* Switch de Tema Sol / Luna Uiverse (Alineado a la izquierda) */}
-          <div className="flex items-center justify-start px-1 py-1">
+          {/* Switch de Tema Sol / Luna Uiverse */}
+          <div className={`flex items-center ${isCollapsed ? 'justify-center w-full' : 'justify-start px-1'} py-1`}>
             <ThemeToggleSwitch isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
           </div>
 
@@ -362,7 +391,7 @@ function Sidebar({
 
               <div className="flex items-center gap-1.5 shrink-0">
                 {/* BOTÓN NOTIFICACIONES (LIDER NOTIFICATION BELL) */}
-                <LiderNotificationBell onNavigateTab={setActiveTab} />
+                <LiderNotificationBell onNavigateTab={setActiveTab} isCollapsed={false} />
 
                 {/* BOTÓN CONFIGURACIÓN / SETTINGS */}
                 <button
@@ -387,18 +416,17 @@ function Sidebar({
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2 pt-2">
+            <div className="flex flex-col items-center gap-2.5 pt-2 w-full">
               {/* BOTÓN NOTIFICACIONES EN MODO COLAPSADO */}
-              <LiderNotificationBell onNavigateTab={setActiveTab} />
+              <LiderNotificationBell onNavigateTab={setActiveTab} isCollapsed={true} />
 
               <button
                 type="button"
                 onClick={() => setIsSettingsOpen(true)}
-                className="group relative p-2 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors cursor-pointer"
+                className="group relative w-10 h-10 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-xl transition-all cursor-pointer border border-slate-200/80 dark:border-slate-800"
                 title="Configuración de Perfil"
-                style={{ border: 'none', background: 'transparent' }}
               >
-                <Settings size={17} />
+                <Settings size={18} />
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
                   <span>Ajustes de Perfil</span>
@@ -409,9 +437,8 @@ function Sidebar({
               <button
                 type="button"
                 onClick={handleLogout}
-                className="group relative p-2 text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors cursor-pointer"
+                className="group relative w-10 h-10 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all cursor-pointer border border-slate-200/80 dark:border-slate-800"
                 title="Cerrar Sesión"
-                style={{ border: 'none', background: 'transparent' }}
               >
                 {icons.logout}
                 <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-rose-950 dark:bg-[#2e1065]/90 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-rose-500/15 border border-rose-200/90 dark:border-rose-400/40 flex items-center gap-2">
