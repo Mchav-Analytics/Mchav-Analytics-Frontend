@@ -139,6 +139,7 @@ function Sidebar({
     if (userRole === 'MANAGER') {
       return [
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+        { id: 'capacity_calculator', label: 'Calculadora Capacidad', icon: icons.tasks },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
         { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
         { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
@@ -148,6 +149,7 @@ function Sidebar({
 
     return [
       { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+      { id: 'capacity_calculator', label: 'Calculadora Capacidad', icon: icons.tasks },
       { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
       { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
       { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },

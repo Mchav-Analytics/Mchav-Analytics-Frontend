@@ -5,7 +5,7 @@ import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Toolti
 
 export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesData }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       {/* COLUMNA 1: VELOCIDAD DEL EQUIPO (STORY POINTS) */}
       <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">

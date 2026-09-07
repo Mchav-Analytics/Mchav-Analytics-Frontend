@@ -92,7 +92,7 @@ export const SprintBurnupChart = ({ data }) => {
       <ResponsiveContainer width="100%" height={360}>
         <ComposedChart
           data={data}
-          margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+          margin={{ top: 15, right: 20, left: 10, bottom: 25 }}
         >
           <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#334155" opacity={0.3} />
           
@@ -101,8 +101,8 @@ export const SprintBurnupChart = ({ data }) => {
             axisLine={false} 
             tickLine={false} 
             tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
-            dy={10}
-            label={{ value: 'Días del Sprint', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11, fontWeight: 'bold' }}
+            dy={6}
+            label={{ value: 'Días del Sprint', position: 'insideBottom', offset: -10, fill: '#64748b', fontSize: 11, fontWeight: 'bold' }}
           />
           
           <YAxis 
