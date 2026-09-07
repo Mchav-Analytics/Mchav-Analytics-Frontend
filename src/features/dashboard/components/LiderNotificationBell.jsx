@@ -128,9 +128,44 @@ export default function LiderNotificationBell({
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
+  const handleMarkSingleRead = (id) => {
+    handleMarkAsRead(id);
+  };
+
   const handleMarkAllAsRead = () => {
     markAllNotificationsAsRead();
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+  };
+
+  const handleMarkAllRead = () => {
+    handleMarkAllAsRead();
+  };
+
+  const handleNavigate = (tabName) => {
+    setIsOpen(false);
+    if (onNavigateTab) {
+      onNavigateTab(tabName);
+    } else if (onNavigateToHub) {
+      onNavigateToHub(tabName);
+    }
+  };
+
+  const handleGoToHub = () => {
+    setIsOpen(false);
+    if (onNavigateTab) {
+      onNavigateTab('alerts_center');
+    } else if (onNavigateToHub) {
+      onNavigateToHub('alerts_center');
+    }
+  };
+
+  const handleOpenTask = (issueKey) => {
+    setIsOpen(false);
+    if (onOpenTask && issueKey) {
+      onOpenTask(issueKey);
+    } else if (onNavigateTab) {
+      onNavigateTab('dev_workload');
+    }
   };
 
   const handleSyncIssue = async (e, issueKey, notifId) => {
