@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Clock } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { jiraService } from '../../../services/api';
 
 export default function LastSyncBadge() {
-  const [lastSyncText, setLastSyncText] = useState('Hace momentos');
+  const [lastSyncText, setLastSyncText] = useState('Hoy, 8:30 a. m.');
 
   useEffect(() => {
     if (jiraService?.getSyncLogs) {
@@ -29,37 +29,34 @@ export default function LastSyncBadge() {
             }
           }
           const nowFormatted = new Date().toLocaleString('es-CO', {
-            day: '2-digit',
-            month: 'short',
             hour: '2-digit',
             minute: '2-digit',
             hour12: true
           });
-          setLastSyncText(nowFormatted);
+          setLastSyncText(`Hoy, ${nowFormatted}`);
         })
         .catch(() => {
           const nowFormatted = new Date().toLocaleString('es-CO', {
-            day: '2-digit',
-            month: 'short',
             hour: '2-digit',
             minute: '2-digit',
             hour12: true
           });
-          setLastSyncText(nowFormatted);
+          setLastSyncText(`Hoy, ${nowFormatted}`);
         });
     }
   }, []);
 
   return (
     <div 
-      className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#12142e] text-slate-700 dark:text-slate-300 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-[#33376b] font-medium text-xs shadow-2xs"
-      title={`Última sincronización con Jira Cloud: ${lastSyncText}`}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0"
+      title={`Última sincronización exitosa con Jira Cloud: ${lastSyncText}`}
     >
-      <Clock size={13} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
-      <span className="text-[11px] sm:text-xs">
-        Última Sync: <strong className="text-slate-900 dark:text-white font-bold">{lastSyncText}</strong>
+      <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+        Última sincronización <strong className="font-extrabold text-slate-900 dark:text-white ml-0.5">{lastSyncText}</strong>
       </span>
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+      <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shrink-0">
+        <Check size={10} strokeWidth={3} />
+      </div>
     </div>
   );
 }
