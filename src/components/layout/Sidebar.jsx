@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle } from 'lucide-react';
+import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle, ChevronLeft } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
 import LiderNotificationBell from '../../features/dashboard/components/LiderNotificationBell';
@@ -176,25 +176,21 @@ function Sidebar({
       }`}
       style={{ flexShrink: 0 }}
     >
-      {/* ── BOTÓN FLOTANTE EN EL CENTRO VERTICAL DERECHO PARA COLAPSAR Y EXPANDIR EL PANEL ── */}
-      <div className="absolute top-1/2 -translate-y-1/2 -right-3.5 z-[60]">
-        <div className="p-2 rounded-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-lg hover:shadow-indigo-500/20 hover:border-indigo-500/50 transition-all flex items-center justify-center cursor-pointer hover:scale-110 active:scale-95">
-          <label 
-            className="burger" 
-            htmlFor="sidebar-burger-toggle" 
-            title={isCollapsed ? 'Expandir panel' : 'Colapsar panel'}
-          >
-            <input
-              type="checkbox"
-              id="sidebar-burger-toggle"
-              checked={!isCollapsed}
-              onChange={() => setIsCollapsed(!isCollapsed)}
-            />
-            <span></span>
-            <span></span>
-            <span></span>
-          </label>
-        </div>
+      {/* ── BOTÓN FLOTANTE ULTRA-PREMIUM EN EL BORDE DERECHO PARA COLAPSAR Y EXPANDIR ── */}
+      <div className="absolute top-1/2 -translate-y-1/2 -right-3 z-[60]">
+        <button
+          type="button"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="w-6 h-6 rounded-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#3b3f78] text-slate-500 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:border-indigo-500/50 dark:hover:border-indigo-400/60 shadow-md hover:shadow-indigo-500/25 transition-all duration-300 flex items-center justify-center cursor-pointer hover:scale-115 active:scale-90"
+          title={isCollapsed ? 'Expandir panel lateral' : 'Colapsar panel lateral'}
+        >
+          <ChevronLeft
+            size={13}
+            className={`transition-transform duration-300 stroke-[2.5] ${
+              isCollapsed ? 'rotate-180 text-indigo-500 dark:text-indigo-400' : ''
+            }`}
+          />
+        </button>
       </div>
 
       {/* ── CABECERA CON LOGO CENTRADO Y AMPLIADO ── */}
