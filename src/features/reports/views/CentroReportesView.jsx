@@ -67,6 +67,12 @@ export default function CentroReportesView({ selectedProjectId }) {
   const itemsPerPage = 8;
   const [selectedGeneralProjects, setSelectedGeneralProjects] = useState([]);
   const [searchGeneralQuery, setSearchGeneralQuery] = useState('');
+  const [genProjectId, setGenProjectId] = useState(selectedProjectId || '');
+  const [validationError, setValidationError] = useState(null);
+
+  useEffect(() => {
+    setValidationError(null);
+  }, [reportType, reportParam, genProjectId]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -128,16 +134,28 @@ export default function CentroReportesView({ selectedProjectId }) {
         } catch (e) { console.error("Error fetching sprints", e); }
     };
     fetchData();
-  }, []);
+  }, [selectedProjectId]);
+
+  useEffect(() => {
+    const fetchGen = async () => {
+        if (genProjectId) {
+            try {
+                const sprintRes = await projectService.getSprints(genProjectId);
+                setDbSprints(sprintRes || []);
+            } catch (e) {}
+        }
+    };
+    fetchGen();
+  }, [genProjectId]);
 
   const handleGenerateLiveReport = async () => {
     setIsGenerating(true);
     
     try {
       // 1. Determinar el proyecto a consultar
-      const projectId = reportType === 'general' 
-        ? (selectedGeneralProjects.length > 0 ? selectedGeneralProjects[0] : null) 
-        : reportParam;
+      const projectId = reportType === 'general'
+        ? (selectedGeneralProjects.length > 0 ? selectedGeneralProjects[0] : null)
+        : (reportType === 'proyecto' ? reportParam : genProjectId);
         
       if (!projectId) {
         throw new Error("Por favor selecciona un proyecto.");
@@ -150,7 +168,7 @@ export default function CentroReportesView({ selectedProjectId }) {
 
       // Extraer nombre del proyecto real siempre
       let realProjectName = 'MCHAV Analytics';
-      const currentProj = dbProjects.find(p => p.id_proyecto === (reportType === 'proyecto' ? projectId : selectedProjectId));
+      const currentProj = dbProjects.find(p => p.id_proyecto === (reportType === 'proyecto' ? projectId : genProjectId));
       if (currentProj) {
         realProjectName = currentProj.nombre || currentProj.name || 'MCHAV Analytics';
       }
@@ -158,7 +176,7 @@ export default function CentroReportesView({ selectedProjectId }) {
       let sprintName = 'Sprint Actual';
 
       if (reportType === 'sprint') {
-        const sprint = dbSprints.find(s => s.id_sprint === reportParam);
+        const sprint = dbSprints.find(s => String(s.id_sprint) === String(reportParam));
         if (sprint) {
           params.sprint_id = sprint.id_sprint;
           targetName = sprint.nombre_sprint || sprint.nombre || sprint.id_sprint;
@@ -183,11 +201,14 @@ export default function CentroReportesView({ selectedProjectId }) {
 
       // 4. Validar las reglas de negocio
       if (totalRecords < minimumRequired) {
-        alert(`No hay suficientes registros para este reporte.\n\nSe requieren al menos ${minimumRequired} tickets, pero solo se encontraron ${totalRecords} para ${targetName}.\n\nIntenta sincronizar nuevamente o selecciona otro filtro.`);
+        setValidationError({
+          targetName,
+          totalRecords,
+          minimumRequired
+        });
         setIsGenerating(false);
         return;
       }
-
       // 5. Cargar KPIs reales
       const kpis = await projectService.getKpis(projectId, params.sprint_id);
       
@@ -203,9 +224,7 @@ export default function CentroReportesView({ selectedProjectId }) {
           bugs: kpis?.metrics?.bugs_count || 0,
           totalScope: Math.max(kpis?.metrics?.completed_sp || 0, 40),
           sprintHealth: kpis?.health_score || 0,
-          p50: kpis?.metrics?.avg_cycle_time > 0 ? kpis?.metrics?.avg_cycle_time : 2.5,
-          p85: (kpis?.metrics?.avg_cycle_time > 0 ? kpis?.metrics?.avg_cycle_time : 2.5) * 1.5,
-          p95: (kpis?.metrics?.avg_cycle_time > 0 ? kpis?.metrics?.avg_cycle_time : 2.5) * 2.0
+          sprintName: sprintName
         };
         const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
         if (aiResponse.data && aiResponse.data.data) {
@@ -240,7 +259,6 @@ export default function CentroReportesView({ selectedProjectId }) {
 
   const renderGeneracion = () => (
     <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
       {/* WIZARD SIN TARJETA (Integrado al fondo principal) */}
       <div className="w-full pt-4">
         
@@ -372,10 +390,11 @@ export default function CentroReportesView({ selectedProjectId }) {
                     </label>
                     <div className="relative">
                       <select 
-                        className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none appearance-none"
-                        value={reportParam} onChange={(e) => setReportParam(e.target.value)}
-                      >
-                        <option value="">Selecciona un proyecto...</option>
+                          className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none appearance-none"
+                          value={reportType === 'proyecto' ? reportParam : genProjectId} 
+                          onChange={(e) => reportType === 'proyecto' ? setReportParam(e.target.value) : setGenProjectId(e.target.value)}
+                        >
+                          <option value="">Selecciona un proyecto...</option>
                         {dbProjects.map(p => <option key={p.id_proyecto} value={p.id_proyecto}>{p.nombre}</option>)}
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">▼</div>
@@ -387,7 +406,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                       <label className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Sprint</label>
                       <div className="relative">
-                        <select className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none appearance-none">
+                        <select 
+                          className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none appearance-none"
+                          value={reportParam} onChange={(e) => setReportParam(e.target.value)}
+                        >
                           <option value="">Selecciona un sprint...</option>
                           {dbSprints.map(s => <option key={s.id_sprint} value={s.id_sprint}>{s.nombre_sprint || s.nombre || s.id_sprint}</option>)}
                         </select>
@@ -401,7 +423,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                       <label className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Desarrollador</label>
                       <div className="relative">
-                        <select className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 outline-none appearance-none">
+                        <select 
+                          className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 outline-none appearance-none"
+                          value={reportParam} onChange={(e) => setReportParam(e.target.value)}
+                        >
                           <option value="">Selecciona un desarrollador...</option>
                           {dbUsers.map(u => <option key={u.id_usuario} value={u.id_usuario}>{u.nombre}</option>)}
                         </select>
@@ -442,13 +467,35 @@ export default function CentroReportesView({ selectedProjectId }) {
               ))}
             </div>
 
-            <button 
-              onClick={handleGenerateLiveReport} 
-              disabled={isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '')}
-              className={`absolute bottom-0 right-0 px-10 py-4 ${isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '') ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_20px_rgba(79,70,229,0.4)]'} text-white rounded-xl font-bold flex items-center gap-3 transition-all`}
-            >
-              Generar reporte &rarr;
-            </button>
+            <div className="flex flex-col md:flex-row items-center gap-4 mt-auto w-full max-w-full justify-between pb-4">
+              <div className="flex-1">
+                {validationError && (
+                  <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30">
+                      <div className="p-2 bg-amber-100 dark:bg-amber-800/40 rounded-lg text-amber-600 dark:text-amber-400 shrink-0">
+                        <AlertCircle className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">¡Ups! Datos insuficientes</h4>
+                        <p className="text-xs text-amber-700 dark:text-amber-400/80 mt-0.5 leading-relaxed">
+                          {validationError.targetName} solo tiene {validationError.totalRecords} ticket{validationError.totalRecords !== 1 ? 's' : ''} registrado{validationError.totalRecords !== 1 ? 's' : ''}. Para poder generar el reporte se requiere al menos {validationError.minimumRequired === 3 ? '3 a 5' : validationError.minimumRequired} tickets. Por favor, selecciona un periodo con más movimiento o intenta sincronizar nuevamente.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex-none shrink-0">
+                <button 
+                  onClick={handleGenerateLiveReport} 
+                  disabled={isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '')}
+                  className={`px-10 py-4 ${isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '') ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_20px_rgba(79,70,229,0.4)]'} text-white rounded-xl font-bold flex items-center gap-3 transition-all`}
+                >
+                  Generar reporte &rarr;
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

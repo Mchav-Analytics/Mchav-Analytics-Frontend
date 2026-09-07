@@ -196,12 +196,13 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
 
     // ═══════════════════════════════════════════════════════════════════════
     // MAPEO DE GRÁFICAS POR TIPO DE REPORTE
-    // Sprint:    sección 4 → Burnup, sección 5 → CFD, sección 7 → Scatter
-    // Proyecto:  ACTO 2 → Burnup, ACTO 3 → CFD, ACTO 4 → Scatter
+    // Sprint:    Sección 3 → Burnup + Velocidad, Sección 4 → CFD, Sección 5 → Predictibilidad
+    // Proyecto:  ACTO 2 → CFD, ACTO 3 → Burnup, ACTO 4 → Velocidad, ACTO 5 → Predictibilidad
     // ═══════════════════════════════════════════════════════════════════════
-    const showBurnup = isProyecto ? sectionNum === 2 : sectionNum === 4;
-    const showCFD = isProyecto ? sectionNum === 3 : sectionNum === 5;
-    const showScatter = isProyecto ? sectionNum === 4 : sectionNum === 7;
+    const showCFD = isProyecto ? sectionNum === 2 : sectionNum === 4;
+    const showBurnup = isProyecto ? sectionNum === 3 : sectionNum === 3;
+    const showVelocidad = isProyecto ? sectionNum === 4 : sectionNum === 3;
+    const showScatter = isProyecto ? sectionNum === 5 : sectionNum === 5;
 
     return (
       <div key={`section-${pageIndex}`} style={{ 
@@ -312,6 +313,13 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
         {showBurnup && (
           <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
             <GraficaBurnup data={chartData.burnupData} />
+          </div>
+        )}
+
+        {/* ═══ GRÁFICA VELOCIDAD ═══ */}
+        {showVelocidad && (
+          <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
+            <GraficaVelocidad data={chartData.velocityData} />
           </div>
         )}
 
@@ -500,7 +508,7 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
             <img src="/Logo_sf.png" alt="MCHAV Analytics" style={{ height: '220px', objectFit: 'contain', marginBottom: '32px' }} />
             <h1 style={{ fontSize: '22px', fontWeight: 900, color: '#243b67', textTransform: 'uppercase', letterSpacing: '0.12em', textAlign: 'center', marginBottom: '60px', maxWidth: '420px', lineHeight: 1.25 }}>
-              {titleMap[reportType] || titleMap.general}
+              {reportType === 'sprint' ? `REPORTE DE ${sprintName}` : (titleMap[reportType] || titleMap.general)}
             </h1>
 
             {/* Metadatos */}
