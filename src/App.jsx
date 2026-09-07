@@ -370,6 +370,11 @@ function MainAppContent() {
           title: "Consola de Consultas JQL & Sintaxis ",
           subtitle: "Validador sintáctico en tiempo real, ejecutor de consultas JQL y diccionario de campos (Solo Admin)."
         };
+      case 'capacity_calculator':
+        return {
+          title: "Calculadora de Capacidad de Equipo",
+          subtitle: "Planificación de disponibilidad, horas de sprint y capacidad efectiva del equipo."
+        };
       case 'sincronizacion':
       case 'reports_center':
         return {

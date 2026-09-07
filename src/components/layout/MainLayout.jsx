@@ -74,7 +74,7 @@ function MainLayout({
         
 
 
-        <div className="dashboard-inner pt-4 flex-1">
+        <div className="dashboard-inner pt-4 flex-1 w-full max-w-full">
           {children}
         </div>
       </main>

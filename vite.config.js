@@ -12,7 +12,7 @@ export default defineConfig({
   },
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: './src/test/setup.js',
     exclude: ['tests/**', 'node_modules/**', 'dist/**'],
     coverage: {
@@ -21,7 +21,7 @@ export default defineConfig({
       reportsDirectory: './coverage',
       all: true,
       include: ['src/**/*.{js,jsx,ts,tsx}'],
-      exclude: ['src/test/**', 'src/main.jsx', 'src/**/*.d.ts']
+      exclude: ['src/test/**', 'src/main.jsx', 'src/**/*.d.ts', 'src/**/mockData.js']
     }
   },
 })

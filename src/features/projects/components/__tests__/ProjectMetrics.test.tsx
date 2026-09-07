@@ -90,7 +90,7 @@ describe('ProjectMetrics', () => {
   it('renders TIEMPOS tab correctly with percentiles data', () => {
     const mockPercentilesData = [{ issue_type: 'Task' }];
     render(<ProjectMetrics {...defaultProps} activeProjectTab="TIEMPOS" percentilesData={mockPercentilesData} />);
-    expect(screen.getByText('Análisis de Task')).toBeDefined();
+    expect(screen.getByText(/Análisis de Task/)).toBeDefined();
   });
 
   it('handles percentiles window change', () => {

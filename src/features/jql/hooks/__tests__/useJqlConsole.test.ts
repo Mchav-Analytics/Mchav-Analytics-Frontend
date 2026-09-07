@@ -93,21 +93,22 @@ describe('useJqlConsole', () => {
   });
 
   it('exports to CSV correctly', () => {
-    const mockLink = {
-      setAttribute: vi.fn(),
-      click: vi.fn()
-    };
-    const createElementSpy = vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
-    const appendChildSpy = vi.spyOn(document.body, 'appendChild').mockImplementation(() => {});
-    const removeChildSpy = vi.spyOn(document.body, 'removeChild').mockImplementation(() => {});
+    let mockLink: HTMLAnchorElement;
+    const originalCreateElement = document.createElement.bind(document);
+    const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation((tag) => {
+      const el = originalCreateElement(tag);
+      if (tag === 'a') {
+        mockLink = el as HTMLAnchorElement;
+        vi.spyOn(mockLink, 'setAttribute');
+        vi.spyOn(mockLink, 'click');
+      }
+      return el;
+    });
+    const appendChildSpy = vi.spyOn(document.body, 'appendChild');
+    const removeChildSpy = vi.spyOn(document.body, 'removeChild');
 
     const { result } = renderHook(() => useJqlConsole());
     
-    act(() => {
-      // Simulate issues loaded
-      result.current.handleExecuteJql = vi.fn(); 
-    });
-
     // Manually setting issues isn't possible directly without triggering a setState, 
     // we can mock the initial state or just call the API. Let's call the API to set issues.
     jqlService.executeJql.mockResolvedValueOnce({

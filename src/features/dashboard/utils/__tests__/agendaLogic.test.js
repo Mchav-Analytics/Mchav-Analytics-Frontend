@@ -5,7 +5,8 @@ import {
   getNubiaAnalysis,
   addDays,
   getTodayStr,
-  formatDateLocal
+  formatDateLocal,
+  getTaskDate
 } from '../agendaLogic';
 
 describe('Agenda Logic & NUBIIA Business Rules', () => {
@@ -197,5 +198,95 @@ describe('Agenda Logic & NUBIIA Business Rules', () => {
     const nubia = getNubiaAnalysis(classification, selectedDate, 'Proyecto Principal');
     expect(nubia.message).toContain('SCRUM-2');
   });
-});
+  it('getTaskDate returns custom taskDates if present', () => {
+    expect(getTaskDate({ key: 'T-1' }, '2026-08-24', '2026-08-24', { 'T-1': '2026-08-25' })).toBe('2026-08-25');
+  });
 
+  it('getTaskDate logic for finalized and active tasks', () => {
+    const today = '2026-08-24';
+    // FINALIZADO con resolved_at
+    expect(getTaskDate({ status: 'FINALIZADO', resolved_at: '2026-08-20' }, today, today)).toBe('2026-08-20');
+    // FINALIZADO sin resolved_at pero con dueDate
+    expect(getTaskDate({ status: 'FINALIZADO', dueDate: '2026-08-21' }, today, today)).toBe('2026-08-21');
+    // FINALIZADO sin resolved ni due, pero con created
+    expect(getTaskDate({ status: 'FINALIZADO', created_at: '2026-08-22' }, today, today)).toBe('2026-08-22');
+    // FINALIZADO sin nada
+    expect(getTaskDate({ status: 'FINALIZADO' }, today, today)).toBeNull();
+
+    // Activa (no finalizada) si selected == today
+    expect(getTaskDate({ status: 'POR HACER' }, today, today)).toBe(today);
+    // Activa si selected != today y coincide dueDate
+    expect(getTaskDate({ status: 'POR HACER', dueDate: '2026-08-25' }, '2026-08-25', today)).toBe('2026-08-25');
+    // Activa si selected != today y coincide created_at
+    expect(getTaskDate({ status: 'POR HACER', created_at: '2026-08-26' }, '2026-08-26', today)).toBe('2026-08-26');
+    // Fallback a today si no hay coincidencia
+    expect(getTaskDate({ status: 'POR HACER' }, '2026-08-27', today)).toBe(today);
+  });
+
+  it('classifyAgendaTasks handles taskDates overrides', () => {
+    const tasks = [{ key: 'T-1' }, { key: 'T-2', status: 'FINALIZADO', created_at: '2026-08-24' }];
+    const cls = classifyAgendaTasks(tasks, '2026-08-25', { 'T-1': '2026-08-25' });
+    expect(cls.todayTasks.map(t => t.key)).toContain('T-1');
+  });
+
+  it('getNubiaAnalysis PAST branches', () => {
+    const pastDate = '2026-08-23';
+    // Total today = 0
+    let cls = classifyAgendaTasks([], pastDate);
+    cls.todayStr = '2026-08-24';
+    let res = getNubiaAnalysis(cls, pastDate);
+    expect(res.message).toContain('No hubo actividades registradas');
+
+    // Pending = 0
+    cls = classifyAgendaTasks([{ status: 'FINALIZADO', resolved_at: pastDate }], pastDate);
+    cls.todayStr = '2026-08-24';
+    res = getNubiaAnalysis(cls, pastDate);
+    expect(res.message).toContain('Jornada impecable');
+
+    // Pending > 0
+    cls = classifyAgendaTasks([{ key: 'T-1', status: 'POR HACER', dueDate: pastDate }], pastDate);
+    cls.todayStr = '2026-08-24';
+    res = getNubiaAnalysis(cls, pastDate);
+    expect(res.message).toContain('actividades sin concluir');
+  });
+
+  it('getNubiaAnalysis FUTURE branches', () => {
+    const futureDate = '2026-08-25';
+    // Total today = 0
+    let cls = classifyAgendaTasks([], futureDate);
+    cls.todayStr = '2026-08-24';
+    let res = getNubiaAnalysis(cls, futureDate);
+    expect(res.message).toContain('Aún no tienes tareas programadas');
+
+    // Future with critical task
+    cls = classifyAgendaTasks([{ key: 'T-1', status: 'POR HACER', dueDate: futureDate, priority: 'Crítica' }], futureDate);
+    cls.todayStr = '2026-08-24';
+    res = getNubiaAnalysis(cls, futureDate);
+    expect(res.message).toContain('Prepárate para abordarla');
+
+    // Future with normal task
+    cls = classifyAgendaTasks([{ key: 'T-1', status: 'POR HACER', dueDate: futureDate, priority: 'Baja', sp: 5 }], futureDate);
+    cls.todayStr = '2026-08-24';
+    res = getNubiaAnalysis(cls, futureDate);
+    expect(res.message).toContain('sugiero tener presente');
+  });
+
+  it('getNubiaAnalysis TODAY - Carga de trabajo alta y estándar', () => {
+    const today = '2026-08-24';
+    
+    // Carga alta (SP > 12) sin dueDate cercano
+    let cls = classifyAgendaTasks([{ key: 'T-1', status: 'POR HACER', dueDate: null, priority: 'Baja', sp: 15 }], today);
+    let res = getNubiaAnalysis(cls, today);
+    expect(res.message).toContain('Tu carga de trabajo de hoy es alta');
+
+    // Estándar (SP < 12, qty < 4) sin dueDate cercano
+    cls = classifyAgendaTasks([{ key: 'T-1', status: 'POR HACER', dueDate: null, priority: 'Baja', sp: 2 }], today);
+    res = getNubiaAnalysis(cls, today);
+    expect(res.message).toContain('¡Vas al día!');
+    
+    // Agenda libre
+    cls = classifyAgendaTasks([], today);
+    res = getNubiaAnalysis(cls, today);
+    expect(res.message).toContain('Tu agenda está libre');
+  });
+});

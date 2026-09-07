@@ -98,7 +98,7 @@ export const CumulativeFlowDiagram = ({ data }) => {
       <ResponsiveContainer width="100%" height={360}>
         <AreaChart
           data={data}
-          margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
+          margin={{ top: 15, right: 20, left: 10, bottom: 25 }}
         >
           <defs>
             <linearGradient id="colorCompletado" x1="0" y1="0" x2="0" y2="1">
@@ -126,8 +126,8 @@ export const CumulativeFlowDiagram = ({ data }) => {
             axisLine={false} 
             tickLine={false} 
             tick={{ fill: '#64748b', fontSize: 11, fontWeight: 600 }}
-            dy={10}
-            label={{ value: 'Días del Sprint / Rango', position: 'insideBottom', offset: -15, fill: '#64748b', fontSize: 11, fontWeight: 'bold' }}
+            dy={6}
+            label={{ value: 'Días del Sprint / Rango', position: 'insideBottom', offset: -10, fill: '#64748b', fontSize: 11, fontWeight: 'bold' }}
           />
           
           <YAxis 

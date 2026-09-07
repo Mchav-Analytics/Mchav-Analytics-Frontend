@@ -41,59 +41,59 @@ export const ProjectsTable = ({
       </div>
 
       {/* Tabla de Proyectos */}
-      <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+      <div className="overflow-x-auto w-full max-w-full">
+        <table className="w-full min-w-[720px] text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-100 dark:border-slate-800/80 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-              <th className="pb-3 pr-2">
+              <th className="py-3.5 pr-3 pl-2">
                 <span className="flex items-center">
                   Proyecto
                   <InfoTooltip text="Nombre oficial y clave de Jira. Haz clic en la fila para filtrar métricas globales." align="left" />
                 </span>
               </th>
-              <th className="pb-3 px-2">
+              <th className="py-3.5 px-3">
                 <span className="flex items-center">
                   Clave
                   <InfoTooltip text="Identificador único del proyecto en Jira." align="left" />
                 </span>
               </th>
-              <th className="pb-3 px-2">
+              <th className="py-3.5 px-3">
                 <span className="flex items-center">
                   Estado
                   <InfoTooltip text="Estado del desarrollo: Activo o Pausado." />
                 </span>
               </th>
-              <th className="pb-3 px-2 text-right">
+              <th className="py-3.5 px-3 text-right">
                 <span className="flex items-center justify-end">
                   Incidencias
                   <InfoTooltip text="Total de tareas e incidencias registradas en el proyecto." />
                 </span>
               </th>
-              <th className="pb-3 px-2 text-right">
+              <th className="py-3.5 px-3 text-right">
                 <span className="flex items-center justify-end">
                   Velocidad
                   <InfoTooltip text="Story Points promedio entregados por Sprint." />
                 </span>
               </th>
-              <th className="pb-3 px-2 text-right">
+              <th className="py-3.5 px-3 text-right">
                 <span className="flex items-center justify-end">
                   T. Ciclo
                   <InfoTooltip text="Tiempo promedio de resolución de incidencias en días." />
                 </span>
               </th>
-              <th className="pb-3 px-2">
+              <th className="py-3.5 px-3">
                 <span className="flex items-center justify-center">
                   Avance General
                   <InfoTooltip text="Porcentaje global de completitud de tareas." align="center" />
                 </span>
               </th>
-              <th className="pb-3 px-2 text-right">
+              <th className="py-3.5 px-3 text-right">
                 <span className="flex items-center justify-end">
                   Última Sync
                   <InfoTooltip text="Tiempo transcurrido desde la última sincronización con Jira." align="right" />
                 </span>
               </th>
-              <th className="pb-3 pl-2 text-center">
+              <th className="py-3.5 pl-3 text-center">
                 <span className="flex items-center justify-center">
                   Acción
                   <InfoTooltip text="Haz clic para desplegar u ocultar el equipo asignado al proyecto." align="right" />
