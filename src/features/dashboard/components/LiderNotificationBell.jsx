@@ -227,7 +227,7 @@ export default function LiderNotificationBell({
         className={`group relative transition-all duration-300 cursor-pointer flex items-center justify-center border shadow-xs hover:shadow-lg hover:shadow-indigo-500/20 active:scale-95 ${
           isCollapsed 
             ? 'w-10 h-10 rounded-xl p-0' 
-            : 'px-3 py-2 sm:px-3.5 sm:py-2.5 gap-2 rounded-2xl'
+            : 'px-3 py-2 sm:px-3.5 sm:py-2 gap-2 rounded-2xl'
         } ${
           isOpen
             ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/30'

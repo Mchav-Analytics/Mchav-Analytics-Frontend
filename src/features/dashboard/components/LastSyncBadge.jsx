@@ -48,13 +48,13 @@ export default function LastSyncBadge() {
 
   return (
     <div 
-      className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0"
+      className="flex items-center gap-2 px-3 py-2 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold shrink-0 shadow-2xs"
       title={`Última sincronización exitosa con Jira Cloud: ${lastSyncText}`}
     >
-      <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+      <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 whitespace-nowrap">
         Última sincronización <strong className="font-extrabold text-slate-900 dark:text-white ml-0.5">{lastSyncText}</strong>
       </span>
-      <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shrink-0">
+      <div className="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[10px] shrink-0 shadow-xs">
         <Check size={10} strokeWidth={3} />
       </div>
     </div>
