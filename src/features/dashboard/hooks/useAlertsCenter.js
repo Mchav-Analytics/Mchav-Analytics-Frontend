@@ -110,6 +110,57 @@ const INITIAL_FEEDBACK_ITEMS = [
   }))
 ];
 
+export const SYSTEM_USERS = [
+  { id: 'usr-1', name: 'Administrador Principal (Admin)', role: 'ADMIN', project: 'TODOS' },
+  { id: 'usr-2', name: 'Camila C. (Líder Técnico)', role: 'MANAGER', project: 'Sistema Analytics MCHAV' },
+  { id: 'usr-3', name: 'Julián Torres (Líder Técnico)', role: 'MANAGER', project: 'Portal de Clientes & Seguridad' },
+  { id: 'usr-4', name: 'Valentina H. (Desarrolladora)', role: 'DEVELOPER', project: 'Sistema Analytics MCHAV' },
+  { id: 'usr-5', name: 'Mike A. (Desarrollador)', role: 'DEVELOPER', project: 'Sistema Analytics MCHAV' },
+  { id: 'usr-6', name: 'Carlos Pérez (Desarrollador)', role: 'DEVELOPER', project: 'API Gateway ETL' }
+];
+
+export const getRecipientsForUser = (currentUser, selectedProject = 'Sistema Analytics MCHAV') => {
+  const roleRaw = (currentUser?.rol || currentUser?.role || 'DEVELOPER').toUpperCase();
+  const isAdmin = roleRaw.includes('ADMIN');
+  const isLeader = roleRaw.includes('MANAG') || roleRaw.includes('LIDER') || roleRaw.includes('LEAD');
+
+  if (isAdmin) {
+    return {
+      recipients: SYSTEM_USERS.filter(u => u.name !== currentUser?.nombre),
+      notice: 'Como Administrador, puedes enviar feedback a cualquier usuario del sistema.',
+      roleLabel: 'Administrador'
+    };
+  }
+
+  if (isLeader) {
+    const leaderProj = currentUser?.project || selectedProject;
+    const filtered = SYSTEM_USERS.filter(u => {
+      if (u.name === currentUser?.nombre) return false;
+      return u.role === 'ADMIN' || u.project === leaderProj || u.project === 'TODOS';
+    });
+    return {
+      recipients: filtered,
+      notice: 'Como Líder Técnico, puedes enviar feedback al Administrador y a los miembros de tu equipo asignado.',
+      roleLabel: 'Líder Técnico'
+    };
+  }
+
+  // Developer
+  const devProj = currentUser?.project || selectedProject;
+  const filtered = SYSTEM_USERS.filter(u => {
+    if (u.name === currentUser?.nombre) return false;
+    const isTeammate = u.project === devProj;
+    const isLeaderOrAdmin = u.role === 'MANAGER' || u.role === 'ADMIN';
+    return isTeammate || (isLeaderOrAdmin && (u.project === devProj || u.project === 'TODOS'));
+  });
+
+  return {
+    recipients: filtered.length > 0 ? filtered : SYSTEM_USERS.filter(u => u.role === 'ADMIN' || u.role === 'MANAGER'),
+    notice: 'Como Desarrollador, puedes enviar feedback a tus compañeros de proyecto y a tu Líder Técnico.',
+    roleLabel: 'Desarrollador'
+  };
+};
+
 export const useAlertsCenter = ({ selectedProjectId }) => {
   const { user } = useAuth();
   const isAdmin = user?.rol?.toLowerCase().includes('admin') || user?.rol?.toLowerCase().includes('administrador');
@@ -135,6 +186,16 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
   const [formCategory, setFormCategory] = useState('Código');
   const [formPriority, setFormPriority] = useState('MEDIA');
   const [formProject, setFormProject] = useState('Sistema Analytics MCHAV');
+
+  // Recipient / A quién va dirigido
+  const recipientsInfo = useMemo(() => getRecipientsForUser(user, formProject), [user, formProject]);
+  const [formRecipient, setFormRecipient] = useState('');
+
+  useEffect(() => {
+    if (recipientsInfo.recipients && recipientsInfo.recipients.length > 0 && !formRecipient) {
+      setFormRecipient(recipientsInfo.recipients[0].name);
+    }
+  }, [recipientsInfo, formRecipient]);
 
   const [newCommentText, setNewCommentText] = useState('');
   const [toastMessage, setToastMessage] = useState(null);
@@ -162,6 +223,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
           project: a.id_proyecto || 'Proyecto Jira',
           timeAgo: 'Reciente',
           author: 'Motor de Inteligencia',
+          recipient: 'Equipo Técnico',
           avatar: 'A',
           comments: []
         }));
@@ -193,6 +255,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       project: formProject,
       timeAgo: 'Creado ahora',
       author: user?.nombre || 'Usuario Actual',
+      recipient: formRecipient || recipientsInfo.recipients[0]?.name || 'Administrador Principal (Admin)',
       avatar: (user?.nombre || 'U')[0].toUpperCase(),
       comments: []
     };
@@ -310,6 +373,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     showCreateModal, setShowCreateModal,
     formTitle, setFormTitle, formSummary, setFormSummary,
     formCategory, setFormCategory, formPriority, setFormPriority, formProject, setFormProject,
+    formRecipient, setFormRecipient, recipientsInfo,
     handleCreateFeedback, handleExportCSV,
     pendingCount, resolvedCount, inProgressCount,
     statusTab, setStatusTab, searchTerm, setSearchTerm, sortBy, setSortBy,

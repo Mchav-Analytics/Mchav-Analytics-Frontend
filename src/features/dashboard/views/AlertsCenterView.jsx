@@ -13,6 +13,7 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
     showCreateModal, setShowCreateModal,
     formTitle, setFormTitle, formSummary, setFormSummary,
     formCategory, setFormCategory, formPriority, setFormPriority, formProject, setFormProject,
+    formRecipient, setFormRecipient, recipientsInfo,
     handleCreateFeedback, handleExportCSV,
     pendingCount, resolvedCount, inProgressCount,
     statusTab, setStatusTab, searchTerm, setSearchTerm, sortBy, setSortBy,
@@ -92,6 +93,8 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
         formCategory={formCategory} setFormCategory={setFormCategory}
         formPriority={formPriority} setFormPriority={setFormPriority}
         formProject={formProject} setFormProject={setFormProject}
+        formRecipient={formRecipient} setFormRecipient={setFormRecipient}
+        recipientsInfo={recipientsInfo}
         handleCreateFeedback={handleCreateFeedback}
       />
     </div>

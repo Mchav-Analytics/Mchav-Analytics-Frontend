@@ -105,8 +105,15 @@ export const AlertsCenterList = ({
                           <div className="w-5 h-5 rounded-full bg-indigo-600 text-white font-black text-[9px] flex items-center justify-center shrink-0">
                             {item.avatar || 'U'}
                           </div>
-                          <span>{item.author}</span>
+                          <span>De: {item.author}</span>
                         </div>
+
+                        {/* Recipient info */}
+                        {item.recipient && (
+                          <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/40 text-indigo-700 dark:text-indigo-300 text-[10px] font-extrabold flex items-center gap-1">
+                            🎯 Para: {item.recipient}
+                          </span>
+                        )}
 
                         {/* Time ago */}
                         <span className="text-[11px] font-medium text-slate-400">
