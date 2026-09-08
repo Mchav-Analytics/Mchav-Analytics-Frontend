@@ -14,7 +14,8 @@ export const AlertsCenterHeader = ({
   sidebarCategory = 'ALL',
   setSidebarCategory,
   sidebarPriority = 'ALL',
-  setSidebarPriority
+  setSidebarPriority,
+  projectsList = []
 }) => {
   return (
     <div className="space-y-6">
@@ -66,9 +67,19 @@ export const AlertsCenterHeader = ({
             className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
           >
             <option value="ALL" className="bg-white dark:bg-slate-900">Todos los proyectos</option>
-            <option value="Sistema Analytics MCHAV" className="bg-white dark:bg-slate-900">Sistema Analytics MCHAV</option>
-            <option value="Portal de Clientes & Seguridad" className="bg-white dark:bg-slate-900">Portal de Clientes & Seguridad</option>
-            <option value="API Gateway ETL" className="bg-white dark:bg-slate-900">API Gateway ETL</option>
+            {projectsList && projectsList.length > 0 ? (
+              projectsList.map(p => (
+                <option key={p.id_proyecto || p.id || p.nombre} value={p.nombre || p.id_proyecto} className="bg-white dark:bg-slate-900">
+                  {p.nombre || p.id_proyecto}
+                </option>
+              ))
+            ) : (
+              <>
+                <option value="Sistema Analytics MCHAV" className="bg-white dark:bg-slate-900">Sistema Analytics MCHAV</option>
+                <option value="Portal de Clientes & Seguridad" className="bg-white dark:bg-slate-900">Portal de Clientes & Seguridad</option>
+                <option value="API Gateway ETL" className="bg-white dark:bg-slate-900">API Gateway ETL</option>
+              </>
+            )}
           </select>
         </div>
 

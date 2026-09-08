@@ -10,6 +10,7 @@ import { AlertsCenterModal } from '../components/AlertsCenterModal';
 export default function AlertsCenterView({ selectedProjectId = null, onNavigateTab }) {
   const {
     toastMessage, setToastMessage,
+    projectsList, systemUsers,
     showCreateModal, setShowCreateModal,
     formTitle, setFormTitle, formSummary, setFormSummary,
     formCategory, setFormCategory, formPriority, setFormPriority, formProject, setFormProject,
@@ -52,6 +53,7 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
         setSidebarCategory={setSidebarCategory}
         sidebarPriority={sidebarPriority}
         setSidebarPriority={setSidebarPriority}
+        projectsList={projectsList}
       />
 
       {/* Main Grid: Feed List (8 cols) + Sidebar Widgets (4 cols) */}
@@ -96,6 +98,7 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
         formRecipient={formRecipient} setFormRecipient={setFormRecipient}
         recipientsInfo={recipientsInfo}
         handleCreateFeedback={handleCreateFeedback}
+        projectsList={projectsList}
       />
     </div>
   );

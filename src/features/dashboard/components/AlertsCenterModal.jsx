@@ -6,7 +6,7 @@ export const AlertsCenterModal = ({
   formTitle, setFormTitle, formSummary, setFormSummary,
   formCategory, setFormCategory, formPriority, setFormPriority, formProject, setFormProject,
   formRecipient, setFormRecipient, recipientsInfo = {},
-  handleCreateFeedback
+  handleCreateFeedback, projectsList = []
 }) => {
   if (!showCreateModal) return null;
 
@@ -127,9 +127,19 @@ export const AlertsCenterModal = ({
               onChange={e => setFormProject(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl outline-none focus:border-indigo-500"
             >
-              <option value="Sistema Analytics MCHAV">Sistema Analytics MCHAV</option>
-              <option value="Portal de Clientes & Seguridad">Portal de Clientes & Seguridad</option>
-              <option value="API Gateway ETL">API Gateway ETL</option>
+              {projectsList && projectsList.length > 0 ? (
+                projectsList.map(p => (
+                  <option key={p.id_proyecto || p.id || p.nombre} value={p.nombre || p.id_proyecto}>
+                    {p.nombre || p.id_proyecto}
+                  </option>
+                ))
+              ) : (
+                <>
+                  <option value="Sistema Analytics MCHAV">Sistema Analytics MCHAV</option>
+                  <option value="Portal de Clientes & Seguridad">Portal de Clientes & Seguridad</option>
+                  <option value="API Gateway ETL">API Gateway ETL</option>
+                </>
+              )}
             </select>
           </div>
 
