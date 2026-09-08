@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, FileDown, MessageSquare, Clock, CheckCircle2, TrendingUp, Calendar, Folder, Filter, Check } from 'lucide-react';
+import { Plus, FileDown, MessageSquare, Clock, CheckCircle2, TrendingUp, Calendar, Folder, Filter, Check, History } from 'lucide-react';
 
 export const AlertsCenterHeader = ({ 
   setShowCreateModal, 
@@ -55,7 +55,7 @@ export const AlertsCenterHeader = ({
         </div>
       </div>
 
-      {/* ── FILTER DROPDOWNS BAR ── */}
+      {/* ── FILTER DROPDOWNS BAR + HISTORIAL BOTÓN ── */}
       <div className="flex items-center gap-3 overflow-x-auto no-scrollbar pb-1">
         {/* Proyecto Selector */}
         <div className="flex items-center gap-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs hover:border-indigo-500/40 transition-colors shrink-0">
@@ -104,18 +104,34 @@ export const AlertsCenterHeader = ({
           </select>
         </div>
 
+        {/* Botón de Historial de Resueltos */}
+        <button
+          type="button"
+          onClick={() => setStatusTab && setStatusTab(statusTab === 'RESOLVED' ? 'ALL' : 'RESOLVED')}
+          className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+            statusTab === 'RESOLVED'
+              ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/30 border border-emerald-500 ring-2 ring-emerald-500/20'
+              : 'bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] text-slate-700 dark:text-slate-200 hover:border-emerald-500/50 shadow-xs'
+          }`}
+          title="Ver historial de feedbacks resueltos"
+        >
+          <History size={15} className={statusTab === 'RESOLVED' ? 'text-white' : 'text-emerald-500'} />
+          <span>Historial Resueltos ({resolvedCount})</span>
+        </button>
+
         {/* Botón de Limpieza rápida */}
-        {(sidebarProject !== 'ALL' || sidebarCategory !== 'ALL' || sidebarPriority !== 'ALL') && (
+        {(sidebarProject !== 'ALL' || sidebarCategory !== 'ALL' || sidebarPriority !== 'ALL' || statusTab === 'RESOLVED') && (
           <button
             type="button"
             onClick={() => {
               if (setSidebarProject) setSidebarProject('ALL');
               if (setSidebarCategory) setSidebarCategory('ALL');
               if (setSidebarPriority) setSidebarPriority('ALL');
+              if (setStatusTab) setStatusTab('ALL');
             }}
             className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-extrabold hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer shrink-0"
           >
-            Limpiar filtros
+            Ver Activos / Limpiar
           </button>
         )}
       </div>

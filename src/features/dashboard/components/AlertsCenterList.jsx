@@ -84,6 +84,11 @@ export const AlertsCenterList = ({
 
                       {/* Tags & Metadata Row */}
                       <div className="flex items-center gap-2.5 pt-1.5 flex-wrap">
+                        {/* Project title tag */}
+                        <span className="px-2.5 py-0.5 rounded-md bg-blue-500/10 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/40 text-blue-700 dark:text-blue-300 text-[10px] font-extrabold flex items-center gap-1">
+                          📁 {item.project}
+                        </span>
+
                         {/* Category tag */}
                         <span className="px-2.5 py-0.5 rounded-md bg-purple-500/10 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-700/40 text-purple-700 dark:text-purple-300 text-[10px] font-extrabold">
                           #{item.category}
@@ -123,17 +128,25 @@ export const AlertsCenterList = ({
                     </div>
                   </div>
 
-                  {/* Right side status badge, comment count & chevron */}
+                  {/* Right side status badge button, comment count & chevron */}
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                      isResolved
-                        ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40'
-                        : isInProgress
-                        ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40'
-                        : 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/40'
-                    }`}>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleToggleStatus(item.id);
+                      }}
+                      title="Haz clic para cambiar el estado (Pendiente -> En proceso -> Resuelto)"
+                      className={`px-3 py-1 rounded-full text-xs font-bold border transition-all cursor-pointer hover:scale-105 active:scale-95 shadow-xs ${
+                        isResolved
+                          ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25'
+                          : isInProgress
+                          ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/40 hover:bg-amber-500/25'
+                          : 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border-indigo-500/40 hover:bg-indigo-500/25'
+                      }`}
+                    >
                       {isResolved ? 'Resuelto' : isInProgress ? 'En proceso' : 'Pendiente'}
-                    </span>
+                    </button>
 
                     <div className="flex items-center gap-1 text-slate-400 text-xs font-bold">
                       <MessageSquare size={14} />

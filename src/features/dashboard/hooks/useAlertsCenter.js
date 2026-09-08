@@ -267,11 +267,23 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     showToast('✨ Nuevo feedback registrado exitosamente.');
   };
 
-  const handleToggleStatus = (id) => {
+  const handleToggleStatus = (id, targetStatus = null) => {
     setFeedbackList(prev => prev.map(item => {
       if (item.id === id) {
-        const nextStatus = item.status === 'RESUELTO' ? 'PENDIENTE' : 'RESUELTO';
-        showToast(nextStatus === 'RESUELTO' ? '✅ Feedback marcado como resuelto.' : '🔄 Feedback reabierto.');
+        let nextStatus = targetStatus;
+        if (!nextStatus) {
+          if (item.status === 'PENDIENTE') nextStatus = 'EN_PROCESO';
+          else if (item.status === 'EN_PROCESO') nextStatus = 'RESUELTO';
+          else nextStatus = 'PENDIENTE';
+        }
+
+        if (nextStatus === 'RESUELTO') {
+          showToast('✅ Feedback marcado como resuelto y guardado en el historial.');
+        } else if (nextStatus === 'EN_PROCESO') {
+          showToast('⏳ Feedback cambiado a En Proceso.');
+        } else {
+          showToast('📌 Feedback reactivado como Pendiente.');
+        }
         return { ...item, status: nextStatus };
       }
       return item;
@@ -298,7 +310,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
 
   const handleExportCSV = () => {
     try {
-      const headers = ['ID', 'Título', 'Resumen', 'Categoría', 'Estado', 'Prioridad', 'Proyecto', 'Autor'];
+      const headers = ['ID', 'Título', 'Resumen', 'Categoría', 'Estado', 'Prioridad', 'Proyecto', 'Autor', 'Destinatario'];
       const rows = feedbackList.map(item => [
         item.id,
         `"${item.title.replace(/"/g, '""')}"`,
@@ -307,7 +319,8 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
         item.status,
         item.priority,
         `"${item.project}"`,
-        `"${item.author}"`
+        `"${item.author}"`,
+        `"${item.recipient || ''}"`
       ]);
 
       const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
@@ -344,9 +357,19 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
         item.project.toLowerCase().includes(searchTerm.toLowerCase());
       if (!matchesSearch) return false;
 
-      if (statusTab === 'PENDING' && item.status !== 'PENDIENTE' && item.status !== 'EN_PROCESO') return false;
-      if (statusTab === 'RESOLVED' && item.status !== 'RESUELTO') return false;
-      if (statusTab === 'MY_ASSIGNED' && item.author !== user?.nombre) return false;
+      // Filtrado por Tab de Estado / Historial
+      if (statusTab === 'RESOLVED') {
+        if (item.status !== 'RESUELTO') return false;
+      } else if (statusTab === 'PENDING') {
+        if (item.status !== 'PENDIENTE') return false;
+      } else if (statusTab === 'IN_PROGRESS') {
+        if (item.status !== 'EN_PROCESO') return false;
+      } else if (statusTab === 'MY_ASSIGNED') {
+        if (item.author !== user?.nombre) return false;
+      } else {
+        // Modo por defecto ('ALL'): Oculta los resueltos para que desaparezcan de la lista activa y queden en el Historial
+        if (item.status === 'RESUELTO') return false;
+      }
 
       if (sidebarProject !== 'ALL' && item.project !== sidebarProject) return false;
       if (sidebarCategory !== 'ALL' && item.category !== sidebarCategory) return false;
