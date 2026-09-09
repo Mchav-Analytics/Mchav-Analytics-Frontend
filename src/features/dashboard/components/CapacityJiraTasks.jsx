@@ -8,6 +8,17 @@ export default function CapacityJiraTasks({
   selectedTaskProject, setSelectedTaskProject,
   filteredTasks
 }) {
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [taskStatusTab, taskSearchTerm, selectedTaskProject]);
+
+  const totalPages = Math.ceil(filteredTasks.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentTasks = filteredTasks.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   return (
     <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-3xl p-5 sm:p-6 shadow-sm space-y-4 text-left">
       
@@ -64,7 +75,7 @@ export default function CapacityJiraTasks({
               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
           }`}
         >
-          🌐 Todas (187)
+          Todas (187)
         </button>
         <button
           type="button"
@@ -139,7 +150,7 @@ export default function CapacityJiraTasks({
                   </td>
                 </tr>
               ) : (
-                filteredTasks.slice(0, 15).map((task, idx) => (
+                currentTasks.map((task, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/80 dark:hover:bg-[#192038] transition-colors group">
                     <td className="py-3 px-3 font-black text-indigo-600 dark:text-indigo-400">
                       {task.key}
@@ -189,6 +200,36 @@ export default function CapacityJiraTasks({
             </tbody>
           </table>
         </div>
+        
+        {/* Paginación */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between px-5 py-3 border-t border-slate-200 dark:border-[#242b45] bg-slate-50 dark:bg-slate-900/50">
+            <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Mostrando {startIndex + 1} a {Math.min(startIndex + ITEMS_PER_PAGE, filteredTasks.length)} de {filteredTasks.length} tareas
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-white dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#242b45] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Anterior
+              </button>
+              <div className="flex items-center justify-center px-3 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300">
+                Pág. {currentPage} de {totalPages}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-white dark:bg-[#1a2138] border border-slate-200 dark:border-[#2c3757] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#242b45] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
