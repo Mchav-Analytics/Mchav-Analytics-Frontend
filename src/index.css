@@ -3542,6 +3542,6 @@ body {
   }
   @page {
     size: A4 portrait;
-    margin: 1.2cm;
+    margin: 20mm;
   }
 }

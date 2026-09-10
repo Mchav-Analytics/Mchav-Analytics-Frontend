@@ -152,13 +152,100 @@ export default function CentroReportesView({ selectedProjectId }) {
     setIsGenerating(true);
     
     try {
-      // 1. Determinar el proyecto a consultar
-      const projectId = reportType === 'general'
-        ? (selectedGeneralProjects.length > 0 ? selectedGeneralProjects[0] : null)
-        : (reportType === 'proyecto' ? reportParam : genProjectId);
+      if (reportType === 'general') {
+        if (!selectedGeneralProjects || selectedGeneralProjects.length === 0) {
+           setIsGenerating(false);
+           alert("Por favor selecciona al menos un proyecto.");
+           return;
+        }
+        
+        let allKpis = [];
+        let totalRecordsAgg = 0;
+        let totalSpAgg = 0;
+        let totalBugsAgg = 0;
+        let totalBlockedDays = 0;
+        let cycleTimeSum = 0;
+        let cycleTimeCount = 0;
+        
+        for (const pId of selectedGeneralProjects) {
+            const currentProj = dbProjects.find(p => p.id_proyecto === pId);
+            const pName = currentProj ? (currentProj.nombre || currentProj.name) : pId;
+            
+            // Obtener el conteo
+            const detailRes = await projectService.getKpiIssuesDetail(pId, {});
+            const tRec = detailRes?.total_issues || detailRes?.issues?.length || 0;
+            
+            // Cargar KPIs
+            const pKpis = await projectService.getKpis(pId, null);
+            
+            const sp = pKpis?.metrics?.completed_sp || 0;
+            const bugs = pKpis?.metrics?.bugs_count || 0;
+            const bd = pKpis?.metrics?.blocked_days || 0;
+            const ct = pKpis?.metrics?.avg_cycle_time || 0;
+            
+            totalRecordsAgg += tRec;
+            totalSpAgg += sp;
+            totalBugsAgg += bugs;
+            totalBlockedDays += bd;
+            if (ct > 0) { cycleTimeSum += ct; cycleTimeCount++; }
+            
+            allKpis.push({
+               projectId: pId,
+               projectName: pName,
+               throughput: tRec,
+               velocity: sp,
+               bugs: bugs,
+               blockedDays: bd,
+               cycleTime: ct
+            });
+        }
+        
+        const avgCt = cycleTimeCount > 0 ? cycleTimeSum / cycleTimeCount : 0;
+        
+        let aiInsightsData = null;
+        try {
+            const metricsData = {
+              reportType: 'general',
+              projectMetrics: allKpis,
+              velocity: totalSpAgg,
+              throughput: totalRecordsAgg,
+              cycleTime: avgCt,
+              blockedDays: totalBlockedDays,
+              bugs: totalBugsAgg,
+              targetName: 'Resumen General'
+            };
+            const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
+            if (aiResponse.data && aiResponse.data.data) {
+              aiInsightsData = aiResponse.data.data;
+            }
+        } catch (e) {
+            console.error("Error al generar AI insights:", e);
+        }
+        
+        setIsGenerating(false);
+        setReportData({
+            reportType: 'general',
+            month: "Reporte en Vivo", 
+            pointsCompleted: totalSpAgg, 
+            totalIssues: totalRecordsAgg, 
+            blockedDays: totalBlockedDays,
+            targetName: 'Resumen General',
+            projectName: 'Portafolio Multi-Proyecto',
+            sprintName: 'N/A',
+            projectMetrics: allKpis,
+            aiInsights: { markdown: aiInsightsData }
+        });
+        setShouldPrint(true);
+        return;
+      }
+
+      // 1. Determinar el proyecto a consultar para reportes individuales
+      const projectId = reportType === 'proyecto' ? reportParam : genProjectId;
         
       if (!projectId) {
-        throw new Error("Por favor selecciona un proyecto.");
+        setIsGenerating(false);
+        alert("Por favor selecciona un proyecto.");
+        return;
       }
 
       // 2. Preparar parámetros de consulta según el tipo de reporte
@@ -184,7 +271,7 @@ export default function CentroReportesView({ selectedProjectId }) {
         }
         minimumRequired = 3;
       } else if (reportType === 'desarrollador') {
-        const dev = dbUsers.find(u => u.id_usuario === reportParam);
+        const dev = dbUsers.find(u => String(u.id_usuario) === String(reportParam));
         if (dev) {
           params.assignee_id = dev.id_usuario;
           targetName = dev.nombre;
@@ -245,7 +332,7 @@ export default function CentroReportesView({ selectedProjectId }) {
           projectName: realProjectName,
           sprintName: sprintName,
           kpis: kpis,
-          aiInsights: aiInsightsData
+          aiInsights: { markdown: aiInsightsData }
       });
       
       setShouldPrint(true);
@@ -1040,9 +1127,6 @@ export default function CentroReportesView({ selectedProjectId }) {
     <div className="w-full h-[calc(100vh-32px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-slate-50 to-white dark:from-transparent dark:to-transparent shadow-sm dark:shadow-none border border-slate-200/60 dark:border-transparent rounded-3xl p-8 md:p-12 flex flex-col gap-8 relative">
       
       {/* HEADER Y TABS */}
-      {/* Luces decorativas de fondo (Soft Glassmorphism effect) */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-400/10 dark:bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
-      <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-sky-400/10 dark:bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
       
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 relative z-20">
         <div>
