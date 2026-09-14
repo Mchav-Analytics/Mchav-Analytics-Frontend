@@ -69,7 +69,7 @@ export default function AdminUserTable({
                 <div className="min-w-0 space-y-1">
                   <h4 className="text-sm font-extrabold text-slate-900 dark:text-slate-100 truncate flex items-center gap-2 flex-wrap">
                     {u.name}
-                    {u.role === 'ADMIN' && (
+                    {u.role === 'ADMIN' && (u.email || '').toLowerCase().trim() === 'salamancamai12@gmail.com' && (
                       <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-500/30">
                         ADMIN
                       </span>
@@ -86,20 +86,24 @@ export default function AdminUserTable({
 
               <div className="flex flex-col gap-1.5 xl:items-center">
                 <span className="xl:hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Rol</span>
-                <select
-                  value={u.role}
-                  onChange={e => handleRoleChange(u.id, e.target.value as 'ADMIN' | 'MANAGER' | 'DEVELOPER')}
-                  className={`w-full max-w-[200px] border rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer transition-all ${u.role === 'ADMIN'
-                    ? 'bg-purple-50 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700/60'
-                    : u.role === 'MANAGER'
-                      ? 'bg-blue-50 dark:bg-blue-950/90 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60'
-                      : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
+                {(u.email || '').toLowerCase().trim() === 'salamancamai12@gmail.com' ? (
+                  <div className="px-3 py-2 rounded-xl text-xs font-black bg-purple-50 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-700/60 inline-flex items-center gap-1.5">
+                    <span>ADMINISTRADOR</span>
+                  </div>
+                ) : (
+                  <select
+                    value={u.role === 'ADMIN' ? 'DEVELOPER' : u.role}
+                    onChange={e => handleRoleChange(u.id, e.target.value as 'MANAGER' | 'DEVELOPER')}
+                    className={`w-full max-w-[200px] border rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer transition-all ${
+                      u.role === 'MANAGER'
+                        ? 'bg-blue-50 dark:bg-blue-950/90 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60'
+                        : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
                     }`}
-                >
-                  <option value="ADMIN">ADMINISTRADOR</option>
-                  <option value="MANAGER">LÍDER TÉCNICO</option>
-                  <option value="DEVELOPER">DESARROLLADOR</option>
-                </select>
+                  >
+                    <option value="DEVELOPER">DESARROLLADOR</option>
+                    <option value="MANAGER">LÍDER TÉCNICO</option>
+                  </select>
+                )}
               </div>
 
               <div className="flex flex-col gap-2 xl:items-center">
