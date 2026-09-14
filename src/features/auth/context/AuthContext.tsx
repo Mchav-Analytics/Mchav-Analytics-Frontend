@@ -76,6 +76,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     checkAuthSession();
+
+    const handleDeactivated = () => {
+      setUser(prev => prev ? ({
+        ...prev,
+        activo: false,
+        status: 'PENDING',
+        rol: 'PENDING'
+      }) : null);
+    };
+    window.addEventListener('mchav-account-deactivated', handleDeactivated);
+    return () => window.removeEventListener('mchav-account-deactivated', handleDeactivated);
   }, []);
 
   const checkAuthSession = async () => {
@@ -133,7 +144,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
       } else if (USE_MOCK_DATA) {
         isApproved = currentApproved.includes(userData.email);
       } else {
-        isApproved = userData.activo !== false && userData.rol !== null && userData.rol !== undefined;
+        isApproved = Boolean(
+          userData.activo === true && 
+          userData.id_rol && 
+          userData.rol && 
+          userData.rol !== 'Sin Rol' &&
+          userData.rol !== 'PENDING'
+        );
       }
 
       const rawNorm = normalizeRole(userData.rol);
@@ -144,9 +161,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
         assignedRole = 'ADMIN';
       } else if (USE_MOCK_DATA) {
         const mockNorm = normalizeRole(rolesMap[userData.email] || userData.rol);
-        assignedRole = mockNorm === 'ADMIN' ? 'DEVELOPER' : mockNorm;
+        assignedRole = mockNorm;
       } else {
-        assignedRole = rawNorm === 'ADMIN' ? 'DEVELOPER' : rawNorm;
+        assignedRole = rawNorm;
       }
 
       if (userData?.token || userData?.access_token) {
@@ -156,7 +173,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser({
         ...userData,
         email: userEmail || userData.email,
-        rol: isMasterAdmin ? 'ADMIN' : (isApproved ? assignedRole : 'PENDING'),
+        rol: isApproved ? assignedRole : 'PENDING',
         original_rol: userData.rol,
         activo: isApproved,
         status: isApproved ? 'ACTIVE' : 'PENDING'
@@ -182,13 +199,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
     localStorage.setItem('mock_user_roles_map', JSON.stringify(rolesMap));
 
     // Si el usuario actualmente logueado es a quien le están aprobando el permiso, actualizarlo inmediatamente
-    if (user && user.email === email) {
-      setUser(prev => prev ? ({
-        ...prev,
-        rol: newRole,
-        status: 'ACTIVE'
-      }) : null);
-    }
+      if (user && user.email === email) {
+        const normalized = normalizeRole(newRole);
+        setUser(prev => prev ? ({
+          ...prev,
+          rol: normalized,
+          status: 'ACTIVE'
+        }) : null);
+      }
   };
 
   const login = async (credentials: { email: string; password?: string }) => {
@@ -207,14 +225,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       
-      const isApproved = isMasterAdmin || isTestEnv || (USE_MOCK_DATA ? currentApproved.includes(loggedUser.email) : (loggedUser.activo !== false && loggedUser.rol !== null && loggedUser.rol !== undefined));
+      const isApproved = isMasterAdmin || isTestEnv || (
+        USE_MOCK_DATA 
+          ? currentApproved.includes(loggedUser.email) 
+          : Boolean(loggedUser.activo === true && loggedUser.id_rol && loggedUser.rol && loggedUser.rol !== 'Sin Rol' && loggedUser.rol !== 'PENDING')
+      );
       const candidateRole = normalizeRole(rolesMap[loggedUser.email] || loggedUser.rol);
-      const assignedRole = isTestEnv ? candidateRole : (isMasterAdmin ? 'ADMIN' : (candidateRole === 'ADMIN' ? 'DEVELOPER' : candidateRole));
+      const assignedRole = candidateRole;
 
       const userWithStatus: AuthUser = {
         ...loggedUser,
         email: userEmail || loggedUser.email,
-        rol: isMasterAdmin ? 'ADMIN' : (isApproved ? assignedRole : 'PENDING'),
+        rol: isApproved ? assignedRole : 'PENDING',
         original_rol: loggedUser.rol,
         activo: isApproved,
         status: isApproved ? 'ACTIVE' : 'PENDING'

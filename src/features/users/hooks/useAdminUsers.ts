@@ -49,7 +49,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
           
           let parsedRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' = 'DEVELOPER';
           if (rawRolStr.includes('ADMIN')) {
-            parsedRole = (isMaster || isTestEnv) ? 'ADMIN' : 'DEVELOPER';
+            parsedRole = 'ADMIN';
           } else if (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER') || rawRolStr.includes('LÍDER')) {
             parsedRole = 'MANAGER';
           } else {
@@ -58,7 +58,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
 
           const isPending = isTestEnv 
             ? (u.activo === false) 
-            : (!isMaster && (!u.activo || u.id_rol === null || rawRolStr.includes('SIN ROL') || !u.rol));
+            : (!u.activo || u.id_rol === null || rawRolStr.includes('SIN ROL') || !u.rol);
 
           return {
             id: String(u.id_usuario),

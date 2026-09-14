@@ -37,6 +37,11 @@ api.interceptors.response.use(
       } else {
         console.warn(`401 Unauthorized en ${reqUrl}: se conserva el token para la vista de espera.`);
       }
+    } else if (error.response && error.response.status === 403) {
+      const detail = String(error.response.data?.detail || '');
+      if (detail.toLowerCase().includes('inactiva') || detail.toLowerCase().includes('pendiente')) {
+        window.dispatchEvent(new CustomEvent('mchav-account-deactivated'));
+      }
     }
     return Promise.reject(error);
   }
