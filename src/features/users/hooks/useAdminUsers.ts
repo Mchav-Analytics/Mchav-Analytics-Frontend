@@ -45,7 +45,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
           const rawRolStr = String(u.rol || '').toUpperCase();
           const parsedRole = rawRolStr.includes('ADMIN')
             ? 'ADMIN'
-            : (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER'))
+            : (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER') || rawRolStr.includes('LÍDER'))
               ? 'MANAGER'
               : 'DEVELOPER';
 
@@ -119,7 +119,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
       /* ignore storage errors */
     }
 
-    const displayRoleName = targetRole === 'MANAGER' ? 'PLANIFICADOR' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : 'DESARROLLADOR';
+    const displayRoleName = targetRole === 'MANAGER' ? 'LÍDER TÉCNICO' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : 'DESARROLLADOR';
     showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${displayRoleName}`);
   };
 

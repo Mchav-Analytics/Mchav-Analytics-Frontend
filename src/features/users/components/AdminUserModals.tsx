@@ -217,7 +217,7 @@ export default function AdminUserModals({
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-slate-900 dark:text-slate-100 font-semibold outline-none cursor-pointer"
                 >
                   <option value="DEVELOPER">DESARROLLADOR (Developer)</option>
-                  <option value="MANAGER">PLANIFICADOR (Manager)</option>
+                  <option value="MANAGER">LÍDER TÉCNICO (Manager)</option>
                   <option value="ADMIN">ADMINISTRADOR (Admin)</option>
                 </select>
               </div>

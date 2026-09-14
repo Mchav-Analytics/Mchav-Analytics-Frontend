@@ -30,8 +30,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      console.warn("401 Unauthorized: sesión no válida o expirada.");
-      localStorage.removeItem('mchav_jwt_token');
+      const reqUrl = error.config?.url || '';
+      if (reqUrl.includes('/auth/me') || reqUrl.includes('/auth/login')) {
+        console.warn("401 Unauthorized en verificación de autenticación: cerrando sesión.");
+        localStorage.removeItem('mchav_jwt_token');
+      } else {
+        console.warn(`401 Unauthorized en ${reqUrl}: se conserva el token para la vista de espera.`);
+      }
     }
     return Promise.reject(error);
   }

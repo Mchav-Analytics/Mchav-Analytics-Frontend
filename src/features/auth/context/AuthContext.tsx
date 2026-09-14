@@ -105,7 +105,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       let userData;
       try {
-        if (storedSession) {
+        if (existingToken || tokenParam) {
+          userData = await authService.getCurrentUser();
+        } else if (USE_MOCK_DATA && storedSession) {
           userData = JSON.parse(storedSession);
         } else {
           userData = await authService.getCurrentUser();

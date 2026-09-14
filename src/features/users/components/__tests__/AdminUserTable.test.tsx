@@ -50,7 +50,7 @@ describe('AdminUserTable', () => {
     
     // Status badges
     expect(screen.getByText('Activo')).toBeDefined();
-    expect(screen.getByText('Inactivo')).toBeDefined();
+    expect(screen.getByText('Pendiente')).toBeDefined();
   });
 
   it('handles empty state', () => {
@@ -65,7 +65,7 @@ describe('AdminUserTable', () => {
     fireEvent.click(disableButton);
     expect(defaultProps.toggleUserStatus).toHaveBeenCalledWith('1');
 
-    const enableButton = screen.getByText('Activar');
+    const enableButton = screen.getByText('Aprobar Acceso');
     fireEvent.click(enableButton);
     expect(defaultProps.toggleUserStatus).toHaveBeenCalledWith('2');
   });

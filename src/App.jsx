@@ -59,6 +59,11 @@ class ErrorBoundary extends React.Component {
 
 function MainAppContent() {
   const { user, isAuthenticated, loading: authLoading } = useAuth(); // Contexto de autenticación
+  
+  // Usuario autenticado pero con acceso pendiente de aprobación por el Administrador o cuenta inactiva
+  const isMasterAdmin = user?.email?.toLowerCase() === 'salamancamai12@gmail.com';
+  const isPendingApproval = !isMasterAdmin && (user?.status === 'PENDING' || user?.activo === false);
+
   // Persistir pestaña activa actual en localStorage para no volver al inicio al hacer Refresh
   const [activeTab, setActiveTabState] = useState(() => {
     try {
@@ -180,21 +185,21 @@ function MainAppContent() {
     }
   }, [user?.rol]);
 
-  // Cargar métricas e información inicial al autenticarse
+  // Cargar métricas e información inicial al autenticarse (solo si la cuenta está aprobada)
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isPendingApproval) {
       fetchMetrics();
       fetchProjects();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isPendingApproval]);
 
-  // Recargar KPIs al seleccionar un proyecto
+  // Recargar KPIs al seleccionar un proyecto (solo si la cuenta está aprobada)
   useEffect(() => {
-    if (selectedProjectId) {
+    if (selectedProjectId && !isPendingApproval) {
       fetchSprints(selectedProjectId);
       fetchKpis(selectedProjectId, null);
     }
-  }, [selectedProjectId]);
+  }, [selectedProjectId, isPendingApproval]);
 
   const fetchMetrics = () => {
     setMetricsLoading(true);
@@ -308,6 +313,10 @@ function MainAppContent() {
     return <LoginView />;
   }
 
+  if (isPendingApproval) {
+    return <WaitingApprovalView isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />;
+  }
+
   // Configurar títulos y subtítulos legibles en el Topbar por pestaña activa
   const getTabHeaderDetails = () => {
     switch (activeTab) {
@@ -412,29 +421,6 @@ function MainAppContent() {
   };
 
   const headerDetails = getTabHeaderDetails();
-
-  if (authLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-slate-950 text-white font-sans">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm font-semibold text-slate-400">Cargando MCHAV Analytics...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LoginView />;
-  }
-
-  // Usuario autenticado pero con acceso pendiente de aprobación por el Administrador
-  const isMasterAdmin = user?.email?.toLowerCase() === 'salamancamai12@gmail.com';
-  const isPendingApproval = !isMasterAdmin && (user?.status === 'PENDING' || user?.activo === false);
-
-  if (isPendingApproval) {
-    return <WaitingApprovalView isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />;
-  }
 
   return (
     <MainLayout
