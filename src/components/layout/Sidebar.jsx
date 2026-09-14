@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle, ChevronLeft } from 'lucide-react';
+import { Settings, Sparkles, MessageCircle, ChevronLeft } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
 import LiderNotificationBell from '../../features/dashboard/components/LiderNotificationBell';
@@ -22,7 +22,7 @@ function Sidebar({
   selectedProjectId = 'PROJ-01',
   setSelectedProjectId
 }) {
-  const { logout, user, switchViewRole, isRealAdmin } = useAuth();
+  const { logout, user, isRealAdmin } = useAuth();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
@@ -247,86 +247,7 @@ function Sidebar({
           </button>
         </div>
 
-        {/* ── CONMUTADOR RÁPIDO DE VISTAS (3 BOTONES) ── */}
-        <div className={`mb-3 p-1 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 ${isCollapsed ? 'flex flex-col gap-1.5 items-center w-full' : 'grid grid-cols-3 gap-1'}`}>
-          <button
-            type="button"
-            onClick={() => {
-              switchViewRole('ADMIN');
-              setActiveTab('proyectos');
-            }}
-            className={`group relative rounded-xl text-[10px] font-extrabold flex items-center justify-center transition-all cursor-pointer ${
-              isCollapsed ? 'w-8 h-8 p-0' : 'py-1.5 px-2 gap-1'
-            } ${
-              userRole === 'ADMIN'
-                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-500/30'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-            }`}
-            title="Cambiar a Vista Administrador"
-          >
-            <Shield size={13} />
-            {!isCollapsed && <span>Admin</span>}
-            {isCollapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#191c3d]/95 text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl border border-indigo-200/30 dark:border-[#3b3f78] flex items-center gap-2">
-                <Shield size={12} className="text-indigo-400" />
-                <span>Vista Administrador</span>
-                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-900/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/30 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
-              </div>
-            )}
-          </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              switchViewRole('MANAGER');
-              setActiveTab('proyectos');
-            }}
-            className={`group relative rounded-xl text-[10px] font-extrabold flex items-center justify-center transition-all cursor-pointer ${
-              isCollapsed ? 'w-8 h-8 p-0' : 'py-1.5 px-2 gap-1'
-            } ${
-              userRole === 'MANAGER'
-                ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/30'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-            }`}
-            title="Cambiar a Vista Líder Técnico"
-          >
-            <Briefcase size={13} />
-            {!isCollapsed && <span>Líder</span>}
-            {isCollapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#191c3d]/95 text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl border border-purple-200/30 dark:border-[#3b3f78] flex items-center gap-2">
-                <Briefcase size={12} className="text-purple-400" />
-                <span>Vista Líder Técnico</span>
-                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-900/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-purple-200/30 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
-              </div>
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              switchViewRole('DEVELOPER');
-              setActiveTab('developer');
-            }}
-            className={`group relative rounded-xl text-[10px] font-extrabold flex items-center justify-center transition-all cursor-pointer ${
-              isCollapsed ? 'w-8 h-8 p-0' : 'py-1.5 px-2 gap-1'
-            } ${
-              userRole === 'DEVELOPER'
-                ? 'bg-blue-600 text-white shadow-sm shadow-blue-500/30'
-                : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-slate-800'
-            }`}
-            title="Cambiar a Vista Desarrollador"
-          >
-            <Code size={13} />
-            {!isCollapsed && <span>Dev</span>}
-            {isCollapsed && (
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-slate-900/95 dark:bg-[#191c3d]/95 text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl border border-blue-200/30 dark:border-[#3b3f78] flex items-center gap-2">
-                <Code size={12} className="text-blue-400" />
-                <span>Vista Desarrollador</span>
-                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-slate-900/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-blue-200/30 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
-              </div>
-            )}
-          </button>
-        </div>
 
         {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM ── */}
         <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>

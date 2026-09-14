@@ -84,6 +84,7 @@ export default function AdminUsuariosView({
     setToastMessage,
     handleRoleChange,
     toggleUserStatus,
+    approveUser,
     handleInviteUser
   } = useAdminUsers(approveUserPermission, approvedUsers);
 
@@ -161,6 +162,7 @@ export default function AdminUsuariosView({
           itemsPerPage={5}
           handleRoleChange={handleRoleChange}
           toggleUserStatus={toggleUserStatus}
+          approveUser={approveUser}
         />
 
       </div>

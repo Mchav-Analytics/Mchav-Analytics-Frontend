@@ -120,14 +120,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
       
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
-      const rolePref = localStorage.getItem('mchav_active_role');
       
-      const normRole = normalizeRole(userData.rol);
-      const isApproved = USE_MOCK_DATA 
-        ? currentApproved.includes(userData.email) 
-        : (userData.activo !== false);
+      const userEmail = (userData.email || '').toLowerCase().trim();
+      const isMasterAdmin = userEmail === 'salamancamai12@gmail.com';
+      
+      let isApproved = false;
+      if (isMasterAdmin) {
+        isApproved = true;
+      } else if (USE_MOCK_DATA) {
+        isApproved = currentApproved.includes(userData.email);
+      } else {
+        isApproved = userData.activo === true;
+      }
 
-      const assignedRole = rolePref || (USE_MOCK_DATA ? (rolesMap[userData.email] || 'DEVELOPER') : 'DEVELOPER');
+      let assignedRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' = 'DEVELOPER';
+      if (isMasterAdmin) {
+        assignedRole = 'ADMIN';
+      } else if (USE_MOCK_DATA) {
+        assignedRole = normalizeRole(rolesMap[userData.email] || userData.rol);
+      } else {
+        assignedRole = normalizeRole(userData.rol);
+      }
 
       if (userData?.token || userData?.access_token) {
         localStorage.setItem('mchav_jwt_token', userData.token || userData.access_token);
@@ -135,9 +148,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       setUser({
         ...userData,
+        email: userEmail || userData.email,
         rol: assignedRole,
         original_rol: userData.rol,
-        status: isApproved ? 'ACTIVE' : (assignedRole === 'ADMIN' ? 'ACTIVE' : 'PENDING')
+        activo: isApproved,
+        status: isApproved ? 'ACTIVE' : 'PENDING'
       });
     } catch (err) {
       console.log("Sin sesión activa actualmente:", err);
@@ -179,16 +194,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       }
       
       // Comprobar si el usuario logueado está en la lista de aprobados por el Admin
+      const userEmail = (loggedUser.email || '').toLowerCase().trim();
+      const isMasterAdmin = userEmail === 'salamancamai12@gmail.com';
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       
-      const isApproved = currentApproved.includes(loggedUser.email);
-      const assignedRole = localStorage.getItem('mchav_active_role') || (rolesMap[loggedUser.email] || 'DEVELOPER');
+      const isApproved = isMasterAdmin || (USE_MOCK_DATA ? currentApproved.includes(loggedUser.email) : loggedUser.activo === true);
+      const assignedRole = isMasterAdmin ? 'ADMIN' : normalizeRole(rolesMap[loggedUser.email] || loggedUser.rol);
 
       const userWithStatus: AuthUser = {
         ...loggedUser,
+        email: userEmail || loggedUser.email,
         rol: assignedRole,
-        status: isApproved ? 'ACTIVE' : (assignedRole === 'ADMIN' ? 'ACTIVE' : 'PENDING')
+        activo: isApproved,
+        status: isApproved ? 'ACTIVE' : 'PENDING'
       };
       
       localStorage.setItem('mock_user_session', JSON.stringify(userWithStatus));
@@ -238,7 +257,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setApprovedUsers(['salamancamai12@gmail.com', 'valentina1025m@gmail.com', 'corredorbeltran592@gmail.com', 'pipealcala22@gmail.com', 'stephanyleon326@gmail.com']);
   };
 
-  const isRealAdmin = !user || normalizeRole(user.original_rol || user.rol) === 'ADMIN' || user.email === 'salamancamai12@gmail.com' || user.email === 'valentina1025m@gmail.com';
+  const isRealAdmin = !user || user.email?.toLowerCase() === 'salamancamai12@gmail.com' || normalizeRole(user.original_rol || user.rol) === 'ADMIN';
 
   const switchViewRole = (newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
     try {

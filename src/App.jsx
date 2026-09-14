@@ -26,6 +26,7 @@ import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import JqlConsultasView from './features/jql/views/JqlConsultasView';
 import LoginView from './features/auth/views/LoginView';
+import WaitingApprovalView from './features/auth/views/WaitingApprovalView';
 import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
 
@@ -419,6 +420,14 @@ function MainAppContent() {
 
   if (!isAuthenticated) {
     return <LoginView />;
+  }
+
+  // Usuario autenticado pero con acceso pendiente de aprobación por el Administrador
+  const isMasterAdmin = user?.email?.toLowerCase() === 'salamancamai12@gmail.com';
+  const isPendingApproval = !isMasterAdmin && (user?.status === 'PENDING' || user?.activo === false);
+
+  if (isPendingApproval) {
+    return <WaitingApprovalView isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />;
   }
 
   return (

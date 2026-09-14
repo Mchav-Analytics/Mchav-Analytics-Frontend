@@ -24,7 +24,7 @@ export default function AdminUserFilters({
 }: AdminUserFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
-      {/* Botones de Filtro Todos / Inactivos */}
+      {/* Botones de Filtro Todos / Nuevos Ingresos */}
       <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
         <button
           onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
@@ -37,14 +37,25 @@ export default function AdminUserFilters({
           Todos ({usersCount})
         </button>
         <button
-          onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            statusFilter === 'INACTIVE'
-              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
-              : 'bg-amber-50 dark:bg-slate-950/80 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/30 border border-amber-200 dark:border-amber-900/40'
+          onClick={() => {
+            setRoleFilter('ALL');
+            setStatusFilter(statusFilter === 'PENDING' || statusFilter === 'INACTIVE' ? 'ALL' : 'PENDING');
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2 ${
+            statusFilter === 'PENDING' || statusFilter === 'INACTIVE'
+              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25 ring-2 ring-amber-400/40'
+              : pendingRequestsCount > 0
+                ? 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 border border-amber-300 dark:border-amber-500/40'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
           }`}
         >
-          Inactivos ({pendingRequestsCount})
+          {pendingRequestsCount > 0 && (
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+            </span>
+          )}
+          <span>Nuevos Ingresos ({pendingRequestsCount})</span>
         </button>
       </div>
 

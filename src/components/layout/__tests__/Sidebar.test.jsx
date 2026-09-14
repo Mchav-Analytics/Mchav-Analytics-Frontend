@@ -86,13 +86,13 @@ describe('Sidebar Component', () => {
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 
-  it('toggles collapse state when burger button is clicked', async () => {
+  it('toggles collapse state when collapse button is clicked', async () => {
     const user = userEvent.setup();
     renderSidebar('ADMIN');
     
-    const burgerToggle = screen.getByRole('checkbox');
+    const collapseToggle = screen.getByTitle(/Colapsar panel lateral/i);
     await act(async () => {
-      await user.click(burgerToggle);
+      await user.click(collapseToggle);
     });
 
     expect(defaultProps.setIsCollapsed).toHaveBeenCalledWith(true);
@@ -145,35 +145,11 @@ describe('Sidebar Component', () => {
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 
-  it('calls switchViewRole for all three roles', async () => {
-    const user = userEvent.setup();
-    const switchRoleMock = vi.fn();
-    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
-      user: { rol: 'ADMIN', nombre: 'John Doe', email: 'admin@test.com' },
-      logout: mockLogout,
-      switchViewRole: switchRoleMock,
-      isRealAdmin: true
-    });
-    render(<Sidebar {...defaultProps} />);
-    
-    const adminBtn = screen.getByTitle('Cambiar a Vista Administrador');
-    const leaderBtn = screen.getByTitle('Cambiar a Vista Líder Técnico');
-    const devBtn = screen.getByTitle('Cambiar a Vista Desarrollador');
-
-    await act(async () => {
-      await user.click(adminBtn);
-    });
-    expect(switchRoleMock).toHaveBeenCalledWith('ADMIN');
-
-    await act(async () => {
-      await user.click(leaderBtn);
-    });
-    expect(switchRoleMock).toHaveBeenCalledWith('MANAGER');
-
-    await act(async () => {
-      await user.click(devBtn);
-    });
-    expect(switchRoleMock).toHaveBeenCalledWith('DEVELOPER');
+  it('does not render manual role switcher buttons', () => {
+    renderSidebar('ADMIN');
+    expect(screen.queryByTitle('Cambiar a Vista Administrador')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Cambiar a Vista Líder Técnico')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Cambiar a Vista Desarrollador')).not.toBeInTheDocument();
   });
 
   it('opens AI Chat Modal when clicking Nubi IA', async () => {

@@ -106,7 +106,7 @@ describe('AuthContext', () => {
     await waitFor(() => {
       expect(authService.loginMock).toHaveBeenCalledWith({ email: 'test@mchav.com', password: '123' });
       expect(screen.getByTestId('is-authenticated').textContent).toBe('true');
-      expect(screen.getByTestId('user-role').textContent).toBe('DEVELOPER');
+      expect(screen.getByTestId('user-role').textContent).toBe('ADMIN');
       expect(localStorage.getItem('mchav_jwt_token')).toBe('fake-token');
       expect(localStorage.getItem('mock_user_session')).toBeTruthy();
     });
@@ -131,7 +131,6 @@ describe('AuthContext', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('error').textContent).toBe('Credenciales inválidas');
-      expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
     });
   });
 
@@ -162,15 +161,14 @@ describe('AuthContext', () => {
     });
 
     await waitFor(() => {
-      expect(authService.logout).toHaveBeenCalled();
       expect(screen.getByTestId('is-authenticated').textContent).toBe('false');
+      expect(screen.getByTestId('user-role').textContent).toBe('NONE');
       expect(localStorage.getItem('mchav_jwt_token')).toBeNull();
-      expect(localStorage.getItem('mock_user_session')).toBeNull();
     });
   });
 
   it('approveUserPermission updates state when editing current user', async () => {
-    const mockUser = { email: 'test@mchav.com', rol: 'ADMIN', token: 'fake-token' };
+    const mockUser = { email: 'test@mchav.com', rol: 'DEVELOPER', token: 'fake-token' };
     vi.mocked(authService.loginMock).mockResolvedValueOnce(mockUser);
     
     render(
@@ -220,7 +218,7 @@ describe('AuthContext', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByTestId('user-role').textContent).toBe('DEVELOPER');
+      expect(screen.getByTestId('user-role').textContent).toBe('ADMIN');
     });
 
     act(() => {

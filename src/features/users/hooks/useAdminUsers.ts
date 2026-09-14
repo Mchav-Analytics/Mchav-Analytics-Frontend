@@ -145,6 +145,41 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     );
   };
 
+  const approveUser = async (userId: string, targetRole?: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+    const targetUser = users.find(u => u.id === userId);
+    const finalRole = targetRole || targetUser?.role || 'DEVELOPER';
+
+    setUsers(prev =>
+      prev.map(u =>
+        u.id === userId ? { ...u, status: 'ACTIVE', role: finalRole } : u
+      )
+    );
+
+    try {
+      await api.put(`/api/v1/users/${userId}/role`, { role: finalRole });
+      await api.put(`/api/v1/users/${userId}/status`, { activo: true });
+    } catch (err) {
+      console.log("Error al activar usuario en backend:", err);
+    }
+
+    if (targetUser && typeof approveUserPermission === 'function') {
+      approveUserPermission(targetUser.email, finalRole);
+    }
+
+    try {
+      const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
+      if (targetUser) {
+        rolesMap[targetUser.email] = finalRole;
+        localStorage.setItem('mock_user_roles_map', JSON.stringify(rolesMap));
+      }
+    } catch {
+      /* ignore */
+    }
+
+    const displayRole = finalRole === 'MANAGER' ? 'Líder Técnico' : finalRole === 'ADMIN' ? 'Administrador' : 'Desarrollador';
+    showToast(`✅ Acceso aprobado para ${targetUser?.name || targetUser?.email} con rol de ${displayRole}`);
+  };
+
   const handleInviteUser = (newName: string, newEmail: string, newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
     const newUser: ManagementUser = {
       id: `usr-${Date.now().toString().slice(-3)}`,
@@ -176,7 +211,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     const search = (searchTerm || '').toLowerCase();
     const matchesSearch = userName.includes(search) || userEmail.includes(search);
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-    const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter;
+    const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter || ((statusFilter === 'PENDING' || statusFilter === 'INACTIVE') && u.status === 'INACTIVE');
     return matchesSearch && matchesRole && matchesStatus;
   });
 
@@ -245,6 +280,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     setToastMessage,
     handleRoleChange,
     toggleUserStatus,
+    approveUser,
     handleInviteUser
   };
 }
