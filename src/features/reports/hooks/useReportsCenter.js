@@ -81,7 +81,7 @@ export function useReportsCenter(selectedProjectId) {
     }
     setLoadingHistory(true);
     try {
-        const url = `http://localhost:8000/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
+        const url = `/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
         const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
         if (!res.ok) throw new Error('Error al reconstruir el historial.');
         setReportData(await res.json());
