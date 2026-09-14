@@ -171,6 +171,12 @@ function MainAppContent() {
         const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
         setActiveTab(nextTab);
       }
+    } else if (role === 'MANAGER') {
+      const managerTabs = ['dashboard', 'proyectos', 'capacity_calculator', 'alerts_center', 'team_matrix', 'sprint_health', 'team_devs', 'sincronizacion', 'reports_center'];
+      if (!managerTabs.includes(activeTab)) {
+        const nextTab = managerTabs.includes(savedTab) ? savedTab : 'dashboard';
+        setActiveTab(nextTab);
+      }
     }
   }, [user?.rol]);
 
@@ -448,7 +454,25 @@ function MainAppContent() {
       alerts={alerts}
       setAlerts={setAlerts}
     >
-      {(activeTab === 'proyectos' || activeTab === 'dashboard' || activeTab === 'tasks' || activeTab === 'history') && (
+      {activeTab === 'dashboard' && (
+        normalizeRole(user?.rol) === 'MANAGER' ? (
+          <LiderTecnicoDashboardView
+            selectedProjectId={selectedProjectId}
+            setActiveTab={setActiveTab}
+            isDarkMode={isDarkMode}
+          />
+        ) : (
+          <ProyectosDashboardView 
+            userProfile={user} 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab}
+            selectedProjectId={selectedProjectId}
+            setSelectedProjectId={setSelectedProjectId}
+          />
+        )
+      )}
+
+      {(activeTab === 'proyectos' || activeTab === 'tasks' || activeTab === 'history') && (
         <ProyectosDashboardView 
           userProfile={user} 
           activeTab={activeTab} 

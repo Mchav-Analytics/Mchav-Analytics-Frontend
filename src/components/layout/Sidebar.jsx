@@ -139,6 +139,7 @@ function Sidebar({
 
     if (userRole === 'MANAGER') {
       return [
+        { id: 'dashboard', label: 'Panel del Líder', icon: icons.dashboard },
         { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
         { id: 'capacity_calculator', label: 'Calculadora Capacidad', icon: icons.tasks },
         { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },

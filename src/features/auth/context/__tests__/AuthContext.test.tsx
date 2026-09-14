@@ -62,6 +62,7 @@ describe('AuthContext', () => {
     it('normalizes MANAGER roles to MANAGER', () => {
       expect(normalizeRole('MANAGER_ROLE')).toBe('MANAGER');
       expect(normalizeRole('LÍDER_TÉCNICO')).toBe('MANAGER');
+      expect(normalizeRole('Planificador')).toBe('MANAGER');
     });
 
     it('normalizes other roles to DEVELOPER', () => {

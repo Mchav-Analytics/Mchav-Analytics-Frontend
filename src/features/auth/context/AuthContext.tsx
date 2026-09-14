@@ -20,7 +20,7 @@ export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPE
   if (!rawRole) return 'DEVELOPER';
   const str = String(rawRole).toUpperCase();
   if (str.includes('ADMIN')) return 'ADMIN';
-  if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER')) return 'MANAGER';
+  if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER') || str.includes('PLANIF')) return 'MANAGER';
   if (str.includes('DEV') || str.includes('DESARROLLADOR')) return 'DEVELOPER';
   return 'DEVELOPER';
 }
