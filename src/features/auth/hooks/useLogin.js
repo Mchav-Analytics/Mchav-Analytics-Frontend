@@ -53,9 +53,9 @@ export function useLogin() {
   const handleLocalDevLogin = () => {
     setIsSubmitting(true);
     const userSession = {
-      email: 'admin@mchav.com',
+      email: 'salamancamai12@gmail.com',
       rol: 'ADMIN',
-      name: 'Administrador MCHAV',
+      name: 'Michael Salamanca (Admin)',
       activo: true
     };
     localStorage.setItem('mock_user_session', JSON.stringify(userSession));

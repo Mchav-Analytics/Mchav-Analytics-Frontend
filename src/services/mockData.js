@@ -135,15 +135,29 @@ export const mockAuthService = {
   async loginMock(credentials) {
     await delay(400);
     const email = credentials?.email?.toLowerCase();
+    const isMaster = email === 'salamancamai12@gmail.com';
     const isDev = email === 'dev@mchav.com' || email === 'cgomez@mchav.com' || credentials?.role === 'DEVELOPER';
     const isManager = email === 'aftorres@mchav.com' || credentials?.role === 'MANAGER';
 
     // Seleccionar datos mock según el perfil solicitado
-    let userToSave = mockUserAdmin;
-    if (isDev) {
-      userToSave = mockUserDeveloper;
+    let userToSave;
+    if (isMaster) {
+      userToSave = mockUserAdmin;
     } else if (isManager) {
       userToSave = mockUserManager;
+    } else if (isDev) {
+      userToSave = mockUserDeveloper;
+    } else {
+      userToSave = {
+        id_usuario: 99,
+        nombre: credentials?.email?.split('@')[0] || "Nuevo Usuario",
+        email: credentials?.email || "nuevo@mchav.com",
+        rol: "DEVELOPER",
+        id_rol: null,
+        activo: false,
+        avatar_url: null,
+        jira_connected: false
+      };
     }
 
     localStorage.setItem('mock_user_session', JSON.stringify(userToSave)); // Guarda la sesión localmente

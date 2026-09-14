@@ -19,7 +19,7 @@ describe('AdminUserFilters', () => {
     render(<AdminUserFilters {...defaultProps} />);
     
     expect(screen.getByText('Todos (50)')).toBeDefined();
-    expect(screen.getByText('Inactivos (5)')).toBeDefined();
+    expect(screen.getByText(/Nuevos Ingresos/i)).toBeDefined();
     expect(screen.getByPlaceholderText('Buscar por nombre o correo...')).toBeDefined();
   });
 
@@ -36,10 +36,10 @@ describe('AdminUserFilters', () => {
   it('handles clicking Inactivos button', () => {
     render(<AdminUserFilters {...defaultProps} />);
     
-    const inactivosBtn = screen.getByText('Inactivos (5)');
+    const inactivosBtn = screen.getByText(/Nuevos Ingresos/i);
     fireEvent.click(inactivosBtn);
     
-    expect(defaultProps.setStatusFilter).toHaveBeenCalledWith('INACTIVE');
+    expect(defaultProps.setStatusFilter).toHaveBeenCalledWith('PENDING');
   });
 
   it('handles search input change', () => {

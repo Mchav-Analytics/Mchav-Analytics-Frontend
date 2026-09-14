@@ -27,7 +27,7 @@ describe('AdminRolesSummary', () => {
     render(<AdminRolesSummary {...defaultProps} />);
     
     expect(screen.getByText('Administrador')).toBeDefined();
-    expect(screen.getByText('Planificador')).toBeDefined();
+    expect(screen.getByText('Líder Técnico')).toBeDefined();
     expect(screen.getByText('Desarrollador')).toBeDefined();
     
     // Check if initials are rendered for the users
@@ -43,7 +43,7 @@ describe('AdminRolesSummary', () => {
     if (adminCard) fireEvent.click(adminCard);
     expect(defaultProps.setRoleFilter).toHaveBeenCalledWith('ADMIN');
 
-    const managerCard = screen.getByText('Planificador').closest('div.group');
+    const managerCard = screen.getByText('Líder Técnico').closest('div.cursor-pointer');
     if (managerCard) fireEvent.click(managerCard);
     expect(defaultProps.setRoleFilter).toHaveBeenCalledWith('MANAGER');
 
