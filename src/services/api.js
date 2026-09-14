@@ -53,11 +53,11 @@ export const authService = {
   },
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
-    return api.get('/api/v1/auth/me').then(res => res.data).catch(() => mockAuthService.getCurrentUser());
+    return api.get('/api/v1/auth/me').then(res => res.data);
   },
   loginMock(credentials) {
     if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
-    return api.post('/api/v1/auth/login', credentials).then(res => res.data).catch(() => mockAuthService.loginMock(credentials));
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
   },
   logout() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();

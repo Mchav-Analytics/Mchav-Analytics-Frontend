@@ -16,9 +16,10 @@ export interface AuthUser {
   [key: string]: any;
 }
 
-export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPER' {
+export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO' {
   if (!rawRole) return 'DEVELOPER';
   const str = String(rawRole).toUpperCase();
+  if (str.includes('DESACTIVAD') || str.includes('INACTIV')) return 'DESACTIVADO';
   if (str.includes('ADMIN')) return 'ADMIN';
   if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER') || str.includes('PLANIF')) return 'MANAGER';
   if (str.includes('DEV') || str.includes('DESARROLLADOR')) return 'DEVELOPER';
@@ -81,8 +82,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(prev => prev ? ({
         ...prev,
         activo: false,
-        status: 'PENDING',
-        rol: 'PENDING'
+        status: 'INACTIVE',
+        rol: 'DESACTIVADO'
       }) : null);
     };
     window.addEventListener('mchav-account-deactivated', handleDeactivated);
@@ -138,9 +139,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const isTestEnv = import.meta.env.MODE === 'test';
       const isMasterAdmin = userEmail === 'salamancamai12@gmail.com';
       
+      const rawNorm = normalizeRole(userData.rol);
       let isApproved = false;
-      if (isMasterAdmin || isTestEnv) {
+      if (isMasterAdmin) {
         isApproved = true;
+      } else if (isTestEnv) {
+        isApproved = (userData.activo !== false) && rawNorm !== 'DESACTIVADO';
       } else if (USE_MOCK_DATA) {
         isApproved = currentApproved.includes(userData.email);
       } else {
@@ -149,16 +153,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
           userData.id_rol && 
           userData.rol && 
           userData.rol !== 'Sin Rol' &&
-          userData.rol !== 'PENDING'
+          userData.rol !== 'PENDING' &&
+          rawNorm !== 'DESACTIVADO'
         );
       }
 
-      const rawNorm = normalizeRole(userData.rol);
-      let assignedRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' = 'DEVELOPER';
-      if (isTestEnv) {
-        assignedRole = rawNorm;
-      } else if (isMasterAdmin) {
+      let assignedRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO' = 'DEVELOPER';
+      if (isMasterAdmin) {
         assignedRole = 'ADMIN';
+      } else if (rawNorm === 'DESACTIVADO' || !isApproved) {
+        assignedRole = 'DESACTIVADO';
       } else if (USE_MOCK_DATA) {
         const mockNorm = normalizeRole(rolesMap[userData.email] || userData.rol);
         assignedRole = mockNorm;
@@ -173,10 +177,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser({
         ...userData,
         email: userEmail || userData.email,
-        rol: isApproved ? assignedRole : 'PENDING',
+        rol: isApproved ? assignedRole : 'DESACTIVADO',
         original_rol: userData.rol,
         activo: isApproved,
-        status: isApproved ? 'ACTIVE' : 'PENDING'
+        status: isApproved ? 'ACTIVE' : 'INACTIVE'
       });
     } catch (err) {
       console.log("Sin sesión activa actualmente:", err);
@@ -225,21 +229,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       
-      const isApproved = isMasterAdmin || isTestEnv || (
-        USE_MOCK_DATA 
-          ? currentApproved.includes(loggedUser.email) 
-          : Boolean(loggedUser.activo === true && loggedUser.id_rol && loggedUser.rol && loggedUser.rol !== 'Sin Rol' && loggedUser.rol !== 'PENDING')
-      );
       const candidateRole = normalizeRole(rolesMap[loggedUser.email] || loggedUser.rol);
-      const assignedRole = candidateRole;
+      const isApproved = isMasterAdmin || (
+        isTestEnv 
+          ? ((loggedUser.activo !== false) && candidateRole !== 'DESACTIVADO')
+          : USE_MOCK_DATA 
+            ? currentApproved.includes(loggedUser.email) 
+            : Boolean(
+                loggedUser.activo === true && 
+                loggedUser.id_rol && 
+                loggedUser.rol && 
+                loggedUser.rol !== 'Sin Rol' && 
+                loggedUser.rol !== 'PENDING' &&
+                candidateRole !== 'DESACTIVADO'
+              )
+      );
+      const assignedRole = isApproved ? candidateRole : 'DESACTIVADO';
 
       const userWithStatus: AuthUser = {
         ...loggedUser,
         email: userEmail || loggedUser.email,
-        rol: isApproved ? assignedRole : 'PENDING',
+        rol: isApproved ? assignedRole : 'DESACTIVADO',
         original_rol: loggedUser.rol,
         activo: isApproved,
-        status: isApproved ? 'ACTIVE' : 'PENDING'
+        status: isApproved ? 'ACTIVE' : 'INACTIVE'
       };
       
       localStorage.setItem('mock_user_session', JSON.stringify(userWithStatus));

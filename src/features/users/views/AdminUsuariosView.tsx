@@ -17,7 +17,7 @@ import AdminUserModals from '../components/AdminUserModals';
 
 type ApproveUserPermission = (
   email: string,
-  role: 'ADMIN' | 'MANAGER' | 'DEVELOPER'
+  role: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO'
 ) => void;
 
 type AdminUsuariosViewProps = {

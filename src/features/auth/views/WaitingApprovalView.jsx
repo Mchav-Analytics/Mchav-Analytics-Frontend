@@ -92,7 +92,7 @@ export default function WaitingApprovalView({ isDarkMode, setIsDarkMode }) {
                 Atlassian Jira OAuth
               </span>
               <span className="text-[11px] font-medium px-2 py-0.5 rounded-md bg-amber-950/60 text-amber-300 border border-amber-800/40">
-                Sin Rol Asignado
+                Rol: Desactivado
               </span>
             </div>
           </div>

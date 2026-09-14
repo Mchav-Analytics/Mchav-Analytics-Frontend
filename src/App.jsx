@@ -62,10 +62,14 @@ function MainAppContent() {
   
   const isMasterAdmin = user?.email?.toLowerCase().trim() === 'salamancamai12@gmail.com' || (import.meta.env.MODE === 'test' && user?.rol === 'ADMIN');
   const isPendingApproval = !isMasterAdmin && (
+    user?.rol === 'DESACTIVADO' ||
+    user?.rol === 'Desactivado' ||
+    user?.status === 'INACTIVE' ||
     user?.status === 'PENDING' || 
     user?.activo === false || 
     user?.rol === 'PENDING' ||
-    user?.activo === null
+    user?.activo === null ||
+    !user?.activo
   );
 
   // Persistir pestaña activa actual en localStorage para no volver al inicio al hacer Refresh

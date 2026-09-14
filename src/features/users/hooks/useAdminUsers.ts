@@ -5,7 +5,7 @@ export interface ManagementUser {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'MANAGER' | 'DEVELOPER';
+  role: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO';
   status: 'ACTIVE' | 'INACTIVE';
   joinedDate: string;
   lastActive: string;
@@ -47,8 +47,10 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
           const isMaster = userEmail === 'salamancamai12@gmail.com' || (isTestEnv && userEmail.includes('admin'));
           const rawRolStr = String(u.rol || '').toUpperCase();
           
-          let parsedRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' = 'DEVELOPER';
-          if (rawRolStr.includes('ADMIN')) {
+          let parsedRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO' = 'DEVELOPER';
+          if (rawRolStr.includes('DESACTIVAD') || rawRolStr.includes('INACTIV')) {
+            parsedRole = 'DESACTIVADO';
+          } else if (rawRolStr.includes('ADMIN')) {
             parsedRole = 'ADMIN';
           } else if (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER') || rawRolStr.includes('LÍDER')) {
             parsedRole = 'MANAGER';
@@ -57,8 +59,8 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
           }
 
           const isPending = isTestEnv 
-            ? (u.activo === false) 
-            : (!u.activo || u.id_rol === null || rawRolStr.includes('SIN ROL') || !u.rol);
+            ? (u.activo === false || parsedRole === 'DESACTIVADO') 
+            : (!u.activo || u.id_rol === null || rawRolStr.includes('SIN ROL') || !u.rol || parsedRole === 'DESACTIVADO');
 
           return {
             id: String(u.id_usuario),
@@ -103,20 +105,23 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleRoleChange = async (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+  const handleRoleChange = async (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO') => {
     const targetUser = users.find(u => u.id === userId);
+    const isDeactivating = targetRole === 'DESACTIVADO';
+    const newStatus = isDeactivating ? 'INACTIVE' : 'ACTIVE';
 
     setUsers(prev =>
-      prev.map(u => (u.id === userId ? { ...u, role: targetRole } : u))
+      prev.map(u => (u.id === userId ? { ...u, role: targetRole, status: newStatus } : u))
     );
 
     try {
       await api.put(`/api/v1/users/${userId}/role`, { role: targetRole });
+      await api.put(`/api/v1/users/${userId}/status`, { activo: !isDeactivating });
     } catch (err) {
       console.log("Actualizando estado local de rol:", err);
     }
 
-    if (targetUser && typeof approveUserPermission === 'function') {
+    if (targetUser && typeof approveUserPermission === 'function' && !isDeactivating) {
       approveUserPermission(targetUser.email, targetRole);
     }
 
@@ -130,29 +135,36 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
       /* ignore storage errors */
     }
 
-    const displayRoleName = targetRole === 'MANAGER' ? 'LÍDER TÉCNICO' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : 'DESARROLLADOR';
+    const displayRoleName = targetRole === 'MANAGER' ? 'LÍDER TÉCNICO' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : targetRole === 'DESACTIVADO' ? 'DESACTIVADO' : 'DESARROLLADOR';
     showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${displayRoleName}`);
   };
 
   const toggleUserStatus = async (userId: string) => {
     const targetUser = users.find(u => u.id === userId);
-    const newStatus = targetUser?.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    const isActivating = targetUser?.status !== 'ACTIVE';
+    const newStatus = isActivating ? 'ACTIVE' : 'INACTIVE';
+    const newRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'DESACTIVADO' = isActivating 
+      ? (targetUser?.role === 'DESACTIVADO' ? 'DEVELOPER' : targetUser?.role || 'DEVELOPER') 
+      : 'DESACTIVADO';
 
     setUsers(prev =>
       prev.map(u =>
-        u.id === userId ? { ...u, status: newStatus } : u
+        u.id === userId ? { ...u, status: newStatus, role: newRole } : u
       )
     );
 
     try {
-      await api.put(`/api/v1/users/${userId}/status`, { activo: newStatus === 'ACTIVE' });
+      await api.put(`/api/v1/users/${userId}/status`, { activo: isActivating });
+      if (!isActivating) {
+        await api.put(`/api/v1/users/${userId}/role`, { role: 'DESACTIVADO' });
+      }
     } catch (err) {
       console.log("Actualizando estado local de activación:", err);
     }
 
-    showToast(newStatus === 'ACTIVE'
+    showToast(isActivating
       ? `🟢 Cuenta de ${targetUser?.name} activada exitosamente`
-      : `🔴 Cuenta de ${targetUser?.name} suspendida`
+      : `🔴 Cuenta de ${targetUser?.name} desactivada`
     );
   };
 
@@ -214,7 +226,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
   const adminUsers = users.filter(u => u.role === 'ADMIN');
   const managerUsers = users.filter(u => u.role === 'MANAGER');
   const developerUsers = users.filter(u => u.role === 'DEVELOPER');
-  const pendingRequests = users.filter(u => u.status === 'INACTIVE');
+  const pendingRequests = users.filter(u => u.status === 'INACTIVE' || u.role === 'DESACTIVADO');
 
   const filteredUsers = users.filter(u => {
     const userName = (u.name || u.email || '').toLowerCase();
@@ -222,7 +234,10 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     const search = (searchTerm || '').toLowerCase();
     const matchesSearch = userName.includes(search) || userEmail.includes(search);
     const matchesRole = roleFilter === 'ALL' || u.role === roleFilter;
-    const matchesStatus = statusFilter === 'ALL' || u.status === statusFilter || ((statusFilter === 'PENDING' || statusFilter === 'INACTIVE') && u.status === 'INACTIVE');
+    const isUserPending = u.status === 'INACTIVE' || u.role === 'DESACTIVADO';
+    const matchesStatus = statusFilter === 'ALL' 
+      || (statusFilter === 'ACTIVE' && u.status === 'ACTIVE' && u.role !== 'DESACTIVADO')
+      || ((statusFilter === 'PENDING' || statusFilter === 'INACTIVE') && isUserPending);
     return matchesSearch && matchesRole && matchesStatus;
   });
 
