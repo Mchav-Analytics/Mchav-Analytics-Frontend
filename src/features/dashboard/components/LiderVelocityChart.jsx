@@ -7,7 +7,9 @@ import {
   XAxis,
   YAxis,
   Tooltip as RechartsTooltip,
-  CartesianGrid
+  CartesianGrid,
+  ReferenceArea,
+  ReferenceLine
 } from 'recharts';
 
 export const MetricInfoTooltip = ({ text, align = "auto" }) => {
@@ -83,7 +85,7 @@ const CustomVelocityTooltip = ({ active, payload, label, isDark }) => {
   return null;
 };
 
-export default function LiderVelocityChart({ velocityData, isDarkMode }) {
+export default function LiderVelocityChart({ velocityData, velocityStats, isDarkMode }) {
   return (
     <div className="lg:col-span-7 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 shadow-sm flex flex-col h-fit space-y-4">
       <div className="flex flex-col space-y-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
@@ -116,6 +118,15 @@ export default function LiderVelocityChart({ velocityData, isDarkMode }) {
               <strong>🔵 SP Entregados:</strong> Story Points realmente cerrados con éxito en la columna "Listo / Done" antes del fin del sprint.
             </div>
           </div>
+          <div className="group/vel relative">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 cursor-help transition-all hover:scale-105">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/50"></span>
+              Rango Estable ({velocityStats?.min || 0} - {velocityStats?.max || 0} SP)
+            </span>
+            <div className="absolute bottom-full mb-2 left-0 hidden group-hover/vel:block w-64 p-3 bg-slate-900/95 border border-slate-700 text-slate-200 text-xs rounded-xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed">
+              <strong>🟢 Rango Histórico:</strong> Muestra la capacidad real probada del equipo. Promedio: {velocityStats?.avg || 0} SP.
+            </div>
+          </div>
         </div>
       </div>
 
@@ -136,6 +147,25 @@ export default function LiderVelocityChart({ velocityData, isDarkMode }) {
                 tick={{ fill: isDarkMode ? "#f8fafc" : "#1e293b", fontSize: 11, fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}
               />
               <RechartsTooltip content={<CustomVelocityTooltip isDark={isDarkMode} />} />
+              
+              {velocityStats && velocityStats.avg > 0 && (
+                <>
+                  <ReferenceArea 
+                    y1={velocityStats.min} 
+                    y2={velocityStats.max} 
+                    fill="#10b981" 
+                    fillOpacity={isDarkMode ? 0.1 : 0.05} 
+                  />
+                  <ReferenceLine 
+                    y={velocityStats.avg} 
+                    stroke="#10b981" 
+                    strokeDasharray="4 4" 
+                    opacity={0.8}
+                    label={{ position: 'insideTopLeft', value: `Promedio: ${velocityStats.avg}`, fill: isDarkMode ? '#34d399' : '#059669', fontSize: 10, fontWeight: 'bold' }}
+                  />
+                </>
+              )}
+              
               <Bar dataKey="compromisos" fill="#4f46e5" radius={[6, 6, 0, 0]} name="SP Comprometidos" />
               <Bar dataKey="entregados" fill="#06b6d4" radius={[6, 6, 0, 0]} name="SP Entregados" />
             </BarChart>

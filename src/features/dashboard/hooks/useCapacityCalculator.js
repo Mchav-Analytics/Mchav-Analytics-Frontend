@@ -1,19 +1,49 @@
 import { useState, useEffect } from 'react';
 import { calculateBusinessDays, REAL_JIRA_ISSUES_DB } from '../components/CapacityShared';
 
+export const TEAM_DEVS = [
+  'Michael Rodríguez',
+  'Camilo Beltrán',
+  'Andrés Alcalá',
+  'Stephany León',
+  'Valentina Montalvo',
+  'Mai Salamanca',
+  'Carlos Mendoza'
+];
+
 export function useCapacityCalculator() {
-  const [devCount, setDevCount] = useState(4);
+  const [devCount, setDevCount] = useState(5);
   const [sprintDays, setSprintDays] = useState(10);
   const [vacationDays, setVacationDays] = useState(2);
-  const [sickDevsCount, setSickDevsCount] = useState(0);
-  const [sickDays, setSickDays] = useState(0);
+  const [sickDevsCount, setSickDevsCount] = useState(1);
+  const [sickDays, setSickDays] = useState(5);
   const [avgDevVelocity, setAvgDevVelocity] = useState(10);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Lista de ausencias/incapacidades programadas por fecha
+  // Lista de ausencias/incapacidades programadas por fecha (con desarrolladores reales)
   const [absenceEvents, setAbsenceEvents] = useState([
-    { id: 1, devName: 'Desarrollador 1', type: 'VACATION', startDate: '2026-09-01', endDate: '2026-09-02', days: 2, note: 'Vacaciones planificadas' }
+    { 
+      id: 1, 
+      devName: 'Michael Rodríguez', 
+      type: 'SICK', 
+      startDate: '2026-09-08', 
+      endDate: '2026-09-12', 
+      days: 5, 
+      note: 'Incapacidad Médica por Gripe Severa' 
+    },
+    { 
+      id: 2, 
+      devName: 'Camilo Beltrán', 
+      type: 'VACATION', 
+      startDate: '2026-09-14', 
+      endDate: '2026-09-15', 
+      days: 2, 
+      note: 'Permiso personal planificado' 
+    }
   ]);
+
+  // Lista viva de incidencias de Jira para permitir reasignación en tiempo real
+  const [jiraTasks, setJiraTasks] = useState(REAL_JIRA_ISSUES_DB);
 
   // Estados para Filtros de Incidencias en Vivo de Jira
   const [taskStatusTab, setTaskStatusTab] = useState(() => {
@@ -81,10 +111,34 @@ export function useCapacityCalculator() {
     return true;
   };
 
+  const handleUpdateAbsenceEvent = (id, updatedFields) => {
+    const updated = absenceEvents.map(ev => {
+      if (ev.id !== id) return ev;
+      const startDate = updatedFields.startDate || ev.startDate;
+      const endDate = updatedFields.endDate || ev.endDate;
+      const days = calculateBusinessDays(startDate, endDate);
+      return {
+        ...ev,
+        ...updatedFields,
+        days: days > 0 ? days : ev.days
+      };
+    });
+    setAbsenceEvents(updated);
+    recalculateFromEvents(updated);
+  };
+
   const handleRemoveEvent = (id) => {
     const updated = absenceEvents.filter(ev => ev.id !== id);
     setAbsenceEvents(updated);
     recalculateFromEvents(updated);
+  };
+
+  const handleReassignTask = (taskKey, newAssignee) => {
+    setJiraTasks(prevTasks => 
+      prevTasks.map(task => 
+        task.key === taskKey ? { ...task, assignee: newAssignee } : task
+      )
+    );
   };
 
   const handleResetScenarios = () => {
@@ -108,21 +162,21 @@ export function useCapacityCalculator() {
   const impactPct = Math.abs(spDiffPct);
 
   // Nivel de impacto y diagnóstico
-  let impactBadgeText = '🟢 IMPACTO MANEJABLE (<15%)';
+  let impactBadgeText = 'IMPACTO MANEJABLE (<15%)';
   let impactBadgeStyle = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30';
   let barColor = 'bg-emerald-500';
-  let diagnosticText = '🟢 Capacidad Normal: El equipo cuenta con margen para absorber la carga de trabajo planificada con redistribución interna ligera entre los desarrolladores activos.';
+  let diagnosticText = 'Capacidad Normal: El equipo cuenta con margen para absorber la carga de trabajo planificada con redistribución interna ligera entre los desarrolladores activos.';
 
   if (impactPct >= 15 && impactPct < 30) {
-    impactBadgeText = '🟡 IMPACTO MODERADO (15-30%)';
+    impactBadgeText = 'IMPACTO MODERADO (15-30%)';
     impactBadgeStyle = 'bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30';
     barColor = 'bg-amber-500';
-    diagnosticText = '🟡 Alerta Moderada: Se recomienda reajustar el compromiso del sprint removiendo 1 o 2 tareas de menor prioridad.';
+    diagnosticText = 'Alerta Moderada: Se recomienda reajustar el compromiso del sprint removiendo 1 o 2 tareas de menor prioridad.';
   } else if (impactPct >= 30) {
-    impactBadgeText = '🔴 IMPACTO CRÍTICO (>30%)';
+    impactBadgeText = 'IMPACTO CRÍTICO (>30%)';
     impactBadgeStyle = 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30';
     barColor = 'bg-rose-500';
-    diagnosticText = '🔴 Riesgo Severo: Se requiere despriorizar historias principales y negociar el alcance del sprint con el Product Owner.';
+    diagnosticText = 'Riesgo Severo: Se requiere despriorizar historias principales y negociar el alcance del sprint con el Product Owner.';
   }
 
   const results = {
@@ -140,7 +194,7 @@ export function useCapacityCalculator() {
   };
 
   // Filtrado de incidencias Jira
-  let filteredTasks = REAL_JIRA_ISSUES_DB;
+  let filteredTasks = jiraTasks;
   if (selectedTaskProject !== 'ALL') {
     filteredTasks = filteredTasks.filter(item => item.projectId === selectedTaskProject);
   }
@@ -166,11 +220,14 @@ export function useCapacityCalculator() {
     avgDevVelocity, setAvgDevVelocity,
     isCollapsed, setIsCollapsed,
     absenceEvents,
+    jiraTasks,
     taskStatusTab, setTaskStatusTab,
     taskSearchTerm, setTaskSearchTerm,
     selectedTaskProject, setSelectedTaskProject,
     handleAddAbsenceEvent,
+    handleUpdateAbsenceEvent,
     handleRemoveEvent,
+    handleReassignTask,
     handleResetScenarios,
     results,
     filteredTasks

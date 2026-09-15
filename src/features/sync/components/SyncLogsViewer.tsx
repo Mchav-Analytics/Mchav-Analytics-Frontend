@@ -1,6 +1,7 @@
 import React from 'react';
-import { Server, CheckCircle2, RefreshCcw, XCircle, Eye, RotateCw, Download, Play } from 'lucide-react';
+import { Server, CheckCircle2, RefreshCcw, XCircle, Eye, RotateCw, Download, Play, MoreVertical } from 'lucide-react';
 import { SyncStatus, SyncLog } from '../hooks/useSystemSync';
+import ContextMenu from '../../../components/ui/ContextMenu';
 
 interface SyncLogsViewerProps {
   syncStatus: SyncStatus;
@@ -168,29 +169,12 @@ export default function SyncLogsViewer({
                     {log.ejecutadoPor}
                   </td>
                   <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center gap-2.5">
-                      <button
-                        title="Ver detalles"
-                        onClick={() => handleShowLogDetail(log)}
-                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <Eye size={15} className="text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
-                      </button>
-                      <button
-                        title="Re-ejecutar"
-                        onClick={handleManualSync}
-                        disabled={syncStatus.status === 'SYNCING'}
-                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
-                      >
-                        <RotateCw size={15} className="text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors" />
-                      </button>
-                      <button
-                        title="Descargar log"
-                        onClick={() => handleDownloadLog(log)}
-                        className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      >
-                        <Download size={15} className="text-slate-500 hover:text-teal-600 dark:hover:text-teal-400 transition-colors" />
-                      </button>
+                    <div className="flex items-center justify-center">
+                      <ContextMenu actions={[
+                        { label: 'Ver detalles', icon: Eye, onClick: () => handleShowLogDetail(log) },
+                        { label: 'Re-ejecutar esta tarea', icon: RotateCw, onClick: () => handleManualSync(), hidden: syncStatus.status === 'SYNCING' },
+                        { label: 'Descargar log JSON', icon: Download, onClick: () => handleDownloadLog(log) }
+                      ]} />
                     </div>
                   </td>
                 </tr>

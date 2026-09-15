@@ -72,9 +72,7 @@ function MainLayout({
       {/* Contenido Principal */}
       <main className="main-content flex flex-col flex-1 min-h-screen overflow-x-hidden">
         
-
-
-        <div className="dashboard-inner pt-4 flex-1 w-full max-w-full">
+        <div className="dashboard-inner pt-4 flex-1">
           {children}
         </div>
       </main>

@@ -113,7 +113,7 @@ export default function TeamDevScorecardsDashboard({ scorecard }) {
         </div>
       </div>
 
-      {/* TARJETA 4: Story Points */}
+      {/* TARJETA 4: Volumen (SP) */}
       <div className="group relative flex flex-col rounded-2xl bg-white dark:bg-[#191c3d] p-7 shadow-sm dark:shadow-xl transition-all duration-300 hover:scale-[1.02] border border-slate-200 dark:border-[#33376b] min-h-[220px] justify-between">
         <div className="relative z-10 flex flex-col justify-between h-full space-y-4">
           <div className="flex items-center justify-between">
@@ -121,26 +121,20 @@ export default function TeamDevScorecardsDashboard({ scorecard }) {
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 shadow-md">
                 <Zap className="h-5 w-5 text-white" />
               </div>
-              <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Story Points Dev</h3>
+              <h3 className="text-xs font-bold text-slate-800 dark:text-white uppercase tracking-wider">Volumen (SP)</h3>
             </div>
-            <MetricInfoTooltip align="right" text="Puntos de Historia del Desarrollador: Puntos de esfuerzo completados por este desarrollador." />
+            <MetricInfoTooltip align="right" text="Story Points completados por el desarrollador (Contexto Operativo)." />
           </div>
 
           <div>
             <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 tracking-tight">
-              {scorecard?.story_points_burned || 0} <span className="text-sm font-bold text-indigo-600 dark:text-indigo-500">SP</span>
+              {scorecard?.story_points_burned || 0} <span className="text-sm font-bold text-indigo-600 dark:text-indigo-500">SP Entregados</span>
             </span>
-            <div className="w-full bg-slate-100 dark:bg-slate-900 h-3 rounded-full mt-4 overflow-hidden p-0.5 border border-slate-200 dark:border-slate-800">
-              <div 
-                className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${scorecard?.story_points_achieved_pct || 0}%` }}
-              ></div>
-            </div>
           </div>
 
           <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-xs">
-            <span className="text-slate-500 dark:text-slate-400">Meta Sprint</span>
-            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{scorecard?.story_points_target || 0} SP</span>
+            <span className="text-slate-500 dark:text-slate-400">Tipo de Métrica</span>
+            <span className="font-semibold text-indigo-600 dark:text-indigo-400">Contexto Operativo</span>
           </div>
         </div>
       </div>

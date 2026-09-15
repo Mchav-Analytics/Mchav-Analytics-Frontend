@@ -1,6 +1,7 @@
 import React from 'react';
-import { Settings2, RefreshCcw, Play } from 'lucide-react';
+import { Settings2, RefreshCcw, Play, Edit3, Power, Trash2 } from 'lucide-react';
 import { SyncStatus } from '../hooks/useSystemSync';
+import ContextMenu from '../../../components/ui/ContextMenu';
 
 interface SystemSyncControlPanelProps {
   syncStatus: SyncStatus;
@@ -87,12 +88,18 @@ export default function SystemSyncControlPanel({
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
               Sincronización Automática
             </span>
-            <button
-              onClick={() => setIsAutoSync(!isAutoSync)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isAutoSync ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'}`}
-            >
-              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoSync ? 'translate-x-6' : 'translate-x-1'}`} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsAutoSync(!isAutoSync)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isAutoSync ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'}`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoSync ? 'translate-x-6' : 'translate-x-1'}`} />
+              </button>
+              <ContextMenu actions={[
+                { label: isAutoSync ? 'Pausar automatización' : 'Activar automatización', icon: Power, onClick: () => setIsAutoSync(!isAutoSync) },
+                { label: 'Editar frecuencia', icon: Edit3, onClick: () => { document.getElementById('cronSelect')?.focus(); } }
+              ]} />
+            </div>
           </div>
           <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
             {isAutoSync ? '🟢 Programador Automático Activo' : '⚪ Programación Pausada'}
@@ -112,9 +119,10 @@ export default function SystemSyncControlPanel({
 
           <div className="grid grid-cols-2 gap-2">
             <select
+              id="cronSelect"
               value={cronSchedule}
               onChange={(e) => setCronSchedule(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer"
+              className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer focus:ring-2 focus:ring-teal-500"
             >
               <option value="6h">Cada 6 Horas</option>
               <option value="12h">Cada 12 Horas</option>

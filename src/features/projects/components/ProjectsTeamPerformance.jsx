@@ -1,9 +1,13 @@
 import React from 'react';
 import { InfoTooltip, EnrichedChartTooltip } from './Tooltips';
 import { CheckCircle2 } from 'lucide-react';
-import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, ScatterChart, Scatter, ReferenceLine, Cell } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip as RechartsTooltip, ScatterChart, Scatter, ReferenceLine, ReferenceArea, Cell } from 'recharts';
 
-export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesData, selectedProjectObj }) => {
+export const ProjectsTeamPerformance = ({ activeVelocityData, velocityStats, activePercentilesData, selectedProjectObj }) => {
+  const avg = velocityStats?.avg || 0;
+  const rangeMin = velocityStats?.min || 0;
+  const rangeMax = velocityStats?.max || 0;
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
@@ -21,10 +25,10 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesD
                 </span>
               )}
             </h3>
-            <InfoTooltip text="Muestra la comparación entre los Story Points comprometidos y completados por el equipo al cierre de cada sprint." />
+            <InfoTooltip text="Muestra la comparación entre los Story Points comprometidos y completados por el equipo al cierre de cada sprint. La franja sombreada indica el rango histórico estable y la línea punteada el promedio." />
           </div>
 
-          <div className="flex items-center gap-3 text-[11px] font-extrabold">
+          <div className="flex items-center gap-3 text-[11px] font-extrabold flex-wrap">
             <span className="flex items-center gap-1.5 text-purple-400">
               <span className="w-2.5 h-2.5 rounded-xs bg-[#d8b4fe] shrink-0" />
               Comprometido
@@ -33,10 +37,16 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesD
               <span className="w-2.5 h-2.5 rounded-xs bg-[#7c3aed] shrink-0" />
               Completado
             </span>
+            {avg > 0 && (
+              <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                <span className="w-4 h-0 border-t-2 border-dashed border-emerald-500 shrink-0" />
+                Promedio ({avg} SP)
+              </span>
+            )}
           </div>
         </div>
 
-        {/* Gráfico de Barras Agrupadas */}
+        {/* Gráfico de Barras Agrupadas con Banda de Rango Histórico */}
         <div className="h-52 w-full min-h-[210px] pt-2">
           <ResponsiveContainer width="100%" height={210}>
             <BarChart
@@ -61,6 +71,31 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, activePercentilesD
                 label={{ value: 'Story Points', angle: -90, position: 'insideLeft', offset: 15, fill: '#64748b', fontSize: 10, fontWeight: 700 }}
               />
               <RechartsTooltip content={<EnrichedChartTooltip unit="SP" titlePrefix="Sprint" />} />
+              
+              {/* BANDA DE RANGO HISTÓRICO ESTABLE (min-max de completados) */}
+              {rangeMin > 0 && rangeMax > 0 && (
+                <ReferenceArea
+                  y1={rangeMin}
+                  y2={rangeMax}
+                  fill="#10b981"
+                  fillOpacity={0.08}
+                  stroke="#10b981"
+                  strokeOpacity={0.2}
+                  strokeDasharray="3 3"
+                />
+              )}
+
+              {/* LÍNEA DE PROMEDIO HISTÓRICO */}
+              {avg > 0 && (
+                <ReferenceLine
+                  y={avg}
+                  stroke="#10b981"
+                  strokeWidth={2}
+                  strokeDasharray="6 4"
+                  label={{ value: `Prom: ${avg}`, position: 'right', fill: '#10b981', fontSize: 10, fontWeight: 700 }}
+                />
+              )}
+
               <Bar
                 dataKey="comprometido"
                 name="Comprometido"

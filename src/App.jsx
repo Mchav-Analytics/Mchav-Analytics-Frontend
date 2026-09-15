@@ -21,10 +21,12 @@ import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsV
 import TeamMatrixView from './features/dashboard/views/TeamMatrixView';
 import SprintHealthView from './features/dashboard/views/SprintHealthView';
 import AlertsCenterView from './features/dashboard/views/AlertsCenterView';
+import AiRulesView from './features/ai/views/AiRulesView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import JqlConsultasView from './features/jql/views/JqlConsultasView';
+import FlowAnalyticsView from './features/flow/views/FlowAnalyticsView';
 import LoginView from './features/auth/views/LoginView';
 import WaitingApprovalView from './features/auth/views/WaitingApprovalView';
 import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
@@ -398,10 +400,30 @@ function MainAppContent() {
           title: "Consola de Consultas JQL & Sintaxis ",
           subtitle: "Validador sintáctico en tiempo real, ejecutor de consultas JQL y diccionario de campos (Solo Admin)."
         };
-      case 'capacity_calculator':
+      case 'capacity_form':
         return {
-          title: "Calculadora de Capacidad de Equipo",
-          subtitle: "Planificación de disponibilidad, horas de sprint y capacidad efectiva del equipo."
+          title: "Calculadora: Parámetros y Ausencias",
+          subtitle: "Configuración de disponibilidad y horas de sprint."
+        };
+      case 'capacity_results':
+        return {
+          title: "Calculadora: Resumen de Capacidad",
+          subtitle: "Visualización de capacidad efectiva del equipo."
+        };
+      case 'capacity_jira':
+        return {
+          title: "Calculadora: Impacto en Jira",
+          subtitle: "Planificación de disponibilidad contrastada contra tareas."
+        };
+      case 'flow_analytics':
+        return {
+          title: "Análisis de Flujo (Flow Analytics)",
+          subtitle: "Distribución de tiempos de ciclo, eficiencia, cuellos de botella y diagrama de flujo acumulado."
+        };
+      case 'ai_rules':
+        return {
+          title: "Configuración de Reglas de Inteligencia Artificial",
+          subtitle: "Parametrización de detectores automáticos y reglas heurísticas."
         };
       case 'sincronizacion':
       case 'reports_center':
@@ -438,7 +460,7 @@ function MainAppContent() {
       setIsDarkMode={setIsDarkMode}
       projects={projects}
       selectedProjectId={selectedProjectId}
-      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs', 'reports_center'].includes(activeTab) ? setSelectedProjectId : null}
+      setSelectedProjectId={['dashboard', 'tasks', 'history', 'developer', 'daily_focus', 'dev_workload', 'dev_alerts', 'activity_history', 'team_devs', 'reports_center', 'flow_analytics', 'capacity_form', 'capacity_results', 'capacity_jira'].includes(activeTab) ? setSelectedProjectId : null}
       syncLoading={syncLoading}
       handleSyncNow={handleSyncNow}
       topbarTitle={headerDetails.title}
@@ -476,8 +498,15 @@ function MainAppContent() {
         />
       )}
 
-      {activeTab === 'capacity_calculator' && (
-        <CapacityCalculatorView isDarkMode={isDarkMode} />
+      {activeTab.startsWith('capacity_') && (
+        <CapacityCalculatorView 
+          isDarkMode={isDarkMode} 
+          activeTab={activeTab} 
+          setActiveTab={setActiveTab}
+          selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          projects={projects}
+        />
       )}
 
       {activeTab === 'developer' && (
@@ -574,6 +603,17 @@ function MainAppContent() {
 
       {activeTab === 'sincronizacion' && (
         <SystemSyncTab />
+      )}
+
+      {activeTab === 'ai_rules' && (
+        <AiRulesView />
+      )}
+
+      {activeTab === 'flow_analytics' && (
+        <FlowAnalyticsView 
+          selectedProjectId={selectedProjectId}
+          onNavigateTab={setActiveTab}
+        />
       )}
 
       {activeTab === 'reports_center' && (

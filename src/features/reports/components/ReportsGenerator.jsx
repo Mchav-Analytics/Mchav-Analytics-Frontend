@@ -114,12 +114,12 @@ export function ReportsGenerator({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ml-0 md:ml-12 mb-20 flex-1">
               {(reportType === 'proyecto' 
-                ? ['Resumen ejecutivo', 'KPIs del proyecto', 'Velocidad por sprint', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
+                ? ['Resumen ejecutivo', 'KPIs del proyecto', 'Velocidad por sprint', 'Distribución del trabajo', 'Defectos Escapados', 'Bloqueos y riesgos']
                 : reportType === 'sprint'
                 ? ['Resumen del sprint', 'Burnup del sprint', 'Tareas completadas vs pendientes', 'Distribución por desarrollador', 'Bugs reportados', 'Retrospectiva y mejoras']
                 : reportType === 'desarrollador'
                 ? ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo']
-                : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
+                : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Defectos Escapados', 'Bloqueos y riesgos']
               ).map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">

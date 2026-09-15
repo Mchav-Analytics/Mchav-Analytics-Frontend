@@ -22,6 +22,7 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
     selectedProjectObj,
     displayProjects,
     activeVelocityData,
+    velocityStats,
     activePercentilesData,
     activeCfdData,
     activeBurnupData,
@@ -74,15 +75,12 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
 
       {/* 2B. Tarjetas de Métricas Ejecutivas del Proyecto Seleccionado */}
       <SprintHealthKpis metrics={activeHealthMetrics} />
-
       {/* 3. Bloque 2A: Diagrama de Flujo Acumulado (CFD) */}
       <ProjectsCFD
         activeCfdData={activeCfdData}
         setShowCfdDocModal={setShowCfdDocModal}
         selectedProjectObj={selectedProjectObj}
-      />
-
-      {/* 4. Bloque 2B: Sprint Burnup Chart */}
+      />      {/* 4. Bloque 2B: Sprint Burnup Chart */}
       <ProjectsBurnup
         activeBurnupData={activeBurnupData}
         setShowBurndownDocModal={setShowBurndownDocModal}
@@ -92,6 +90,7 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
       {/* 5. Bloque 3: Velocidad del Equipo & Predictibilidad */}
       <ProjectsTeamPerformance
         activeVelocityData={activeVelocityData}
+        velocityStats={velocityStats}
         activePercentilesData={activePercentilesData}
         selectedProjectObj={selectedProjectObj}
       />

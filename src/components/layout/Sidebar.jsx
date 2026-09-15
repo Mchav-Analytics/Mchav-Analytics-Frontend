@@ -6,7 +6,7 @@ import React, { useState } from 'react';
 import Logo from './Logo';
 import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
 import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Settings, Sparkles, MessageCircle, ChevronLeft } from 'lucide-react';
+import { Settings, Sparkles, Shield, Briefcase, Code, MessageCircle, ChevronLeft, ChevronDown, Calendar, BarChart2, Activity, User, Folder } from 'lucide-react';
 import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
 import AiChatModal from '../ui/AiChatModal';
 import LiderNotificationBell from '../../features/dashboard/components/LiderNotificationBell';
@@ -125,40 +125,163 @@ function Sidebar({
     )
   };
 
-  // ── Navegación según el rol ──
-  const navItems = React.useMemo(() => {
+  // ── Navegación según el rol (Agrupada) ──
+  const navGroups = React.useMemo(() => {
+    const aiIcon = (
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+      </svg>
+    );
+
     if (userRole === 'DEVELOPER') {
       return [
-        { id: 'developer', label: 'Mi Trabajo', icon: icons.home },
-        { id: 'daily_focus', label: 'Mi Agenda', icon: icons.calendar },
-        { id: 'dev_workload', label: 'Plan de Trabajo', icon: icons.projects },
-        { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
-        { id: 'activity_history', label: 'Historial', icon: icons.history },
+        {
+          title: 'Mi Trabajo',
+          icon: <User size={16} />,
+          items: [
+            { id: 'developer', label: 'Mi Tablero', icon: icons.home },
+            { id: 'daily_focus', label: 'Mi Agenda', icon: icons.calendar },
+            { id: 'dev_workload', label: 'Plan de Trabajo', icon: icons.projects },
+          ]
+        },
+        {
+          title: 'Seguimiento',
+          icon: <Activity size={16} />,
+          items: [
+            { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
+            { id: 'activity_history', label: 'Historial', icon: icons.history },
+          ]
+        }
       ];
     }
 
     if (userRole === 'MANAGER') {
       return [
-        { id: 'dashboard', label: 'Panel del Líder', icon: icons.dashboard },
-        { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
-        { id: 'capacity_calculator', label: 'Calculadora Capacidad', icon: icons.tasks },
-        { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
-        { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-        { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
-        { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
+        {
+          title: 'Operación',
+          icon: <Briefcase size={16} />,
+          items: [
+            { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+            { id: 'sprint_health', label: 'Sprints', icon: icons.tasks },
+          ]
+        },
+        {
+          title: 'Planificación',
+          icon: <Calendar size={16} />,
+          items: [
+            { id: 'capacity_form', label: 'Parámetros y Ausencias', icon: icons.calendar },
+            { id: 'capacity_jira', label: 'Impacto en Jira', icon: icons.tasks },
+          ]
+        },
+        {
+          title: 'Analítica',
+          icon: <BarChart2 size={16} />,
+          items: [
+            { id: 'flow_analytics', label: 'Análisis de Flujo', icon: icons.target },
+            { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
+            { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
+          ]
+        },
+        {
+          title: 'Sistema',
+          icon: <Sparkles size={16} />,
+          items: [
+            { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+            { id: 'ai_rules', label: 'Reglas de IA', icon: aiIcon },
+            { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
+          ]
+        }
       ];
     }
 
+    // ADMIN
     return [
-      { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
-      { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
-      { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
-      { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
-      { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
-      { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
-      { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
+      {
+        title: 'Operación',
+        icon: <Briefcase size={16} />,
+        items: [
+          { id: 'proyectos', label: 'Proyectos', icon: icons.projects },
+          { id: 'sprint_health', label: 'Sprints', icon: icons.tasks },
+        ]
+      },
+      {
+        title: 'Analítica',
+        icon: <BarChart2 size={16} />,
+        items: [
+          { id: 'flow_analytics', label: 'Análisis de Flujo', icon: icons.target },
+          { id: 'team_matrix', label: 'Matriz de Rendimiento', icon: icons.target },
+          { id: 'reports_center', label: 'Centro de Reportes', icon: icons.history },
+        ]
+      },
+      {
+        title: 'Sistema',
+        icon: <Shield size={16} />,
+        items: [
+          { id: 'usuarios', label: 'Usuarios y Roles', icon: icons.users },
+          { id: 'sincronizacion', label: 'Sincronización', icon: icons.sync },
+          { id: 'ai_rules', label: 'Reglas de IA', icon: aiIcon },
+          { id: 'jql_queries', label: 'Consultas JQL', icon: icons.code },
+          { id: 'alerts_center', label: 'Centro de Actividad', icon: icons.alert },
+        ]
+      }
     ];
-  }, [userRole]);
+  }, [userRole, icons]);
+
+  // ── Estado para secciones colapsables (Acordeón, por defecto colapsadas al ingresar) ──
+  const [openSections, setOpenSections] = useState({});
+
+  const toggleSection = (title) => {
+    setOpenSections(prev => ({
+      ...prev,
+      [title]: !prev[title]
+    }));
+  };
+
+  // ── Mapa de temas y gradientes por categoría ──
+  const categoryThemeMap = {
+    'Operación': {
+      gradient: 'from-[#4f46e5] to-[#3b82f6]',
+      activeText: 'text-indigo-600 dark:text-indigo-400',
+      activeBg: 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-200/80 dark:border-indigo-800/40',
+      borderGuide: 'border-indigo-400/80 dark:border-indigo-600/80'
+    },
+    'Planificación': {
+      gradient: 'from-[#9333ea] to-[#4f46e5]',
+      activeText: 'text-purple-600 dark:text-purple-400',
+      activeBg: 'bg-purple-50/80 dark:bg-purple-950/40 border-purple-200/80 dark:border-purple-800/40',
+      borderGuide: 'border-purple-400/80 dark:border-purple-600/80'
+    },
+    'Analítica': {
+      gradient: 'from-[#0284c7] to-[#2563eb]',
+      activeText: 'text-cyan-600 dark:text-cyan-400',
+      activeBg: 'bg-cyan-50/80 dark:bg-cyan-950/40 border-cyan-200/80 dark:border-cyan-800/40',
+      borderGuide: 'border-cyan-400/80 dark:border-cyan-600/80'
+    },
+    'Configuración e IA': {
+      gradient: 'from-[#d946ef] to-[#ec4899]',
+      activeText: 'text-fuchsia-600 dark:text-fuchsia-400',
+      activeBg: 'bg-fuchsia-50/80 dark:bg-fuchsia-950/40 border-fuchsia-200/80 dark:border-fuchsia-800/40',
+      borderGuide: 'border-fuchsia-400/80 dark:border-fuchsia-600/80'
+    },
+    'Sistema': {
+      gradient: 'from-[#059669] to-[#0d9488]',
+      activeText: 'text-emerald-600 dark:text-emerald-400',
+      activeBg: 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-200/80 dark:border-emerald-800/40',
+      borderGuide: 'border-emerald-400/80 dark:border-emerald-600/80'
+    },
+    'Mi Trabajo': {
+      gradient: 'from-[#2563eb] to-[#4f46e5]',
+      activeText: 'text-blue-600 dark:text-blue-400',
+      activeBg: 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-200/80 dark:border-blue-800/40',
+      borderGuide: 'border-blue-400/80 dark:border-blue-600/80'
+    },
+    'Seguimiento': {
+      gradient: 'from-[#d97706] to-[#ea580c]',
+      activeText: 'text-amber-600 dark:text-amber-400',
+      activeBg: 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-200/80 dark:border-amber-800/40',
+      borderGuide: 'border-amber-400/80 dark:border-amber-600/80'
+    }
+  };
 
   // ── Clases de navegación con efecto dinámico ──
   const linkClasses = 'group/nav relative flex items-center px-3 py-2.5 text-gray-500 dark:text-gray-400 rounded-xl transition-all duration-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/80 dark:hover:bg-gray-800/60 hover:translate-x-0.5';
@@ -250,29 +373,145 @@ function Sidebar({
 
 
 
-        {/* ── NAVEGACIÓN PRINCIPAL CON DISEÑO UIVERSE GLASSMORPHISM ── */}
-        <nav className={`uiverse-menu ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''}`}>
-          {navItems.map((item) => {
-            const isMatrixSubtab = ['team_matrix', 'sprint_health', 'team_devs'].includes(activeTab);
-            const isActive = activeTab === item.id || (item.id === 'team_matrix' && isMatrixSubtab);
+        {/* ── NAVEGACIÓN PRINCIPAL CON ACORDEÓN ANIMADO CSS GRID ── */}
+        <nav className={`uiverse-menu flex-1 overflow-y-auto ${isCollapsed ? 'items-center !px-1.5 !py-2.5 gap-2 overflow-visible' : ''} scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800`}>
+          {navGroups.map((group, groupIdx) => {
+            const isOpen = Boolean(openSections[group.title]);
+            const hasActiveItem = group.items.some(item => {
+              if (activeTab === item.id) return true;
+              if (item.id === 'team_matrix' && ['team_matrix', 'team_devs'].includes(activeTab)) return true;
+              if (item.id === 'sprint_health' && ['sprint_health'].includes(activeTab)) return true;
+              if (item.id === 'capacity_calculator' && activeTab.startsWith('capacity_')) return true;
+              return false;
+            });
 
             return (
-              <button
-                key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`group relative uiverse-menu-item ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center !px-2.5 !py-2.5' : ''}`}
+              <div
+                key={groupIdx}
+                className={`transition-all duration-300 ${
+                  !isCollapsed && isOpen
+                    ? 'mb-3.5 rounded-[22px] p-1.5 bg-gradient-to-b from-indigo-50/90 via-indigo-50/40 to-blue-50/20 dark:from-indigo-950/70 dark:via-indigo-950/40 dark:to-slate-900/30 shadow-xs'
+                    : isCollapsed
+                    ? 'mb-2.5 w-full flex flex-col items-center'
+                    : 'mb-1.5'
+                }`}
               >
-                {item.icon}
-                {!isCollapsed && <span>{item.label}</span>}
-                
-                {isCollapsed && (
-                  <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>
-                    <span>{item.label}</span>
-                    <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
-                  </div>
+                {!isCollapsed ? (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(group.title)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-[13px] font-bold transition-all duration-300 cursor-pointer select-none group/hdr ${
+                      isOpen
+                        ? 'text-indigo-900 dark:text-indigo-200'
+                        : 'bg-transparent hover:bg-slate-100/70 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                    }`}
+                    title={isOpen ? `Plegar ${group.title}` : `Desplegar ${group.title}`}
+                  >
+                    <div className="flex items-center gap-2.5 truncate">
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-transform duration-300 shrink-0 ${
+                        isOpen
+                          ? 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-xs'
+                          : 'bg-indigo-50/80 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 group-hover/hdr:scale-105'
+                      }`}>
+                        {group.icon || <Folder size={16} />}
+                      </div>
+                      <span className="truncate tracking-tight font-extrabold">{group.title}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {hasActiveItem && !isOpen && (
+                        <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse"></span>
+                      )}
+                      <div className={`p-1 rounded-lg transition-transform duration-300 ease-out ${isOpen ? 'rotate-180 text-indigo-600 dark:text-indigo-400' : 'rotate-0 text-slate-400'}`}>
+                        <ChevronDown size={15} />
+                      </div>
+                    </div>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => toggleSection(group.title)}
+                    className={`group relative w-10 h-10 flex items-center justify-center rounded-xl transition-all cursor-pointer ${
+                      isOpen
+                        ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30'
+                        : hasActiveItem
+                        ? 'bg-indigo-100 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400'
+                        : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
+                    }`}
+                    title={group.title}
+                  >
+                    {group.icon || <Folder size={18} />}
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+                      <span>{group.title}</span>
+                      <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+                    </div>
+                  </button>
                 )}
-              </button>
+
+                {/* ── CONTENEDOR DESPLEGABLE CON ANIMACIÓN CSS GRID ── */}
+                <div
+                  className={`grid transition-all duration-300 ease-in-out overflow-hidden ${
+                    isOpen
+                      ? 'grid-rows-[1fr] opacity-100 mt-1'
+                      : 'grid-rows-[0fr] opacity-0 mt-0 pointer-events-none'
+                  }`}
+                >
+                  <div className="min-h-0">
+                    <div className={`${!isCollapsed ? 'flex flex-col gap-1 px-1 pb-1' : 'flex flex-col gap-1.5 items-center mt-1'}`}>
+                      {group.items.map((item, itemIdx) => {
+                        const isMatrixSubtab = ['team_matrix', 'team_devs'].includes(activeTab);
+                        const isSprintsSubtab = ['sprint_health'].includes(activeTab);
+                        
+                        let isActive = activeTab === item.id;
+                        if (item.id === 'team_matrix' && isMatrixSubtab) isActive = true;
+                        if (item.id === 'sprint_health' && isSprintsSubtab) isActive = true;
+                        if (item.id === 'capacity_calculator' && activeTab.startsWith('capacity_')) isActive = true;
+
+                        return (
+                          <button
+                            key={item.id}
+                            onClick={() => setActiveTab(item.id)}
+                            className={`group relative flex items-center gap-2.5 rounded-xl transition-all duration-200 cursor-pointer ${
+                              isCollapsed
+                                ? 'justify-center w-8 h-8 p-0 text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+                                : isActive
+                                ? 'w-full px-2 py-2 text-xs font-bold text-indigo-900 dark:text-indigo-100 bg-white/90 dark:bg-slate-800/90 shadow-sm'
+                                : 'w-full px-3 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-slate-800/50 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                            style={{ animationDelay: `${itemIdx * 40}ms` }}
+                            title={item.label}
+                          >
+                            {/* Indicador de barra vertical activa */}
+                            {isActive && !isCollapsed && (
+                              <span className="w-1.5 h-6 rounded-full bg-indigo-600 dark:bg-indigo-400 shrink-0"></span>
+                            )}
+
+                            <div className={`shrink-0 transition-transform duration-200 group-hover:scale-110 ${
+                              isActive && !isCollapsed
+                                ? 'w-6 h-6 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300 flex items-center justify-center'
+                                : isActive && isCollapsed
+                                ? 'text-indigo-600 dark:text-indigo-400 font-bold'
+                                : 'text-slate-400 dark:text-slate-500'
+                            }`}>
+                              {item.icon}
+                            </div>
+
+                            {!isCollapsed && <span className="truncate font-semibold">{item.label}</span>}
+                            
+                            {isCollapsed && (
+                              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3.5 px-3.5 py-1.5 rounded-xl bg-white/95 text-indigo-950 dark:bg-[#191c3d]/95 dark:text-white backdrop-blur-xl font-extrabold text-xs whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 group-hover:translate-x-1 transition-all duration-200 ease-out z-[99999] shadow-xl shadow-indigo-500/15 border border-indigo-200/90 dark:border-[#3b3f78] flex items-center gap-2">
+                                {isActive && <span className="w-2 h-2 rounded-full bg-indigo-600 dark:bg-indigo-400 shadow-sm animate-pulse"></span>}
+                                <span>{item.label}</span>
+                                <div className="absolute top-1/2 -translate-y-1/2 -left-[5px] w-2.5 h-2.5 bg-white/95 dark:bg-[#191c3d]/95 rotate-45 border-b border-l border-indigo-200/90 dark:border-[#3b3f78] rounded-bl-[2px]"></div>
+                              </div>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
             );
           })}
         </nav>
