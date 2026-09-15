@@ -1,8 +1,8 @@
 import React, {useState, useEffect, useRef} from 'react';
-import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2 } from 'lucide-react';
+import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft } from 'lucide-react';
 import api, { projectService } from '../../../services/api';
 import { useReactToPrint } from 'react-to-print';
-import DynamicAIReportTemplate from '../components/DynamicAIReportTemplate';
+import ExecutiveReportTemplate from '../components/ExecutiveReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
 
 export default function CentroReportesView({ selectedProjectId }) {
@@ -12,74 +12,31 @@ export default function CentroReportesView({ selectedProjectId }) {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showNubi, setShowNubi] = useState(false);
+  
+  const nubiPhrases = [
+    "¡Hola! Soy Nubi. Echemos un vistazo a cómo va todo.",
+    "¡Hola! Soy Nubi. Revisé tus métricas y encontré algunos puntos importantes.",
+    "¡Hola! Soy Nubi. Esto es lo que encontré en tu proyecto.",
+    "¡Hola! Soy Nubi. Vamos a ver cómo va tu proyecto.",
+    "¡Hola! Soy Nubi. Esto es lo más importante que deberías saber."
+  ];
+  const [currentNubiPhrase, setCurrentNubiPhrase] = useState(nubiPhrases[0]);
 
-  // ── Historial Persistente de Reportes ──
-  const [savedReports, setSavedReports] = useState(() => {
-    try {
-      const stored = localStorage.getItem('mchav_generated_reports');
-      return stored ? JSON.parse(stored) : [];
-    } catch (e) {
-      return [];
+  useEffect(() => {
+    if (showNubi) {
+      setCurrentNubiPhrase(nubiPhrases[Math.floor(Math.random() * nubiPhrases.length)]);
     }
-  });
-
-  const saveReportToHistory = (reportItem) => {
-    setSavedReports(prev => {
-      const updated = [reportItem, ...prev];
-      try {
-        localStorage.setItem('mchav_generated_reports', JSON.stringify(updated));
-      } catch (e) {
-        console.error("Error al guardar reporte en localStorage:", e);
-      }
-      return updated;
-    });
-  };
-
-  const deleteReportFromHistory = (reportId, e) => {
-    if (e) e.stopPropagation();
-    setSavedReports(prev => {
-      const updated = prev.filter(r => r.id !== reportId);
-      try {
-        localStorage.setItem('mchav_generated_reports', JSON.stringify(updated));
-      } catch (e) {}
-      return updated;
-    });
-  };
-
-  const handleOpenSavedReport = (report) => {
-    if (report && report.reportData) {
-      setReportData(report.reportData);
-      setShouldPrint(true);
-    }
-  };
-
-  const getReportBadge = (type) => {
-    const t = (type || '').toLowerCase();
-    if (t.includes('proyecto')) return { icon: Folder, color: 'indigo', label: 'Proyecto' };
-    if (t.includes('sprint')) return { icon: Flag, color: 'sky', label: 'Sprint' };
-    if (t.includes('desarrollador')) return { icon: User, color: 'fuchsia', label: 'Desarrollador' };
-    if (t.includes('equipo')) return { icon: User, color: 'emerald', label: 'Equipo' };
-    return { icon: FileText, color: 'amber', label: 'General' };
-  };
+  }, [showNubi]);
 
   const reportRef = useRef(null);
   const handlePrint = useReactToPrint({
     contentRef: reportRef,
     documentTitle: "MCHAV_Reporte_Ejecutivo",
-    pageStyle: "@page { size: A4; margin: 0 !important; } @media print { body { margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }"
+    pageStyle: "@page { size: A4; margin: 0 !important; } @media print { body { margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }",
+    onAfterPrint: () => setShowNubi(true)
   });
   const [reportData, setReportData] = useState(null);
-  const [shouldPrint, setShouldPrint] = useState(false);
-
-  useEffect(() => {
-    if (shouldPrint && reportData) {
-      const timer = setTimeout(() => {
-        handlePrint();
-        setShouldPrint(false);
-      }, 1500);
-      return () => clearTimeout(timer);
-    }
-  }, [shouldPrint, reportData, handlePrint]);
   
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
@@ -98,12 +55,6 @@ export default function CentroReportesView({ selectedProjectId }) {
   const itemsPerPage = 8;
   const [selectedGeneralProjects, setSelectedGeneralProjects] = useState([]);
   const [searchGeneralQuery, setSearchGeneralQuery] = useState('');
-  const [genProjectId, setGenProjectId] = useState(selectedProjectId || '');
-  const [validationError, setValidationError] = useState(null);
-
-  useEffect(() => {
-    setValidationError(null);
-  }, [reportType, reportParam, genProjectId]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -165,298 +116,23 @@ export default function CentroReportesView({ selectedProjectId }) {
         } catch (e) { console.error("Error fetching sprints", e); }
     };
     fetchData();
-  }, [selectedProjectId]);
+  }, []);
 
-  useEffect(() => {
-    const fetchGen = async () => {
-        if (genProjectId) {
-            try {
-                const sprintRes = await projectService.getSprints(genProjectId);
-                setDbSprints(sprintRes || []);
-            } catch (e) {}
-        }
-    };
-    fetchGen();
-  }, [genProjectId]);
-
-  const handleGenerateLiveReport = async () => {
+  const handleGenerateLiveReport = () => {
     setIsGenerating(true);
-    
-    try {
-      if (reportType === 'general') {
-        if (!selectedGeneralProjects || selectedGeneralProjects.length === 0) {
-           setIsGenerating(false);
-           alert("Por favor selecciona al menos un proyecto.");
-           return;
-        }
-        
-        let allKpis = [];
-        let totalRecordsAgg = 0;
-        let totalSpAgg = 0;
-        let totalBugsAgg = 0;
-        let totalBlockedDays = 0;
-        let cycleTimeSum = 0;
-        let cycleTimeCount = 0;
-        
-        for (const pId of selectedGeneralProjects) {
-            const currentProj = dbProjects.find(p => p.id_proyecto === pId);
-            const pName = currentProj ? (currentProj.nombre || currentProj.name) : pId;
-            
-            // Obtener el conteo
-            const detailRes = await projectService.getKpiIssuesDetail(pId, {});
-            const tRec = detailRes?.total_issues || detailRes?.issues?.length || 0;
-            
-            // Cargar KPIs
-            const pKpis = await projectService.getKpis(pId, null);
-            
-            const sp = pKpis?.metrics?.completed_sp || 0;
-            const bugs = pKpis?.metrics?.bugs_count || 0;
-            const bd = pKpis?.metrics?.blocked_days || 0;
-            const ct = pKpis?.metrics?.avg_cycle_time || 0;
-            
-            totalRecordsAgg += tRec;
-            totalSpAgg += sp;
-            totalBugsAgg += bugs;
-            totalBlockedDays += bd;
-            if (ct > 0) { cycleTimeSum += ct; cycleTimeCount++; }
-            
-            allKpis.push({
-               projectId: pId,
-               projectName: pName,
-               throughput: tRec,
-               velocity: sp,
-               bugs: bugs,
-               blockedDays: bd,
-               cycleTime: ct
-            });
-        }
-        
-        const avgCt = cycleTimeCount > 0 ? cycleTimeSum / cycleTimeCount : 0;
-        
-        let aiInsightsData = null;
-        try {
-            const metricsData = {
-              reportType: 'general',
-              projectMetrics: allKpis,
-              velocity: totalSpAgg,
-              throughput: totalRecordsAgg,
-              cycleTime: avgCt,
-              blockedDays: totalBlockedDays,
-              bugs: totalBugsAgg,
-              targetName: 'Resumen General'
-            };
-            const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
-            if (aiResponse.data && aiResponse.data.data) {
-              aiInsightsData = aiResponse.data.data;
-            }
-        } catch (e) {
-            console.error("Error al generar AI insights:", e);
-        }
-        
-        setIsGenerating(false);
-        const finalReportData = {
-            reportType: 'general',
-            month: "Reporte en Vivo", 
-            pointsCompleted: totalSpAgg, 
-            totalIssues: totalRecordsAgg, 
-            blockedDays: totalBlockedDays,
-            targetName: 'Resumen General',
-            projectName: 'Portafolio Multi-Proyecto',
-            sprintName: 'N/A',
-            projectMetrics: allKpis,
-            aiInsights: { markdown: aiInsightsData }
-        };
-        setReportData(finalReportData);
-        saveReportToHistory({
-            id: `rep_${Date.now()}`,
-            type: 'General',
-            name: 'Resumen General',
-            date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-            timestamp: Date.now(),
-            reportData: finalReportData
-        });
-        setShouldPrint(true);
-        return;
-      }
-
-      // 1. Determinar el proyecto a consultar para reportes individuales
-      const projectId = reportType === 'proyecto' ? reportParam : genProjectId;
-        
-      if (!projectId) {
-        setIsGenerating(false);
-        alert("Por favor selecciona un proyecto.");
-        return;
-      }
-
-      // 2. Preparar parámetros de consulta según el tipo de reporte
-      let params = {};
-      let minimumRequired = 5;
-      let targetName = 'General';
-
-      // Extraer nombre del proyecto real siempre
-      let realProjectName = 'MCHAV Analytics';
-      const currentProj = dbProjects.find(p => p.id_proyecto === (reportType === 'proyecto' ? projectId : genProjectId));
-      if (currentProj) {
-        realProjectName = currentProj.nombre || currentProj.name || 'MCHAV Analytics';
-      }
-
-      let sprintName = 'Sprint Actual';
-
-      if (reportType === 'sprint') {
-        const sprint = dbSprints.find(s => String(s.id_sprint) === String(reportParam));
-        if (sprint) {
-          params.sprint_id = sprint.id_sprint;
-          targetName = sprint.nombre_sprint || sprint.nombre || sprint.id_sprint;
-          sprintName = targetName;
-        }
-        minimumRequired = 3;
-      } else if (reportType === 'desarrollador') {
-        const dev = dbUsers.find(u => String(u.id_usuario) === String(reportParam));
-        if (dev) {
-          params.assignee_id = dev.id_usuario;
-          targetName = dev.nombre;
-        }
-        minimumRequired = 2;
-      } else if (reportType === 'proyecto') {
-        targetName = realProjectName;
-        minimumRequired = 5;
-      }
-
-      // 3. Obtener el conteo de tickets (issues-detail)
-      const detailRes = await projectService.getKpiIssuesDetail(projectId, params);
-      const totalRecords = detailRes?.total_issues || detailRes?.issues?.length || 0;
-
-      // 4. Validar las reglas de negocio
-      if (totalRecords < minimumRequired) {
-        setValidationError({
-          targetName,
-          totalRecords,
-          minimumRequired
-        });
-        setIsGenerating(false);
-        return;
-      }
-      // 5. Cargar KPIs reales
-      const kpis = await projectService.getKpis(projectId, params.sprint_id);
-
-      // 5b. Cargar datos reales de Burnup, CFD y Velocidad Histórica
-      let realBurnupData = [];
-      let realCfdData = [];
-      let realVelocityData = [];
-
-      try {
-        const burnupRes = await projectService.getProjectBurnup(projectId, params.sprint_id || null);
-        realBurnupData = burnupRes?.data || (Array.isArray(burnupRes) ? burnupRes : []);
-      } catch (e) { console.warn('No se pudo cargar burnup:', e); }
-
-      try {
-        const cfdRes = await projectService.getProjectCFD(projectId, params.sprint_id || null);
-        const cfdArr = cfdRes?.cfd || cfdRes?.data?.cfd || (Array.isArray(cfdRes) ? cfdRes : []);
-        // Mapear al formato esperado por el componente
-        realCfdData = cfdArr.map(d => ({
-          fecha_real: d.date,
-          completado: d.Done || 0,
-          en_progreso: d.Active || 0,
-          en_revision: d.Waiting || 0,
-          por_hacer: (d['To Do'] || 0) + (d.Blocked || 0),
-        }));
-      } catch (e) { console.warn('No se pudo cargar CFD:', e); }
-
-      try {
-        const sprints = await projectService.getSprints(projectId);
-        if (sprints && sprints.length > 0) {
-          const sortedSprints = [...sprints].sort((a, b) => 
-            a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: 'base' })
-          ).slice(-5);
-
-          for (const sp of sortedSprints) {
-            try {
-              const health = await projectService.getSprintHealth(projectId, sp.id_sprint);
-              let planned = health?.metrics?.sp_planned || 0;
-              let completed = health?.metrics?.sp_completed || 0;
-              if (planned === 0 && completed === 0) {
-                planned = Math.floor(35 + Math.random() * 15);
-                completed = Math.floor(30 + Math.random() * 15);
-              }
-              realVelocityData.push({
-                sprint: sp.nombre,
-                comprometido: planned,
-                compromisos: planned,
-                completado: completed,
-                entregados: completed
-              });
-            } catch (hErr) {
-              console.warn('Error health sprint:', hErr);
-            }
-          }
-        }
-      } catch (e) { console.warn('No se pudo cargar velocidad histórica:', e); }
-
-      // 6. Generar Insights con IA
-      let aiInsightsData = null;
-      try {
-        const metricsData = {
-          reportType: reportType || 'sprint',
-          velocity: kpis?.metrics?.completed_sp || 0,
-          throughput: totalRecords,
-          cycleTime: kpis?.metrics?.avg_cycle_time || 0,
-          blockedDays: kpis?.metrics?.blocked_days || 0,
-          bugs: kpis?.metrics?.bugs_count || 0,
-          totalScope: Math.max(kpis?.metrics?.completed_sp || 0, 40),
-          sprintHealth: kpis?.health_score || 0,
-          sprintName: sprintName
-        };
-        const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
-        if (aiResponse.data && aiResponse.data.data) {
-          aiInsightsData = aiResponse.data.data;
-        }
-      } catch (e) {
-        console.error("Error al generar AI insights:", e);
-      }
-
+    setTimeout(() => {
       setIsGenerating(false);
-      const finalReportData = {
-          reportType: reportType,
-          month: "Reporte en Vivo",
-          pointsCompleted: kpis?.metrics?.completed_sp || 0,
-          sprintHealth: kpis?.health_score || 0,
-          totalIssues: totalRecords,
-          blockedDays: kpis?.metrics?.blocked_days || 0,
-          targetName: targetName,
-          projectName: realProjectName,
-          sprintName: sprintName,
-          kpis: kpis,
-          // ✅ Datos reales de gráficas
-          realBurnupData,
-          realCfdData,
-          realVelocityData,
-          aiInsights: { markdown: aiInsightsData }
-      };
-
-      setReportData(finalReportData);
-      
-      const reportTypeTitle = reportType === 'proyecto' ? 'Proyecto' : reportType === 'sprint' ? 'Sprint' : reportType === 'desarrollador' ? 'Desarrollador' : 'General';
-      saveReportToHistory({
-          id: `rep_${Date.now()}`,
-          type: reportTypeTitle,
-          name: targetName || realProjectName || 'Reporte Ejecutivo',
-          date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-          timestamp: Date.now(),
-          reportData: finalReportData
+      setReportData({
+          month: "Reporte en Vivo", pointsCompleted: 145, sprintHealth: 92, totalIssues: 42, blockedDays: 2
       });
-
-      setShouldPrint(true);
-
-      
-    } catch (error) {
-      console.error("Error al generar reporte:", error);
-      alert(error.message || "Error al conectar con el servidor. Intenta de nuevo.");
-      setIsGenerating(false);
-    }
+      // Option 3: Direct Download
+      handlePrint();
+    }, 1500);
   };
 
   const renderGeneracion = () => (
     <div className="flex flex-col gap-6 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+      
       {/* WIZARD SIN TARJETA (Integrado al fondo principal) */}
       <div className="w-full pt-4">
         
@@ -588,11 +264,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                     </label>
                     <div className="relative">
                       <select 
-                          className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none appearance-none"
-                          value={reportType === 'proyecto' ? reportParam : genProjectId} 
-                          onChange={(e) => reportType === 'proyecto' ? setReportParam(e.target.value) : setGenProjectId(e.target.value)}
-                        >
-                          <option value="">Selecciona un proyecto...</option>
+                        className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none appearance-none"
+                        value={reportParam} onChange={(e) => setReportParam(e.target.value)}
+                      >
+                        <option value="">Selecciona un proyecto...</option>
                         {dbProjects.map(p => <option key={p.id_proyecto} value={p.id_proyecto}>{p.nombre}</option>)}
                       </select>
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">▼</div>
@@ -604,10 +279,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                       <label className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Sprint</label>
                       <div className="relative">
-                        <select 
-                          className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none appearance-none"
-                          value={reportParam} onChange={(e) => setReportParam(e.target.value)}
-                        >
+                        <select className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none appearance-none">
                           <option value="">Selecciona un sprint...</option>
                           {dbSprints.map(s => <option key={s.id_sprint} value={s.id_sprint}>{s.nombre_sprint || s.nombre || s.id_sprint}</option>)}
                         </select>
@@ -621,10 +293,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
                       <label className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Desarrollador</label>
                       <div className="relative">
-                        <select 
-                          className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 outline-none appearance-none"
-                          value={reportParam} onChange={(e) => setReportParam(e.target.value)}
-                        >
+                        <select className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 outline-none appearance-none">
                           <option value="">Selecciona un desarrollador...</option>
                           {dbUsers.map(u => <option key={u.id_usuario} value={u.id_usuario}>{u.nombre}</option>)}
                         </select>
@@ -649,12 +318,12 @@ export default function CentroReportesView({ selectedProjectId }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ml-0 md:ml-12 mb-20 flex-1">
               {(reportType === 'proyecto' 
-                ? ['Contexto General', 'Estado de Entrega y Burnup', 'Flujo Operativo (CFD)', 'Predictibilidad y Riesgos', 'Conclusiones Estratégicas', 'Plan de Acción']
+                ? ['Resumen ejecutivo', 'KPIs del proyecto', 'Velocidad por sprint', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
                 : reportType === 'sprint'
-                ? ['KPIs de Rendimiento', 'Análisis de Cumplimiento', 'Sprint Burnup', 'Flujo Acumulado (CFD)', 'Predictibilidad (Scatter)', 'Veredicto del Sprint']
+                ? ['Resumen del sprint', 'Burndown del sprint', 'Tareas completadas vs pendientes', 'Distribución por desarrollador', 'Bugs reportados', 'Retrospectiva y mejoras']
                 : reportType === 'desarrollador'
                 ? ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo']
-                : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Defectos Escapados', 'Bloqueos y riesgos']
+                : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Calidad y bugs', 'Bloqueos y riesgos']
               ).map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
@@ -665,35 +334,12 @@ export default function CentroReportesView({ selectedProjectId }) {
               ))}
             </div>
 
-            <div className="flex flex-col md:flex-row items-center gap-4 mt-auto w-full max-w-full justify-between pb-4">
-              <div className="flex-1">
-                {validationError && (
-                  <div className="animate-in fade-in slide-in-from-left-4 duration-300">
-                    <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30">
-                      <div className="p-2 bg-amber-100 dark:bg-amber-800/40 rounded-lg text-amber-600 dark:text-amber-400 shrink-0">
-                        <AlertCircle className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">¡Ups! Datos insuficientes</h4>
-                        <p className="text-xs text-amber-700 dark:text-amber-400/80 mt-0.5 leading-relaxed">
-                          {validationError.targetName} solo tiene {validationError.totalRecords} ticket{validationError.totalRecords !== 1 ? 's' : ''} registrado{validationError.totalRecords !== 1 ? 's' : ''}. Para poder generar el reporte se requiere al menos {validationError.minimumRequired === 3 ? '3 a 5' : validationError.minimumRequired} tickets. Por favor, selecciona un periodo con más movimiento o intenta sincronizar nuevamente.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              <div className="flex-none shrink-0">
-                <button 
-                  onClick={handleGenerateLiveReport} 
-                  disabled={isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '')}
-                  className={`px-10 py-4 ${isGenerating || (reportType === 'general' ? selectedGeneralProjects.length === 0 : reportParam === '') ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-indigo-600 hover:bg-indigo-700 shadow-[0_4px_20px_rgba(79,70,229,0.4)]'} text-white rounded-xl font-bold flex items-center gap-3 transition-all`}
-                >
-                  Generar reporte &rarr;
-                </button>
-              </div>
-            </div>
+            <button 
+              onClick={handleGenerateLiveReport} disabled={isGenerating}
+              className="absolute bottom-0 right-0 px-10 py-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl font-bold flex items-center gap-3 transition-all shadow-[0_4px_20px_rgba(79,70,229,0.4)]"
+            >
+              Generar reporte &rarr;
+            </button>
           </div>
         </div>
       </div>
@@ -715,14 +361,27 @@ export default function CentroReportesView({ selectedProjectId }) {
     finally { setLoadingHistory(false); }
   };
 
-  const filteredReports = savedReports.filter(report => {
+  const allReportsData = [
+    { type: 'Proyecto', name: 'MCHAV Analytics', date: '01/07 - 31/07', icon: Folder, color: 'indigo' },
+    { type: 'Equipo', name: 'Equipo Backend', date: '01/07 - 31/07', icon: User, color: 'emerald' },
+    { type: 'Sprint', name: 'Sprint 04', date: '30/06 - 13/07', icon: Flag, color: 'sky' },
+    { type: 'General', name: 'Resumen Mensual', date: 'Junio 2026', icon: FileText, color: 'amber' },
+    { type: 'Proyecto', name: 'App Móvil iOS', date: '01/06 - 30/06', icon: Folder, color: 'indigo' },
+    { type: 'Desarrollador', name: 'Camilo Corredor', date: '15/06 - 30/06', icon: User, color: 'fuchsia' },
+    { type: 'Sprint', name: 'Sprint 03', date: '16/06 - 29/06', icon: Flag, color: 'sky' },
+    { type: 'General', name: 'Q2 2026 Resumen', date: 'Abr - Jun', icon: FileText, color: 'amber' },
+    { type: 'Proyecto', name: 'Plataforma B2B', date: '01/05 - 31/05', icon: Folder, color: 'indigo' },
+    { type: 'Equipo', name: 'Equipo Frontend', date: '01/05 - 31/05', icon: User, color: 'emerald' }
+  ];
+
+  const filteredReports = allReportsData.filter(report => {
     const q = searchQuery.toLowerCase();
-    return (report.name || '').toLowerCase().includes(q) || 
-           (report.type || '').toLowerCase().includes(q) || 
-           (report.date || '').toLowerCase().includes(q);
+    return report.name.toLowerCase().includes(q) || 
+           report.type.toLowerCase().includes(q) || 
+           report.date.toLowerCase().includes(q);
   });
 
-  const totalPages = Math.ceil(filteredReports.length / itemsPerPage) || 1;
+  const totalPages = Math.ceil(filteredReports.length / itemsPerPage);
   const paginatedReports = filteredReports.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const renderHistorial = () => (
@@ -1031,65 +690,66 @@ export default function CentroReportesView({ selectedProjectId }) {
             </button>
         </div>
 
-        {savedReports.length === 0 ? (
-          <div className="p-8 rounded-[2rem] border border-dashed border-slate-300 dark:border-white/10 text-center bg-slate-50/50 dark:bg-white/[0.01]">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500 flex items-center justify-center mx-auto mb-3">
-              <Clock className="w-6 h-6" />
-            </div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-slate-200">Sin reportes generados aún</h4>
-            <p className="text-xs text-slate-500 mt-1">Genera un nuevo reporte para que se guarde en tu historial.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {savedReports.slice(0, 3).map((report) => {
-              const badge = getReportBadge(report.type);
-              const IconComp = badge.icon;
-              const theme = {
-                indigo: { border: 'border-indigo-100 dark:border-indigo-500/20', bg: 'bg-indigo-500', shadow: 'shadow-indigo-500/20', text: 'text-indigo-500', hoverText: 'hover:text-indigo-600' },
-                emerald: { border: 'border-emerald-100 dark:border-emerald-500/20', bg: 'bg-emerald-500', shadow: 'shadow-emerald-500/20', text: 'text-emerald-500', hoverText: 'hover:text-emerald-600' },
-                sky: { border: 'border-sky-100 dark:border-sky-500/20', bg: 'bg-sky-500', shadow: 'shadow-sky-500/20', text: 'text-sky-500', hoverText: 'hover:text-sky-600' },
-                fuchsia: { border: 'border-fuchsia-100 dark:border-fuchsia-500/20', bg: 'bg-fuchsia-500', shadow: 'shadow-fuchsia-500/20', text: 'text-fuchsia-500', hoverText: 'hover:text-fuchsia-600' },
-                amber: { border: 'border-amber-100 dark:border-amber-500/20', bg: 'bg-amber-500', shadow: 'shadow-amber-500/20', text: 'text-amber-500', hoverText: 'hover:text-amber-600' }
-              }[badge.color] || { border: 'border-indigo-100 dark:border-indigo-500/20', bg: 'bg-indigo-500', shadow: 'shadow-indigo-500/20', text: 'text-indigo-500', hoverText: 'hover:text-indigo-600' };
-
-              return (
-                <div 
-                  key={report.id} 
-                  onClick={() => handleOpenSavedReport(report)}
-                  className={`p-6 rounded-[2rem] border ${theme.border} bg-white dark:bg-white/[0.02] flex flex-col gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer transition-all duration-300 relative group`}
-                >
-                  <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-2xl ${theme.bg} text-white flex items-center justify-center shadow-lg ${theme.shadow}`}>
-                      <IconComp className="w-5 h-5" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Tarjeta 1 - Proyecto (Indigo) */}
+            <div className="p-6 rounded-[2rem] border border-slate-200/60 dark:border-white/5 bg-white dark:bg-white/[0.02] flex flex-col gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer transition-all duration-300">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-indigo-500 text-white flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                        <Folder className="w-5 h-5" />
                     </div>
-                    <div className="flex-1 overflow-hidden">
-                      <h4 className="text-sm font-black text-slate-900 dark:text-white truncate">Reporte de {report.type}</h4>
-                      <p className={`text-xs font-semibold ${theme.text} mt-0.5 truncate`}>{report.name}</p>
+                    <div>
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white">Reporte de Proyecto</h4>
+                        <p className="text-xs font-semibold text-indigo-500 mt-0.5">MCHAV Analytics</p>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
-                    <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5" /> {report.date}
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <button 
-                        type="button"
-                        onClick={(e) => deleteReportFromHistory(report.id, e)}
-                        title="Eliminar reporte"
-                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-all"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                      <div className={`text-slate-400 ${theme.hoverText} transition-colors`} title="Ver / Descargar PDF">
-                        <Download className="w-4 h-4" />
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-white/5">
+                    <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> 01/07 - 31/07</p>
+                    <div className="text-slate-400 hover:text-indigo-500 transition-colors">
+                        <Download className="w-4 h-4" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Tarjeta 2 - Equipo (Emerald) */}
+            <div className="p-6 rounded-[2rem] border border-emerald-100 dark:border-emerald-500/20 bg-white dark:bg-white/[0.02] flex flex-col gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer transition-all duration-300">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <User className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white">Reporte de Equipo</h4>
+                        <p className="text-xs font-semibold text-emerald-500 mt-0.5">Equipo Backend</p>
+                    </div>
+                </div>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-emerald-50 dark:border-white/5">
+                    <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> 01/07 - 31/07</p>
+                    <div className="text-slate-400 hover:text-emerald-500 transition-colors">
+                        <Download className="w-4 h-4" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Tarjeta 3 - Sprint (Sky) */}
+            <div className="p-6 rounded-[2rem] border border-sky-100 dark:border-sky-500/20 bg-white dark:bg-white/[0.02] flex flex-col gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 cursor-pointer transition-all duration-300">
+                <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-sky-500 text-white flex items-center justify-center shadow-lg shadow-sky-500/20">
+                        <Flag className="w-5 h-5" />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white">Reporte de Sprint</h4>
+                        <p className="text-xs font-semibold text-sky-500 mt-0.5">Sprint 04</p>
+                    </div>
+                </div>
+                <div className="flex items-center justify-between mt-4 pt-4 border-t border-sky-50 dark:border-white/5">
+                    <p className="text-[11px] font-medium text-slate-500 flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> 30/06 - 13/07</p>
+                    <div className="text-slate-400 hover:text-sky-500 transition-colors">
+                        <Download className="w-4 h-4" />
+                    </div>
+                </div>
+            </div>
+
+        </div>
       </div>
         </div>
       ) : (
@@ -1134,9 +794,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-white/5">
-                  {paginatedReports.map((report) => {
-                    const badge = getReportBadge(report.type);
-                    const IconComp = badge.icon;
+                  {paginatedReports.map((report, idx) => {
                     const bgColors = {
                       indigo: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400',
                       emerald: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400',
@@ -1145,14 +803,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                       fuchsia: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-500/10 dark:text-fuchsia-400'
                     };
                     return (
-                      <tr 
-                        key={report.id} 
-                        onClick={() => handleOpenSavedReport(report)}
-                        className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group cursor-pointer"
-                      >
+                      <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
                         <td className="py-4 px-6">
-                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${bgColors[badge.color] || bgColors.indigo}`}>
-                            <IconComp className="w-3.5 h-3.5" />
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${bgColors[report.color]}`}>
+                            <report.icon className="w-3.5 h-3.5" />
                             {report.type}
                           </span>
                         </td>
@@ -1166,24 +820,9 @@ export default function CentroReportesView({ selectedProjectId }) {
                           </div>
                         </td>
                         <td className="py-4 px-6 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <button 
-                              type="button"
-                              onClick={(e) => deleteReportFromHistory(report.id, e)}
-                              className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-all"
-                              title="Eliminar reporte del historial"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                            <button 
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); handleOpenSavedReport(report); }}
-                              className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all"
-                              title="Ver / Descargar PDF"
-                            >
-                              <Download className="w-4 h-4" />
-                            </button>
-                          </div>
+                          <button className="p-2 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all">
+                            <Download className="w-4 h-4" />
+                          </button>
                         </td>
                       </tr>
                     );
@@ -1192,7 +831,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                   {filteredReports.length === 0 && (
                     <tr>
                       <td colSpan="4" className="py-8 px-6 text-center text-sm font-medium text-slate-500">
-                        {searchQuery ? `No se encontraron reportes con "${searchQuery}"` : 'No hay reportes guardados en el historial.'}
+                        No se encontraron reportes con "{searchQuery}"
                       </td>
                     </tr>
                   )}
@@ -1245,6 +884,9 @@ export default function CentroReportesView({ selectedProjectId }) {
     <div className="w-full h-[calc(100vh-32px)] overflow-y-auto custom-scrollbar bg-gradient-to-br from-slate-50 to-white dark:from-transparent dark:to-transparent shadow-sm dark:shadow-none border border-slate-200/60 dark:border-transparent rounded-3xl p-8 md:p-12 flex flex-col gap-8 relative">
       
       {/* HEADER Y TABS */}
+      {/* Luces decorativas de fondo (Soft Glassmorphism effect) */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-indigo-400/10 dark:bg-indigo-600/15 rounded-full blur-[120px] pointer-events-none z-0"></div>
+      <div className="absolute bottom-[20%] right-[-10%] w-[40%] h-[40%] bg-sky-400/10 dark:bg-emerald-600/10 rounded-full blur-[120px] pointer-events-none z-0"></div>
       
       <div className="flex flex-col md:flex-row items-start md:items-end justify-between gap-6 relative z-20">
         <div>
@@ -1278,9 +920,68 @@ export default function CentroReportesView({ selectedProjectId }) {
       <div className="flex-1 flex flex-col w-full relative z-20">
         {activeTab === 'generacion' ? renderGeneracion() : renderHistorial()}
       </div>
+      {/* Nubi AI Popover */}
+      {showNubi && (
+        <div className="fixed bottom-8 right-8 z-50 flex items-end animate-in slide-in-from-bottom-8 fade-in duration-500">
+          
+          {/* Mascot Image */}
+          <div className="relative mr-4 mb-4 flex flex-col items-center animate-float">
+             <img src="/owl_mascot.png" alt="Nubi" className="w-24 h-24 object-contain z-20 relative drop-shadow-xl" />
+             <div className="bg-white dark:bg-slate-800 text-[10px] font-black px-3 py-1 rounded-full text-center tracking-widest shadow-md border border-slate-100 dark:border-slate-700 relative z-30 -mt-3">
+                NUBI
+             </div>
+          </div>
+          
+          {/* Speech Bubble */}
+          <div className="relative max-w-sm w-full animate-float-delayed">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.15)] border border-slate-100 dark:border-white/10 relative overflow-hidden">
+              
+              {/* Speech bubble pointer pointing LEFT */}
+              <div className="absolute -left-3 bottom-12 w-6 h-6 bg-white dark:bg-slate-900 border-b border-l border-slate-100 dark:border-white/10 rotate-45"></div>
+
+              {/* Close button */}
+              <button onClick={() => setShowNubi(false)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+
+              <div className="flex items-start gap-4 mb-4 relative z-10">
+                <div className="p-2.5 bg-indigo-600 rounded-2xl shadow-lg shadow-indigo-500/30 text-white shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-indigo-700 dark:text-indigo-400 tracking-tight leading-tight">
+                    {currentNubiPhrase}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="mb-5 text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed space-y-4">
+                <p>
+                  <span className="font-bold text-slate-900 dark:text-white mr-1">💡 Diagnóstico del Desarrollador:</span> 
+                  <span className="italic text-slate-600 dark:text-slate-400">"Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al periodo anterior, sin embargo, el volumen de bugs detectados aumentó ligeramente. Te recomendamos estabilizar la calidad antes de tomar nuevas tareas complejas."</span>
+                </p>
+              </div>
+
+              <div className="bg-indigo-50/80 dark:bg-indigo-500/5 border border-indigo-100 dark:border-indigo-500/10 rounded-2xl p-4 relative z-10">
+                <div className="flex items-start gap-3 mb-3">
+                  <Activity className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                  <p className="text-[13px] font-bold text-slate-800 dark:text-slate-200">
+                    ¿Quieres que elabore un plan estructurado para estabilizar la calidad de tus entregas?
+                  </p>
+                </div>
+                <button onClick={() => setShowNubi(false)} className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-[13px] flex items-center justify-center gap-2 transition-all shadow-[0_4px_14px_0_rgba(79,70,229,0.39)]">
+                  Sí, generar plan de mejora <ChevronRight className="w-3 h-3" />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Plantilla oculta para el PDF */}
-      <DynamicAIReportTemplate ref={reportRef} reportType={reportType} filters={{}} user={useAuth().user} reportData={reportData} aiInsights={reportData?.aiInsights} />
+      <ExecutiveReportTemplate ref={reportRef} reportType={reportType} filters={{}} user={useAuth().user} />
     </div>
   );
 }
