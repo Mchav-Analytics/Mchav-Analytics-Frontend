@@ -120,7 +120,7 @@ export default function AdminUserTable({
                     : 'bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400'
                     }`}>
                     <span className={`w-2 h-2 rounded-full ${u.status === 'ACTIVE' && u.role !== 'DESACTIVADO' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-                    {u.status === 'ACTIVE' && u.role !== 'DESACTIVADO' ? 'Activo' : 'Pendiente / Desactivado'}
+                    {u.status === 'ACTIVE' && u.role !== 'DESACTIVADO' ? 'Activo' : 'Pendiente'}
                   </span>
                   {u.status === 'INACTIVE' || u.role === 'DESACTIVADO' ? (
                     <button
