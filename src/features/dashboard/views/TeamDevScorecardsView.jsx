@@ -65,14 +65,14 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
                 {(selectedDev.nombre || 'Dev').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
               </div>
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Scorecard de {selectedDev.nombre}</h2>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Developer Workload & Flow Profile: {selectedDev.nombre}</h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">ID Assignee: <span className="font-mono text-indigo-600 dark:text-indigo-400">{selectedDev.assignee_id}</span> | Email: {selectedDev.email}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
               <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3.5 py-1.5 rounded-full">
-                Rendimiento: Alto (81% SP)
+                Vista de Contexto Operativo
               </span>
             </div>
           </div>

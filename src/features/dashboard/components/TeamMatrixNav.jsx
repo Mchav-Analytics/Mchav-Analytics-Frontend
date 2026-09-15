@@ -36,21 +36,6 @@ export default function TeamMatrixNav({
           <span className="text-slate-400 dark:text-slate-500">|</span>
           <span className="truncate max-w-[120px] sm:max-w-[180px]">{activeModelName}</span>
         </div>
-
-        {/* TOP PERFORMER */}
-        {topPerformer && (
-          <div className="flex items-center gap-2 bg-amber-50 dark:bg-[#12142e] px-3 py-1 rounded-xl border border-amber-200 dark:border-amber-500/30 shadow-xs shrink-0 max-w-full sm:max-w-xs">
-            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-amber-400 to-amber-600 flex items-center justify-center text-white font-bold shadow-xs shrink-0">
-              <Trophy size={11} />
-            </div>
-            <div className="flex flex-col text-left overflow-hidden">
-              <span className="text-[9px] uppercase font-black text-amber-600 dark:text-amber-400 tracking-wider">Top Performer</span>
-              <span className="text-xs font-extrabold text-slate-900 dark:text-white leading-none truncate max-w-[140px] sm:max-w-[220px]">
-                {topPerformer.nombre} ({topPerformer.performance_score} pts)
-              </span>
-            </div>
-          </div>
-        )}
       </div>
 
     </div>

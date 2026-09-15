@@ -79,10 +79,6 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
               }`}>
                 {cuadrante.nombre || 'Sin Cuadrante'}
               </span>
-
-              <div className="px-3 py-1 rounded-xl bg-indigo-600 text-white font-extrabold text-xs shadow-md shadow-indigo-500/20">
-                {developer.performance_score} pts
-              </div>
             </div>
           </div>
 

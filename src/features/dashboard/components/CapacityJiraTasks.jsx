@@ -35,7 +35,7 @@ export default function CapacityJiraTasks({
             </span>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-            Visualiza la carga real de tareas activas asignadas en Jira comparadas contra la capacidad disponible ajustada (<strong className="text-indigo-500">{adjustedCapacitySP} SP</strong>).
+            Visualiza la carga real de tareas activas asignadas en Jira comparadas contra la capacidad neta ajustada (<strong className="text-indigo-500">{adjustedCapacitySP} SP</strong>).
           </p>
         </div>
 

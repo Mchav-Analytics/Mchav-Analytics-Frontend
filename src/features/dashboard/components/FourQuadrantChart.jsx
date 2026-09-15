@@ -124,8 +124,8 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
 
           <div className="space-y-1.5 text-[11px]">
             <div className="flex justify-between">
-              <span className="text-slate-400">Performance Score:</span>
-              <span className="font-extrabold text-emerald-400">{dev.performance_score || dataPoint.y} / 100</span>
+              <span className="text-slate-400">Flow Index:</span>
+              <span className="font-extrabold text-emerald-400">{dev.performance_score || dataPoint.y}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-400">Índice Calidad:</span>
@@ -215,10 +215,10 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
         <div>
           <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart2 size={18} className="text-indigo-500" />
-            Matriz de Rendimiento & Calidad del Equipo
+            Developer Workload & Flow Profile
           </h3>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Distribución de desarrolladores en 4 cuadrantes analíticos según su desempeño y calidad de código.
+            Distribución contextual de desarrolladores según carga de trabajo, volumen entregado y flujo.
           </p>
         </div>
       </div>
@@ -230,10 +230,10 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
             <Info size={15} />
           </div>
           <div>
-            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs">¿Cómo interpretar este gráfico?</h4>
+            <h4 className="font-bold text-slate-800 dark:text-slate-100 text-xs">¿Cómo interpretar este perfil?</h4>
             <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug mt-0.5">
-              • <strong>Eje Vertical (Y): Performance Score (0-100 pts)</strong> = Mide el rendimiento general y velocidad de entrega.<br />
-              • <strong>Eje Horizontal (X): Calidad (%)</strong> = Porcentaje de entregas sin errores ni devoluciones.
+              • <strong>Eje Vertical (Y): Flow Index</strong> = Indicador compuesto de volumen de tareas entregadas y velocidad de ciclo.<br />
+              • <strong>Eje Horizontal (X): Calidad (%)</strong> = Porcentaje de entregas sin devoluciones de QA.
             </p>
           </div>
         </div>
@@ -278,7 +278,7 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
           <div className="absolute top-full mt-2 left-0 hidden group-hover:block w-72 p-3.5 bg-slate-900/95 border border-slate-700 text-slate-100 text-xs rounded-2xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed space-y-1.5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
               <span className="font-black text-emerald-400">Cuadrante Estrella</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">Calidad ≥75% | Score ≥70</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800 font-mono">Alta Calidad | Alto Flujo</span>
             </div>
             <p className="text-[11px] text-slate-300">
               <strong>• Qué mide:</strong> Desarrolladores con alto rendimiento y máxima precisión en entregas.
@@ -310,7 +310,7 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
           <div className="absolute top-full mt-2 left-0 hidden group-hover:block w-72 p-3.5 bg-slate-900/95 border border-slate-700 text-slate-100 text-xs rounded-2xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed space-y-1.5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
               <span className="font-black text-indigo-400">Cuadrante Metódico</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono">Calidad ≥75% | Score &lt;70</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800 font-mono">Alta Calidad | Flujo Estable</span>
             </div>
             <p className="text-[11px] text-slate-300">
               <strong>• Qué mide:</strong> Desarrolladores con excelente calidad de código y tasa de fallos casi nula.
@@ -342,7 +342,7 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
           <div className="absolute top-full mt-2 right-0 hidden group-hover:block w-72 p-3.5 bg-slate-900/95 border border-slate-700 text-slate-100 text-xs rounded-2xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed space-y-1.5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
               <span className="font-black text-amber-400">Cuadrante Alto Volumen</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 font-mono">Calidad &lt;75% | Score ≥70</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800 font-mono">Baja Calidad | Alto Flujo</span>
             </div>
             <p className="text-[11px] text-slate-300">
               <strong>• Qué mide:</strong> Desarrolladores con entrega acelerada y alto volumen de tareas completadas.
@@ -374,7 +374,7 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
           <div className="absolute top-full mt-2 right-0 hidden group-hover:block w-72 p-3.5 bg-slate-900/95 border border-slate-700 text-slate-100 text-xs rounded-2xl shadow-2xl z-50 pointer-events-none backdrop-blur-md leading-relaxed space-y-1.5">
             <div className="flex items-center justify-between border-b border-slate-800 pb-1.5">
               <span className="font-black text-rose-400">Cuadrante Atascado</span>
-              <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-mono">Calidad &lt;75% | Score &lt;70</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800 font-mono">Baja Calidad | Flujo Lento</span>
             </div>
             <p className="text-[11px] text-slate-300">
               <strong>• Qué mide:</strong> Desarrolladores con rendimiento moderado y tasa de retrabajo que requiere atención.
@@ -418,21 +418,21 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
               <YAxis 
                 type="number" 
                 dataKey="y" 
-                name="Performance Score" 
+                name="Flow Index" 
                 domain={[40, 100]}
                 stroke={isDark ? "#94a3b8" : "#64748b"} 
                 tickCount={7}
                 tick={{ fill: axisTickFill, fontSize: 11, fontWeight: 600, fontFamily: 'Inter, system-ui, sans-serif' }}
-                label={{ value: 'Rendimiento y Velocidad (Score 0-100 pts)', angle: -90, position: 'insideLeft', offset: 10, fill: axisLabelFill, fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }}
+                label={{ value: 'Índice de Flujo (Volumen & Ciclo)', angle: -90, position: 'insideLeft', offset: 10, fill: axisLabelFill, fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }}
               />
               
               <ZAxis type="number" dataKey="z" range={[160, 480]} name="Throughput" />
 
               <Tooltip content={<CustomTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#6366f1' }} />
 
-              {/* Ejes Umbral de Cuadrantes (Intersección en Calidad=qualityThreshold, Score=70) */}
+              {/* Ejes Umbral de Cuadrantes */}
               <ReferenceLine x={qualityThreshold} stroke="#38bdf8" strokeWidth={2} strokeDasharray="4 4" label={{ value: `Umbral Calidad ${qualityThreshold}%`, position: 'top', fill: '#38bdf8', fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} />
-              <ReferenceLine y={70} stroke="#a855f7" strokeWidth={2} strokeDasharray="4 4" label={{ value: 'Promedio Score 70 pts', position: 'insideTopRight', fill: '#e9d5ff', fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} />
+              <ReferenceLine y={70} stroke="#a855f7" strokeWidth={2} strokeDasharray="4 4" label={{ value: 'Promedio Flujo Esperado', position: 'insideTopRight', fill: '#e9d5ff', fontSize: 11, fontWeight: 700, fontFamily: 'Inter, system-ui, sans-serif' }} />
 
               <Scatter 
                 name="Desarrolladores" 

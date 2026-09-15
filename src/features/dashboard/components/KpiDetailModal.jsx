@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Search, Clock, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { projectService } from '../../../services/api';
 
@@ -102,14 +103,12 @@ export default function KpiDetailModal({ isOpen, onClose, projectId, metricTitle
     return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700';
   };
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-150 overflow-hidden"
-      onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
+      className="fixed inset-0 z-[99999] flex items-center justify-center bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-in fade-in duration-150 overflow-hidden"
     >
       <div 
         className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl w-full max-w-4xl flex flex-col shadow-2xl overflow-hidden text-left my-auto"
-        onWheel={(e) => { e.preventDefault(); e.stopPropagation(); }}
       >
         
         {/* Modal Header */}
@@ -246,6 +245,7 @@ export default function KpiDetailModal({ isOpen, onClose, projectId, metricTitle
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

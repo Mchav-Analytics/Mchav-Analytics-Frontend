@@ -20,24 +20,30 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, reportD
   const totalScope = Math.max(stats.velocity, 40);
 
   // 1. Datos Burnup
-  const burnupData = [
-    { fecha_real: 'Inicio', alcance_total: totalScope, trabajo_completado: 0, ritmo_ideal: 0, tareas_completadas: 0 },
-    { fecha_real: 'Mitad', alcance_total: totalScope, trabajo_completado: Math.floor(stats.velocity / 2), ritmo_ideal: Math.floor(totalScope / 2), tareas_completadas: Math.floor(stats.throughput / 2) },
-    { fecha_real: 'Fin', alcance_total: totalScope, trabajo_completado: stats.velocity, ritmo_ideal: totalScope, tareas_completadas: Math.ceil(stats.throughput / 2) }
-  ];
+  const burnupData = (reportData?.realBurnupData?.length > 0)
+    ? reportData.realBurnupData
+    : [
+        { fecha_real: 'Inicio', alcance_total: totalScope, trabajo_completado: 0, ritmo_ideal: 0, tareas_completadas: 0 },
+        { fecha_real: 'Mitad', alcance_total: totalScope, trabajo_completado: Math.floor(stats.velocity / 2), ritmo_ideal: Math.floor(totalScope / 2), tareas_completadas: Math.floor(stats.throughput / 2) },
+        { fecha_real: 'Fin', alcance_total: totalScope, trabajo_completado: stats.velocity, ritmo_ideal: totalScope, tareas_completadas: Math.ceil(stats.throughput / 2) }
+      ];
 
   // 2. Datos CFD
-  const cfdData = [
-    { fecha_real: 'Inicio', por_hacer: stats.throughput, en_progreso: 0, en_revision: 0, completado: 0 },
-    { fecha_real: 'Mitad', por_hacer: Math.floor(stats.throughput * 0.3), en_progreso: Math.floor(stats.throughput * 0.3), en_revision: Math.floor(stats.throughput * 0.1), completado: Math.floor(stats.throughput * 0.3) },
-    { fecha_real: 'Fin', por_hacer: 0, en_progreso: 0, en_revision: 0, completado: stats.throughput }
-  ];
+  const cfdData = (reportData?.realCfdData?.length > 0)
+    ? reportData.realCfdData
+    : [
+        { fecha_real: 'Inicio', por_hacer: stats.throughput, en_progreso: 0, en_revision: 0, completado: 0 },
+        { fecha_real: 'Mitad', por_hacer: Math.floor(stats.throughput * 0.3), en_progreso: Math.floor(stats.throughput * 0.3), en_revision: Math.floor(stats.throughput * 0.1), completado: Math.floor(stats.throughput * 0.3) },
+        { fecha_real: 'Fin', por_hacer: 0, en_progreso: 0, en_revision: 0, completado: stats.throughput }
+      ];
 
   // 3. Datos Velocity Histórica (BarChart)
-  const velocityData = [
-    { sprint: 'Sprint 1', comprometido: Math.max(stats.velocity - 5, 20), completado: Math.max(stats.velocity - 10, 15) },
-    { sprint: 'Sprint 2', comprometido: totalScope, completado: stats.velocity }
-  ];
+  const velocityData = (reportData?.realVelocityData?.length > 0)
+    ? reportData.realVelocityData
+    : [
+        { sprint: 'Sprint 1', comprometido: Math.max(stats.velocity - 5, 20), completado: Math.max(stats.velocity - 10, 15) },
+        { sprint: 'Sprint 2', comprometido: totalScope, completado: stats.velocity }
+      ];
 
   // 4. Datos Percentiles (ScatterChart)
   const p50 = stats.cycleTime > 0 ? stats.cycleTime : 2.5;
@@ -421,13 +427,13 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, reportD
                 <div className="border border-gray-200 p-5 bg-white shadow-sm">
                   <div className="flex items-center gap-3 mb-2">
                     <div className={`w-3 h-3 rounded-full ${stats.bugs > 0 ? 'bg-amber-500' : 'bg-emerald-500'}`} />
-                    <h4 className="text-xs font-bold text-black uppercase tracking-widest">Calidad Técnica</h4>
+                    <h4 className="text-xs font-bold text-black uppercase tracking-widest">Defectos Escapados</h4>
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ml-auto ${stats.bugs > 0 ? 'text-amber-700 bg-amber-100' : 'text-emerald-700 bg-emerald-100'}`}>
-                      {stats.bugs > 0 ? 'Atención a Defectos' : 'Sin Incidencias Relevantes'}
+                      {stats.bugs > 0 ? 'Atención a Defectos' : 'Sin Defectos Escapados'}
                     </span>
                   </div>
                   <p className="text-[11px] text-gray-600 leading-relaxed text-justify ml-6">
-                    {insights.technicalQuality || (stats.bugs > 0 ? `Se registraron ${stats.bugs} incidencias correctivas (bugs) en este período. Es crítico mantener un balance técnico para evitar acumulación de deuda.` : 'No se detectaron niveles relevantes de fallos, indicando un proceso de aseguramiento de calidad satisfactorio en esta iteración.')}
+                    {insights.technicalQuality || (stats.bugs > 0 ? `Se registraron ${stats.bugs} defectos escapados en este período (fallos detectados post-desarrollo). Es crítico identificar la causa raíz para evitar que estos incidentes lleguen a producción.` : 'No se detectaron defectos escapados, indicando un proceso de aseguramiento de calidad satisfactorio desde la fase de desarrollo.')}
                   </p>
                 </div>
               </div>

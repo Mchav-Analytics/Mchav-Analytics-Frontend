@@ -159,10 +159,11 @@ export const projectService = {
 
   // Obtener data para el Cumulative Flow Diagram (CFD)
   getProjectCFD: async (projectId, sprintId = null) => {
-    let url = `/api/v1/projects/${projectId}/cfd`;
-    if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/cfd`;
+    let url = `/api/v1/flow/cfd-wip?proyecto_id=${projectId}`;
+    if (sprintId) url += `&sprint_id=${sprintId}`;
     const response = await api.get(url);
-    return response.data?.data || response.data;
+    // El backend retorna { wip: {...}, cfd: [...] } directamente
+    return response.data;
   },
 
   getProjects() {
@@ -605,6 +606,35 @@ export const aiService = {
   },
   getSuggestedPrompts() {
     return api.get('/api/v1/ai/prompts').then(res => res.data);
+  }
+};
+
+export const flowService = {
+  getCycleTime(projectId, sprintId = null) {
+    let url = `/api/v1/flow/cycle-time?proyecto_id=${projectId}`;
+    if (sprintId) url += `&sprint_id=${sprintId}`;
+    return api.get(url).then(res => res.data);
+  },
+  getEfficiency(projectId, sprintId = null) {
+    let url = `/api/v1/flow/efficiency?proyecto_id=${projectId}`;
+    if (sprintId) url += `&sprint_id=${sprintId}`;
+    return api.get(url).then(res => res.data);
+  },
+  getBottlenecks(projectId, sprintId = null) {
+    let url = `/api/v1/flow/bottlenecks?proyecto_id=${projectId}`;
+    if (sprintId) url += `&sprint_id=${sprintId}`;
+    return api.get(url).then(res => res.data);
+  },
+  getBlockers(projectId) {
+    return api.get(`/api/v1/flow/blockers?proyecto_id=${projectId}`).then(res => res.data);
+  },
+  getAging(projectId) {
+    return api.get(`/api/v1/flow/aging?proyecto_id=${projectId}`).then(res => res.data);
+  },
+  getCfdWip(projectId, sprintId = null) {
+    let url = `/api/v1/flow/cfd-wip?proyecto_id=${projectId}`;
+    if (sprintId) url += `&sprint_id=${sprintId}`;
+    return api.get(url).then(res => res.data);
   }
 };
 

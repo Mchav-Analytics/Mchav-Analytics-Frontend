@@ -12,9 +12,8 @@ export default function TeamMatrixLeaderboard({
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
           <Trophy size={20} className="text-amber-500 dark:text-amber-400" />
-          Ranking General & Diagnóstico Nubi IA por Desarrollador
+          Diagnóstico Nubi IA por Desarrollador
         </h2>
-        <span className="text-xs text-slate-500 dark:text-slate-400">Puntuación ponderada de 0 a 100 puntos</span>
       </div>
 
       <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl overflow-hidden shadow-sm dark:shadow-xl">
@@ -22,10 +21,8 @@ export default function TeamMatrixLeaderboard({
           <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
             <thead className="bg-slate-50 dark:bg-[#12142e] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-[#33376b]">
               <tr>
-                <th className="px-4 py-3 text-center">Rank</th>
                 <th className="px-4 py-3">Desarrollador</th>
                 <th className="px-4 py-3">Cuadrante Operativo</th>
-                <th className="px-4 py-3 text-center">Performance Score</th>
                 <th className="px-4 py-3 text-center">Throughput</th>
                 <th className="px-4 py-3 text-center">Cycle Time</th>
                 <th className="px-4 py-3 text-center">Calidad %</th>
@@ -42,17 +39,6 @@ export default function TeamMatrixLeaderboard({
                     key={dev.assignee_id}
                     className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    {/* RANK POSICIÓN */}
-                    <td className="px-4 py-4 text-center">
-                      <span className={`inline-flex items-center justify-center w-7 h-7 rounded-full font-bold text-xs ${dev.rank_posicion === 1 ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/40' :
-                          dev.rank_posicion === 2 ? 'bg-slate-200 text-slate-700 dark:bg-slate-400/20 dark:text-slate-300 border border-slate-300 dark:border-slate-400/40' :
-                            dev.rank_posicion === 3 ? 'bg-amber-700/15 text-amber-800 dark:text-amber-500 border border-amber-700/40' :
-                              'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
-                        }`}>
-                        {dev.rank_posicion}
-                      </span>
-                    </td>
-
                     {/* NOMBRE Y AVATAR */}
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
@@ -75,19 +61,6 @@ export default function TeamMatrixLeaderboard({
                         }`}>
                         {q.nombre || 'Desconocido'}
                       </span>
-                    </td>
-
-                    {/* SCORE (BARRA Y NÚMERO) */}
-                    <td className="px-4 py-4 text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">{dev.performance_score} pts</span>
-                        <div className="w-20 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                          <div
-                            className="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full"
-                            style={{ width: `${Math.min(dev.performance_score, 100)}%` }}
-                          />
-                        </div>
-                      </div>
                     </td>
 
                     {/* THROUGHPUT */}
