@@ -23,7 +23,7 @@ export const ActivityTimeline = ({
   return (
     <div className="space-y-4 animate-in fade-in duration-200 mt-4">
       {/* Barra de Resumen de Impacto en Timeline */}
-      <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 py-2.5 px-3.5 sm:px-4 rounded-xl bg-white dark:bg-[#141738]/50 border border-slate-200 dark:border-[#272b5c]/60 shadow-xs text-xs">
+      <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 py-2.5 px-3.5 sm:px-4 rounded-2xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs text-xs">
         <div className="flex items-center gap-1.5 whitespace-nowrap">
           <span className="text-slate-600 dark:text-slate-400 font-medium">Entregables:</span>
           <strong className="text-slate-900 dark:text-white font-mono font-bold">{activityFeed.length} tareas</strong>
@@ -48,7 +48,7 @@ export const ActivityTimeline = ({
       </div>
 
       {/* Contenedor del Timeline */}
-      <div className="flex flex-col rounded-2xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-xs overflow-hidden">
+      <div className="flex flex-col rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs overflow-hidden">
         
         {/* Header del Timeline con Filtros y Buscador */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 px-4 sm:px-5 py-3.5 border-b border-slate-200 dark:border-[#272b5c] bg-slate-50/70 dark:bg-[#0c0e21]/40">

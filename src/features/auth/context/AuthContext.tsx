@@ -122,12 +122,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
       const rolePref = localStorage.getItem('mchav_active_role');
       
-      const normRole = normalizeRole(userData.rol);
+      const normRole = normalizeRole(userData.rol || userData.nombre_rol);
       const isApproved = USE_MOCK_DATA 
         ? currentApproved.includes(userData.email) 
         : (userData.activo !== false);
 
-      const assignedRole = rolePref || (USE_MOCK_DATA ? (rolesMap[userData.email] || 'DEVELOPER') : 'DEVELOPER');
+      const assignedRole = rolePref || (USE_MOCK_DATA ? (rolesMap[userData.email] || 'DEVELOPER') : normRole);
 
       if (userData?.token || userData?.access_token) {
         localStorage.setItem('mchav_jwt_token', userData.token || userData.access_token);
@@ -181,9 +181,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
       // Comprobar si el usuario logueado está en la lista de aprobados por el Admin
       const currentApproved: string[] = JSON.parse(localStorage.getItem('mock_approved_users') || '["vhoyos@mchav.com"]');
       const rolesMap: Record<string, string> = JSON.parse(localStorage.getItem('mock_user_roles_map') || '{}');
+      const normRole = normalizeRole(loggedUser.rol || loggedUser.nombre_rol);
       
-      const isApproved = currentApproved.includes(loggedUser.email);
-      const assignedRole = localStorage.getItem('mchav_active_role') || (rolesMap[loggedUser.email] || 'DEVELOPER');
+      const isApproved = USE_MOCK_DATA ? currentApproved.includes(loggedUser.email) : (loggedUser.activo !== false);
+      const assignedRole = localStorage.getItem('mchav_active_role') || (USE_MOCK_DATA ? (rolesMap[loggedUser.email] || 'DEVELOPER') : normRole);
 
       const userWithStatus: AuthUser = {
         ...loggedUser,

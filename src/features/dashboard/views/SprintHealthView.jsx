@@ -3,7 +3,6 @@ import { useSprintHealth } from '../hooks/useSprintHealth';
 
 // Componentes extraídos
 import SprintHealthHeader from '../components/SprintHealthHeader';
-import SprintHealthNav from '../components/SprintHealthNav';
 import SprintHealthKpis from '../components/SprintHealthKpis';
 import SprintHealthChart from '../components/SprintHealthChart';
 
@@ -43,28 +42,25 @@ export default function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavi
   return (
     <div className="space-y-6 pb-12 font-sans text-left">
       
-      {/* 1. CABECERA PRINCIPAL DE SALUD DEL SPRINT */}
-      <SprintHealthHeader 
-        selectedProjectId={selectedProjectId}
-        onNavigateToProjects={onNavigateToProjects}
-        onNavigateToMatrix={onNavigateToMatrix}
-        healthScore={healthScore}
-      />
+      {/* CONTENEDOR MASTER UNIFICADO (EN UNA SOLA TARJETA) */}
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-6">
+        {/* 1. CABECERA PRINCIPAL DE SALUD DEL SPRINT */}
+        <SprintHealthHeader 
+          selectedProjectId={selectedProjectId}
+          onNavigateToProjects={onNavigateToProjects}
+          onNavigateToMatrix={onNavigateToMatrix}
+          healthScore={healthScore}
+        />
 
-      {/* 2. BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO CON SELECTOR DE SPRINT */}
-      <SprintHealthNav 
-        sprints={sprints}
-        selectedSprintId={selectedSprintId}
-        setSelectedSprintId={setSelectedSprintId}
-        onNavigateToMatrix={onNavigateToMatrix}
-        onNavigateToScorecards={onNavigateToScorecards}
-      />
-
-      {/* 3. KPIS Y ADVERTENCIAS DE SCOPE CREEP */}
-      <SprintHealthKpis 
-        metrics={metrics}
-        warning={warning}
-      />
+        {/* 2. KPIS, ADVERTENCIAS Y SELECTOR DE SPRINT */}
+        <SprintHealthKpis 
+          metrics={metrics}
+          warning={warning}
+          sprints={sprints}
+          selectedSprintId={selectedSprintId}
+          setSelectedSprintId={setSelectedSprintId}
+        />
+      </div>
 
       {/* 4. GRÁFICO DE EFICIENCIA DE FLUJO E INSIGHTS */}
       <SprintHealthChart 

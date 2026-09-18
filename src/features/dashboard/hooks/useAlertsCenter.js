@@ -96,7 +96,7 @@ const INITIAL_FEEDBACK_ITEMS = [
     priority: 'ALTA',
     project: 'Portal de Clientes & Seguridad',
     timeAgo: 'Hace 3 días',
-    author: 'Camila C.',
+    author: 'Camila Corredor (Líder Técnico)',
     recipient: 'Administrador Principal (Admin)',
     avatar: 'CC',
     comments: []
@@ -113,9 +113,111 @@ const INITIAL_FEEDBACK_ITEMS = [
     priority: 'MEDIA',
     project: 'Sistema Analytics MCHAV',
     timeAgo: 'Hace 4 días',
-    author: 'Valentina H.',
+    author: 'Valentina Montalvo (Desarrollador)',
     recipient: 'Mike A. (Desarrollador)',
     avatar: 'VH',
+    comments: []
+  },
+  {
+    id: 'fb-7',
+    rawHelpRequestId: 7,
+    isHelpRequest: true,
+    title: 'Solicitud de incremento de cuota en API Gateway',
+    summary: 'Se requiere aumentar la tasa límite de peticiones para atender el incremento de tráfico en el portal web.',
+    category: 'Procesos',
+    tags: ['#Procesos', 'Alta prioridad'],
+    status: 'PENDIENTE',
+    priority: 'ALTA',
+    project: 'API Gateway ETL',
+    timeAgo: 'Hace 3 horas',
+    author: 'Julián Torres (Líder Técnico)',
+    recipient: 'Administrador Principal (Admin)',
+    avatar: 'JT',
+    comments: []
+  },
+  {
+    id: 'fb-8',
+    rawHelpRequestId: 8,
+    isHelpRequest: true,
+    title: 'Actualización de políticas de retención de logs',
+    summary: 'Definir el período de almacenamiento en S3 para los registros auditados del backend.',
+    category: 'Documentación',
+    tags: ['#Documentación', 'Media prioridad'],
+    status: 'EN_PROCESO',
+    priority: 'MEDIA',
+    project: 'Portal de Clientes & Seguridad',
+    timeAgo: 'Hace 4 horas',
+    author: 'Camila Corredor (Líder Técnico)',
+    recipient: 'Administrador Principal (Admin)',
+    avatar: 'CC',
+    comments: []
+  },
+  {
+    id: 'fb-9',
+    rawHelpRequestId: 9,
+    isHelpRequest: true,
+    title: 'Revisión de matriz de permisos RBAC para nuevos módulos',
+    summary: 'Validar la asignación de roles de usuario en los módulos de reportería avanzada.',
+    category: 'Código',
+    tags: ['#Código', 'Media prioridad'],
+    status: 'PENDIENTE',
+    priority: 'MEDIA',
+    project: 'Sistema Analytics MCHAV',
+    timeAgo: 'Hace 6 horas',
+    author: 'Julián Torres (Líder Técnico)',
+    recipient: 'Administrador Principal (Admin)',
+    avatar: 'JT',
+    comments: []
+  },
+  {
+    id: 'fb-10',
+    rawHelpRequestId: 10,
+    isHelpRequest: true,
+    title: 'Optimización de pipelines de despliegue CI/CD',
+    summary: 'Reducir tiempos de build en los runner de GitHub Actions para el microservicio de reportes.',
+    category: 'Procesos',
+    tags: ['#Procesos', 'Baja prioridad'],
+    status: 'RESUELTO',
+    priority: 'BAJA',
+    project: 'API Gateway ETL',
+    timeAgo: 'Hace 1 día',
+    author: 'Camila Corredor (Líder Técnico)',
+    recipient: 'Administrador Principal (Admin)',
+    avatar: 'CC',
+    comments: []
+  },
+  {
+    id: 'fb-11',
+    rawHelpRequestId: 11,
+    isHelpRequest: true,
+    title: 'Integración de alertas de monitoreo en tiempo real',
+    summary: 'Configurar Webhooks de Sentry para notificaciones instantáneas de errores 500.',
+    category: 'UI/UX',
+    tags: ['#UI/UX', 'Alta prioridad'],
+    status: 'EN_PROCESO',
+    priority: 'ALTA',
+    project: 'Sistema Analytics MCHAV',
+    timeAgo: 'Hace 2 días',
+    author: 'Julián Torres (Líder Técnico)',
+    recipient: 'Administrador Principal (Admin)',
+    avatar: 'JT',
+    comments: []
+  },
+  {
+    id: 'fb-12',
+    rawHelpRequestId: 12,
+    isHelpRequest: true,
+    title: 'Renovación de certificados SSL y dominios principales',
+    summary: 'Planificar el ciclo de actualización de certificados TLS para endpoints de producción.',
+    category: 'Documentación',
+    tags: ['#Documentación', 'Baja prioridad'],
+    status: 'RESUELTO',
+    priority: 'BAJA',
+    project: 'Portal de Clientes & Seguridad',
+    timeAgo: 'Hace 3 días',
+    author: 'Camila Corredor (Líder Técnico)',
+    recipient: 'Administrador Principal (Admin)',
+    avatar: 'CC',
     comments: []
   }
 ];
@@ -133,18 +235,75 @@ const formatTimeAgo = (dateStr) => {
   if (!dateStr) return 'Reciente';
   try {
     const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+
     const now = new Date();
-    const diffMs = now - d;
+    const diffMs = Math.max(0, now - d);
     const diffMins = Math.floor(diffMs / (1000 * 60));
     if (diffMins < 5) return 'Hace un momento';
     if (diffMins < 60) return `Hace ${diffMins} min`;
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24) return `Hace ${diffHours} h`;
+    if (diffHours < 24) return diffHours === 1 ? 'Hace 1 hora' : `Hace ${diffHours} h`;
     const diffDays = Math.floor(diffHours / 24);
-    return `Hace ${diffDays} días`;
+    if (diffDays < 7) {
+      return diffDays === 1 ? 'Hace 1 día' : `Hace ${diffDays} días`;
+    }
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
   } catch (e) {
     return 'Reciente';
   }
+};
+
+export const isUserParticipantInFeedback = (user, item) => {
+  if (!user || !item) return true;
+
+  const userName = (user?.nombre || user?.email || '').trim().toLowerCase();
+  const userRole = (user?.rol || user?.role || '').toUpperCase();
+  const isAdmin = userRole.includes('ADMIN');
+  const isLeader = userRole.includes('MANAG') || userRole.includes('LIDER') || userRole.includes('LEAD');
+  const isDev = !isAdmin && !isLeader;
+
+  const itemAuthor = (item.author || '').trim().toLowerCase();
+  const itemRecipient = (item.recipient || '').trim().toLowerCase();
+  const itemTitle = (item.title || '').trim().toLowerCase();
+
+  const isAuthor = Boolean(itemAuthor && (itemAuthor === userName || userName.includes(itemAuthor) || itemAuthor.includes(userName)));
+  const isDirectRecipient = Boolean(itemRecipient && (itemRecipient === userName || userName.includes(itemRecipient) || itemRecipient.includes(userName)));
+
+  const recipientIsAdmin = itemRecipient.includes('admin') || itemRecipient.includes('administrador') || Boolean(item.isLeaderToAdmin) || itemTitle.includes('admin');
+  const recipientIsLeader = (itemRecipient.includes('líder') || itemRecipient.includes('lider') || itemRecipient.includes('manager') || itemRecipient.includes('camilo') || itemRecipient.includes('julián') || Boolean(item.isDevToLeader)) && !recipientIsAdmin;
+
+  // 1. VISTA ADMINISTRADOR:
+  // Lo que sea para Líder NUNCA debe salirle al Admin.
+  if (isAdmin) {
+    if (recipientIsLeader && !isAuthor && !isDirectRecipient) {
+      return false;
+    }
+    return recipientIsAdmin || isAuthor || isDirectRecipient;
+  }
+
+  // 2. VISTA LÍDER TÉCNICO:
+  // Lo que sea para Admin entre otro Líder y Admin NO le sale a este Líder si no es participante.
+  if (isLeader) {
+    if (recipientIsAdmin && !isAuthor && !isDirectRecipient) {
+      return false;
+    }
+    return true;
+  }
+
+  // 3. VISTA DESARROLLADOR:
+  // Lo que sea para Admin NUNCA le sale al Desarrollador.
+  if (isDev) {
+    if (recipientIsAdmin) {
+      return false;
+    }
+    return true;
+  }
+
+  return false;
 };
 
 export const getRecipientsForUserList = (currentUser, systemUsers = SYSTEM_USERS_FALLBACK, selectedProject = 'Sistema Analytics MCHAV') => {
@@ -157,50 +316,59 @@ export const getRecipientsForUserList = (currentUser, systemUsers = SYSTEM_USERS
   if (isAdmin) {
     return {
       recipients: users.filter(u => u.name !== currentUser?.nombre),
-      notice: 'Como Administrador, puedes enviar feedback a cualquier usuario del sistema.',
+      notice: 'Como Administrador, puedes enviar feedback a cualquier Líder Técnico o Desarrollador.',
       roleLabel: 'Administrador'
     };
   }
 
   if (isLeader) {
-    const leaderProj = currentUser?.project || selectedProject;
-    const filtered = users.filter(u => {
-      if (u.name === currentUser?.nombre) return false;
-      return u.role === 'ADMIN' || u.project === leaderProj || u.project === 'TODOS';
+    const leaderRecipients = users.filter(u => {
+      return u.role === 'ADMIN' || (u.role && u.role.includes('ADMIN')) || (u.name && u.name.includes('Admin'));
     });
     return {
-      recipients: filtered.length > 0 ? filtered : users,
-      notice: 'Como Líder Técnico, puedes enviar feedback al Administrador y a los miembros de tu equipo asignado.',
+      recipients: leaderRecipients.length > 0 ? leaderRecipients : users.filter(u => u.role === 'ADMIN'),
+      notice: 'Como Líder Técnico, puedes enviar feedback a los Administradores del sistema.',
       roleLabel: 'Líder Técnico'
     };
   }
 
-  // Developer
-  const devProj = currentUser?.project || selectedProject;
-  const filtered = users.filter(u => {
+  // Developer -> solo Líderes Técnicos
+  const devRecipients = users.filter(u => {
     if (u.name === currentUser?.nombre) return false;
-    const isTeammate = u.project === devProj;
-    const isLeaderOrAdmin = u.role === 'MANAGER' || u.role === 'ADMIN';
-    return isTeammate || (isLeaderOrAdmin && (u.project === devProj || u.project === 'TODOS'));
+    return u.role === 'MANAGER' || (u.role && u.role.includes('LIDER')) || (u.name && u.name.includes('Líder'));
   });
 
   return {
-    recipients: filtered.length > 0 ? filtered : users.filter(u => u.role === 'ADMIN' || u.role === 'MANAGER'),
-    notice: 'Como Desarrollador, puedes enviar feedback a tus compañeros de proyecto y a tu Líder Técnico.',
+    recipients: devRecipients.length > 0 ? devRecipients : users.filter(u => u.role === 'MANAGER'),
+    notice: 'Como Desarrollador, solo puedes enviar feedback a los Líderes Técnicos.',
     roleLabel: 'Desarrollador'
   };
 };
 
 export const useAlertsCenter = ({ selectedProjectId }) => {
   const { user } = useAuth();
-  const isAdmin = user?.rol?.toLowerCase().includes('admin') || user?.rol?.toLowerCase().includes('administrador');
+  const roleRaw = (user?.rol || user?.role || '').toUpperCase();
+  const isAdmin = roleRaw.includes('ADMIN');
+  const isLeader = roleRaw.includes('MANAG') || roleRaw.includes('LIDER') || roleRaw.includes('LEAD');
+  const isDev = !isAdmin && !isLeader;
 
   const [projectsList, setProjectsList] = useState(DEFAULT_PROJECTS);
   const [systemUsers, setSystemUsers] = useState(SYSTEM_USERS_FALLBACK);
 
   const [feedbackList, setFeedbackList] = useState(() => {
     const saved = localStorage.getItem('mchav_feedback_items');
-    return saved ? JSON.parse(saved) : INITIAL_FEEDBACK_ITEMS;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          const realUserItems = parsed.filter(item => !INITIAL_FEEDBACK_ITEMS.some(init => init.id === item.id));
+          if (realUserItems.length > 0) {
+            return realUserItems;
+          }
+        }
+      } catch (e) {}
+    }
+    return INITIAL_FEEDBACK_ITEMS;
   });
 
   const [expandedId, setExpandedId] = useState(null);
@@ -224,8 +392,11 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
   const [formRecipient, setFormRecipient] = useState('');
 
   useEffect(() => {
-    if (recipientsInfo.recipients && recipientsInfo.recipients.length > 0 && !formRecipient) {
-      setFormRecipient(recipientsInfo.recipients[0].name);
+    if (recipientsInfo.recipients && recipientsInfo.recipients.length > 0) {
+      const names = recipientsInfo.recipients.map(r => r.name);
+      if (!formRecipient || !names.includes(formRecipient)) {
+        setFormRecipient(recipientsInfo.recipients[0].name);
+      }
     }
   }, [recipientsInfo, formRecipient]);
 
@@ -283,23 +454,34 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       let realBackendItems = [];
 
       if (helpReqs && Array.isArray(helpReqs) && helpReqs.length > 0) {
-        const mappedReqs = helpReqs.map(r => ({
-          id: `hr-${r.id_solicitud}`,
-          rawHelpRequestId: r.id_solicitud,
-          isHelpRequest: true,
-          title: r.titulo || 'Solicitud de Apoyo Técnico',
-          summary: r.descripcion || 'Sin descripción adicional.',
-          category: r.key_issue ? 'Código' : 'Procesos',
-          tags: [r.key_issue || 'HelpRequest', r.prioridad || 'Media'],
-          status: (r.estado || '').toUpperCase().includes('RESUELT') ? 'RESUELTO' : (r.estado || '').toUpperCase().includes('ATENCION') || (r.estado || '').toUpperCase().includes('PROCESO') ? 'EN_PROCESO' : 'PENDIENTE',
-          priority: (r.prioridad || 'MEDIA').toUpperCase(),
-          project: r.id_proyecto || 'Sistema Analytics MCHAV',
-          timeAgo: formatTimeAgo(r.fecha_creacion),
-          author: r.solicitado_por_name || 'Desarrollador',
-          recipient: r.atendido_por_name || 'Equipo Técnico',
-          avatar: (r.solicitado_por_name || 'U')[0].toUpperCase(),
-          comments: []
-        }));
+        const mappedReqs = helpReqs.map(r => {
+          const userRoleUpper = (r.rol_usuario || '').toUpperCase();
+          const isFromLeader = userRoleUpper.includes('MANAG') || userRoleUpper.includes('LIDER') || userRoleUpper.includes('LEAD');
+          const defaultRec = isFromLeader ? 'Administrador Principal (Admin)' : 'Camilo Corredor (Líder Técnico)';
+
+          const recipientStr = r.atendido_por_name || r.destinatario || defaultRec;
+          const isLeaderToAdmin = isFromLeader || recipientStr.toLowerCase().includes('admin');
+
+          return {
+            id: `hr-${r.id_solicitud}`,
+            rawHelpRequestId: r.id_solicitud,
+            isHelpRequest: true,
+            isLeaderToAdmin: isLeaderToAdmin,
+            isDevToLeader: !isLeaderToAdmin,
+            title: r.titulo || 'Solicitud de Apoyo Técnico',
+            summary: r.descripcion || 'Sin descripción adicional.',
+            category: r.key_issue ? 'Código' : 'Procesos',
+            tags: [r.key_issue || 'HelpRequest', r.prioridad || 'Media'],
+            status: (r.estado || '').toUpperCase().includes('RESUELT') ? 'RESUELTO' : (r.estado || '').toUpperCase().includes('ATENCION') || (r.estado || '').toUpperCase().includes('PROCESO') ? 'EN_PROCESO' : 'PENDIENTE',
+            priority: (r.prioridad || 'MEDIA').toUpperCase(),
+            project: r.id_proyecto || 'Sistema Analytics MCHAV',
+            timeAgo: formatTimeAgo(r.fecha_creacion),
+            author: r.solicitado_por_name || (isFromLeader ? 'Camila C. (Líder Técnico)' : 'Valentina H. (Desarrolladora)'),
+            recipient: recipientStr,
+            avatar: (r.solicitado_por_name || 'U')[0].toUpperCase(),
+            comments: []
+          };
+        });
         realBackendItems = [...realBackendItems, ...mappedReqs];
       }
 
@@ -317,7 +499,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
           project: a.id_proyecto || 'Sistema Analytics MCHAV',
           timeAgo: formatTimeAgo(a.fecha_creacion),
           author: 'Motor de Agilidad AI',
-          recipient: a.assignee_name || 'Equipo Técnico',
+          recipient: a.assignee_name || 'Camilo Corredor (Líder Técnico)',
           avatar: 'A',
           comments: []
         }));
@@ -326,9 +508,29 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
 
       if (realBackendItems.length > 0) {
         setFeedbackList(prev => {
-          const ids = new Set(realBackendItems.map(b => b.id));
-          const localOnly = prev.filter(p => !ids.has(p.id) && !p.id.startsWith('fb-'));
-          return [...realBackendItems, ...localOnly];
+          const prevMap = new Map(prev.map(p => [p.id, p]));
+          const mergedBackend = realBackendItems.map(b => {
+            const existing = prevMap.get(b.id);
+            if (existing) {
+              const mergedComments = (existing.comments && existing.comments.length > 0) 
+                ? existing.comments 
+                : (b.comments || []);
+              const mergedRecipient = (existing.recipient && existing.recipient !== 'Camilo Corredor (Líder Técnico)') 
+                ? existing.recipient 
+                : b.recipient;
+              const mergedAuthor = existing.author || b.author;
+              return { 
+                ...b, 
+                recipient: mergedRecipient, 
+                author: mergedAuthor,
+                comments: mergedComments
+              };
+            }
+            return b;
+          });
+          const ids = new Set(mergedBackend.map(b => b.id));
+          const localOnly = prev.filter(p => !ids.has(p.id) && !INITIAL_FEEDBACK_ITEMS.some(init => init.id === p.id));
+          return [...mergedBackend, ...localOnly];
         });
       }
     } catch (err) {
@@ -348,10 +550,23 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       return;
     }
 
+    const roleUpper = (user?.rol || user?.role || 'DEVELOPER').toUpperCase();
+    const isAdminUser = roleUpper.includes('ADMIN');
+    const isLeaderUser = roleUpper.includes('MANAG') || roleUpper.includes('LIDER') || roleUpper.includes('LEAD');
+    const isDevUser = !isAdminUser && !isLeaderUser;
+
+    let selectedRecipient = formRecipient || recipientsInfo.recipients[0]?.name;
+    if (isDevUser || (selectedRecipient && selectedRecipient.includes('Admin') && !isLeaderUser && !isAdminUser)) {
+      selectedRecipient = 'Camilo Corredor (Líder Técnico)';
+    } else if (!selectedRecipient) {
+      selectedRecipient = isLeaderUser ? 'Administrador Principal (Admin)' : 'Camilo Corredor (Líder Técnico)';
+    }
+
     const payload = {
       id_proyecto: formProject,
       solicitado_por_name: user?.nombre || 'Usuario Actual',
       solicitado_por_email: user?.email || 'dev@mchav.com',
+      atendido_por_name: selectedRecipient,
       rol_usuario: (user?.rol || user?.role || 'DEVELOPER').toUpperCase(),
       titulo: formTitle.trim(),
       descripcion: formSummary.trim(),
@@ -366,10 +581,14 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       console.warn("Guardando feedback en almacenamiento local:", err);
     }
 
+    const isLeaderToAdmin = isLeaderUser || (formRecipient && formRecipient.includes('Admin'));
+
     const newItem = {
       id: createdReal?.id_solicitud ? `hr-${createdReal.id_solicitud}` : `fb-${Date.now()}`,
       rawHelpRequestId: createdReal?.id_solicitud || null,
       isHelpRequest: true,
+      isLeaderToAdmin: isLeaderToAdmin,
+      isDevToLeader: !isLeaderToAdmin,
       title: formTitle.trim(),
       summary: formSummary.trim(),
       category: formCategory,
@@ -379,7 +598,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       project: formProject,
       timeAgo: 'Creado ahora',
       author: user?.nombre || 'Usuario Actual',
-      recipient: formRecipient || recipientsInfo.recipients[0]?.name || 'Administrador Principal (Admin)',
+      recipient: isLeaderToAdmin ? 'Administrador Principal (Admin)' : 'Camilo Corredor (Líder Técnico)',
       avatar: (user?.nombre || 'U')[0].toUpperCase(),
       comments: []
     };
@@ -431,14 +650,22 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     }
   };
 
-  const handleAddComment = (itemId) => {
-    if (!newCommentText.trim()) return;
+  const handleAddComment = (itemId, textOverride = null) => {
+    const textToSend = textOverride !== null ? textOverride : newCommentText;
+    if (!textToSend || !textToSend.trim()) return;
+
+    const roleRaw = (user?.rol || user?.role || '').toUpperCase();
+    let authorName = user?.nombre || user?.email;
+    if (!authorName) {
+      authorName = roleRaw.includes('ADMIN') ? 'Administrador Principal (Admin)' : roleRaw.includes('MANAG') || roleRaw.includes('LIDER') ? 'Líder Técnico' : 'Desarrollador';
+    }
+
     setFeedbackList(prev => prev.map(item => {
       if (item.id === itemId) {
         const newCom = {
           id: Date.now(),
-          author: user?.nombre || 'Usuario Actual',
-          text: newCommentText.trim(),
+          author: authorName,
+          text: textToSend.trim(),
           time: 'Justo ahora'
         };
         return { ...item, comments: [...(item.comments || []), newCom] };
@@ -478,9 +705,14 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     }
   };
 
+  // Filtrar ítems visibles estrictamente según jerarquía (DEV <-> LÍDER <-> ADMIN)
+  const visibleFeedbackList = useMemo(() => {
+    return feedbackList.filter(item => isUserParticipantInFeedback(user, item));
+  }, [feedbackList, user]);
+
   const categoryCounts = useMemo(() => {
     const counts = { 'Código': 0, 'Documentación': 0, 'Procesos': 0, 'UI/UX': 0, 'Arquitectura': 0 };
-    feedbackList.forEach(item => {
+    visibleFeedbackList.forEach(item => {
       if (counts[item.category] !== undefined) {
         counts[item.category]++;
       } else {
@@ -488,10 +720,22 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       }
     });
     return counts;
-  }, [feedbackList]);
+  }, [visibleFeedbackList]);
+
+  const pendingCount = useMemo(() => {
+    return visibleFeedbackList.filter(item => item.status === 'PENDIENTE').length;
+  }, [visibleFeedbackList]);
+
+  const resolvedCount = useMemo(() => {
+    return visibleFeedbackList.filter(item => item.status === 'RESUELTO').length;
+  }, [visibleFeedbackList]);
+
+  const inProgressCount = useMemo(() => {
+    return visibleFeedbackList.filter(item => item.status === 'EN_PROCESO').length;
+  }, [visibleFeedbackList]);
 
   const filteredItems = useMemo(() => {
-    return feedbackList.filter(item => {
+    return visibleFeedbackList.filter(item => {
       const matchesSearch = !searchTerm.trim() ||
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -507,9 +751,6 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
         if (item.status !== 'EN_PROCESO') return false;
       } else if (statusTab === 'MY_ASSIGNED') {
         if (item.author !== user?.nombre) return false;
-      } else {
-        // Modo por defecto ('ALL'): Oculta los resueltos para que desaparezcan de la lista activa y queden en el Historial
-        if (item.status === 'RESUELTO') return false;
       }
 
       if (sidebarProject !== 'ALL' && item.project !== sidebarProject) return false;
@@ -526,14 +767,49 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       if (sortBy === 'project') return a.project.localeCompare(b.project);
       return 0; // recent
     });
-  }, [feedbackList, searchTerm, statusTab, sidebarProject, sidebarCategory, sidebarPriority, sidebarStatus, sortBy, user?.nombre]);
+  }, [visibleFeedbackList, searchTerm, statusTab, sidebarProject, sidebarCategory, sidebarPriority, sidebarStatus, sortBy, user?.nombre]);
 
-  const pendingCount = feedbackList.filter(i => i.status === 'PENDIENTE').length;
-  const resolvedCount = feedbackList.filter(i => i.status === 'RESUELTO').length;
-  const inProgressCount = feedbackList.filter(i => i.status === 'EN_PROCESO').length;
+  const [trendTimeframe, setTrendTimeframe] = useState('weekly');
+
+  const trendData = useMemo(() => {
+    if (trendTimeframe === 'monthly') {
+      const labels = ['May', 'Jun', 'Jul', 'Ago', 'Sep'];
+      return labels.map((label, idx) => {
+        // Al estar configurando el módulo ahora, los meses anteriores muestran 0
+        // y Septiembre refleja el total real de feedbacks registrados.
+        const count = idx === 4 ? visibleFeedbackList.length : 0;
+        return { name: label, val: count };
+      });
+    }
+    const labels = ['20 Ago', '27 Ago', '3 Sep', '10 Sep', '17 Sep'];
+    let count10Sep = 0;
+    let count17Sep = 0;
+    visibleFeedbackList.forEach(item => {
+      const timeStr = item.timeAgo || '';
+      if (timeStr.includes('5 días') || timeStr.includes('6 días') || timeStr.includes('7 días')) {
+        count10Sep++;
+      } else {
+        count17Sep++;
+      }
+    });
+    return labels.map((label, idx) => {
+      if (idx === 4) return { name: label, val: count17Sep };
+      if (idx === 3) return { name: label, val: count10Sep };
+      return { name: label, val: 0 };
+    });
+  }, [visibleFeedbackList, trendTimeframe]);
+
+  const projectCounts = useMemo(() => {
+    const counts = {};
+    visibleFeedbackList.forEach(item => {
+      const proj = (item.project || 'Sistema Analytics MCHAV').trim();
+      counts[proj] = (counts[proj] || 0) + 1;
+    });
+    return counts;
+  }, [visibleFeedbackList]);
 
   return {
-    user, isAdmin, toastMessage, setToastMessage,
+    user, isAdmin, isLeader, isDev, toastMessage, setToastMessage,
     projectsList, systemUsers,
     showCreateModal, setShowCreateModal,
     formTitle, setFormTitle, formSummary, setFormSummary,
@@ -546,6 +822,6 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     newCommentText, setNewCommentText, handleAddComment, handleToggleStatus,
     sidebarProject, setSidebarProject, sidebarCategory, setSidebarCategory,
     sidebarPriority, setSidebarPriority, sidebarStatus, setSidebarStatus,
-    categoryCounts
+    categoryCounts, projectCounts, trendData, trendTimeframe, setTrendTimeframe
   };
 };

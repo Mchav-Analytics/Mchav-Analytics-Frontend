@@ -1,5 +1,5 @@
 import React from 'react';
-import { Server, CheckCircle2, RefreshCcw, XCircle, Eye, RotateCw, Download, Play, MoreVertical } from 'lucide-react';
+import { Database, CheckCircle2, RefreshCcw, XCircle, Eye, RotateCw, Download, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { SyncStatus, SyncLog } from '../hooks/useSystemSync';
 import ContextMenu from '../../../components/ui/ContextMenu';
 
@@ -60,96 +60,107 @@ export default function SyncLogsViewer({
   };
 
   return (
-    <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-sm overflow-hidden mt-6">
-      <div className="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 flex items-center justify-between">
-        <div>
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-            <Server size={18} className="text-slate-500" />
-            Historial de Ejecución de Tareas (Logs)
-          </h2>
-          <p className="text-xs text-slate-400 mt-1">
-            Registro inmutable de auditoría de sincronizaciones.
-          </p>
+    <div className="w-full h-full bg-white dark:bg-[#141738] border border-slate-200/80 dark:border-[#272b5c] rounded-3xl shadow-xs overflow-hidden flex flex-col justify-between">
+      {/* HEADER */}
+      <div className="p-6 border-b border-slate-100 dark:border-[#272b5c] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <Database size={20} className="text-slate-700 dark:text-slate-300 mt-1 shrink-0" />
+          <div>
+            <h2 className="text-[18px] font-black text-slate-900 dark:text-white leading-tight">
+              Historial de Ejecución de Tareas (Logs)
+            </h2>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Registro inmutable de auditoría de sincronizaciones.
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Filtro Temporal */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <span className="text-[11px] font-bold text-slate-400">📅</span>
-            <select
-              value={timeFilter}
-              onChange={(e) => setTimeFilter(e.target.value)}
-              className="bg-transparent text-[11px] font-bold text-slate-600 dark:text-slate-300 outline-none cursor-pointer border-0 p-0"
-            >
-              <option value="all" className="bg-white dark:bg-slate-900">Todos los tiempos</option>
-              <option value="30d" className="bg-white dark:bg-slate-900">Últimos 30 días</option>
-              <option value="60d" className="bg-white dark:bg-slate-900">Últimos 2 meses</option>
-              <option value="90d" className="bg-white dark:bg-slate-900">Últimos 3 meses</option>
-            </select>
+          {/* Filtro Dropdown */}
+          <div className="relative">
+            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-[#1a1e47] border border-slate-200 dark:border-[#272b5c] text-[12px] font-bold text-slate-600 dark:text-slate-300">
+              <SlidersHorizontal size={13} className="text-slate-400" />
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value)}
+                className="bg-transparent text-[12px] font-bold text-slate-700 dark:text-slate-200 outline-none cursor-pointer border-0 p-0 pr-4 appearance-none"
+              >
+                <option value="all" className="bg-white dark:bg-slate-900">Todos los estados</option>
+                <option value="30d" className="bg-white dark:bg-slate-900">Últimos 30 días</option>
+                <option value="60d" className="bg-white dark:bg-slate-900">Últimos 2 meses</option>
+                <option value="90d" className="bg-white dark:bg-slate-900">Últimos 3 meses</option>
+              </select>
+              <div className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">▼</div>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <span className={`h-2 w-2 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : 'bg-teal-500'}`} />
-            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-50 dark:bg-[#1a1e47] border border-slate-200 dark:border-[#272b5c]">
+            <span className={`h-2 w-2 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : 'bg-emerald-500'}`} />
+            <span className="text-[12px] font-bold text-slate-700 dark:text-slate-300">
               {syncStatus.status === 'SYNCING' ? 'Worker Activo' : 'Worker en Reposo'}
             </span>
           </div>
         </div>
       </div>
 
-      <div className="overflow-x-auto w-full">
-        <table className="w-full text-sm text-left">
-          <thead className="bg-slate-50/70 dark:bg-slate-950/60 text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 text-xs uppercase tracking-wider font-bold">
+      {/* TABLA DE LOGS */}
+      <div className="overflow-x-auto w-full custom-scrollbar flex-1">
+        <table className="w-full text-sm text-left border-collapse">
+          <thead className="bg-slate-50/70 dark:bg-[#1a1e47]/60 text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-[#272b5c] text-[11px] uppercase tracking-wider font-extrabold">
             <tr>
-              <th className="px-6 py-4">ID Tarea</th>
-              <th className="px-6 py-4">Fecha y Hora</th>
-              <th className="px-6 py-4">Tipo</th>
-              <th className="px-6 py-4 text-center">Estado</th>
-              <th className="px-6 py-4 text-right">Issues Procesados</th>
-              <th className="px-6 py-4 text-right">Duración</th>
-              <th className="px-6 py-4">Iniciado Por</th>
-              <th className="px-6 py-4 text-center">Acciones</th>
+              <th className="px-5 py-3.5">ID TAREA</th>
+              <th className="px-5 py-3.5">FECHA Y HORA ⇅</th>
+              <th className="px-5 py-3.5">TIPO</th>
+              <th className="px-5 py-3.5 text-center">ESTADO</th>
+              <th className="px-5 py-3.5 text-center">ISSUES PROCESADOS</th>
+              <th className="px-5 py-3.5 text-center">DURACIÓN</th>
+              <th className="px-5 py-3.5">INICIADO POR</th>
+              <th className="px-5 py-3.5 text-center">ACCIONES</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">
+          <tbody className="divide-y divide-slate-100 dark:divide-[#272b5c] bg-white dark:bg-[#141738] text-slate-700 dark:text-slate-300">
             {filteredLogs.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-6 py-10 text-center text-slate-400">
+                <td colSpan={8} className="px-5 py-12 text-center text-slate-400 text-[13px]">
                   No se encontraron registros de sincronización.
                 </td>
               </tr>
             ) : (
               paginatedLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/20 transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-slate-500 dark:text-slate-400">
+                <tr key={log.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/30 transition-colors">
+                  <td className="px-5 py-4 font-mono text-[13px] text-slate-400 dark:text-slate-500 font-medium">
                     {log.id.replace('log-', '')}
                   </td>
-                  <td className="px-6 py-4 font-semibold text-xs whitespace-nowrap">
+                  <td className="px-5 py-4 font-bold text-[13px] text-slate-800 dark:text-slate-200 whitespace-nowrap">
                     {formatTimestamp(log.timestamp)}
                   </td>
-                  <td className="px-6 py-4 text-xs whitespace-nowrap">
+                  <td className="px-5 py-4 text-[12px] whitespace-nowrap">
                     {log.executionType === 'AUTOMATIC' ? (
-                      <span className="text-slate-500 font-medium">Sincronización Incremental Jira</span>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40">
+                        Sincronización Automática
+                      </span>
                     ) : (
-                      <span className="text-teal-600 dark:text-teal-400 font-semibold">Sincronización Manual</span>
+                      <span className="inline-flex items-center px-3 py-1 rounded-full font-bold bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 border border-sky-100 dark:border-sky-800/40">
+                        Sincronización Manual
+                      </span>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-center whitespace-nowrap">
+                  <td className="px-5 py-4 text-center whitespace-nowrap">
                     {log.result === 'SUCCESS' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-bold bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 border border-emerald-100 dark:border-emerald-800/40">
                         <CheckCircle2 size={12} /> Completado
                       </span>
                     ) : log.result === 'RUNNING' ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20">
+                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-bold bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-100 dark:border-amber-800/40">
                         <RefreshCcw size={12} className="animate-spin" /> Procesando...
                       </span>
                     ) : (
                       <div className="relative group inline-block">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-500/20 cursor-pointer">
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[12px] font-bold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-100 dark:border-rose-800/40 cursor-pointer">
                           <XCircle size={12} /> Fallo
                         </span>
                         {log.detalleError && (
-                          <div className="absolute right-0 top-full mt-2 w-72 bg-slate-800 dark:bg-slate-950 text-white text-[11px] rounded-xl p-3 shadow-xl z-20 hidden group-hover:block transition-all border border-slate-700 text-left font-sans">
+                          <div className="absolute right-0 top-full mt-2 w-72 bg-slate-800 dark:bg-slate-950 text-white text-[12px] rounded-xl p-3 shadow-xl z-20 hidden group-hover:block transition-all border border-slate-700 text-left font-sans">
                             <p className="font-semibold text-rose-400 mb-1">Detalle del Error:</p>
                             <p className="break-words line-clamp-4 leading-relaxed font-mono">
                               {log.detalleError}
@@ -159,17 +170,33 @@ export default function SyncLogsViewer({
                       </div>
                     )}
                   </td>
-                  <td className="px-6 py-4 text-right font-bold text-slate-800 dark:text-slate-100 text-xs">
+                  <td className="px-5 py-4 text-center font-black text-slate-900 dark:text-white text-[13px]">
                     {log.processedIssues}
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-slate-600 dark:text-slate-400 text-xs">
+                  <td className="px-5 py-4 text-center font-medium text-slate-500 dark:text-slate-400 text-[13px]">
                     {formatDuration(log.durationSeconds, log.result)}
                   </td>
-                  <td className="px-6 py-4 text-xs whitespace-nowrap font-medium">
+                  <td className="px-5 py-4 text-[13px] whitespace-nowrap font-bold text-slate-700 dark:text-slate-300">
                     {log.ejecutadoPor}
                   </td>
-                  <td className="px-6 py-4 text-center">
-                    <div className="flex items-center justify-center">
+                  <td className="px-5 py-4 text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <button
+                        type="button"
+                        title="Ver detalles"
+                        onClick={() => handleShowLogDetail(log)}
+                        className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <Eye size={15} />
+                      </button>
+                      <button
+                        type="button"
+                        title="Descargar log"
+                        onClick={() => handleDownloadLog(log)}
+                        className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <Download size={15} />
+                      </button>
                       <ContextMenu actions={[
                         { label: 'Ver detalles', icon: Eye, onClick: () => handleShowLogDetail(log) },
                         { label: 'Re-ejecutar esta tarea', icon: RotateCw, onClick: () => handleManualSync(), hidden: syncStatus.status === 'SYNCING' },
@@ -184,49 +211,41 @@ export default function SyncLogsViewer({
         </table>
       </div>
 
-      {/* Barra de Paginación */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/20 text-xs">
-        <div className="flex flex-wrap items-center gap-4">
-          <button
-            onClick={handleManualSync}
-            disabled={syncStatus.status === 'SYNCING'}
-            className="flex items-center justify-center gap-2 rounded-xl bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 text-xs font-bold transition-colors shadow-sm disabled:opacity-75 cursor-pointer"
-          >
-            {syncStatus.status === 'SYNCING' ? (
-              <>
-                <RefreshCcw size={14} className="animate-spin" />
-                Procesando en segundo plano...
-              </>
-            ) : (
-              <>
-                <Play size={14} fill="currentColor" />
-                Ejecutar Sincronización Manual Ahora
-              </>
-            )}
-          </button>
+      {/* BARRA DE PAGINACIÓN */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-100 dark:border-[#272b5c] bg-slate-50/50 dark:bg-[#1a1e47]/30 text-[13px]">
+        <span className="text-slate-500 dark:text-slate-400 font-medium">
+          Mostrando del {filteredLogs.length > 0 ? ((logPage - 1) * logsPerPage) + 1 : 0} al {Math.min(logPage * logsPerPage, filteredLogs.length)} de {filteredLogs.length} registros
+        </span>
 
-          <span className="text-slate-500 dark:text-slate-400 font-medium">
-            Mostrando del {filteredLogs.length > 0 ? ((logPage - 1) * logsPerPage) + 1 : 0} al {Math.min(logPage * logsPerPage, filteredLogs.length)} de {filteredLogs.length} registros
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => setLogPage(p => Math.max(p - 1, 1))}
             disabled={logPage === 1}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#272b5c] bg-white dark:bg-[#141738] text-slate-500 dark:text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer"
           >
-            Anterior
+            <ChevronLeft size={16} />
           </button>
-          <span className="text-xs font-bold text-slate-600 dark:text-slate-300 px-2">
-            Página {logPage} de {totalLogPages}
-          </span>
+          
+          {Array.from({ length: totalLogPages }).map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setLogPage(i + 1)}
+              className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-all shadow-xs ${
+                logPage === i + 1
+                  ? 'bg-indigo-600 text-white shadow-indigo-500/30'
+                  : 'bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] text-slate-600 dark:text-slate-300 hover:bg-slate-50'
+              }`}
+            >
+              {i + 1}
+            </button>
+          ))}
+
           <button
             onClick={() => setLogPage(p => Math.min(p + 1, totalLogPages))}
             disabled={logPage === totalLogPages || filteredLogs.length === 0}
-            className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#272b5c] bg-white dark:bg-[#141738] text-slate-500 dark:text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer"
           >
-            Siguiente
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>

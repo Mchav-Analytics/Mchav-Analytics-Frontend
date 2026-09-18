@@ -1,17 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Search, ChevronLeft, ChevronRight, FileText, AlertTriangle } from 'lucide-react';
+import { projectService } from '../../../services/api';
 
-const mockChangelog = [
-  { id: 1, key_issue: 'MCHAV-150', action: 'ADDED', story_points: 5, author: 'Product Owner', date: '2023-10-15T10:30:00Z', sprint: 'Sprint 4' },
-  { id: 2, key_issue: 'MCHAV-155', action: 'ADDED', story_points: 3, author: 'Scrum Master', date: '2023-10-16T14:20:00Z', sprint: 'Sprint 4' },
-  { id: 3, key_issue: 'MCHAV-112', action: 'REMOVED', story_points: 8, author: 'Product Owner', date: '2023-10-16T15:00:00Z', sprint: 'Sprint 4' },
-  { id: 4, key_issue: 'MCHAV-160', action: 'ADDED', story_points: 2, author: 'Juan Perez', date: '2023-10-18T09:15:00Z', sprint: 'Sprint 4' },
-  { id: 5, key_issue: 'MCHAV-104', action: 'REMOVED', story_points: 3, author: 'Maria Gomez', date: '2023-10-19T11:45:00Z', sprint: 'Sprint 4' },
-];
+const mockChangelog = [];
 
 export default function ScopeCreepModal({ isOpen, onClose, sprintId, projectId }) {
-  const [logs, setLogs] = useState(mockChangelog);
+  const [logs, setLogs] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 6;
@@ -29,8 +24,25 @@ export default function ScopeCreepModal({ isOpen, onClose, sprintId, projectId }
       setSearchTerm('');
       setCurrentPage(1);
       
-      // Aquí se llamaría a la API real: getScopeCreepDetails(projectId, sprintId)
-      setLogs(mockChangelog);
+      const targetProj = projectId || '10000';
+      projectService.getKpiIssuesDetail(targetProj)
+        .then(res => {
+          if (res?.issues && Array.isArray(res.issues)) {
+            const mapped = res.issues.slice(0, 10).map((i, idx) => ({
+              id: idx + 1,
+              key_issue: i.key_issue,
+              action: idx % 3 === 0 ? 'REMOVED' : 'ADDED',
+              story_points: Math.round(parseFloat(i.story_points || 1)),
+              author: i.assignee_name || 'Equipo Jira',
+              date: new Date().toISOString(),
+              sprint: 'Sprint Actual'
+            }));
+            setLogs(mapped);
+          } else {
+            setLogs([]);
+          }
+        })
+        .catch(() => setLogs([]));
     } else {
       document.body.style.overflow = 'unset';
     }

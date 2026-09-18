@@ -66,7 +66,7 @@ export function useDashboard(selectedProjectId) {
   }, []);
 
   const projectsHealthList = useMemo(() => {
-    if (!realProjects || realProjects.length === 0) return mockProjectsHealthList;
+    if (!realProjects || realProjects.length === 0) return [];
     return realProjects.map((p, idx) => ({
       id: p.id_proyecto || `proj-${idx}`,
       key: p.key_proyecto || p.key || 'SCRUM',
@@ -81,7 +81,7 @@ export function useDashboard(selectedProjectId) {
   }, [realProjects]);
 
   const totalProjectsCount = useMemo(() => {
-    return realProjects.length > 0 ? realProjects.length : 2;
+    return realProjects.length;
   }, [realProjects]);
 
   const estadoDonutData = useMemo(() => {

@@ -87,7 +87,7 @@ const CustomVelocityTooltip = ({ active, payload, label, isDark }) => {
 
 export default function LiderVelocityChart({ velocityData, velocityStats, isDarkMode }) {
   return (
-    <div className="lg:col-span-7 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 shadow-sm flex flex-col h-fit space-y-4">
+    <div className="lg:col-span-7 bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 shadow-2xs flex flex-col h-fit space-y-4">
       <div className="flex flex-col space-y-2.5 pb-2 border-b border-slate-100 dark:border-slate-800">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-1.5">

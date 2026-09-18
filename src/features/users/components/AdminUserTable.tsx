@@ -28,7 +28,7 @@ export default function AdminUserTable({
   toggleUserStatus
 }: AdminUserTableProps) {
   return (
-    <section className="relative bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-3xl p-5 sm:p-6 shadow-sm dark:shadow-2xl space-y-4">
+    <section className="relative bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
       <div className="flex items-center justify-between gap-3 pb-1">
         <h4 className="text-sm font-black text-slate-800 dark:text-slate-100 tracking-tight">
           Listado de cuentas

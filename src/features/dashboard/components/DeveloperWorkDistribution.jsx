@@ -13,7 +13,7 @@ const tooltipStyle = {
 
 export const DeveloperWorkDistribution = ({ donutData, totalCount, typeFilter, setTypeFilter, setCurrentPage }) => {
   return (
-    <div className="lg:col-span-5 p-5 sm:p-7 rounded-3xl bg-white/80 dark:bg-[#141738]/80 backdrop-blur-md border border-slate-200/80 dark:border-[#272b5c]/80 shadow-sm space-y-4 flex flex-col justify-between relative overflow-hidden group h-full">
+    <div className="lg:col-span-5 p-5 sm:p-7 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs space-y-4 flex flex-col justify-between relative overflow-hidden group h-full">
       <div className="absolute top-0 left-0 w-32 h-32 bg-indigo-500 rounded-full blur-[60px] -z-10 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity"></div>
       <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
         <div className="space-y-0.5">

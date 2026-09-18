@@ -5,7 +5,7 @@ export default function GeminiInsightsCard({ geminiInsights }) {
   if (!geminiInsights) return null;
 
   return (
-    <div className="w-full rounded-3xl bg-gradient-to-r from-indigo-900/40 via-purple-900/30 to-slate-900/60 p-5 border border-indigo-500/30 shadow-xl backdrop-blur-md space-y-3.5 text-left">
+    <div className="w-full rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 sm:p-6 shadow-2xs space-y-3.5 text-left">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5 text-indigo-300 font-black text-xs uppercase tracking-wider">
           <div className="flex h-7 w-7 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">

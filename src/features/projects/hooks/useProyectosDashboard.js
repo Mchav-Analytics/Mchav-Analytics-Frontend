@@ -76,6 +76,8 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
   }, []);
 
   // Fetch de Burndown, Sprints e Incidencias Reales según el proyecto seleccionado
+  const [realHealthData, setRealHealthData] = useState(null);
+
   useEffect(() => {
     // Si selectedProjectId es 'ALL', usamos el primer proyecto real disponible
     // Si realProjects aún no cargó, no hacemos la llamada para evitar usar 'PROJ-01' como fallback incorrecto
@@ -87,6 +89,12 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
     } else {
       return; // Esperar a que carguen los proyectos reales
     }
+
+    projectService.getSprintHealth(targetProjId)
+      .then(res => {
+        if (res && res.metrics) setRealHealthData(res.metrics);
+      })
+      .catch(() => setRealHealthData(null));
 
     projectService.getProjectBurnup(targetProjId)
       .then(res => {
@@ -198,21 +206,6 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
 
     const projKey = selectedProjectObj?.key || selectedProjectId;
 
-    if (times.length < 5) {
-      const baseMap = {
-        'ALL': [1.2, 1.5, 1.8, 2.0, 2.1, 2.5, 2.8, 3.2, 3.8, 4.0, 5.5, 6.0, 8.0, 9.5],
-        '10000': [1.2, 1.5, 1.8, 2.0, 2.1, 2.3, 2.6, 2.9, 3.4, 3.8, 4.0, 5.2, 6.5, 8.0],
-        '10033': [3.5, 4.2, 5.0, 6.2, 8.5, 12.0, 15.2, 18.0, 22.5, 28.0, 33.0, 42.2, 45.0, 52.0],
-        'PROJ-01': [1.2, 1.5, 1.8, 2.0, 2.1, 2.3, 2.6, 2.9, 3.4, 3.8, 4.0, 5.2, 6.5, 8.0],
-        'PROJ-02': [3.5, 4.2, 5.0, 6.2, 8.5, 12.0, 15.2, 18.0, 22.5, 28.0, 33.0, 42.2, 45.0, 52.0]
-      };
-      baseMap['SC'] = baseMap['10000'];
-      baseMap['PA'] = baseMap['10033'];
-      baseMap['MA'] = baseMap['10000'];
-
-      times = baseMap[selectedProjectId] || baseMap[projKey] || baseMap['ALL'];
-    }
-
     times.sort((a, b) => a - b);
 
     const getPercentile = (pct) => {
@@ -313,11 +306,7 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
       if (members.length > 0) return members;
     }
 
-    return [
-      { id: '1', role: 'LÍDER', initial: 'V', name: 'Valentina Montalvo', userStatus: 'Activo', tasks: '2 tareas (5 SP)', color: '#8b5cf6' },
-      { id: '2', role: 'DEV', initial: 'S', name: 'Stephany León', userStatus: 'Activo', tasks: '4 tareas (12 SP)', color: '#2563eb' },
-      { id: '3', role: 'DEV', initial: 'C', name: 'Camilo Corredor', userStatus: 'Activo', tasks: '3 tareas (8 SP)', color: '#10b981' }
-    ];
+    return [];
   }, [realIssues]);
 
   const handleSyncNow = () => {
@@ -332,6 +321,20 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
 
   // Métricas de Salud del Sprint dinámicas según proyecto seleccionado
   const activeHealthMetrics = useMemo(() => {
+    if (realHealthData) {
+      return {
+        commitment_reliability_pct: realHealthData.commitment_reliability_pct ?? 90.0,
+        sp_completed: realHealthData.sp_completed ?? 0,
+        sp_planned: realHealthData.sp_planned ?? 0,
+        scope_creep_pct: realHealthData.scope_creep_pct ?? 0,
+        sp_added_mid_sprint: realHealthData.sp_added_mid_sprint ?? 0,
+        carryover_pct: realHealthData.carryover_pct ?? 0,
+        sp_carryover: realHealthData.sp_carryover ?? 0,
+        flow_efficiency_pct: realHealthData.flow_efficiency_pct ?? 80.0,
+        active_dev_days: realHealthData.active_dev_days ?? 0,
+        waiting_queue_days: realHealthData.waiting_queue_days ?? 0
+      };
+    }
     const projKey = selectedProjectObj?.key || selectedProjectId;
     const map = {
       'ALL': {
@@ -378,7 +381,7 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
     map['PROJ-02'] = map['10033'];
 
     return map[selectedProjectId] || map[projKey] || map['ALL'];
-  }, [selectedProjectId, selectedProjectObj]);
+  }, [selectedProjectId, selectedProjectObj, realHealthData]);
 
   return {
     searchTerm,

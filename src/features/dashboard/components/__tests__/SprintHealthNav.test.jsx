@@ -22,12 +22,10 @@ describe('SprintHealthNav Component', () => {
     vi.clearAllMocks();
   });
 
-  it('renders navigation buttons correctly', () => {
+  it('renders navigation title correctly', () => {
     render(<SprintHealthNav {...defaultProps} />);
     
-    expect(screen.getByText('Matriz 4 Cuadrantes')).toBeInTheDocument();
     expect(screen.getByText('Salud del Sprint & Flow')).toBeInTheDocument();
-    expect(screen.getByText('Scorecards Desarrolladores')).toBeInTheDocument();
   });
 
   it('renders sprints dropdown correctly and handles changes', () => {
@@ -40,7 +38,7 @@ describe('SprintHealthNav Component', () => {
     // Check options
     expect(screen.getByText('Sprint 1')).toBeInTheDocument();
     expect(screen.getByText('Sprint 2 (Alt Name)')).toBeInTheDocument();
-    expect(screen.getByText('S3')).toBeInTheDocument(); // fallback to id
+    expect(screen.getByText('S3')).toBeInTheDocument();
     
     // Change selection
     fireEvent.change(select, { target: { value: 'S2' } });
@@ -52,15 +50,5 @@ describe('SprintHealthNav Component', () => {
     
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     expect(screen.getByText('Kanban / Sin Sprints Scrum')).toBeInTheDocument();
-  });
-
-  it('calls navigation handlers when buttons are clicked', () => {
-    render(<SprintHealthNav {...defaultProps} />);
-    
-    fireEvent.click(screen.getByText('Matriz 4 Cuadrantes'));
-    expect(defaultProps.onNavigateToMatrix).toHaveBeenCalledTimes(1);
-
-    fireEvent.click(screen.getByText('Scorecards Desarrolladores'));
-    expect(defaultProps.onNavigateToScorecards).toHaveBeenCalledTimes(1);
   });
 });

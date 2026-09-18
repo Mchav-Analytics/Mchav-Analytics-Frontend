@@ -6,8 +6,8 @@ export const useDeveloperDashboard = ({ projects, selectedProjectId }) => {
   const { user } = useAuth();
   const [scorecard, setScorecard] = useState(null);
   const [aiCoachTip, setAiCoachTip] = useState(null);
-  const [efficiencyGain, setEfficiencyGain] = useState(14);
-  const [cleanDeliveries, setCleanDeliveries] = useState(100);
+  const [efficiencyGain, setEfficiencyGain] = useState(0);
+  const [cleanDeliveries, setCleanDeliveries] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [taskFilter, setTaskFilter] = useState('ALL');
   const [typeFilter, setTypeFilter] = useState('ALL');

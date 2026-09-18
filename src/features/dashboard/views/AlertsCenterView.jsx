@@ -4,6 +4,7 @@ import { useAlertsCenter } from '../hooks/useAlertsCenter';
 import { AlertsCenterHeader } from '../components/AlertsCenterHeader';
 import { AlertsCenterList } from '../components/AlertsCenterList';
 import { AlertsCenterWidgets } from '../components/AlertsCenterWidgets';
+import { AlertsCenterDetailPanel } from '../components/AlertsCenterDetailPanel';
 import { AlertsCenterBottomWidgets } from '../components/AlertsCenterBottomWidgets';
 import { AlertsCenterModal } from '../components/AlertsCenterModal';
 
@@ -22,8 +23,14 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
     newCommentText, setNewCommentText, handleAddComment, handleToggleStatus,
     sidebarProject, setSidebarProject, sidebarCategory, setSidebarCategory,
     sidebarPriority, setSidebarPriority, sidebarStatus, setSidebarStatus,
-    categoryCounts
+    categoryCounts, projectCounts, trendData, trendTimeframe, setTrendTimeframe,
+    isAdmin, isLeader, isDev
   } = useAlertsCenter({ selectedProjectId });
+
+  const selectedItem = React.useMemo(() => {
+    if (!expandedId) return null;
+    return filteredItems.find(item => item.id === expandedId) || null;
+  }, [expandedId, filteredItems]);
 
   return (
     <div className="space-y-6 text-left animate-in fade-in duration-200 font-sans pb-10">
@@ -47,6 +54,8 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
         inProgressCount={inProgressCount}
         statusTab={statusTab}
         setStatusTab={setStatusTab}
+        searchTerm={searchTerm}
+        setSearchTerm={setSearchTerm}
         sidebarProject={sidebarProject}
         setSidebarProject={setSidebarProject}
         sidebarCategory={sidebarCategory}
@@ -54,9 +63,12 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
         sidebarPriority={sidebarPriority}
         setSidebarPriority={setSidebarPriority}
         projectsList={projectsList}
+        isAdmin={isAdmin}
+        isLeader={isLeader}
+        isDev={isDev}
       />
 
-      {/* Main Grid: Feed List (8 cols) + Sidebar Widgets (4 cols) */}
+      {/* Main Grid: Feed List (8 cols) + Sidebar / Detail Panel (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <AlertsCenterList 
           statusTab={statusTab} setStatusTab={setStatusTab}
@@ -70,24 +82,49 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
           setSidebarCategory={setSidebarCategory}
           setSidebarPriority={setSidebarPriority}
           setSidebarStatus={setSidebarStatus}
+          isAdmin={isAdmin}
+          isLeader={isLeader}
+          isDev={isDev}
         />
 
-        <AlertsCenterWidgets 
+        <div className="lg:col-span-4">
+          {selectedItem ? (
+            <AlertsCenterDetailPanel
+              item={selectedItem}
+              onClose={() => setExpandedId(null)}
+              onAddComment={(itemId, text) => handleAddComment(itemId, text)}
+              onToggleStatus={(itemId, targetStatus) => handleToggleStatus(itemId, targetStatus)}
+            />
+          ) : (
+            <AlertsCenterWidgets 
+              categoryCounts={categoryCounts}
+              projectCounts={projectCounts}
+              trendData={trendData}
+              trendTimeframe={trendTimeframe}
+              setTrendTimeframe={setTrendTimeframe}
+              sidebarCategory={sidebarCategory}
+              setSidebarCategory={setSidebarCategory}
+              setStatusTab={setStatusTab}
+              isAdmin={isAdmin}
+              isLeader={isLeader}
+              isDev={isDev}
+            />
+          )}
+        </div>
+      </div>
+
+      {/* Bottom Widgets: Tendencia de feedback general + Áreas que requieren atención (Solo vista Admin) */}
+      {isAdmin && (
+        <AlertsCenterBottomWidgets
           categoryCounts={categoryCounts}
+          trendData={trendData}
+          trendTimeframe={trendTimeframe}
+          setTrendTimeframe={setTrendTimeframe}
           sidebarCategory={sidebarCategory}
           setSidebarCategory={setSidebarCategory}
           setStatusTab={setStatusTab}
         />
-      </div>
-
-      {/* 4 Bottom Metric Widgets */}
-      <AlertsCenterBottomWidgets 
-        setStatusTab={setStatusTab}
-        setSidebarCategory={setSidebarCategory}
-        onNavigateTab={onNavigateTab}
-      />
-
-      {/* Modal for Creating New Feedback */}
+      )}
       <AlertsCenterModal 
         showCreateModal={showCreateModal} setShowCreateModal={setShowCreateModal}
         formTitle={formTitle} setFormTitle={setFormTitle}

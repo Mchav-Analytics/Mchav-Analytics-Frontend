@@ -13,7 +13,7 @@ export default function SprintHealthChart({ stages, insight, metrics, isDark }) 
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       
       {/* GRÁFICO DE BARRAS DE TIEMPO ACUMULADO POR ETAPA */}
-      <div className="lg:col-span-2 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4">
+      <div className="lg:col-span-2 bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
             <BarChart3 size={18} className="text-indigo-600 dark:text-indigo-400" />
@@ -97,7 +97,7 @@ export default function SprintHealthChart({ stages, insight, metrics, isDark }) 
       </div>
 
       {/* CUELLO DE BOTELLA CLAVE E INSIGHT ANALÍTICO */}
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-4 flex flex-col justify-between">
         <div className="space-y-3">
           <div className="flex items-center gap-1.5 text-indigo-600 dark:text-indigo-400 font-bold text-sm">
             <span>Identificación de Cuellos de Botella</span>

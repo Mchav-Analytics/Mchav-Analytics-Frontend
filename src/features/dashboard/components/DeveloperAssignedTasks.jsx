@@ -6,7 +6,7 @@ export const DeveloperAssignedTasks = ({ filteredTasks, taskFilter, setTaskFilte
   const paginatedTasks = filteredTasks.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
-    <div className="lg:col-span-7 p-5 sm:p-7 rounded-3xl bg-white/80 dark:bg-[#141738]/80 backdrop-blur-md border border-slate-200/80 dark:border-[#272b5c]/80 shadow-sm space-y-4 flex flex-col justify-between min-w-0 relative overflow-hidden group">
+    <div className="lg:col-span-7 p-5 sm:p-7 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs space-y-4 flex flex-col justify-between min-w-0 relative overflow-hidden group">
       <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500 rounded-full blur-[60px] -z-10 opacity-[0.05] group-hover:opacity-[0.1] transition-opacity"></div>
       
       {/* CABECERA Y FILTROS */}

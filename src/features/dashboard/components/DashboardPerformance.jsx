@@ -14,7 +14,7 @@ export default function DashboardPerformance({
   openDrillDown
 }) {
   return (
-    <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4">
+    <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-4">
       
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">

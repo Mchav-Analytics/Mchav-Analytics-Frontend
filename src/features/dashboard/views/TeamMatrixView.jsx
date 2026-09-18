@@ -51,7 +51,7 @@ function TeamMatrixView({
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-sm font-medium text-slate-400">Calculando métricas de la Matriz 4 Cuadrantes para {selectedProjectId}...</p>
+          <p className="text-sm font-medium text-slate-400">Calculando métricas de la Matriz de Flujo y Eficiencia para {selectedProjectId}...</p>
         </div>
       </div>
     );
@@ -63,26 +63,29 @@ function TeamMatrixView({
   return (
     <div className="space-y-6 pb-12 font-sans text-left">
 
-      {/* BARRA SUPERIOR DE MATRIZ DE EQUIPO CON SELECTOR DE EQUIPO JIRA */}
-      <TeamMatrixHeader
-        selectedProjectId={selectedProjectId}
-        onSelectProject={handleSelectProject}
-        allProjects={allProjects}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-        onOpenGuide={() => setIsGuideOpen(true)}
-      />
+      {/* CONTENEDOR MAESTRO DE CABECERA Y NAVEGACIÓN */}
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 transition-all">
+        {/* BARRA SUPERIOR DE MATRIZ DE EQUIPO CON SELECTOR DE EQUIPO JIRA */}
+        <TeamMatrixHeader
+          selectedProjectId={selectedProjectId}
+          onSelectProject={handleSelectProject}
+          allProjects={allProjects}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+          onOpenGuide={() => setIsGuideOpen(true)}
+        />
 
-      {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO POR EQUIPO (PROYECTO JIRA) */}
-      <TeamMatrixNav 
-        selectedProjectId={selectedProjectId}
-        onSelectProject={handleSelectProject}
-        allProjects={allProjects}
-        onNavigateToHealth={onNavigateToHealth}
-        onSelectDevForScorecard={onSelectDevForScorecard}
-        topPerformer={topPerformer}
-        qualityThreshold={activeThreshold}
-        activeModelName={activeModelName}
-      />
+        {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO POR EQUIPO (PROYECTO JIRA) */}
+        <TeamMatrixNav 
+          selectedProjectId={selectedProjectId}
+          onSelectProject={handleSelectProject}
+          allProjects={allProjects}
+          onNavigateToHealth={onNavigateToHealth}
+          onSelectDevForScorecard={onSelectDevForScorecard}
+          topPerformer={topPerformer}
+          qualityThreshold={activeThreshold}
+          activeModelName={activeModelName}
+        />
+      </div>
 
       {/* TARJETAS DE KPIS COMPARATIVOS */}
       <TeamMatrixKpis 

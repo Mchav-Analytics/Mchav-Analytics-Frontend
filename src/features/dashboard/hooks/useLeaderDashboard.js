@@ -80,21 +80,11 @@ export function useLeaderDashboard(selectedProjectId) {
               a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: 'base' })
             );
 
-            let mockIndex = 0;
-            const mockPlanned = [45, 50, 48, 55, 60];
-            const mockCompleted = [40, 48, 40, 52, 58];
-            
             for (const sp of sortedSprints.slice(-5)) {
               try {
                 const health = await projectService.getSprintHealth(projectId, sp.id_sprint);
-                let planned = health?.metrics?.sp_planned || 0;
-                let completed = health?.metrics?.sp_completed || 0;
-                
-                if (planned === 0 && completed === 0) {
-                  planned = mockPlanned[mockIndex % mockPlanned.length];
-                  completed = mockCompleted[mockIndex % mockCompleted.length];
-                  mockIndex++;
-                }
+                const planned = health?.metrics?.sp_planned ?? sp.sp_comprometidos ?? 0;
+                const completed = health?.metrics?.sp_completed ?? sp.sp_completados ?? 0;
                 
                 chartData.push({
                   sprint: sp.nombre,
@@ -104,10 +94,9 @@ export function useLeaderDashboard(selectedProjectId) {
               } catch (e) {
                 chartData.push({ 
                   sprint: sp.nombre, 
-                  compromisos: mockPlanned[mockIndex % mockPlanned.length], 
-                  entregados: mockCompleted[mockIndex % mockCompleted.length] 
+                  compromisos: sp.sp_comprometidos ?? 0, 
+                  entregados: sp.sp_completados ?? 0 
                 });
-                mockIndex++;
               }
             }
             setVelocityData(chartData);

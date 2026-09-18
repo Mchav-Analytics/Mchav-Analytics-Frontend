@@ -45,36 +45,39 @@ const ProyectosDashboardView = ({ userProfile, activeTab, setActiveTab, selected
         </div>
       )}
 
-      {/* 1. Header con controles globales */}
-      <ProjectsHeader
-        userProfile={userProfile}
-        user={user}
-        selectedProjectId={selectedProjectId}
-        setSelectedProjectId={setSelectedProjectId}
-        allProjectsList={allProjectsList}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      {/* CONTENEDOR MASTER UNIFICADO (EN UNA SOLA TARJETA) */}
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-6">
+        {/* 1. Header con controles globales */}
+        <ProjectsHeader
+          userProfile={userProfile}
+          user={user}
+          selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          allProjectsList={allProjectsList}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
 
-      {/* 2. Tabla Resumen de Proyectos */}
-      <ProjectsTable
-        selectedProjectObj={selectedProjectObj}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        displayProjects={displayProjects}
-        selectedProjectId={selectedProjectId}
-        setSelectedProjectId={setSelectedProjectId}
-        expandedTeamProjectId={expandedTeamProjectId}
-        setExpandedTeamProjectId={setExpandedTeamProjectId}
-        assignedTeam={assignedTeam}
-        onNavigateToHealth={(projId) => {
-          if (setSelectedProjectId) setSelectedProjectId(projId);
-          if (setActiveTab) setActiveTab('sprint_health');
-        }}
-      />
+        {/* 2. Tabla Resumen de Proyectos */}
+        <ProjectsTable
+          selectedProjectObj={selectedProjectObj}
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          displayProjects={displayProjects}
+          selectedProjectId={selectedProjectId}
+          setSelectedProjectId={setSelectedProjectId}
+          expandedTeamProjectId={expandedTeamProjectId}
+          setExpandedTeamProjectId={setExpandedTeamProjectId}
+          assignedTeam={assignedTeam}
+          onNavigateToHealth={(projId) => {
+            if (setSelectedProjectId) setSelectedProjectId(projId);
+            if (setActiveTab) setActiveTab('sprint_health');
+          }}
+        />
 
-      {/* 2B. Tarjetas de Métricas Ejecutivas del Proyecto Seleccionado */}
-      <SprintHealthKpis metrics={activeHealthMetrics} />
+        {/* 2B. Tarjetas de Métricas Ejecutivas del Proyecto Seleccionado */}
+        <SprintHealthKpis metrics={activeHealthMetrics} />
+      </div>
       {/* 3. Bloque 2A: Diagrama de Flujo Acumulado (CFD) */}
       <ProjectsCFD
         activeCfdData={activeCfdData}

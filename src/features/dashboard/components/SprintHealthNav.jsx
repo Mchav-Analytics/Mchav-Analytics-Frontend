@@ -8,7 +8,7 @@ export default function SprintHealthNav({
   setSelectedSprintId 
 }) {
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 p-2.5 px-4 rounded-2xl shadow-2xs">
       <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
         <span className="px-3 py-1.5 text-xs font-extrabold bg-indigo-600 text-white rounded-lg shadow border border-indigo-500 flex items-center gap-1.5 cursor-default">
           <span>Salud del Sprint & Flow</span>

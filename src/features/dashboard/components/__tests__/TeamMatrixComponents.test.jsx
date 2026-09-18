@@ -19,9 +19,8 @@ describe('TeamMatrixHeader Component', () => {
   it('renders correctly', () => {
     render(<TeamMatrixHeader />);
     
-    expect(screen.getAllByText('Matriz de Rendimiento').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Matriz de Flujo y Eficiencia').length).toBeGreaterThan(0);
     expect(screen.getByText('Cuadrantes')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-notification-bell')).toBeInTheDocument();
   });
 });
 
@@ -119,14 +118,10 @@ describe('TeamMatrixLeaderboard Component', () => {
     expect(screen.getByText('Andres Chavez')).toBeInTheDocument();
     expect(screen.getByText('andres@example.com')).toBeInTheDocument();
     expect(screen.getByText('Estrella')).toBeInTheDocument();
-    expect(screen.getByText('95 pts')).toBeInTheDocument();
+    expect(screen.getByText('10')).toBeInTheDocument();
     
     expect(screen.getByText('Luis Perez')).toBeInTheDocument();
     expect(screen.getByText('Metódico')).toBeInTheDocument();
-    expect(screen.getByText('85 pts')).toBeInTheDocument();
-    
-    // Check explanations
-    expect(screen.getByText('Fast delivery')).toBeInTheDocument();
     
     // Check actions
     const actionBtns = screen.getAllByText('Ver Scorecard');
@@ -183,8 +178,8 @@ describe('TeamMatrixNav Component', () => {
       />
     );
     
-    expect(screen.getByText('Matriz 4 Cuadrantes')).toBeInTheDocument();
-    expect(screen.getByText('Andres (95 pts)')).toBeInTheDocument();
+    expect(screen.getByText('Matriz de Flujo y Eficiencia')).toBeInTheDocument();
+    expect(screen.getByText('Umbral: 80%')).toBeInTheDocument();
     
     const scorecardBtn = screen.getByText('Scorecards Desarrolladores');
     fireEvent.click(scorecardBtn);

@@ -208,7 +208,7 @@ function FourQuadrantChart({ developers = [], onSelectDev, isDarkMode, qualityTh
   };
 
   return (
-    <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl p-5 shadow-sm dark:shadow-2xl space-y-4">
+    <div className="w-full bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
       
       {/* CABECERA DEL COMPONENTE GRÁFICO */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-2 border-b border-slate-100 dark:border-slate-800">

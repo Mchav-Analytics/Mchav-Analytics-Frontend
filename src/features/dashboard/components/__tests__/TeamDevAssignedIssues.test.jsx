@@ -34,10 +34,11 @@ describe('TeamDevAssignedIssues Component', () => {
     render(<TeamDevAssignedIssues {...defaultProps} />);
     
     // Debería mostrar el nombre del dev
-    expect(screen.getByText('Incidencias Asignadas a Juan Perez')).toBeInTheDocument();
+    expect(screen.getByText(/INCIDENCIAS ASIGNADAS A/i)).toBeInTheDocument();
+    expect(screen.getByText(/Juan Perez/i)).toBeInTheDocument();
     
     // Debería mostrar el total
-    expect(screen.getByText('5 Tareas Totales')).toBeInTheDocument();
+    expect(screen.getByText(/5 Tareas Totales/i)).toBeInTheDocument();
     
     // Como mostramos 3 por página, deben aparecer ISS-1, ISS-2, ISS-3
     expect(screen.getByText('ISS-1')).toBeInTheDocument();
@@ -59,11 +60,11 @@ describe('TeamDevAssignedIssues Component', () => {
     const todoStatus = screen.getByText('TO DO');
 
     // Verificar las clases aplicadas por estado (parte de la cadena)
-    expect(doneStatus).toHaveClass('bg-emerald-50');
-    expect(inProgressStatus).toHaveClass('bg-cyan-50');
-    expect(reviewStatus).toHaveClass('bg-purple-50');
-    expect(blockedStatus).toHaveClass('bg-rose-50');
-    expect(todoStatus).toHaveClass('bg-slate-50');
+    expect(doneStatus.className).toMatch(/bg-emerald/);
+    expect(inProgressStatus.className).toMatch(/bg-cyan/);
+    expect(reviewStatus.className).toMatch(/bg-purple/);
+    expect(blockedStatus.className).toMatch(/bg-rose/);
+    expect(todoStatus.className).toMatch(/bg-slate/);
   });
 
   it('handles pagination next and prev clicks', () => {

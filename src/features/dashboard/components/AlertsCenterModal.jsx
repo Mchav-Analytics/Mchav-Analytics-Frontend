@@ -59,11 +59,17 @@ export const AlertsCenterModal = ({
               {recipientsList.length === 0 ? (
                 <option value="">No hay usuarios disponibles para tu rol</option>
               ) : (
-                recipientsList.map(u => (
-                  <option key={u.id} value={u.name} className="bg-white dark:bg-slate-900 font-semibold">
-                    {u.name} ({u.role === 'ADMIN' ? 'Admin' : u.role === 'MANAGER' ? 'Líder Técnico' : 'Desarrollador'})
-                  </option>
-                ))
+                recipientsList.map(u => {
+                  const roleSuffix = u.role === 'ADMIN' ? 'Admin' : u.role === 'MANAGER' ? 'Líder Técnico' : 'Desarrollador';
+                  const displayName = u.name.includes(`(${roleSuffix})`) || u.name.includes('(Admin)') || u.name.includes('(Líder Técnico)') || u.name.includes('(Desarrollador)')
+                    ? u.name
+                    : `${u.name} (${roleSuffix})`;
+                  return (
+                    <option key={u.id} value={u.name} className="bg-white dark:bg-slate-900 font-semibold">
+                      {displayName}
+                    </option>
+                  );
+                })
               )}
             </select>
 

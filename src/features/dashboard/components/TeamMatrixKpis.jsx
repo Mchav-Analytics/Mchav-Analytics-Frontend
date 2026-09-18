@@ -6,7 +6,7 @@ export default function TeamMatrixKpis({ teamSummary, developers, conteo }) {
     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 
       {/* KPI 1: SCORE PROMEDIO */}
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-2">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
           <span className="text-xs font-semibold uppercase tracking-wider">Score Promedio Equipo</span>
           <TrendingUp size={18} className="text-emerald-500 dark:text-emerald-400" />
@@ -19,7 +19,7 @@ export default function TeamMatrixKpis({ teamSummary, developers, conteo }) {
       </div>
 
       {/* KPI 2: DESARROLLADORES ESTRELLA */}
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-2">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
           <span className="text-xs font-semibold uppercase tracking-wider">Cuadrante Estrella</span>
           <Award size={18} className="text-emerald-500 dark:text-emerald-400" />
@@ -32,7 +32,7 @@ export default function TeamMatrixKpis({ teamSummary, developers, conteo }) {
       </div>
 
       {/* KPI 3: METÓDICOS Y ALTO VOLUMEN */}
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-2">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
           <span className="text-xs font-semibold uppercase tracking-wider">Metódicos & Precisión</span>
           <Target size={18} className="text-indigo-500 dark:text-indigo-400" />
@@ -45,7 +45,7 @@ export default function TeamMatrixKpis({ teamSummary, developers, conteo }) {
       </div>
 
       {/* KPI 4: CYCLE TIME PROMEDIO */}
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-2">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-2">
         <div className="flex items-center justify-between text-slate-500 dark:text-slate-400">
           <span className="text-xs font-semibold uppercase tracking-wider">Cycle Time Promedio</span>
           <Clock size={18} className="text-cyan-500 dark:text-cyan-400" />

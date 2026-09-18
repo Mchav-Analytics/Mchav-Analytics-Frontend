@@ -90,7 +90,7 @@ export const DevWorkloadTable = ({
   };
 
   return (
-    <div className="bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-xs overflow-hidden flex flex-col min-h-[480px]">
+    <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl shadow-2xs overflow-hidden flex flex-col min-h-[480px]">
       <div className="overflow-x-auto flex-1 w-full">
         <table className="w-full text-left border-collapse text-xs">
           <thead>

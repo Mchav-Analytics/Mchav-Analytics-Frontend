@@ -14,18 +14,18 @@ body, h1, h2, h3, h4, .font-heading, .font-sans {
   --primary-hover: #1e40af;
   --secondary-color: #0d9488;
   /* Teal from MCHAV */
-  --bg-dark: #eaeae5;
-  /* Blanco hueso más opaco para máximo contraste con las tarjetas */
-  --bg-card: #ffffff;
-  /* Tarjetas y contenedores en blanco puro */
+  --bg-dark: #e8eff8;
+  /* Fondo canvas azulito sutil */
+  --bg-card: #f8faff;
+  /* Tarjetas en azul helado sutil que contrastan suavemente */
   --text-main: #0f172a;
   /* Dark slate text */
   --text-muted: #64748b;
   /* Slate 500 */
   --border-color: #cbd5e1;
   /* Slate 300 para bordes definidos */
-  --sidebar-bg: #ffffff;
-  --topbar-bg: #eaeae5;
+  --sidebar-bg: #f8faff;
+  --topbar-bg: #e8eff8;
   --input-bg: #ffffff;
   --accent-red: #ef4444;
   --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
@@ -59,7 +59,7 @@ html, body, #root {
   width: 100%;
   margin: 0;
   padding: 0;
-  background-color: #0f172a;
+  background-color: var(--bg-dark);
 }
 
 * {

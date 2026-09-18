@@ -12,7 +12,7 @@ export default function CriticalIssuesList({
   const [newAssigneeName, setNewAssigneeName] = useState(teamMembers[0]?.name || '');
 
   return (
-    <div className="lg:col-span-5 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-5 shadow-sm flex flex-col h-fit max-h-[500px] overflow-y-auto custom-scrollbar">
+    <div className="lg:col-span-5 bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 shadow-2xs flex flex-col h-fit max-h-[500px] overflow-y-auto custom-scrollbar">
       <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-100 dark:border-slate-800">
         <div>
           <h3 className="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider flex items-center gap-2">

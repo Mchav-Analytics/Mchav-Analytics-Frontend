@@ -44,7 +44,7 @@ export default function AiRulesView() {
   return (
     <div className="w-full space-y-6 font-sans text-left pb-10">
       {/* BARRA SUPERIOR */}
-      <div className="w-full rounded-3xl bg-white dark:bg-[#141738] p-5 sm:p-6 shadow-sm dark:shadow-2xl border border-slate-200 dark:border-[#272b5c] flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+      <div className="w-full rounded-3xl bg-[#f8faff] dark:bg-[#14192b] p-5 sm:p-6 shadow-2xs border border-indigo-100/80 dark:border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-fuchsia-600 to-indigo-600 text-white font-extrabold shadow-md shrink-0">
             <Sparkles size={24} />
@@ -67,7 +67,7 @@ export default function AiRulesView() {
         </button>
       </div>
 
-      <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-sm overflow-hidden">
+      <div className="w-full bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl shadow-2xs overflow-hidden">
         <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-950/20">
           <AlertCircle size={18} className="text-slate-500" />
           <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">

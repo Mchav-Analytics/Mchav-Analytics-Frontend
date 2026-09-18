@@ -8,7 +8,7 @@ export const ActivityAchievements = ({
 }) => {
   return (
     <div className="space-y-4 animate-in fade-in duration-200 mt-4">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] shadow-xs">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs">
         <div className="flex items-center gap-3.5">
           <div className={`flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br ${devRank.badgeColor} text-white font-extrabold shadow-md shrink-0 ring-2 ring-amber-400/30`}>
             <Trophy size={24} />

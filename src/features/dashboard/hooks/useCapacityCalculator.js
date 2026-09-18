@@ -1,49 +1,76 @@
 import { useState, useEffect } from 'react';
 import { calculateBusinessDays, REAL_JIRA_ISSUES_DB } from '../components/CapacityShared';
+import { userService, projectService } from '../../../services/api';
 
 export const TEAM_DEVS = [
-  'Michael Rodríguez',
-  'Camilo Beltrán',
-  'Andrés Alcalá',
-  'Stephany León',
   'Valentina Montalvo',
-  'Mai Salamanca',
-  'Carlos Mendoza'
+  'Michael Salamanca',
+  'Stephany León',
+  'Felipe Alcalá',
+  'Camilo Corredor'
 ];
 
 export function useCapacityCalculator() {
   const [devCount, setDevCount] = useState(5);
   const [sprintDays, setSprintDays] = useState(10);
-  const [vacationDays, setVacationDays] = useState(2);
-  const [sickDevsCount, setSickDevsCount] = useState(1);
-  const [sickDays, setSickDays] = useState(5);
+  const [vacationDays, setVacationDays] = useState(0);
+  const [sickDevsCount, setSickDevsCount] = useState(0);
+  const [sickDays, setSickDays] = useState(0);
   const [avgDevVelocity, setAvgDevVelocity] = useState(10);
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [liveDevs, setLiveDevs] = useState(TEAM_DEVS);
 
-  // Lista de ausencias/incapacidades programadas por fecha (con desarrolladores reales)
-  const [absenceEvents, setAbsenceEvents] = useState([
-    { 
-      id: 1, 
-      devName: 'Michael Rodríguez', 
-      type: 'SICK', 
-      startDate: '2026-09-08', 
-      endDate: '2026-09-12', 
-      days: 5, 
-      note: 'Incapacidad Médica por Gripe Severa' 
-    },
-    { 
-      id: 2, 
-      devName: 'Camilo Beltrán', 
-      type: 'VACATION', 
-      startDate: '2026-09-14', 
-      endDate: '2026-09-15', 
-      days: 2, 
-      note: 'Permiso personal planificado' 
-    }
-  ]);
+  // Lista de ausencias/incapacidades programadas por fecha
+  const [absenceEvents, setAbsenceEvents] = useState([]);
 
   // Lista viva de incidencias de Jira para permitir reasignación en tiempo real
   const [jiraTasks, setJiraTasks] = useState(REAL_JIRA_ISSUES_DB);
+
+  useEffect(() => {
+    userService.getUsers()
+      .then(users => {
+        if (Array.isArray(users) && users.length > 0) {
+          const names = users.map(u => u.nombre || u.email).filter(Boolean);
+          if (names.length > 0) {
+            setLiveDevs(names);
+            setDevCount(names.length);
+          }
+        }
+      })
+      .catch(() => {});
+
+    projectService.getProjects()
+      .then(async (projects) => {
+        if (Array.isArray(projects) && projects.length > 0) {
+          let allLiveIssues = [];
+          for (const p of projects) {
+            const projId = p.id_proyecto || p.key_proyecto;
+            try {
+              const detail = await projectService.getKpiIssuesDetail(projId);
+              if (detail?.issues && Array.isArray(detail.issues)) {
+                const mapped = detail.issues.map(i => ({
+                  key: i.key_issue,
+                  project: p.nombre || p.key_proyecto,
+                  projectId: projId,
+                  summary: i.summary || 'Sin resumen',
+                  status: (i.status_actual || '').toLowerCase().includes('done') || (i.status_actual || '').toLowerCase().includes('finalizado') ? 'Completados' : ((i.status_actual || '').toLowerCase().includes('curso') || (i.status_actual || '').toLowerCase().includes('progress') ? 'En Progreso' : 'Por Hacer'),
+                  rawStatus: i.status_actual || 'Por hacer',
+                  assignee: i.assignee_name || 'Sin Asignar',
+                  sp: Math.round(parseFloat(i.story_points || 1)),
+                  priority: i.priority || 'Media',
+                  type: i.issue_type || 'Tarea'
+                }));
+                allLiveIssues = [...allLiveIssues, ...mapped];
+              }
+            } catch (e) {}
+          }
+          if (allLiveIssues.length > 0) {
+            setJiraTasks(allLiveIssues);
+          }
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Estados para Filtros de Incidencias en Vivo de Jira
   const [taskStatusTab, setTaskStatusTab] = useState(() => {
@@ -174,7 +201,7 @@ export function useCapacityCalculator() {
     diagnosticText = 'Alerta Moderada: Se recomienda reajustar el compromiso del sprint removiendo 1 o 2 tareas de menor prioridad.';
   } else if (impactPct >= 30) {
     impactBadgeText = 'IMPACTO CRÍTICO (>30%)';
-    impactBadgeStyle = 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-500/30';
+    impactBadgeStyle = 'bg-rose-500/10 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300/90 border-rose-500/20 dark:border-rose-900/40';
     barColor = 'bg-rose-500';
     diagnosticText = 'Riesgo Severo: Se requiere despriorizar historias principales y negociar el alcance del sprint con el Product Owner.';
   }
@@ -230,6 +257,7 @@ export function useCapacityCalculator() {
     handleReassignTask,
     handleResetScenarios,
     results,
-    filteredTasks
+    filteredTasks,
+    liveDevs
   };
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings2, RefreshCcw, Play, Edit3, Power, Trash2 } from 'lucide-react';
+import { Settings, RefreshCcw, Play, Calendar, Hexagon, Info, ChevronRight, Edit3, Power, Sparkles, CheckCircle2 } from 'lucide-react';
 import { SyncStatus } from '../hooks/useSystemSync';
 import ContextMenu from '../../../components/ui/ContextMenu';
 
@@ -15,6 +15,8 @@ interface SystemSyncControlPanelProps {
   handleSaveCronTime: () => void;
   isSavingCron: boolean;
   savedCronTime: string;
+  showSuccessAlert?: boolean;
+  setShowSuccessAlert?: (val: boolean) => void;
 }
 
 export default function SystemSyncControlPanel({
@@ -28,127 +30,165 @@ export default function SystemSyncControlPanel({
   handleCronTimeChange,
   handleSaveCronTime,
   isSavingCron,
-  savedCronTime
+  savedCronTime,
+  showSuccessAlert,
+  setShowSuccessAlert
 }: SystemSyncControlPanelProps) {
   return (
-    <div className="w-full bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 shadow-sm dark:shadow-xl space-y-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <Settings2 className="text-teal-600 dark:text-teal-500" size={22} />
-          <div>
-            <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-              Sincronización Automática & Programación de Tareas (CRON)
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Control de actualización periódica de métricas de Jira Cloud e historial de ejecuciones.
-            </p>
-          </div>
+    <div className="w-full h-full bg-white dark:bg-[#141738] border border-slate-200/80 dark:border-[#272b5c] rounded-3xl p-6 shadow-xs flex flex-col justify-between gap-5">
+      {/* HEADER SECTION */}
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
+          <RefreshCcw size={20} />
         </div>
-
-        <button
-          type="button"
-          onClick={handleManualSync}
-          disabled={syncStatus.status === 'SYNCING'}
-          className="px-5 py-2.5 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white text-xs font-extrabold shadow-md flex items-center gap-2 transition-all cursor-pointer disabled:opacity-60"
-        >
-          {syncStatus.status === 'SYNCING' ? (
-            <>
-              <RefreshCcw size={15} className="animate-spin" />
-              <span>Sincronizando en segundo plano...</span>
-            </>
-          ) : (
-            <>
-              <Play size={15} fill="currentColor" />
-              <span>Sincronizar Manualmente Ahora</span>
-            </>
-          )}
-        </button>
+        <div>
+          <div className="flex items-center gap-2">
+            <h2 className="text-[18px] font-black text-slate-900 dark:text-white leading-tight">
+              Sincronización Automática & CRON
+            </h2>
+            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+              Active
+            </span>
+          </div>
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+            Control de actualización periódica de Jira Cloud.
+          </p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Tarjeta 1: Estado de la Conexión */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-            Estado de la Integración Jira
-          </span>
+      {/* TARJETAS INTERNAS */}
+      <div className="flex flex-col gap-4">
+        {/* TARJETA 1: ESTADO DE LA INTEGRACIÓN JIRA */}
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1a1e47]/60 border border-slate-200/70 dark:border-[#272b5c] space-y-2 relative">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1 bg-sky-100 dark:bg-sky-950/60 rounded-lg text-sky-600 dark:text-sky-400">
+                <Calendar size={13} />
+              </div>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                ESTADO DE LA INTEGRACIÓN JIRA
+              </span>
+            </div>
+            <ChevronRight size={16} className="text-slate-400" />
+          </div>
+
           <div className="flex items-center gap-2">
-            <span className={`h-3 w-3 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : (syncStatus.status === 'FAILED' ? 'bg-rose-500' : 'bg-emerald-500')}`} />
-            <span className="text-sm font-extrabold text-slate-900 dark:text-white">
+            <span className={`h-2.5 w-2.5 rounded-full ${syncStatus.status === 'SYNCING' ? 'bg-amber-500 animate-ping' : (syncStatus.status === 'FAILED' ? 'bg-rose-500' : 'bg-emerald-500')}`} />
+            <span className="text-[14px] font-extrabold text-slate-900 dark:text-white">
               {syncStatus.status === 'SYNCING' ? 'Sincronizando...' : (syncStatus.status === 'FAILED' ? 'Atención Requerida' : 'Conectado a Jira Cloud')}
             </span>
           </div>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Última actualización: <strong>{syncStatus.lastSync}</strong>
+          <p className="text-[12px] text-slate-500 dark:text-slate-400">
+            Última actualización: <strong className="text-slate-700 dark:text-slate-300">{syncStatus.lastSync}</strong>
           </p>
         </div>
 
-        {/* Tarjeta 2: Switch Automático */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+        {/* TARJETA 2: SINCRONIZACIÓN AUTOMÁTICA */}
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1a1e47]/60 border border-slate-200/70 dark:border-[#272b5c] space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Sincronización Automática
-            </span>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setIsAutoSync(!isAutoSync)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isAutoSync ? 'bg-teal-600' : 'bg-slate-300 dark:bg-slate-700'}`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoSync ? 'translate-x-6' : 'translate-x-1'}`} />
-              </button>
-              <ContextMenu actions={[
-                { label: isAutoSync ? 'Pausar automatización' : 'Activar automatización', icon: Power, onClick: () => setIsAutoSync(!isAutoSync) },
-                { label: 'Editar frecuencia', icon: Edit3, onClick: () => { document.getElementById('cronSelect')?.focus(); } }
-              ]} />
+              <div className="p-1 bg-indigo-100 dark:bg-indigo-950/60 rounded-lg text-indigo-600 dark:text-indigo-400">
+                <Hexagon size={13} />
+              </div>
+              <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                SINCRONIZACIÓN AUTOMÁTICA
+              </span>
             </div>
+            <button
+              type="button"
+              onClick={() => setIsAutoSync(!isAutoSync)}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none cursor-pointer ${isAutoSync ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+            >
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isAutoSync ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
           </div>
-          <p className="text-xs font-extrabold text-slate-800 dark:text-slate-200">
-            {isAutoSync ? '🟢 Programador Automático Activo' : '⚪ Programación Pausada'}
-          </p>
-          <p className="text-[11px] text-slate-500 dark:text-slate-400">
-            Próxima ejecución: <strong>{syncStatus.nextScheduledSync}</strong>
+
+          <div className="flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
+            <span className="text-[13px] font-extrabold text-slate-900 dark:text-white">
+              {isAutoSync ? 'Programador Automático Activo' : 'Programación Pausada'}
+            </span>
+            <Info size={13} className="text-slate-400" />
+          </div>
+          <p className="text-[12px] text-slate-500 dark:text-slate-400">
+            Próxima ejecución: <strong className="text-slate-700 dark:text-slate-300">{syncStatus.nextScheduledSync}</strong>
           </p>
         </div>
 
-        {/* Tarjeta 3: Configuración CRON */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-              Frecuencia y Horario CRON
+        {/* TARJETA 3: FRECUENCIA Y HORARIO CRON */}
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1a1e47]/60 border border-slate-200/70 dark:border-[#272b5c] space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-sky-100 dark:bg-sky-950/60 rounded-lg text-sky-600 dark:text-sky-400">
+              <Calendar size={13} />
+            </div>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              FRECUENCIA Y HORARIO CRON
             </span>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <select
-              id="cronSelect"
-              value={cronSchedule}
-              onChange={(e) => setCronSchedule(e.target.value)}
-              className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer focus:ring-2 focus:ring-teal-500"
-            >
-              <option value="6h">Cada 6 Horas</option>
-              <option value="12h">Cada 12 Horas</option>
-              <option value="24h">Diario (24 Horas)</option>
-            </select>
+          <div className="space-y-2.5">
+            <div>
+              <label className="text-[12px] font-medium text-slate-500 dark:text-slate-400 block mb-1">Frecuencia</label>
+              <div className="relative">
+                <select
+                  id="cronSelect"
+                  value={cronSchedule}
+                  onChange={(e) => setCronSchedule(e.target.value)}
+                  className="w-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                >
+                  <option value="6h">Cada 6 Horas</option>
+                  <option value="12h">Cada 12 Horas</option>
+                  <option value="24h">Diario (24 Horas)</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">▼</div>
+              </div>
+            </div>
 
-            <div className="flex items-center gap-1">
-              <input
-                type="time"
-                value={cronTime}
-                onChange={handleCronTimeChange}
-                disabled={isSavingCron}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 rounded-xl px-2 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
-              />
-              <button
-                type="button"
-                onClick={handleSaveCronTime}
-                disabled={isSavingCron || cronTime === savedCronTime}
-                className="bg-teal-600 text-white rounded-xl px-2 py-1.5 text-[10px] font-bold transition-all hover:bg-teal-700 disabled:opacity-40 cursor-pointer"
-              >
-                {isSavingCron ? '...' : 'Ok'}
-              </button>
+            <div>
+              <label className="text-[12px] font-medium text-slate-500 dark:text-slate-400 block mb-1">Hora de Ejecución</label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    type="time"
+                    value={cronTime}
+                    onChange={handleCronTimeChange}
+                    disabled={isSavingCron}
+                    className="w-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveCronTime}
+                  disabled={isSavingCron || cronTime === savedCronTime}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 py-2 text-[13px] font-bold transition-all disabled:opacity-40 cursor-pointer shrink-0"
+                >
+                  {isSavingCron ? '...' : 'Ok'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* BOTÓN PRINCIPAL EN LA PARTE INFERIOR ESTILO INSIGNIA CELESTE */}
+      <button
+        type="button"
+        onClick={handleManualSync}
+        disabled={syncStatus.status === 'SYNCING'}
+        className="w-full mt-auto px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100/80 dark:bg-sky-950/60 dark:hover:bg-sky-900/60 text-sky-600 dark:text-sky-400 border border-sky-200/80 dark:border-sky-800/60 text-[14px] font-extrabold flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60 shadow-2xs active:scale-98"
+      >
+        {syncStatus.status === 'SYNCING' ? (
+          <>
+            <RefreshCcw size={16} className="animate-spin text-sky-600 dark:text-sky-400" />
+            <span>Sincronizando en segundo plano...</span>
+          </>
+        ) : (
+          <>
+            <Play size={16} fill="currentColor" className="text-sky-600 dark:text-sky-400" />
+            <span>Sincronizar Manualmente Ahora</span>
+          </>
+        )}
+      </button>
     </div>
   );
 }

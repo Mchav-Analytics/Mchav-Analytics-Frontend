@@ -109,17 +109,6 @@ export default function LiderNotificationBell({
   }, []);
 
   const handleToggleOpen = () => {
-    if (!isOpen && buttonTriggerRef.current) {
-      const rect = buttonTriggerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const windowWidth = window.innerWidth;
-      
-      // Abrir hacia arriba si está en la mitad inferior de la pantalla (ej. Footer de la Sidebar)
-      setOpensUpward(rect.top > windowHeight * 0.4);
-
-      // Alinear a la izquierda (left-0) si está en la mitad izquierda de la pantalla
-      setAlignLeft(rect.left < windowWidth * 0.5);
-    }
     setIsOpen(prev => !prev);
   };
 
@@ -188,6 +177,24 @@ export default function LiderNotificationBell({
     }
   };
 
+  const handleRetrySync = async (notifId) => {
+    setSyncingId(notifId);
+    setSyncMsg('Sincronizando...');
+    try {
+      await jiraService.triggerSync();
+      setSyncMsg('✨ Sincronización completada con éxito');
+      handleMarkAsRead(notifId);
+    } catch (err) {
+      console.error("Error al sincronizar:", err);
+      setSyncMsg('Error al reintentar la sincronización');
+    } finally {
+      setTimeout(() => {
+        setSyncingId(null);
+        setSyncMsg('');
+      }, 2500);
+    }
+  };
+
   const handleNotificationClick = (notif) => {
     handleMarkAsRead(notif.id);
     setIsOpen(false);
@@ -233,7 +240,7 @@ export default function LiderNotificationBell({
             ? 'bg-indigo-600 text-white border-indigo-500 shadow-indigo-500/30'
             : 'bg-white dark:bg-[#141738] hover:bg-slate-50 dark:hover:bg-[#1a1e47] text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-[#272b5c]'
         }`}
-        title={`Alertas Nubi AI & Notificaciones - Rol ${activeRole}`}
+        title={`Notificaciones - Rol ${activeRole}`}
       >
         {/* Ícono de Campana con destello de IA Nubi */}
         <div className="relative flex items-center justify-center">
@@ -287,15 +294,16 @@ export default function LiderNotificationBell({
         )}
       </button>
 
-      {/* POPUP EMERGENTE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
+      {/* MODAL EMERGENTE EN PANTALLA GRANDE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
       {isOpen && (
-        <div className={`absolute w-[calc(100vw-1.5rem)] sm:w-[480px] md:w-[520px] max-w-xl bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-2xl shadow-2xl z-[99999] p-4 sm:p-5 space-y-3.5 text-left transition-all ${
-          isCollapsed
-            ? opensUpward ? 'left-full bottom-0 ml-3' : 'left-full top-0 ml-3'
-            : opensUpward
-            ? 'bottom-full mb-3' + (alignLeft ? ' left-0' : ' right-0')
-            : 'top-full mt-3' + (alignLeft ? ' left-0' : ' right-0')
-        }`}>
+        <div 
+          className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8 animate-in fade-in duration-200"
+          onClick={() => setIsOpen(false)}
+        >
+          <div 
+            className="w-full max-w-4xl max-h-[85vh] bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col space-y-5 text-left animate-in zoom-in-95 duration-200 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
           
           {/* CABECERA CON ACCIÓN DE ESCANEO DE IA NUBI */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">
@@ -305,14 +313,16 @@ export default function LiderNotificationBell({
               </div>
               <div>
                 <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <span>Alertas Nubi AI</span>
+                  <span>Alertas Nubi AI & Notificaciones</span>
                   <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[9px] border border-indigo-500/20">
                     Tiempo Real
                   </span>
                 </h3>
-                <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                  Detección inteligente de desviaciones
-                </span>
+                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                  <span>Detección inteligente</span>
+                  <span>• Rol {activeRole}</span>
+                  {unreadCount > 0 && <span className="font-bold text-indigo-500">• {unreadCount} activas</span>}
+                </div>
               </div>
             </div>
 
@@ -385,23 +395,23 @@ export default function LiderNotificationBell({
           )}
 
           {/* LISTA DE NOTIFICACIONES & ALERTAS NUBI AI */}
-          <div className="max-h-96 overflow-y-auto space-y-2.5 pr-1 custom-scrollbar">
+          <div className="flex-1 min-h-0 overflow-y-auto max-h-[55vh] divide-y divide-slate-100 dark:divide-[#232752]/70 pr-2 custom-scrollbar">
             {filteredNotifications.length > 0 ? (
               filteredNotifications.map((notif) => (
                 <div
                   key={notif.id}
                   onClick={() => handleMarkSingleRead(notif.id)}
-                  className={`p-3.5 rounded-2xl transition-all border flex flex-col gap-2.5 cursor-pointer ${
+                  className={`py-3.5 px-3 rounded-xl transition-all flex flex-col gap-2.5 cursor-pointer my-0.5 ${
                     !notif.isRead
                       ? notif.severity === 'CRITICAL'
-                        ? 'bg-rose-50/80 dark:bg-[#1f0d1a] border-rose-300 dark:border-rose-900/60 shadow-xs'
-                        : 'bg-indigo-50/60 dark:bg-[#0c0e21] border-indigo-200 dark:border-indigo-900/50 shadow-xs'
-                      : 'bg-white dark:bg-[#1a1e47]/40 border-slate-200/70 dark:border-[#232752] opacity-85 hover:opacity-100'
+                        ? 'bg-rose-50/70 dark:bg-rose-950/20'
+                        : 'bg-indigo-50/50 dark:bg-indigo-950/25'
+                      : 'hover:bg-slate-50/80 dark:hover:bg-[#1a1e47]/50'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     {/* ÍCONO DE TIPO / SEVERIDAD DE ALERTA */}
-                    <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-xs ${
+                    <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-2xs ${
                       notif.severity === 'CRITICAL' ? 'bg-rose-500 text-white border border-rose-400' :
                       notif.severity === 'WARNING' ? 'bg-amber-500 text-white border border-amber-400' :
                       notif.type === 'TASK_ASSIGNED' ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' :
@@ -451,7 +461,7 @@ export default function LiderNotificationBell({
 
                       {/* DIAGNÓSTICO E INSIGHT DE IA NUBI */}
                       {notif.nubiDiagnosis && (
-                        <div className="mt-2 p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-1 text-left">
+                        <div className="mt-2 p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-1 text-left">
                           <div className="flex items-center gap-1 text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">
                             <Sparkles size={11} />
                             <span>Diagnóstico Nubi AI:</span>
@@ -543,6 +553,7 @@ export default function LiderNotificationBell({
             </button>
           </div>
         </div>
+      </div>
       )}
     </div>
   );

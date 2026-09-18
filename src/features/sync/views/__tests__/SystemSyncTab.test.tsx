@@ -87,8 +87,8 @@ describe('SystemSyncTab - Integration', () => {
       render(<SystemSyncTab />);
     });
 
-    // We have two "Ejecutar Sincronización Manual Ahora" buttons
-    const syncButtons = screen.getAllByRole('button', { name: /Ejecutar Sincronización Manual Ahora|Sincronizar Manualmente Ahora/i });
+    // We have "Aplicar plan de contingencia" button
+    const syncButtons = screen.getAllByRole('button', { name: /Ejecutar Sincronización Manual Ahora|Sincronizar Manualmente Ahora|Aplicar plan de contingencia/i });
     
     await act(async () => {
       await user.click(syncButtons[0]);

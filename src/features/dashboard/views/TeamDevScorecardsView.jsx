@@ -29,56 +29,67 @@ export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', o
   return (
     <div className="w-full max-w-full overflow-x-hidden space-y-8 py-4 text-left font-sans min-h-[85vh] flex flex-col justify-between">
       
-      {/* ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
-      <TeamDevScorecardsHeader 
-        selectedProjectId={selectedProjectId}
-        onSelectProject={onSelectProject}
-        onNavigateToMatrix={onNavigateToMatrix} 
-      />
+      {/* CONTENEDOR MASTER UNIFICADO SUPERIOR (EN UNA SOLA TARJETA) */}
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-6">
+        {/* 1. ENCABEZADO PRINCIPAL PARA ADMINISTRADOR */}
+        <TeamDevScorecardsHeader 
+          selectedProjectId={selectedProjectId}
+          onSelectProject={onSelectProject}
+          onNavigateToMatrix={onNavigateToMatrix} 
+        />
 
-      {/* BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO */}
-      <TeamDevScorecardsNav 
-        selectedProjectId={selectedProjectId}
-        onSelectProject={onSelectProject}
-        onNavigateToMatrix={onNavigateToMatrix}
-        onNavigateToHealth={onNavigateToHealth}
-      />
+        {/* 2. BARRA DE NAVEGACIÓN Y ACCESO RÁPIDO */}
+        <TeamDevScorecardsNav 
+          selectedProjectId={selectedProjectId}
+          onSelectProject={onSelectProject}
+          onNavigateToMatrix={onNavigateToMatrix}
+          onNavigateToHealth={onNavigateToHealth}
+        />
 
-      {/* SELECTOR DE DESARROLLADORES (CARDS INTERACTIVAS) */}
-      <TeamDevSelector 
-        developers={developers}
-        filteredDevs={filteredDevs}
-        selectedDev={selectedDev}
-        setSelectedDev={setSelectedDev}
-        searchFilter={searchFilter}
-        setSearchFilter={setSearchFilter}
-      />
+        {/* 3. SELECTOR DE DESARROLLADORES (CARDS INTERACTIVAS) */}
+        <TeamDevSelector 
+          developers={developers}
+          filteredDevs={filteredDevs}
+          selectedDev={selectedDev}
+          setSelectedDev={setSelectedDev}
+          searchFilter={searchFilter}
+          setSearchFilter={setSearchFilter}
+        />
+      </div>
 
       {/* DASHBOARD INDIVIDUAL DEL DESARROLLADOR SELECCIONADO */}
       {selectedDev && (
-        <div className="space-y-8 pt-4 border-t border-slate-200 dark:border-[#33376b]">
+        <div className="space-y-6 pt-4 border-t border-slate-200 dark:border-[#33376b]">
           
-          {/* BANNER DEL DESARROLLADOR SELECCIONADO */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-2xl shadow-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-extrabold text-lg">
-                {(selectedDev.nombre || 'Dev').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+          {/* CONTENEDOR MASTER UNIFICADO (EN UNA SOLA TARJETA) */}
+          <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-6">
+            
+            {/* 1. ENCABEZADO DEL DESARROLLADOR SELECCIONADO */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/60 dark:border-slate-800/80">
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-extrabold text-lg shadow-md shrink-0 border border-indigo-400/30">
+                  {(selectedDev.nombre || 'Dev').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                </div>
+                <div className="space-y-0.5 text-left">
+                  <h2 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    Developer Workload & Flow Profile: {selectedDev.nombre}
+                  </h2>
+                  <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                    ID Assignee: <span className="font-mono text-indigo-600 dark:text-indigo-400 font-bold">{selectedDev.assignee_id}</span> | Email: {selectedDev.email}
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white">Developer Workload & Flow Profile: {selectedDev.nombre}</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400">ID Assignee: <span className="font-mono text-indigo-600 dark:text-indigo-400">{selectedDev.assignee_id}</span> | Email: {selectedDev.email}</p>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3.5 py-1.5 rounded-full">
+                  Vista de Contexto Operativo
+                </span>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 px-3.5 py-1.5 rounded-full">
-                Vista de Contexto Operativo
-              </span>
-            </div>
+            {/* 2. TARJETAS KPI DEL DESARROLLADOR SELECCIONADO */}
+            <TeamDevScorecardsDashboard scorecard={scorecard} />
           </div>
-
-          {/* TARJETAS KPI DEL DESARROLLADOR SELECCIONADO */}
-          <TeamDevScorecardsDashboard scorecard={scorecard} />
 
           {/* TABLA DE INCIDENCIAS DEL DESARROLLADOR SELECCIONADO */}
           <TeamDevAssignedIssues 

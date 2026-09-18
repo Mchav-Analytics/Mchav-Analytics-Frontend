@@ -58,7 +58,7 @@ describe('Sidebar Component', () => {
   it('renders correct navigation items for MANAGER role', () => {
     renderSidebar('MANAGER');
     expect(screen.getByText(/Proyectos/i)).toBeInTheDocument();
-    expect(screen.getByText(/Matriz de Rendimiento/i)).toBeInTheDocument();
+    expect(screen.getByText(/Matriz de Flujo y Eficiencia/i)).toBeInTheDocument();
     expect(screen.queryByText(/Consultas JQL/i)).not.toBeInTheDocument();
   });
 
@@ -90,7 +90,7 @@ describe('Sidebar Component', () => {
     const user = userEvent.setup();
     renderSidebar('ADMIN');
     
-    const burgerToggle = screen.getByRole('checkbox');
+    const burgerToggle = screen.getByTitle('Colapsar panel lateral');
     await act(async () => {
       await user.click(burgerToggle);
     });
@@ -176,15 +176,5 @@ describe('Sidebar Component', () => {
     expect(switchRoleMock).toHaveBeenCalledWith('DEVELOPER');
   });
 
-  it('opens AI Chat Modal when clicking Nubi IA', async () => {
-    const user = userEvent.setup();
-    renderSidebar('ADMIN');
-    
-    const aiBtn = screen.getByTitle('Consultar a Nubi IA');
-    await act(async () => {
-      await user.click(aiBtn);
-    });
 
-    expect(screen.getByTestId('ai-chat-modal')).toBeInTheDocument();
-  });
 });

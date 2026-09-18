@@ -35,33 +35,58 @@ api.interceptors.response.use(
   }
 );
 
+// Capa de deduplicación y caché de lectura corta (2.5s)
+// Evita que componentes simultáneos disparen peticiones HTTP duplicadas al backend
+const getRequestCache = new Map();
+const originalGet = api.get.bind(api);
+
+api.get = function (url, config = {}) {
+  const cacheKey = `${url}?${JSON.stringify(config?.params || {})}`;
+  const now = Date.now();
+
+  if (getRequestCache.has(cacheKey)) {
+    const cached = getRequestCache.get(cacheKey);
+    if (now - cached.timestamp < 2500) {
+      return cached.promise;
+    }
+  }
+
+  const promise = originalGet(url, config).catch((err) => {
+    getRequestCache.delete(cacheKey);
+    throw err;
+  });
+
+  getRequestCache.set(cacheKey, { timestamp: now, promise });
+  return promise;
+};
+
 export const authService = {
   getLoginUrl() {
     return `${BACKEND_URL}/api/v1/auth/login`;
   },
   getCurrentUser() {
     if (USE_MOCK_DATA) return mockAuthService.getCurrentUser();
-    return api.get('/api/v1/auth/me').then(res => res.data).catch(() => mockAuthService.getCurrentUser());
+    return api.get('/api/v1/auth/me').then(res => res.data);
   },
   loginMock(credentials) {
     if (USE_MOCK_DATA) return mockAuthService.loginMock(credentials);
-    return api.post('/api/v1/auth/login', credentials).then(res => res.data).catch(() => mockAuthService.loginMock(credentials));
+    return api.post('/api/v1/auth/login', credentials).then(res => res.data);
   },
   logout() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/v1/auth/logout').then(res => res.data).catch(() => mockAuthService.logoutMock());
+    return api.post('/api/v1/auth/logout').then(res => res.data).catch(() => ({ status: 'success' }));
   },
   logoutMock() {
     if (USE_MOCK_DATA) return mockAuthService.logoutMock();
-    return api.post('/api/v1/auth/logout').then(res => res.data).catch(() => mockAuthService.logoutMock());
+    return api.post('/api/v1/auth/logout').then(res => res.data).catch(() => ({ status: 'success' }));
   },
   getJiraCredentials() {
     if (USE_MOCK_DATA) return mockAuthService.getJiraCredentials();
-    return api.get('/api/v1/auth/jira-credentials').then(res => res.data).catch(() => mockAuthService.getJiraCredentials());
+    return api.get('/api/v1/auth/jira-credentials').then(res => res.data);
   },
   saveJiraCredentials(payload) {
     if (USE_MOCK_DATA) return mockAuthService.saveJiraCredentials(payload);
-    return api.post('/api/v1/auth/jira-credentials', payload).then(res => res.data).catch(() => mockAuthService.saveJiraCredentials(payload));
+    return api.post('/api/v1/auth/jira-credentials', payload).then(res => res.data);
   }
 };
 
@@ -297,6 +322,10 @@ export const userService = {
 };
 
 export const reportService = {
+  sendMonthlyReports() {
+    return api.post('/api/v1/reports/send-monthly').then(res => res.data);
+  },
+
   downloadPdfReport(projectId) {
     const targetProject = projectId || 'PROJ-01';
     const backendUrl = `${BACKEND_URL}/api/v1/reports/pdf?proyecto_id=${targetProject}`;
@@ -364,12 +393,8 @@ export const reportService = {
 };
 
 export const developerService = {
-  async getMyScorecard(projectId = 'PROJ-01') {
-    try {
-      const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
-      return response.data;
-    } catch (err) {
-      console.warn("Fallback scorecard desarrollador...", err);
+  async getMyScorecard(projectId = '10000') {
+    if (USE_MOCK_DATA) {
       return {
         proyecto_id: projectId,
         cycle_time_personal: 3.2,
@@ -384,94 +409,50 @@ export const developerService = {
         story_points_target: 80.0,
         story_points_achieved_pct: 81,
         work_distribution: { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 },
-        assigned_issues: [
-          { id_jira: "101", key_issue: "MCHAV-101", summary: "Implementar autenticación SSO y OAuth 2.0", status_actual: "EN PROGRESO", status_base: "IN_PROGRESS", story_points: 8.0, cycle_time_days: 4.1 },
-          { id_jira: "105", key_issue: "MCHAV-105", summary: "Corregir bug en la API de pagos y transacciones", status_actual: "LISTO", status_base: "DONE", story_points: 5.0, cycle_time_days: 2.5 },
-          { id_jira: "112", key_issue: "MCHAV-112", summary: "Rediseñar vista de desarrollador con Recharts", status_actual: "EN REVISIÓN", status_base: "IN_PROGRESS", story_points: 13.0, cycle_time_days: 3.2 },
-          { id_jira: "118", key_issue: "MCHAV-118", summary: "Optimizar rendimiento de consultas SQL en reportes", status_actual: "LISTO", status_base: "DONE", story_points: 7.0, cycle_time_days: 2.9 },
-          { id_jira: "120", key_issue: "MCHAV-120", summary: "Pruebas de integración para Service Gateway X", status_actual: "LISTO", status_base: "DONE", story_points: 8.0, cycle_time_days: 2.9 }
-        ]
+        assigned_issues: []
       };
     }
+    const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
+    return response.data;
   },
-  async getDevelopers(projectId = 'PROJ-01') {
-    try {
-      const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
-      return response.data;
-    } catch (err) {
-      return [
-        { assignee_id: "DEV-101", nombre: "Andrés Felipe Torres", email: "aftorres@mchav.com" },
-        { assignee_id: "DEV-102", nombre: "Clara Gomez", email: "cgomez@mchav.com" },
-        { assignee_id: "DEV-103", nombre: "Michael Salamanca", email: "msalamanca@mchav.com" }
-      ];
-    }
+  async getDevelopers(projectId = '10000') {
+    if (USE_MOCK_DATA) return [];
+    const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
+    return response.data;
   },
-  async getDeveloperScorecard(assigneeId, projectId = 'PROJ-01') {
-    try {
-      const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
-      return response.data;
-    } catch (err) {
-      return this.getMyScorecard(projectId);
-    }
+  async getDeveloperScorecard(assigneeId, projectId = '10000') {
+    if (USE_MOCK_DATA) return this.getMyScorecard(projectId);
+    const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
+    return response.data;
   },
-  async getDailyFocus(projectId = 'PROJ-01') {
-    try {
-      const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
-      return response.data;
-    } catch (err) {
+  async getDailyFocus(projectId = '10000') {
+    if (USE_MOCK_DATA) {
       return {
-        ai_coach_tip: "Tu tiempo de ciclo personal en tareas de 5 SP ha mejorado un +14% respecto al sprint anterior. Te recomendamos resolver primero el bug MCHAV-105 en QA antes de avanzar en MCHAV-101.",
-        efficiency_gain_pct: 14,
+        ai_coach_tip: "Sin datos de prueba.",
+        efficiency_gain_pct: 0,
         clean_deliveries_pct: 100,
-        urgent_qa_bugs: [{ id_jira: "105", key_issue: "MCHAV-105", summary: "Corregir desbordamiento en API de transacciones", issue_type: "Bug", status_actual: "Bug en QA", time_ago: "Hace 3 horas" }],
-        active_in_progress: [{ id_jira: "101", key_issue: "MCHAV-101", summary: "Implementar autenticación SSO y OAuth 2.0", story_points: 8.0, time_spent: "1.8d / 3.0d" }],
-        in_review: [{ id_jira: "112", key_issue: "MCHAV-112", summary: "Rediseñar vista de desarrollador con Recharts", story_points: 13.0, time_ago: "Hace 18h" }]
+        urgent_qa_bugs: [],
+        active_in_progress: [],
+        in_review: []
       };
     }
+    const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
+    return response.data;
   },
-  async getDevAlerts(projectId = 'PROJ-01') {
-    try {
-      const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
-      return response.data;
-    } catch (err) {
-      return {
-        total_active_alerts: 2,
-        alerts: [
-          { id: "alert-101", issue_id: "101", key_issue: "MCHAV-101", type: "INACTIVITY", level: "CRITICAL", title: "Inactividad: Tarea sin cambios por más de 48 horas", description: "Tu ticket MCHAV-101 (SSO OAuth 2.0) lleva 3.2 días en 'In Progress' sin registrar avances ni notas." },
-          { id: "alert-wip", type: "WIP_EXCEEDED", level: "WARNING", title: "Advertencia de Multitarea Excesiva (WIP = 7 Tareas)", description: "Tienes 7 tareas abiertas en progreso. Mantener más de 3 tareas abiertas ralentiza el tiempo de ciclo." }
-        ]
-      };
-    }
+  async getDevAlerts(projectId = '10000') {
+    if (USE_MOCK_DATA) return { total_active_alerts: 0, alerts: [] };
+    const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
+    return response.data;
   },
   async performAlertAction(issueId, actionType = 'request_help') {
-    try {
-      const response = await api.post(`/api/v1/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
-      return response.data;
-    } catch (err) {
-      return { status: "SUCCESS", issue_id: issueId, action_type: actionType, message: `Acción '${actionType}' ejecutada exitosamente para el ticket #${issueId}.` };
-    }
+    if (USE_MOCK_DATA) return { status: "SUCCESS", issue_id: issueId, action_type: actionType };
+    const response = await api.post(`/api/v1/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
+    return response.data;
   },
-  async getActivityHistory(projectId = 'PROJ-01') {
-    try {
-      const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
-      return response.data;
-    } catch (err) {
-      return {
-        unlocked_badges_count: 3,
-        activity_feed: [
-          { time: "Hoy 09:30 AM", key: "MCHAV-101", action: "Pasaste a En Desarrollo (In Progress)", points: "8 SP", type: "Story" },
-          { time: "Ayer 04:15 PM", key: "MCHAV-105", action: "Resolviste e hiciste entrega a QA (Done)", points: "5 SP", type: "Bug" },
-          { time: "Hace 2 días", key: "MCHAV-112", action: "Enviaste a Code Review de Pares", points: "13 SP", type: "Story" },
-          { time: "Hace 3 días", key: "MCHAV-118", action: "Completaste optimización de consultas SQL (Done)", points: "7 SP", type: "Task" },
-          { time: "Hace 4 días", key: "MCHAV-120", action: "Completaste pruebas de integración (Done)", points: "8 SP", type: "Task" }
-        ],
-        badges: [
-          { id: "zero-defect", title: "Zero Defect Delivery", description: "2 Sprints consecutivos completados sin re-apertura de bugs en QA.", status: "UNLOCKED" },
-          { id: "fast-delivery", title: "Fast Delivery Hero", description: "Cycle Time menor a 2.5 días en tickets de 5 Story Points.", status: "UNLOCKED" },
-          { id: "sprint-master", title: "Sprint Master", description: "Cumplimiento del 81% de Story Points comprometidos en Sprint 2.", status: "UNLOCKED" }
-        ]
-      };
-    }
+  async getActivityHistory(projectId = '10000') {
+    if (USE_MOCK_DATA) return { unlocked_badges_count: 0, activity_feed: [], badges: [] };
+    const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
+    return response.data;
   },
   async getTeamMatrix(projectId = 'PROJ-01', sprintId = null, extraParams = {}) {
     try {

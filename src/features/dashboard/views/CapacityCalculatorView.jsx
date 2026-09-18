@@ -1,6 +1,5 @@
 import React from 'react';
 import { Calculator, Sliders } from 'lucide-react';
-import LiderNotificationBell from '../components/LiderNotificationBell';
 import { useCapacityCalculator } from '../hooks/useCapacityCalculator';
 import { InfoTooltip } from '../components/CapacityShared';
 
@@ -30,13 +29,14 @@ export default function CapacityCalculatorView({ isDarkMode, activeTab = 'capaci
     handleRemoveEvent,
     handleReassignTask,
     handleResetScenarios,
-    filteredTasks
+    filteredTasks,
+    liveDevs
   } = hookProps;
 
   return (
     <div className="font-sans text-left pb-12">
       {/* CONTENEDOR ÚNICO PRINCIPAL (ESTILO CENTRO DE REPORTES) */}
-      <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xs space-y-6">
         
         {/* Cabecera Integrada */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
@@ -60,9 +60,6 @@ export default function CapacityCalculatorView({ isDarkMode, activeTab = 'capaci
             </div>
           </div>
 
-          <div className="flex items-center gap-3 self-end sm:self-auto shrink-0">
-            <LiderNotificationBell />
-          </div>
         </div>
 
         {/* VISTA DEL SIMULADOR */}
@@ -77,6 +74,7 @@ export default function CapacityCalculatorView({ isDarkMode, activeTab = 'capaci
               avgDevVelocity={avgDevVelocity} setAvgDevVelocity={setAvgDevVelocity}
               absenceEvents={absenceEvents}
               jiraTasks={jiraTasks}
+              liveDevs={liveDevs}
               handleAddAbsenceEvent={handleAddAbsenceEvent}
               handleUpdateAbsenceEvent={handleUpdateAbsenceEvent}
               handleRemoveEvent={handleRemoveEvent}

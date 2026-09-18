@@ -71,7 +71,7 @@ export default function DevWorkloadView({
       </div>
 
       {/* Resumen Horizontal */}
-      <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 py-2.5 px-3.5 sm:px-4 rounded-xl bg-white dark:bg-[#141738]/50 border border-slate-200 dark:border-[#272b5c]/60 shadow-xs text-xs">
+      <div className="flex flex-wrap items-center gap-y-2 gap-x-4 sm:gap-x-6 py-2.5 px-3.5 sm:px-4 rounded-2xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs text-xs">
         <div className="flex items-center gap-1.5 whitespace-nowrap">
           <span className="text-slate-600 dark:text-slate-400 font-medium">Asignados:</span>
           <strong className="text-slate-900 dark:text-white font-mono font-bold">{totalSPAssigned} SP</strong>

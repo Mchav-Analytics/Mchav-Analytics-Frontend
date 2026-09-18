@@ -3,21 +3,10 @@ import { createPortal } from 'react-dom';
 import { X, Search, Clock, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { projectService } from '../../../services/api';
 
-const fallbackMockData = [
-  { id_jira: '101', key_issue: 'MCHAV-101', summary: 'Autenticación mediante OAuth 2.0 y JWT', status_actual: 'Done', story_points: 8, lead_time_days: 3.5, cycle_time_days: 2.1, sprint_nombre: 'Sprint 4' },
-  { id_jira: '102', key_issue: 'MCHAV-102', summary: 'Integración API v3 de Jira Cloud', status_actual: 'Done', story_points: 5, lead_time_days: 4.2, cycle_time_days: 3.1, sprint_nombre: 'Sprint 4' },
-  { id_jira: '103', key_issue: 'MCHAV-103', summary: 'Diseño de esquema PostgreSQL y migraciones', status_actual: 'Done', story_points: 3, lead_time_days: 2.8, cycle_time_days: 1.5, sprint_nombre: 'Sprint 4' },
-  { id_jira: '104', key_issue: 'MCHAV-104', summary: 'Crear componentes de gráficos Recharts', status_actual: 'Done', story_points: 5, lead_time_days: 4.8, cycle_time_days: 3.0, sprint_nombre: 'Sprint 4' },
-  { id_jira: '105', key_issue: 'MCHAV-105', summary: 'Servicio REST para cálculo de Velocity', status_actual: 'Done', story_points: 5, lead_time_days: 4.0, cycle_time_days: 2.5, sprint_nombre: 'Sprint 4' },
-  { id_jira: '106', key_issue: 'MCHAV-106', summary: 'Sanitización y validación de consultas JQL', status_actual: 'In Progress', story_points: 3, lead_time_days: 3.1, cycle_time_days: 2.0, sprint_nombre: 'Sprint 4' },
-  { id_jira: '107', key_issue: 'MCHAV-107', summary: 'Maquetación de la Consola interactiva JQL', status_actual: 'Done', story_points: 3, lead_time_days: 2.5, cycle_time_days: 1.8, sprint_nombre: 'Sprint 4' },
-  { id_jira: '108', key_issue: 'MCHAV-108', summary: 'Configuración de Dockerfile y Compose', status_actual: 'Done', story_points: 8, lead_time_days: 5.2, cycle_time_days: 4.0, sprint_nombre: 'Sprint 4' },
-  { id_jira: '109', key_issue: 'MCHAV-109', summary: 'Pruebas unitarias en Backend con Pytest', status_actual: 'Done', story_points: 3, lead_time_days: 2.2, cycle_time_days: 1.2, sprint_nombre: 'Sprint 4' },
-  { id_jira: '110', key_issue: 'MCHAV-110', summary: 'Filtro global por rango de fechas', status_actual: 'Done', story_points: 4, lead_time_days: 3.5, cycle_time_days: 2.0, sprint_nombre: 'Sprint 4' }
-];
+const fallbackMockData = [];
 
 export default function KpiDetailModal({ isOpen, onClose, projectId, metricTitle, metricType, sprintId }) {
-  const [issues, setIssues] = useState(fallbackMockData);
+  const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,7 +25,7 @@ export default function KpiDetailModal({ isOpen, onClose, projectId, metricTitle
 
       setSearchTerm('');
       setCurrentPage(1);
-      setIssues(fallbackMockData); // Carga instantánea inmediata sin espera
+      setIssues([]);
 
       if (projectId) {
         let isMounted = true;

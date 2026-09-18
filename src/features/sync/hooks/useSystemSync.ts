@@ -57,15 +57,42 @@ export function useSystemSync() {
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [syncErrorMsg, setSyncErrorMsg] = useState('');
 
-  // Configuración de Cron
-  const [isAutoSync, setIsAutoSync] = useState(true);
-  const [cronSchedule, setCronSchedule] = useState('6h');
-  const [cronTime, setCronTime] = useState('23:00');
-  const [savedCronTime, setSavedCronTime] = useState('23:00');
+  // Configuración de Cron con persistencia en localStorage
+  const [isAutoSync, setIsAutoSyncState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('mchav_is_auto_sync');
+      return saved !== null ? saved === 'true' : true;
+    } catch (e) {
+      return true;
+    }
+  });
+
+  const setIsAutoSync = (val: boolean) => {
+    setIsAutoSyncState(val);
+    try {
+      localStorage.setItem('mchav_is_auto_sync', String(val));
+    } catch (e) {}
+  };
+
+  const [cronSchedule, setCronScheduleState] = useState(() => {
+    try {
+      return localStorage.getItem('mchav_cron_schedule') || '24h';
+    } catch (e) {
+      return '24h';
+    }
+  });
+
+  const setCronSchedule = (val: string) => {
+    setCronScheduleState(val);
+    try {
+      localStorage.setItem('mchav_cron_schedule', val);
+    } catch (e) {}
+  };
+
   const [isSavingCron, setIsSavingCron] = useState(false);
   const [timeFilter, setTimeFilter] = useState('all');
   const [logPage, setLogPage] = useState(1);
-  const logsPerPage = 5;
+  const logsPerPage = 8;
 
   const fetchLogsFromApi = () => {
     jiraService.getSyncLogs()
@@ -95,21 +122,39 @@ export function useSystemSync() {
     setLogPage(1);
   }, [timeFilter]);
 
+  // Cargar preferencia de hora guardada en localStorage
+  const [cronTime, setCronTime] = useState(() => {
+    try {
+      return localStorage.getItem('mchav_cron_time') || '23:00';
+    } catch (e) {
+      return '23:00';
+    }
+  });
+  const [savedCronTime, setSavedCronTime] = useState(cronTime);
+
   const handleCronTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCronTime(e.target.value);
   };
 
   const handleSaveCronTime = () => {
     setIsSavingCron(true);
+    try {
+      localStorage.setItem('mchav_cron_time', cronTime);
+      localStorage.setItem('mchav_cron_schedule', cronSchedule);
+      localStorage.setItem('mchav_is_auto_sync', String(isAutoSync));
+    } catch (e) {}
+
     setTimeout(() => {
       setSavedCronTime(cronTime);
       setIsSavingCron(false);
-      const nextDate = syncStatus.nextScheduledSync.split(' ')[0];
+      const nextDate = syncStatus.nextScheduledSync.split(' ')[0] || 'Hoy';
       setSyncStatus(prev => ({
         ...prev,
         nextScheduledSync: `${nextDate} ${cronTime}:00`
       }));
-    }, 800);
+      setShowSuccessAlert(true);
+      setTimeout(() => setShowSuccessAlert(false), 4000);
+    }, 600);
   };
 
   const handleManualSync = () => {
@@ -142,6 +187,7 @@ export function useSystemSync() {
 
                     if (latestLog.result === 'SUCCESS') {
                       setShowSuccessAlert(true);
+                      window.dispatchEvent(new CustomEvent('mchav-sync-completed'));
                       setTimeout(() => setShowSuccessAlert(false), 5000);
                     } else if (latestLog.result === 'RUNNING') {
                       setSyncErrorMsg("La sincronización está tomando más tiempo del habitual, pero sigue ejecutándose en segundo plano.");

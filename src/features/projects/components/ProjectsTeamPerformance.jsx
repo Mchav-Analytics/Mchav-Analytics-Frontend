@@ -12,7 +12,7 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, velocityStats, act
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       
       {/* COLUMNA 1: VELOCIDAD DEL EQUIPO (STORY POINTS) */}
-      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
@@ -118,7 +118,7 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, velocityStats, act
       </div>
 
       {/* COLUMNA 2: TIEMPO DE ENTREGA Y PREDICTIBILIDAD */}
-      <div className="bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#242b45] rounded-2xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4 flex flex-col justify-between">
         
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">

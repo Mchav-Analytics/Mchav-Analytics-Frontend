@@ -13,7 +13,7 @@ export default function LiderKpiCards({ kpis }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {/* KPI 1: Cumplimiento del Sprint */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm relative transition-all hover:border-indigo-500/40">
+      <div className="p-4 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs relative transition-all hover:border-indigo-500/40">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Cumplimiento del Sprint</span>
@@ -45,7 +45,7 @@ export default function LiderKpiCards({ kpis }) {
       </div>
 
       {/* KPI 2: Tiempo de Entrega (Lead Time) */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm relative transition-all hover:border-cyan-500/40">
+      <div className="p-4 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs relative transition-all hover:border-cyan-500/40">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiempo de Entrega (Lead)</span>
@@ -77,7 +77,7 @@ export default function LiderKpiCards({ kpis }) {
       </div>
 
       {/* KPI 3: Tiempo de Desarrollo (Cycle Time) */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm relative transition-all hover:border-purple-500/40">
+      <div className="p-4 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs relative transition-all hover:border-purple-500/40">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Tiempo de Desarrollo (Cycle)</span>
@@ -106,7 +106,7 @@ export default function LiderKpiCards({ kpis }) {
       </div>
 
       {/* KPI 4: Cambio de Alcance (Scope Creep) */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] shadow-sm relative transition-all hover:border-amber-500/40">
+      <div className="p-4 rounded-3xl bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 shadow-2xs relative transition-all hover:border-amber-500/40">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">Cambio de Alcance</span>

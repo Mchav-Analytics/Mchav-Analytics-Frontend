@@ -1,16 +1,22 @@
 import React, { useState } from 'react';
-import { Target, AlertTriangle, Layers, Zap, ShieldAlert } from 'lucide-react';
+import { Target, AlertTriangle, Layers, Zap, ShieldAlert, BarChart2 } from 'lucide-react';
 import { MetricInfoTooltip } from './ScorecardShared';
 import ScopeCreepModal from './ScopeCreepModal';
 
-export default function SprintHealthKpis({ metrics, warning }) {
+export default function SprintHealthKpis({ 
+  metrics = {}, 
+  warning,
+  sprints = [],
+  selectedSprintId,
+  setSelectedSprintId 
+}) {
   const [isScopeModalOpen, setIsScopeModalOpen] = useState(false);
 
   return (
     <>
       {/* BANNER DESTACADO DE ADVERTENCIA POR SCOPE CREEP */}
       {warning && (
-        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/40 p-4 rounded-2xl flex items-start gap-3 shadow-sm dark:shadow-lg">
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-500/40 p-4 rounded-2xl flex items-start gap-3 shadow-sm dark:shadow-lg mb-4">
           <ShieldAlert className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" size={22} />
           <div className="space-y-1">
             <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">{warning.title}</h3>
@@ -19,194 +25,223 @@ export default function SprintHealthKpis({ metrics, warning }) {
         </div>
       )}
 
-      {/* 6 TARJETAS KPIS DE PREDICTIBILIDAD Y RENDIMIENTO */}
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-3 gap-4">
+      {/* SECCIÓN RESUMEN DE RENDIMIENTO DE TODOS LOS PROYECTOS */}
+      <div className="w-full space-y-4 font-sans text-left">
         
-        {/* KPI 1: PREDICTIBILIDAD DEL SPRINT */}
-        <div className="group bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-500/20">
-              <Target size={18} />
+        {/* ENCABEZADO SUPERIOR CON SELECTOR DE SPRINTS A LA DERECHA */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-100/80 dark:border-slate-800/80">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-purple-100/80 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 border border-purple-200/60 dark:border-purple-900/40 shrink-0">
+              <BarChart2 size={18} />
             </div>
-            <div className="flex items-center gap-1 min-w-0 flex-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
-                Predictibilidad del Sprint
-              </span>
-              <MetricInfoTooltip align="left" text="Mide la capacidad del equipo para entregar lo comprometido, diferenciando el plan original del plan ajustado por cambios de alcance a mitad del sprint." />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-emerald-600 dark:text-emerald-400">{metrics.commitment_reliability_pct || 0}%</span>
-              {(metrics.sp_added_mid_sprint > 0 || metrics.sp_carryover > 0) && (
-                <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30 animate-pulse">
-                  PLAN ALTERADO
-                </span>
-              )}
-            </div>
-            <div className="text-[11px] text-slate-600 dark:text-slate-300 leading-tight space-y-1 bg-slate-50 dark:bg-[#20244f] p-2.5 rounded-xl border border-slate-100 dark:border-[#33376b]">
-              <div className="flex justify-between items-center">
-                <span className="opacity-80">Plan inicial:</span>
-                <span className="font-bold">{metrics.sp_initial_commitment || 0} SP</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="opacity-80">Plan ajustado:</span>
-                <span className="font-bold">{metrics.sp_adjusted_commitment || 0} SP</span>
-              </div>
-              <div className="flex justify-between items-center border-t border-slate-200 dark:border-slate-600/50 pt-1.5 mt-1">
-                <span className="opacity-80">Terminados:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">{metrics.sp_completed || 0} SP</span>
-              </div>
+            <div className="flex items-center gap-1.5">
+              <h2 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                Resumen de rendimiento (todos los proyectos)
+              </h2>
+              <MetricInfoTooltip align="left" text="Resumen consolidado de métricas de rendimiento, predictibilidad, variaciones de alcance, incompletos y entregas del equipo." />
             </div>
           </div>
+
+          {/* SELECTOR DE SPRINT A LA DERECHA */}
+          {sprints && sprints.length > 0 && (
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-[#12142e] px-3 py-1.5 rounded-xl border border-slate-200 dark:border-[#33376b] shrink-0">
+              <Layers size={14} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <select
+                value={selectedSprintId || ''}
+                onChange={(e) => setSelectedSprintId && setSelectedSprintId(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-800 dark:text-white outline-none cursor-pointer pr-1"
+              >
+                {sprints.map((s) => (
+                  <option key={s.id_sprint} value={s.id_sprint} className="bg-white dark:bg-[#141738] text-slate-800 dark:text-white font-bold">
+                    {s.nombre || s.nombre_sprint || s.id_sprint}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
-        {/* KPI 2: VARIACIÓN DEL ALCANCE (SCOPE CREEP) */}
-        <div 
-          className="group bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between cursor-pointer hover:border-amber-400/50 dark:hover:border-amber-500/50 transition-colors relative overflow-hidden"
-          onClick={() => setIsScopeModalOpen(true)}
-        >
-          {/* Indicador sutil de clic */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="text-[9px] font-bold text-amber-600/60 dark:text-amber-400/60 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-200/50 dark:border-amber-500/20">VER DETALLE</span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 shrink-0 transition-all duration-300 group-hover:scale-110 group-hover:bg-amber-500/20">
-              <AlertTriangle size={18} />
-            </div>
-            <div className="flex items-center gap-1 min-w-0 flex-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
-                Variación del Alcance
-              </span>
-              <MetricInfoTooltip align="left" text="Porcentaje de Story Points añadidos a mitad del sprint después de la planificación inicial. Haz clic para ver la auditoría de cambios (Agregados y Retirados)." />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-amber-600 dark:text-amber-400">{metrics.scope_creep_pct || 0}%</span>
-            </div>
-            {/* GRID COMPACTO 2x2 PARA NO SATURAR LA TARJETA */}
-            <div className="grid grid-cols-2 gap-1.5 text-[10.5px] text-slate-600 dark:text-slate-300 leading-tight bg-slate-50 dark:bg-[#20244f] p-2 rounded-xl border border-slate-100 dark:border-[#33376b] group-hover:bg-amber-50 dark:group-hover:bg-amber-900/10 transition-colors">
-              <div className="flex flex-col">
-                <span className="opacity-70 uppercase text-[9px] tracking-wider">Agregados</span>
-                <span className="font-bold text-rose-500">+{metrics.sp_added_mid_sprint || 0} SP</span>
+        {/* KPIS REORGANIZADOS: 2 TARJETAS ARRIBA (PREDICTIBILIDAD Y ALCANCE) Y 3 TARJETAS ABAJO (INCOMPLETOS, RIESGO Y THROUGHPUT) */}
+        <div className="space-y-4">
+          {/* FILA SUPERIOR: 2 TARJETAS PRINCIPALES */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* KPI 1: PREDICTIBILIDAD DEL SPRINT */}
+            <div className="p-4 rounded-2xl bg-[#f4fbf7] dark:bg-emerald-950/20 border border-emerald-100/80 dark:border-emerald-900/30 hover:border-emerald-300 dark:hover:border-emerald-700 flex flex-col justify-between space-y-3 shadow-sm shadow-emerald-500/10 hover:shadow-md hover:shadow-emerald-500/20 transition-all h-full">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  <Target size={15} />
+                </div>
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 truncate">
+                    Predictibilidad del Sprint
+                  </span>
+                  <MetricInfoTooltip align="left" text="Mide la capacidad del equipo para entregar lo comprometido." />
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="opacity-70 uppercase text-[9px] tracking-wider">Retirados</span>
-                <span className="font-bold text-emerald-500">-{metrics.sp_removed_mid_sprint || 0} SP</span>
+
+              <div className="flex items-center justify-between gap-3 flex-1 mt-1">
+                <div className="flex flex-col space-y-1 shrink-0">
+                  <span className="text-2xl sm:text-3xl font-black text-emerald-600 dark:text-emerald-400">
+                    {metrics.commitment_reliability_pct || 0}%
+                  </span>
+                  {(metrics.sp_added_mid_sprint > 0 || metrics.sp_carryover > 0) && (
+                    <span className="text-[8.5px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-200/80 dark:border-amber-900/40 w-max">
+                      PLAN ALTERADO
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex-1 min-w-0 text-xs text-slate-700 dark:text-slate-200 leading-tight space-y-1.5 bg-white/90 dark:bg-slate-900/70 p-3 px-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                  <div className="flex justify-between items-center gap-1.5">
+                    <span className="opacity-75 text-[11px] font-medium truncate">Plan inicial:</span>
+                    <span className="font-bold text-[12px] shrink-0">{metrics.sp_initial_commitment || 0} SP</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-1.5">
+                    <span className="opacity-75 text-[11px] font-medium truncate">Plan ajustado:</span>
+                    <span className="font-bold text-[12px] shrink-0">{metrics.sp_adjusted_commitment || 0} SP</span>
+                  </div>
+                  <div className="flex justify-between items-center gap-1.5 border-t border-slate-200/80 dark:border-slate-800 pt-1 mt-0.5">
+                    <span className="opacity-75 text-[11px] font-medium truncate">Terminados:</span>
+                    <span className="font-bold text-[12px] text-emerald-600 dark:text-emerald-400 shrink-0">{metrics.sp_completed || 0} SP</span>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col border-t border-slate-200 dark:border-slate-700/50 pt-1.5">
-                <span className="opacity-70 uppercase text-[9px] tracking-wider">Neto</span>
-                <span className="font-bold text-amber-600 dark:text-amber-400">{((metrics.sp_added_mid_sprint || 0) - (metrics.sp_removed_mid_sprint || 0)) > 0 ? '+' : ''}{(metrics.sp_added_mid_sprint || 0) - (metrics.sp_removed_mid_sprint || 0)} SP</span>
+            </div>
+
+            {/* KPI 2: VARIACIÓN DEL ALCANCE (ESTILO CELESTE / SKY) */}
+            <div 
+              className="p-4 rounded-2xl bg-[#f4f9fd] dark:bg-sky-950/20 border border-sky-100/80 dark:border-sky-900/30 hover:border-sky-300 dark:hover:border-sky-700 flex flex-col justify-between space-y-3 shadow-sm shadow-sky-500/10 hover:shadow-md hover:shadow-sky-500/20 cursor-pointer transition-all h-full"
+              onClick={() => setIsScopeModalOpen(true)}
+            >
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-sky-100 dark:bg-sky-900/50 text-sky-600 dark:text-sky-400 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  <AlertTriangle size={15} />
+                </div>
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 truncate">
+                    Variación del Alcance
+                  </span>
+                  <MetricInfoTooltip align="left" text="Porcentaje de SP añadidos o retirados. Haz clic para ver el detalle de incidencias." />
+                </div>
               </div>
-              <div className="flex flex-col border-t border-slate-200 dark:border-slate-700/50 pt-1.5">
-                <span className="opacity-70 uppercase text-[9px] tracking-wider">Interrupciones</span>
-                <span className="font-bold">{metrics.tickets_changed || 0} tickets</span>
+
+              <div className="flex items-center justify-between gap-3 flex-1 mt-1">
+                <div className="flex flex-col shrink-0">
+                  <span className="text-2xl sm:text-3xl font-black text-sky-600 dark:text-sky-400">
+                    {metrics.scope_creep_pct || 0}%
+                  </span>
+                </div>
+
+                <div className="flex-1 min-w-0 grid grid-cols-2 gap-x-3 gap-y-1.5 text-xs text-slate-700 dark:text-slate-200 leading-tight bg-white/90 dark:bg-slate-900/70 p-3 px-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xs">
+                  <div className="flex flex-col min-w-0">
+                    <span className="opacity-75 uppercase text-[9px] tracking-wide font-extrabold truncate">Agregados</span>
+                    <span className="font-bold text-rose-500 text-[12px]">+{metrics.sp_added_mid_sprint || 0} SP</span>
+                  </div>
+                  <div className="flex flex-col min-w-0">
+                    <span className="opacity-75 uppercase text-[9px] tracking-wide font-extrabold truncate">Retirados</span>
+                    <span className="font-bold text-emerald-500 text-[12px]">-{metrics.sp_removed_mid_sprint || 0} SP</span>
+                  </div>
+                  <div className="flex flex-col min-w-0 border-t border-slate-200/80 dark:border-slate-800 pt-1 mt-0.5">
+                    <span className="opacity-75 uppercase text-[9px] tracking-wide font-extrabold truncate">Neto</span>
+                    <span className="font-bold text-sky-600 dark:text-sky-400 text-[12px]">
+                      {((metrics.sp_added_mid_sprint || 0) - (metrics.sp_removed_mid_sprint || 0)) > 0 ? '+' : ''}
+                      {(metrics.sp_added_mid_sprint || 0) - (metrics.sp_removed_mid_sprint || 0)} SP
+                    </span>
+                  </div>
+                  <div className="flex flex-col min-w-0 border-t border-slate-200/80 dark:border-slate-800 pt-1 mt-0.5">
+                    <span className="opacity-75 uppercase text-[9px] tracking-wide font-extrabold truncate" title="Interrupciones">Interrupciones</span>
+                    <span className="font-bold text-slate-900 dark:text-white text-[12px]">{metrics.tickets_changed || 0} tks</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* KPI 3: TASA DE INCOMPLETOS (CARRYOVER) */}
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0">
-              <Layers size={18} />
-            </div>
-            <div className="flex items-center gap-1 min-w-0 flex-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
-                Tasa de Incompletos
-              </span>
-              <MetricInfoTooltip align="right" text="Porcentaje de Story Points planificados que no lograron completarse a tiempo y deben ser trasladados (Carryover) al siguiente sprint." />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-rose-600 dark:text-rose-400">{metrics.carryover_pct || 0}%</span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-              {metrics.sp_carryover || 0} SP incompletos que pasan a otro sprint.
-            </p>
-          </div>
-        </div>
+          {/* FILA INFERIOR: 3 TARJETAS */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* KPI 3: TASA DE INCOMPLETOS */}
+            <div className="p-4 rounded-2xl bg-[#fff5f6] dark:bg-rose-950/20 border border-rose-100/80 dark:border-rose-900/30 hover:border-rose-300 dark:hover:border-rose-700 flex flex-col justify-between space-y-3 shadow-sm shadow-rose-500/10 hover:shadow-md hover:shadow-rose-500/20 transition-all h-full">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  <Layers size={15} />
+                </div>
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 truncate">
+                    Tasa de Incompletos
+                  </span>
+                  <MetricInfoTooltip align="right" text="Porcentaje de Story Points no entregados a tiempo." />
+                </div>
+              </div>
 
-        {/* KPI 4: EFICIENCIA DEL FLUJO */}
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20 shrink-0">
-              <Zap size={18} />
+              <div className="space-y-1.5">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-extrabold text-rose-600 dark:text-rose-400">
+                    {metrics.carryover_pct || 0}%
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
+                  {metrics.sp_carryover || 0} SP Incompletos que pasan a otro sprint.
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-1 min-w-0 flex-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
-                Eficiencia del Flujo
-              </span>
-              <MetricInfoTooltip align="right" text="Proporción del tiempo en que las tareas estuvieron en desarrollo activo (In Progress) vs. el tiempo total incluyendo colas de espera (Review, QA, Bloqueos)." />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-cyan-600 dark:text-cyan-400">{metrics.flow_efficiency_pct || 0}%</span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-              {metrics.active_dev_days || 0}d activos vs {metrics.waiting_queue_days || 0}d en colas.
-            </p>
-          </div>
-        </div>
 
-        {/* KPI 5: RIESGO DEL SPRINT */}
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 shrink-0">
-              <ShieldAlert size={18} />
-            </div>
-            <div className="flex items-center gap-1 min-w-0 flex-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
-                Nivel de Riesgo
-              </span>
-              <MetricInfoTooltip align="right" text="Evaluación de riesgo basada en alcance, bloqueos y tiempo restante." />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-orange-600 dark:text-orange-400">
-                {metrics.risk_level || 'MEDIO'}
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-              {metrics.risk_factors || 'Impactado por Scope Creep y Bloqueos.'}
-            </p>
-          </div>
-        </div>
+            {/* KPI 4: NIVEL DE RIESGO */}
+            <div className="p-4 rounded-2xl bg-[#fff8f3] dark:bg-orange-950/20 border border-orange-100/80 dark:border-orange-900/30 hover:border-orange-300 dark:hover:border-orange-700 flex flex-col justify-between space-y-3 shadow-sm shadow-orange-500/10 hover:shadow-md hover:shadow-orange-500/20 transition-all h-full">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 font-bold flex items-center justify-center shrink-0 shadow-xs">
+                  <ShieldAlert size={15} />
+                </div>
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 truncate">
+                    Nivel de Riesgo
+                  </span>
+                  <MetricInfoTooltip align="right" text="Evaluación de riesgo basada en alcance y tiempo." />
+                </div>
+              </div>
 
-        {/* KPI 6: THROUGHPUT (VELOCIDAD) */}
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-lg space-y-3 flex flex-col justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 shrink-0">
-              <Target size={18} />
+              <div className="space-y-1.5">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-extrabold text-orange-600 dark:text-orange-400 uppercase tracking-wide">
+                    {metrics.risk_level || 'MEDIO'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
+                  {metrics.risk_factors || 'Impactado por Scope Creep y Bloqueos.'}
+                </p>
+              </div>
             </div>
-            <div className="flex items-center gap-1 min-w-0 flex-1">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 truncate">
-                Throughput (Entregas)
-              </span>
-              <MetricInfoTooltip align="right" text="Cantidad de incidencias completadas en el sprint." />
+
+            {/* KPI 5: THROUGHPUT (ENTREGAS) */}
+            <div className="p-4 rounded-2xl bg-[#f8f6ff] dark:bg-purple-950/20 border border-purple-100/80 dark:border-purple-900/30 hover:border-purple-300 dark:hover:border-purple-700 flex flex-col justify-between space-y-3 shadow-sm shadow-purple-500/10 hover:shadow-md hover:shadow-purple-500/20 transition-all h-full">
+              <div className="flex items-center gap-2.5">
+                <div className="w-7 h-7 rounded-full bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400 font-bold flex items-center justify-center shrink-0">
+                  <Target size={15} />
+                </div>
+                <div className="flex items-center gap-1 min-w-0 flex-1">
+                  <span className="text-[10.5px] font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-200 truncate">
+                    Throughput (Entregas)
+                  </span>
+                  <MetricInfoTooltip align="right" text="Cantidad de incidencias completadas en el sprint." />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">
+                    {metrics.throughput || 0}
+                  </span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">Tickets</span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
+                  Promedio de {metrics.throughput_avg || 0} por sprint histórico.
+                </p>
+              </div>
             </div>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400">
-                {metrics.throughput || 0}
-              </span>
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-bold">Tickets</span>
-            </div>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">
-              Promedio de {metrics.throughput_avg || 0} por sprint histórico.
-            </p>
           </div>
         </div>
 
       </div>
-      
+
       {/* MODAL DE AUDITORÍA DE SCOPE CREEP */}
       <ScopeCreepModal 
         isOpen={isScopeModalOpen}

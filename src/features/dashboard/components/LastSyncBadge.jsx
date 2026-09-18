@@ -2,10 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { Check } from 'lucide-react';
 import { jiraService } from '../../../services/api';
 
-export default function LastSyncBadge() {
-  const [lastSyncText, setLastSyncText] = useState('Hoy, 8:30 a. m.');
+export function formatSpanishSyncDate(dateStr) {
+  if (!dateStr) {
+    const now = new Date();
+    const day = now.getDate();
+    const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
+    const month = months[now.getMonth()];
+    let hours = now.getHours();
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hoursStr = String(hours).padStart(2, '0');
+    return `${day} de ${month}, ${hoursStr}:${minutes} ${ampm}`;
+  }
+  
+  const iso = String(dateStr).endsWith('Z') ? String(dateStr) : `${dateStr}Z`;
+  const dt = new Date(iso);
+  if (isNaN(dt.getTime())) return String(dateStr);
 
-  useEffect(() => {
+  const day = dt.getDate();
+  const months = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'];
+  const month = months[dt.getMonth()];
+  let hours = dt.getHours();
+  const minutes = String(dt.getMinutes()).padStart(2, '0');
+  const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  const hoursStr = String(hours).padStart(2, '0');
+
+  return `${day} de ${month}, ${hoursStr}:${minutes} ${ampm}`;
+}
+
+export default function LastSyncBadge() {
+  const [lastSyncText, setLastSyncText] = useState(() => formatSpanishSyncDate(null));
+
+  const loadLastSync = () => {
     if (jiraService?.getSyncLogs) {
       jiraService.getSyncLogs()
         .then((logs) => {
@@ -13,37 +45,22 @@ export default function LastSyncBadge() {
             const latest = logs[0];
             const rawDate = latest.fecha_ejecucion || latest.created_at || latest.timestamp;
             if (rawDate) {
-              const dateString = String(rawDate).endsWith('Z') ? rawDate : `${rawDate}Z`;
-              const dt = new Date(dateString);
-              if (!isNaN(dt.getTime())) {
-                const formatted = dt.toLocaleString('es-CO', {
-                  day: '2-digit',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  hour12: true
-                });
-                setLastSyncText(formatted);
-                return;
-              }
+              setLastSyncText(formatSpanishSyncDate(rawDate));
+              return;
             }
           }
-          const nowFormatted = new Date().toLocaleString('es-CO', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
-          setLastSyncText(`Hoy, ${nowFormatted}`);
+          setLastSyncText(formatSpanishSyncDate(null));
         })
         .catch(() => {
-          const nowFormatted = new Date().toLocaleString('es-CO', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true
-          });
-          setLastSyncText(`Hoy, ${nowFormatted}`);
+          setLastSyncText(formatSpanishSyncDate(null));
         });
     }
+  };
+
+  useEffect(() => {
+    loadLastSync();
+    window.addEventListener('mchav-sync-completed', loadLastSync);
+    return () => window.removeEventListener('mchav-sync-completed', loadLastSync);
   }, []);
 
   return (

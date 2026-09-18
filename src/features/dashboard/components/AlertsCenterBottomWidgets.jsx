@@ -1,114 +1,203 @@
-import React from 'react';
-import { Info } from 'lucide-react';
-import { BarChart, Bar, XAxis, ResponsiveContainer } from 'recharts';
+import React, { useMemo } from 'react';
+import { TrendingUp, Info, Code, Layers, Layout, FileText } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
-const RESOLUTION_TIME_DATA = [
-  { name: '7 Jul', val: 5 },
-  { name: '14 Jul', val: 3 },
-  { name: '21 Jul', val: 4 },
-  { name: '28 Jul', val: 2 },
-  { name: '4 Ago', val: 4.2 },
-];
+export const AlertsCenterBottomWidgets = ({
+  categoryCounts = {},
+  trendData = [],
+  trendTimeframe = 'weekly',
+  setTrendTimeframe,
+  sidebarCategory = 'ALL',
+  setSidebarCategory,
+  setStatusTab
+}) => {
+  const [localTimeframe, setLocalTimeframe] = React.useState('weekly');
+  const activeTimeframe = trendTimeframe || localTimeframe;
 
-export const AlertsCenterBottomWidgets = ({ setStatusTab, setSidebarCategory, onNavigateTab }) => {
+  const handleTimeframeChange = (val) => {
+    if (setTrendTimeframe) {
+      setTrendTimeframe(val);
+    }
+    setLocalTimeframe(val);
+  };
+
+  const chartData = useMemo(() => {
+    if (trendData && trendData.length > 0) return trendData;
+    return [
+      { name: '10 sep', val: 4 },
+      { name: '12 sep', val: 8 },
+      { name: '14 sep', val: 6 },
+      { name: '16 sep', val: 14 },
+      { name: '18 sep', val: 9 },
+      { name: '20 sep', val: 18 }
+    ];
+  }, [trendData, activeTimeframe]);
+
+  const maxVal = Math.max(1, ...chartData.map(d => d.val || 0));
+
+  const maxCategoryCount = Math.max(
+    1,
+    categoryCounts['Código'] || 0,
+    categoryCounts['Procesos'] || 0,
+    categoryCounts['UI/UX'] || 0,
+    categoryCounts['Documentación'] || 0
+  );
+
+  const getWidthPct = (count) => {
+    if (!count) return 0;
+    return Math.max(12, Math.round((count / maxCategoryCount) * 100));
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-      {/* ── CARD 1: ACTIVIDAD RECIENTE ── */}
-      <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-4">
-        <div className="space-y-3">
-          <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-            Actividad reciente
-          </h3>
-
-          <div className="space-y-3 pt-1">
-            {/* Action 1 */}
-            <div className="flex items-start gap-2.5 text-xs">
-              <div className="w-6 h-6 rounded-full bg-purple-600 text-white font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">
-                CC
-              </div>
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="text-slate-700 dark:text-slate-200 font-medium line-clamp-1">
-                  <strong className="font-extrabold">Camila C.</strong> comentó en "Refactorizar módulo..."
-                </p>
-                <span className="text-[10px] text-slate-400 font-semibold">Hace 1h</span>
-              </div>
-            </div>
-
-            {/* Action 2 */}
-            <div className="flex items-start gap-2.5 text-xs">
-              <div className="w-6 h-6 rounded-full bg-blue-600 text-white font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">
-                MA
-              </div>
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="text-slate-700 dark:text-slate-200 font-medium line-clamp-1">
-                  <strong className="font-extrabold">Mike A.</strong> marcó como resuelto "Optimizar..."
-                </p>
-                <span className="text-[10px] text-slate-400 font-semibold">Hace 2h</span>
-              </div>
-            </div>
-
-            {/* Action 3 */}
-            <div className="flex items-start gap-2.5 text-xs">
-              <div className="w-6 h-6 rounded-full bg-emerald-600 text-white font-black text-[9px] flex items-center justify-center shrink-0 mt-0.5">
-                VH
-              </div>
-              <div className="min-w-0 flex-1 leading-tight">
-                <p className="text-slate-700 dark:text-slate-200 font-medium line-clamp-1">
-                  <strong className="font-extrabold">Valentina H.</strong> creó "Mejorar documentación..."
-                </p>
-                <span className="text-[10px] text-slate-400 font-semibold">Hace 5h</span>
-              </div>
-            </div>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+      {/* ── CARD 1: TENDENCIA DE FEEDBACK GENERAL ── */}
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-[#252a4e] p-5 rounded-3xl shadow-2xs space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} className="text-blue-500" />
+            <h3 className="text-sm font-extrabold text-slate-900 dark:text-white">
+              Tendencia de feedback general
+            </h3>
           </div>
+
+          <select
+            value={activeTimeframe}
+            onChange={(e) => handleTimeframeChange(e.target.value)}
+            className="bg-white dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl px-2.5 py-1 outline-none cursor-pointer"
+          >
+            <option value="monthly">Últimos 30 días</option>
+            <option value="weekly">Últimos 7 días</option>
+          </select>
         </div>
 
-        <button 
-          type="button" 
-          onClick={() => {
-            if (setStatusTab) setStatusTab('ALL');
-            if (setSidebarCategory) setSidebarCategory('ALL');
-            if (onNavigateTab) {
-              onNavigateTab('activity_history');
-            } else {
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }
-          }} 
-          className="text-left text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline pt-2 cursor-pointer"
-        >
-          Ver toda la actividad
-        </button>
+        <div className="h-44 w-full pt-2">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={chartData}
+              margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="purpleGradientBottom" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.35} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="name" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} domain={[0, Math.ceil(maxVal * 1.1)]} />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: '#0f172a',
+                  borderColor: '#334155',
+                  borderRadius: '12px',
+                  color: '#fff',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="val"
+                stroke="#7c3aed"
+                strokeWidth={2.5}
+                fillOpacity={1}
+                fill="url(#purpleGradientBottom)"
+                dot={{ r: 4, fill: '#7c3aed', strokeWidth: 2, stroke: '#ffffff' }}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      {/* ── CARD 2: TIEMPO PROMEDIO DE RESOLUCIÓN ── */}
-      <div className="bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#252a4e] p-5 rounded-2xl shadow-sm flex flex-col justify-between space-y-3">
-        <div>
-          <div className="flex items-center gap-1.5">
-            <h3 className="text-xs font-black uppercase text-slate-900 dark:text-white tracking-wider">
-              Tiempo promedio de resolución
-            </h3>
-            <Info size={13} className="text-slate-400" />
+      {/* ── CARD 2: ÁREAS QUE REQUIEREN ATENCIÓN ── */}
+      <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-[#252a4e] p-5 rounded-3xl shadow-2xs space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <span>Áreas que requieren atención</span>
+            <Info size={14} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors cursor-pointer" />
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              if (setSidebarCategory) setSidebarCategory('ALL');
+              if (setStatusTab) setStatusTab('ALL');
+            }}
+            className="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+          >
+            Ver todas
+          </button>
+        </div>
+
+        <div className="space-y-4 pt-1">
+          {/* Item 1: Código */}
+          <div
+            onClick={() => setSidebarCategory && setSidebarCategory(sidebarCategory === 'Código' ? 'ALL' : 'Código')}
+            className="space-y-1.5 cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-extrabold text-slate-800 dark:text-slate-100">
+                <Code size={15} className="text-rose-500" />
+                <span>Código</span>
+              </div>
+              <span className="text-slate-900 dark:text-white font-black">{categoryCounts['Código'] ?? 0}</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-[#1a1e3b] h-2 rounded-full overflow-hidden">
+              <div className="bg-rose-500 h-full rounded-full transition-all duration-300" style={{ width: `${getWidthPct(categoryCounts['Código'] || 0)}%` }}></div>
+            </div>
           </div>
 
-          <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">
-              4.2 días
-            </span>
-            <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400">
-              ↑ 39% vs. período anterior
-            </span>
+          {/* Item 2: Procesos */}
+          <div
+            onClick={() => setSidebarCategory && setSidebarCategory(sidebarCategory === 'Procesos' ? 'ALL' : 'Procesos')}
+            className="space-y-1.5 cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-extrabold text-slate-800 dark:text-slate-100">
+                <Layers size={15} className="text-amber-500" />
+                <span>Procesos</span>
+              </div>
+              <span className="text-slate-900 dark:text-white font-black">{categoryCounts['Procesos'] ?? 0}</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-[#1a1e3b] h-2 rounded-full overflow-hidden">
+              <div className="bg-amber-500 h-full rounded-full transition-all duration-300" style={{ width: `${getWidthPct(categoryCounts['Procesos'] || 0)}%` }}></div>
+            </div>
           </div>
 
-          {/* Mini Bar Chart */}
-          <div className="h-20 w-full mt-2">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={RESOLUTION_TIME_DATA} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-                <XAxis dataKey="name" tick={{ fontSize: 9, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Bar dataKey="val" fill="#8b5cf6" radius={[4, 4, 0, 0]} barSize={14} />
-              </BarChart>
-            </ResponsiveContainer>
+          {/* Item 3: UI/UX */}
+          <div
+            onClick={() => setSidebarCategory && setSidebarCategory(sidebarCategory === 'UI/UX' ? 'ALL' : 'UI/UX')}
+            className="space-y-1.5 cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-extrabold text-slate-800 dark:text-slate-100">
+                <Layout size={15} className="text-emerald-500" />
+                <span>UI/UX</span>
+              </div>
+              <span className="text-slate-900 dark:text-white font-black">{categoryCounts['UI/UX'] ?? 0}</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-[#1a1e3b] h-2 rounded-full overflow-hidden">
+              <div className="bg-emerald-500 h-full rounded-full transition-all duration-300" style={{ width: `${getWidthPct(categoryCounts['UI/UX'] || 0)}%` }}></div>
+            </div>
+          </div>
+
+          {/* Item 4: Documentación */}
+          <div
+            onClick={() => setSidebarCategory && setSidebarCategory(sidebarCategory === 'Documentación' ? 'ALL' : 'Documentación')}
+            className="space-y-1.5 cursor-pointer group"
+          >
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-extrabold text-slate-800 dark:text-slate-100">
+                <FileText size={15} className="text-blue-500" />
+                <span>Documentación</span>
+              </div>
+              <span className="text-slate-900 dark:text-white font-black">{categoryCounts['Documentación'] ?? 0}</span>
+            </div>
+            <div className="w-full bg-slate-100 dark:bg-[#1a1e3b] h-2 rounded-full overflow-hidden">
+              <div className="bg-blue-500 h-full rounded-full transition-all duration-300" style={{ width: `${getWidthPct(categoryCounts['Documentación'] || 0)}%` }}></div>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
 };
+

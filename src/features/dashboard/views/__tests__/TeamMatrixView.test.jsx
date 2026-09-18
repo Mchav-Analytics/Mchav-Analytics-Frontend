@@ -6,6 +6,8 @@ import TeamMatrixView from '../TeamMatrixView';
 import { developerService } from '../../../../services/api';
 
 vi.mock('../../../../services/api', () => ({
+  default: { get: vi.fn(() => Promise.resolve({ data: [] })) },
+  projectService: { getProjects: vi.fn(() => Promise.resolve([])) },
   developerService: {
     getTeamMatrix: vi.fn(() => Promise.resolve({ team_summary: {}, developers: [] }))
   }

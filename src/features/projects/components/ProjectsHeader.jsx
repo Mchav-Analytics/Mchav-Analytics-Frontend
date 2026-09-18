@@ -1,6 +1,5 @@
 import React from 'react';
-import { Filter, Sparkles } from 'lucide-react';
-import LiderNotificationBell from '../../dashboard/components/LiderNotificationBell';
+import { Filter } from 'lucide-react';
 import LastSyncBadge from '../../dashboard/components/LastSyncBadge';
 
 export const ProjectsHeader = ({ 
@@ -15,7 +14,7 @@ export const ProjectsHeader = ({
   const userFirstName = userProfile?.first_name || user?.email?.split('@')[0] || 'Camilo';
 
   return (
-    <div className="bg-white/90 dark:bg-[#121533]/90 border border-slate-200/80 dark:border-[#232752] rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs backdrop-blur-md transition-all">
+    <div className="w-full pb-4 border-b border-slate-200/60 dark:border-slate-800/80 transition-all">
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         
         {/* Lado Izquierdo: Saludo con Avatar Inicial & Título */}
@@ -26,12 +25,8 @@ export const ProjectsHeader = ({
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-lg sm:text-xl font-black text-slate-900 dark:text-white tracking-tight">
-                ¡Hola, {userFirstName}! 👋
+                ¡Hola, {userFirstName}!
               </h1>
-              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold border border-indigo-500/20">
-                <Sparkles size={10} />
-                Analytics Live
-              </span>
             </div>
             <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-0.5">
               Resumen general del rendimiento y métricas de tus proyectos
@@ -41,9 +36,6 @@ export const ProjectsHeader = ({
 
         {/* Lado Derecho: Barra de Controles Organizada */}
         <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-          {/* Botón de Campana de Notificaciones & Alertas IA Nubi */}
-          <LiderNotificationBell onNavigateTab={setActiveTab} />
-
           {/* Badge de Última Sincronización */}
           <LastSyncBadge />
 

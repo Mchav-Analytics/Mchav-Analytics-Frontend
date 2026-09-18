@@ -2,7 +2,6 @@ import React from 'react';
 import { User, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 import { useDeveloperDashboard } from '../hooks/useDeveloperDashboard';
-import LiderNotificationBell from '../components/LiderNotificationBell';
 import DeveloperProjectHeader from '../../../components/layout/DeveloperProjectHeader';
 import AiDevCoach from '../components/AiDevCoach';
 
@@ -78,15 +77,6 @@ export default function DeveloperView({
             />
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <LiderNotificationBell 
-              onNavigateTab={onNavigateTab} 
-              dynamicNotifications={dynamicNotifications} 
-              onOpenTask={(issueKey) => {
-                const found = assignedIssuesList.find(i => i.key_issue === issueKey || i.id_issue === issueKey);
-                if (found) setSelectedIssueModal(found);
-                else if (onNavigateTab) onNavigateTab('dev_workload');
-              }}
-            />
             <button
               onClick={handleReloadData}
               className="p-3 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-[#1a1e47] bg-white dark:bg-[#0c0e21] border border-slate-200 dark:border-[#272b5c] rounded-2xl transition-all cursor-pointer shadow-sm focus:ring-2 focus:ring-indigo-500/50"

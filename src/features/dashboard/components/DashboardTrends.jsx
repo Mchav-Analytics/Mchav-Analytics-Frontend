@@ -26,7 +26,7 @@ export default function DashboardTrends({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
       
       {/* COLUMNA 1 (7 COLS): TENDENCIA GENERAL CON GRÁFICO DE ÁREA DE GRADIENTE */}
-      <div className="lg:col-span-7 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-5 rounded-2xl shadow-sm dark:shadow-xl space-y-4 flex flex-col justify-between">
+      <div className="lg:col-span-7 bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs space-y-4 flex flex-col justify-between">
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
@@ -94,7 +94,7 @@ export default function DashboardTrends({
         {/* TARJETA: ÚLTIMA SINCRONIZACIÓN */}
         <div
           onClick={() => setActiveTab && setActiveTab('sincronizacion')}
-          className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4 rounded-2xl shadow-sm dark:shadow-xl cursor-pointer hover:border-indigo-400 transition-all group"
+          className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-4 rounded-3xl shadow-2xs cursor-pointer hover:border-indigo-400 transition-all group"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="text-[10px] font-extrabold text-slate-500 dark:text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
@@ -121,7 +121,7 @@ export default function DashboardTrends({
         </div>
 
         {/* TARJETA: ESTADO GENERAL */}
-        <div className="bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-4 rounded-2xl shadow-sm dark:shadow-xl flex-1 flex flex-col justify-between">
+        <div className="bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 p-5 rounded-3xl shadow-2xs flex-1 flex flex-col justify-between">
           
           <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-1.5 mb-3">
             <span>Estado general</span>
