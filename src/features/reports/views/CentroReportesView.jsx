@@ -124,7 +124,10 @@ export default function CentroReportesView({ selectedProjectId }) {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [error, setError] = useState(null);
   
-  const { token } = useAuth();
+  const { user, token } = useAuth();
+  const userRoleStr = user?.rol || user?.role || user?.nombre_rol || '';
+  const isLeader = String(userRoleStr).toUpperCase().includes('LIDER') || String(userRoleStr).toUpperCase().includes('MANAG') || userRoleStr === 'MANAGER';
+
   const [dbProjects, setDbProjects] = useState([]);
   const [dbUsers, setDbUsers] = useState([]);
   const [dbSprints, setDbSprints] = useState([]);
@@ -144,12 +147,31 @@ export default function CentroReportesView({ selectedProjectId }) {
     const fetchData = async () => {
         try {
             const projRes = await api.get('/api/v1/projects');
-            const projs = projRes.data || [];
+            let projs = projRes.data || [];
+            
+            // Si el usuario es Líder Técnico y tiene asignaciones específicas de proyectos, filtrar estrictamente
+            if (isLeader && user?.proyectos_asignados && user.proyectos_asignados.length > 0) {
+                const assignedIds = user.proyectos_asignados.map(p => typeof p === 'string' ? p : (p.id_proyecto || p.key_proyecto));
+                const filtered = projs.filter(p => assignedIds.includes(p.id_proyecto) || assignedIds.includes(p.key_proyecto));
+                if (filtered.length > 0) {
+                  projs = filtered;
+                }
+            }
+
             setDbProjects(projs);
             
             // Preseleccionar los proyectos activos por defecto para el reporte general
             const activeIds = projs.filter(p => p.estado && ['active', 'activo'].includes(p.estado.toLowerCase())).map(p => p.id_proyecto);
-            setSelectedGeneralProjects(activeIds);
+            setSelectedGeneralProjects(activeIds.length > 0 ? activeIds : projs.map(p => p.id_proyecto));
+
+            // Autoseleccionar el proyecto activo del Líder
+            if (selectedProjectId && projs.some(p => p.id_proyecto === selectedProjectId)) {
+              setGenProjectId(selectedProjectId);
+              setReportParam(selectedProjectId);
+            } else if (projs.length > 0) {
+              setGenProjectId(projs[0].id_proyecto);
+              setReportParam(projs[0].id_proyecto);
+            }
         } catch (e) { console.error("Error fetching projects", e); }
         
         try {
@@ -165,7 +187,7 @@ export default function CentroReportesView({ selectedProjectId }) {
         } catch (e) { console.error("Error fetching sprints", e); }
     };
     fetchData();
-  }, [selectedProjectId]);
+  }, [selectedProjectId, user, isLeader]);
 
   useEffect(() => {
     const fetchGen = async () => {
@@ -232,6 +254,16 @@ export default function CentroReportesView({ selectedProjectId }) {
         }
         
         const avgCt = cycleTimeCount > 0 ? cycleTimeSum / cycleTimeCount : 0;
+        
+        if (totalRecordsAgg < 3) {
+            setValidationError({
+              targetName: 'Resumen General',
+              totalRecords: totalRecordsAgg,
+              minimumRequired: 3
+            });
+            setIsGenerating(false);
+            return;
+        }
         
         let aiInsightsData = null;
         try {
@@ -1279,7 +1311,7 @@ export default function CentroReportesView({ selectedProjectId }) {
         {activeTab === 'generacion' ? renderGeneracion() : renderHistorial()}
       </div>
 
-      {/* Plantilla oculta para el PDF */}
+      {/* Plantilla dinámica con IA y gráficas integradas */}
       <DynamicAIReportTemplate ref={reportRef} reportType={reportType} filters={{}} user={useAuth().user} reportData={reportData} aiInsights={reportData?.aiInsights} />
     </div>
   );

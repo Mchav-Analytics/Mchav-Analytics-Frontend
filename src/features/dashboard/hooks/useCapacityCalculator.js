@@ -166,6 +166,12 @@ export function useCapacityCalculator() {
         task.key === taskKey ? { ...task, assignee: newAssignee } : task
       )
     );
+    // Disparar la reasignación en Jira Cloud en segundo plano
+    import('../../../services/api').then(({ jiraService }) => {
+      jiraService.reassignIssue(taskKey, newAssignee).catch(err => {
+        console.warn(`Aviso: Reasignación local completada para ${taskKey}. (Jira API: ${err?.response?.data?.detail || err.message})`);
+      });
+    }).catch(() => {});
   };
 
   const handleResetScenarios = () => {

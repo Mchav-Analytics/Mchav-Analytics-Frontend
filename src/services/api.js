@@ -108,6 +108,12 @@ export const jiraService = {
   },
   executeIssueTransition(issueKey, payload) {
     return api.post(`/api/v1/jira/issues/${issueKey}/transitions`, payload).then(res => res.data);
+  },
+  reassignIssue(issueKey, newAssignee) {
+    return api.put(`/api/v1/jira/issues/${issueKey}/assignee`, { new_assignee: newAssignee }).then(res => res.data);
+  },
+  reassignIssuesBulk(assignments) {
+    return api.post('/api/v1/jira/issues/reassign-bulk', { assignments }).then(res => res.data);
   }
 };
 

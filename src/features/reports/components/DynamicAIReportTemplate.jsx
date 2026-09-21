@@ -928,44 +928,36 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
                   );
                 }
 
-                // Fallback para Proyecto o Sprint en estas secciones
+                // Inline rendering for Proyecto o Sprint
+                const inlineParts = trimmed.split(/(\[GR[AÁ]FICA_BURNUP\]|\[GR[AÁ]FICA_VELOCIDAD\]|\[GR[AÁ]FICA_FLUJO\]|\[GR[AÁ]FICA_PREDICTIBILIDAD\])/gi);
                 return (
-                  <div className={PROSE} style={{ pageBreakInside: 'avoid' }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{trimmed.replace(/\[GR[AÁ]FICA_BURNUP\]/gi, '').replace(/\[GR[AÁ]FICA_VELOCIDAD\]/gi, '').replace(/\[GR[AÁ]FICA_FLUJO\]/gi, '').replace(/\[GR[AÁ]FICA_PREDICTIBILIDAD\]/gi, '').replace(/\[GR[AÁ]FICA_DISTRIBUCION\]/gi, '').replace(/\[PLAN_MEJORA\]/gi, '').replace(/\|\s*\|/g, '|\n|').replace(/(?=\|\s*Tipo de)/i, '\n\n')}</ReactMarkdown>
+                  <div>
+                    {inlineParts.map((part, i) => {
+                      if (/\[GR[AÁ]FICA_BURNUP\]/i.test(part)) {
+                        return <div key={`inline-burnup-${i}`} style={{ pageBreakInside: 'avoid', margin: '20px 0' }}><GraficaBurnup data={chartData.burnupData} /></div>;
+                      }
+                      if (/\[GR[AÁ]FICA_VELOCIDAD\]/i.test(part)) {
+                        return <div key={`inline-vel-${i}`} style={{ pageBreakInside: 'avoid', margin: '20px 0' }}><GraficaVelocidad data={chartData.velocityData} /></div>;
+                      }
+                      if (/\[GR[AÁ]FICA_FLUJO\]/i.test(part)) {
+                        return <div key={`inline-cfd-${i}`} style={{ pageBreakInside: 'avoid', margin: '20px 0' }}><GraficaFlujo data={chartData.cfdData} /></div>;
+                      }
+                      if (/\[GR[AÁ]FICA_PREDICTIBILIDAD\]/i.test(part)) {
+                        return <div key={`inline-scat-${i}`} style={{ pageBreakInside: 'avoid', margin: '20px 0' }}><GraficaPredictibilidad data={chartData.percentilesData} /></div>;
+                      }
+
+                      return part.trim() ? (
+                        <div key={`inline-txt-${i}`} className={PROSE} style={{ pageBreakInside: 'avoid' }}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.replace(/\|\s*\|/g, '|\n|').replace(/(?=\|\s*Tipo de)/i, '\n\n')}</ReactMarkdown>
+                        </div>
+                      ) : null;
+                    })}
                   </div>
                 );
               })()}
-
-
-
-              {/* ═══ GRÁFICA BURNUP Y VELOCIDAD PROYECTO ═══ */}
-              {showBurnup && isProyecto && (
-                <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
-                  <GraficaBurnup data={chartData.burnupData} />
-                </div>
-              )}
-              {showVelocidad && isProyecto && (
-                <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
-                  <GraficaVelocidad data={chartData.velocityData} />
-                </div>
-              )}
             </>
           );
         })()}
-
-        {/* ═══ GRÁFICA CFD Y TABLA PARA PROYECTOS ═══ */}
-        {showCFD && isProyecto && (
-          <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
-            <GraficaFlujo data={chartData.cfdData} />
-          </div>
-        )}
-
-        {/* ═══ GRÁFICA SCATTER (Predictibilidad) ═══ */}
-        {showScatter && (
-          <div style={{ pageBreakInside: 'avoid', marginTop: '15px' }}>
-            <GraficaPredictibilidad data={chartData.percentilesData} />
-          </div>
-        )}
 
         {/* ═══ Veredicto final (Solo Sprint, sección 8) ═══ */}
         {!isProyecto && sectionNum === 8 && (
@@ -985,37 +977,77 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
     );
   });
 
-  // Renderizar el Índice al inicio del reporte (excepto para desarrolladores)
-  if (tableOfContents.length > 0 && reportType !== 'desarrollador') {
-    renderedPages.unshift(
-      <div key="toc" style={{ 
-        padding: '25.4mm', 
-        breakAfter: 'page', pageBreakAfter: 'always', 
-        display: 'flex', flexDirection: 'column', justifyContent: 'flex-start'
-      }}>
-        <h3 style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', marginBottom: '30px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-          Índice de Contenidos
+  // Renderizar la Página 2 (Propósito + Metodología + Índice) al inicio del reporte
+  renderedPages.unshift(
+    <div key="page-2-intro-methodology" style={{ 
+      padding: '25.4mm', 
+      breakAfter: 'page', pageBreakAfter: 'always', 
+      display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: '100vh',
+      background: 'white'
+    }}>
+      <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '10px', marginBottom: '24px', letterSpacing: '0.5px' }}>
+        0. INTRODUCCIÓN, PROPÓSITO Y METODOLOGÍA
+      </h2>
+
+      {/* Propósito del Documento */}
+      <div style={{ marginBottom: '24px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
+          📌 Propósito del Documento
         </h3>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, width: '100%' }}>
-          {tableOfContents.map((title, i) => (
-             <li key={`toc-${i}`} style={{ 
-               display: 'flex', alignItems: 'center',
-               padding: '10px 0',
-               fontSize: '14px', color: '#334155', fontWeight: 600
-             }}>
-               <span style={{ 
-                 color: '#3b82f6', width: '15px', 
-                 display: 'inline-block', fontSize: '18px', fontWeight: 900, marginRight: '10px', lineHeight: 1 
-               }}>
-                 •
-               </span> 
-               {title.replace(/\*/g, '')}
-             </li>
-          ))}
+        <p style={{ fontSize: '11px', color: '#334155', lineHeight: 1.6, textAlign: 'justify', margin: 0 }}>
+          Este informe ejecutivo consolidado tiene como objetivo evaluar el desempeño operativo, la estabilidad del flujo de trabajo, la velocidad de entrega y la predictibilidad del equipo durante el período evaluado. Sirve como herramienta de apoyo analítico para la toma de decisiones informada, el seguimiento metodológico de compromisos y la facilitación continua de los procesos de desarrollo.
+        </p>
+      </div>
+
+      {/* Metodología de Análisis */}
+      <div style={{ marginBottom: '28px' }}>
+        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
+          🔬 Metodología de Análisis
+        </h3>
+        <p style={{ fontSize: '11px', color: '#334155', lineHeight: 1.6, textAlign: 'justify', marginBottom: '10px' }}>
+          El diagnóstico se construye mediante la consolidación de datos históricos extraídos en tiempo real de la plataforma de gestión de incidencias. Un total de <strong>{stats.throughput || reportData?.totalIssues || 0} incidencias</strong> fueron procesadas como muestra base para esta evaluación.
+        </p>
+        <ul style={{ fontSize: '10.5px', color: '#475569', lineHeight: 1.6, paddingLeft: '20px', margin: 0 }}>
+          <li style={{ marginBottom: '4px' }}><strong>Esfuerzo Validado:</strong> Medido bajo la métrica de Story Points (SP) entregados ({stats.velocity} SP completados).</li>
+          <li style={{ marginBottom: '4px' }}><strong>Tiempos de Ciclo (Cycle Time):</strong> Los tiempos de respuesta contemplan únicamente <em>días hábiles laborales</em> (descontando fines de semana y festivos) y se ponderan según la complejidad en Story Points.</li>
+          <li style={{ marginBottom: '4px' }}><strong>Medición de Fricción:</strong> Registro cuantitativo de días acumulados de bloqueo y retención de tareas en las distintas fases del flujo de trabajo (CFD).</li>
         </ul>
       </div>
-    );
-  }
+
+      {/* Índice de Contenidos */}
+      {tableOfContents.length > 0 && (
+        <div style={{ marginTop: '10px', background: '#f8fafc', padding: '20px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#0f172a', marginBottom: '14px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            📋 Índice de Contenidos
+          </h3>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, width: '100%' }}>
+            {tableOfContents.map((title, i) => (
+               <li key={`toc-${i}`} style={{ 
+                 display: 'flex', alignItems: 'center',
+                 padding: '6px 0',
+                 fontSize: '12px', color: '#334155', fontWeight: 600,
+                 borderBottom: i < tableOfContents.length - 1 ? '1px dashed #e2e8f0' : 'none'
+               }}>
+                 <span style={{ 
+                   color: '#3b82f6', width: '15px', 
+                   display: 'inline-block', fontSize: '16px', fontWeight: 900, marginRight: '8px', lineHeight: 1 
+                 }}>
+                   •
+                 </span> 
+                 {title.replace(/\*/g, '')}
+               </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Footer de Paginación */}
+      <div style={{ marginTop: 'auto', paddingTop: '15px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#94a3b8' }}>
+        <span>MCHAV Analytics · Reporte Ejecutivo</span>
+        <span>Página 2</span>
+      </div>
+    </div>
+  );
 
   return renderedPages;
 }
@@ -1197,7 +1229,7 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
                 reportType === 'sprint' ? { label: 'Sprint', value: sprintName } : null,
                 { label: 'Período', value: dates },
                 { label: 'Fecha de Emisión', value: new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' }) },
-                { label: 'Generado Por', value: user?.nombre || 'MCHAV Analytics' },
+                { label: 'Generado Por', value: `${user?.nombre || user?.name || (user?.email ? user.email.split('@')[0] : 'Administrador del Sistema')}${user?.rol ? ` (${user.rol})` : ''}` },
               ].filter(Boolean).map(({ label, value }) => (
                 <div key={label} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                   <span style={{ fontSize: '9px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{label}</span>

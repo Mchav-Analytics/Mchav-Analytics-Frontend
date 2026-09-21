@@ -11,10 +11,10 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, reportD
   const insights = aiInsights || {};
   
   const stats = {
-    velocity: metrics.completed_sp || 0,
-    throughput: metrics.completed_issues || reportData?.totalIssues || 0,
-    cycleTime: metrics.avg_cycle_time || 0,
-    bugs: metrics.bugs_count || 0
+    velocity: (reportData?.pointsCompleted !== undefined && reportData?.pointsCompleted !== null) ? reportData.pointsCompleted : (metrics.completed_sp || 0),
+    throughput: (reportData?.totalIssues !== undefined && reportData?.totalIssues !== null) ? reportData.totalIssues : (metrics.completed_issues || 0),
+    cycleTime: metrics.avg_cycle_time || reportData?.avgCycleTime || 0,
+    bugs: metrics.bugs_count || reportData?.bugs || 0
   };
 
   const totalScope = Math.max(stats.velocity, 40);
@@ -66,13 +66,14 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, reportD
 
   const dates = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
   const titleMap = {
-    general: "INFORME EJECUTIVO DE RENDIMIENTO (V2 IA)",
-    proyecto: "INFORME EJECUTIVO DEL PROYECTO (V2 IA)",
-    sprint: "REPORTE EJECUTIVO DE SPRINT (V2 IA)",
-    desarrollador: "INFORME EJECUTIVO INDIVIDUAL (V2 IA)"
+    general: "INFORME EJECUTIVO DE RENDIMIENTO",
+    proyecto: "INFORME EJECUTIVO DEL PROYECTO",
+    sprint: "REPORTE EJECUTIVO DE SPRINT",
+    desarrollador: "INFORME EJECUTIVO DE DESARROLLADOR"
   };
 
-  const projectName = reportData?.targetName || "MCHAV Analytics";
+  const projectName = reportData?.projectName || reportData?.targetName || "MCHAV Analytics";
+  const sprintName = reportData?.sprintName && reportData?.sprintName !== 'N/A' && reportData?.sprintName !== projectName ? reportData.sprintName : null;
 
   return (
     <div className="hidden">
@@ -116,25 +117,34 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, reportD
             <h1 className="text-3xl font-black text-[#243b67] uppercase tracking-[0.15em] text-center mb-4 leading-snug max-w-2xl">
               {titleMap[reportType] || titleMap.general}
             </h1>
-            <h2 className="text-sm text-gray-500 uppercase tracking-widest mb-20 font-medium">
+            <h2 className="text-sm text-gray-500 uppercase tracking-widest mb-16 font-medium">
               Análisis de desempeño, flujo y predictibilidad
             </h2>
-            <div className="flex flex-col items-center justify-center gap-10 w-full">
-              <div className="flex flex-col items-center gap-2">
-                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Nombre del Proyecto</span>
+            <div className="flex flex-col items-center justify-center gap-8 w-full">
+              <div className="flex flex-col items-center gap-1.5">
+                <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Proyecto</span>
                 <span className="text-lg font-bold text-black">{projectName}</span>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              {sprintName && (
+                <div className="flex flex-col items-center gap-1.5">
+                  <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Sprint</span>
+                  <span className="text-lg font-bold text-black">{sprintName}</span>
+                </div>
+              )}
+              <div className="flex flex-col items-center gap-1.5">
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Período Evaluado</span>
                 <span className="text-lg font-bold text-black">{dates}</span>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1.5">
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Fecha de Emisión</span>
                 <span className="text-lg font-bold text-black">{new Date().toLocaleDateString('es-ES', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
-              <div className="flex flex-col items-center gap-2">
+              <div className="flex flex-col items-center gap-1.5">
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">Generado Por</span>
-                <span className="text-lg font-bold text-black">{user?.nombre || 'Administrador del Sistema'}</span>
+                <span className="text-lg font-bold text-black">
+                  {user?.nombre || user?.name || (user?.email ? user.email.split('@')[0] : 'Administrador del Sistema')}
+                  {user?.rol ? ` (${user.rol})` : ''}
+                </span>
               </div>
             </div>
           </div>

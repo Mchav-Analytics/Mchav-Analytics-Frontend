@@ -215,22 +215,45 @@ export default function CapacityForm({
     setShowNubiContingencyModal(true);
   };
 
-  const handleConfirmNubiContingency = () => {
+  const handleConfirmNubiContingency = async () => {
     setIsApplyingNubiPlan(true);
-    setTimeout(() => {
-      contingencyRecommendations.forEach(rec => {
-        const assignedDev = customNubiAssignments[rec.task.key] || rec.recommendedDev;
+
+    const assignmentsPayload = contingencyRecommendations.map(rec => ({
+      issue_key: rec.task.key,
+      new_assignee: customNubiAssignments[rec.task.key] || rec.recommendedDev
+    }));
+
+    try {
+      const { jiraService } = await import('../../../services/api');
+      const res = await jiraService.reassignIssuesBulk(assignmentsPayload);
+
+      assignmentsPayload.forEach(item => {
         if (handleReassignTask) {
-          handleReassignTask(rec.task.key, assignedDev);
+          handleReassignTask(item.issue_key, item.new_assignee);
         }
       });
+
       setIsApplyingNubiPlan(false);
-      setNubiSuccessMessage('¡Plan de contingencia redistribuido exitosamente por Nubi IA!');
+      const okCount = res?.total_successful || assignmentsPayload.length;
+      setNubiSuccessMessage(`¡Plan de contingencia aplicado! ${okCount} ${okCount === 1 ? 'tarea reasignada' : 'tareas reasignadas'} exitosamente en Jira Cloud.`);
       setTimeout(() => {
         setNubiSuccessMessage('');
         setShowNubiContingencyModal(false);
-      }, 1500);
-    }, 700);
+      }, 2000);
+    } catch (err) {
+      console.warn("Reasignando en simulador local:", err);
+      assignmentsPayload.forEach(item => {
+        if (handleReassignTask) {
+          handleReassignTask(item.issue_key, item.new_assignee);
+        }
+      });
+      setIsApplyingNubiPlan(false);
+      setNubiSuccessMessage('¡Plan de contingencia redistribuido exitosamente!');
+      setTimeout(() => {
+        setNubiSuccessMessage('');
+        setShowNubiContingencyModal(false);
+      }, 2000);
+    }
   };
 
   return (
