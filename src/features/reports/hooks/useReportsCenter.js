@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { useAuth } from '../../auth/context/AuthContext';
-import api from '../../../services/api';
+import api, { BACKEND_URL } from '../../../services/api';
 
 export function useReportsCenter(selectedProjectId) {
   const { token } = useAuth();
@@ -81,7 +81,7 @@ export function useReportsCenter(selectedProjectId) {
     }
     setLoadingHistory(true);
     try {
-        const url = `http://localhost:8000/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
+        const url = `${BACKEND_URL}/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
         const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
         if (!res.ok) throw new Error('Error al reconstruir el historial.');
         setReportData(await res.json());

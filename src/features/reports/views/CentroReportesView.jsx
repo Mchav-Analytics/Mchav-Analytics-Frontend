@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2 } from 'lucide-react';
-import api, { projectService } from '../../../services/api';
+import api, { projectService, BACKEND_URL } from '../../../services/api';
 import { useReactToPrint } from 'react-to-print';
 import DynamicAIReportTemplate from '../components/DynamicAIReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -730,7 +730,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     if (!selectedMonth || !selectedProjectId) return setError("Faltan parámetros.");
     setLoadingHistory(true);
     try {
-        const url = `http://localhost:8000/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
+        const url = `${BACKEND_URL}/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
         const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
         if (!res.ok) throw new Error('Error al reconstruir el historial.');
         setReportData(await res.json());
