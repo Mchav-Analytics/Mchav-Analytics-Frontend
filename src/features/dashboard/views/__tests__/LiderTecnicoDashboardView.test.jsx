@@ -1,7 +1,7 @@
 import React from 'react';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import LiderTecnicoDashboardView from '../LiderTecnicoDashboardView';
 import { projectService } from '../../../../services/api';
 
@@ -56,5 +56,34 @@ describe('LiderTecnicoDashboardView', () => {
       render(<LiderTecnicoDashboardView selectedProjectId="PROJ-01" projects={[]} />);
     });
     expect(screen.getByText('Panel Operativo del Sprint Activo')).toBeInTheDocument();
+  });
+
+  it('renders toast message and handles dismissal', async () => {
+    const useLeaderDashboardHook = await import('../../hooks/useLeaderDashboard');
+    const setToastMessage = vi.fn();
+    vi.spyOn(useLeaderDashboardHook, 'useLeaderDashboard').mockReturnValue({
+      velocityData: [],
+      kpis: {},
+      criticalIssues: [],
+      teamMembers: [],
+      geminiInsights: {},
+      loading: false,
+      toastMessage: 'Acción realizada correctamente',
+      setToastMessage,
+      isExportingPdf: false,
+      handleConfirmReassign: vi.fn(),
+      handleNotifyDev: vi.fn(),
+      handleExportPdf: vi.fn()
+    });
+
+    render(<LiderTecnicoDashboardView selectedProjectId="PROJ-01" />);
+    const toastSpan = screen.getByText('Acción realizada correctamente');
+    expect(toastSpan).toBeInTheDocument();
+
+    const closeBtn = toastSpan.parentElement.querySelector('button');
+    if (closeBtn) {
+      fireEvent.click(closeBtn);
+      expect(setToastMessage).toHaveBeenCalledWith(null);
+    }
   });
 });

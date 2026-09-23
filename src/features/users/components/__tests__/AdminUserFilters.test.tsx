@@ -7,6 +7,7 @@ describe('AdminUserFilters', () => {
   const defaultProps = {
     usersCount: 50,
     pendingRequestsCount: 5,
+    pendingUsersCount: 3,
     roleFilter: 'ALL',
     setRoleFilter: vi.fn(),
     statusFilter: 'ALL',
@@ -20,6 +21,7 @@ describe('AdminUserFilters', () => {
     
     expect(screen.getByText('Todos (50)')).toBeDefined();
     expect(screen.getByText('Inactivos (5)')).toBeDefined();
+    expect(screen.getByText('Pendientes (3)')).toBeDefined();
     expect(screen.getByPlaceholderText('Buscar por nombre o correo...')).toBeDefined();
   });
 
@@ -40,6 +42,16 @@ describe('AdminUserFilters', () => {
     fireEvent.click(inactivosBtn);
     
     expect(defaultProps.setStatusFilter).toHaveBeenCalledWith('INACTIVE');
+  });
+
+  it('handles clicking Pendientes button', () => {
+    render(<AdminUserFilters {...defaultProps} />);
+    
+    const pendientesBtn = screen.getByText('Pendientes (3)');
+    fireEvent.click(pendientesBtn);
+    
+    expect(defaultProps.setRoleFilter).toHaveBeenCalledWith('USER');
+    expect(defaultProps.setStatusFilter).toHaveBeenCalledWith('ALL');
   });
 
   it('handles search input change', () => {

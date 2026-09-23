@@ -577,4 +577,55 @@ describe('API Services', () => {
       expect(newConfig.headers.Authorization).toBeUndefined();
     });
   });
+
+  describe('flowService and aiService', () => {
+    it('calls all flowService endpoints correctly', async () => {
+      const { flowService, aiService, developerService } = await import('../api');
+      
+      const spyGet = vi.spyOn(api, 'get').mockResolvedValue({ data: { test: true } } as any);
+      const spyPost = vi.spyOn(api, 'post').mockResolvedValue({ data: { success: true } } as any);
+
+      await flowService.getCycleTime('P1', 'SP-1');
+      expect(spyGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/flow/cycle-time'));
+
+      await flowService.getCycleTime('P1');
+      expect(spyGet).toHaveBeenCalledWith('/api/v1/flow/cycle-time?proyecto_id=P1');
+
+      await flowService.getEfficiency('P1', 'SP-1');
+      expect(spyGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/flow/efficiency'));
+
+      await flowService.getBottlenecks('P1', 'SP-1');
+      expect(spyGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/flow/bottlenecks'));
+
+      await flowService.getBlockers('P1');
+      expect(spyGet).toHaveBeenCalledWith('/api/v1/flow/blockers?proyecto_id=P1');
+
+      await flowService.getAging('P1');
+      expect(spyGet).toHaveBeenCalledWith('/api/v1/flow/aging?proyecto_id=P1');
+
+      await flowService.getCfdWip('P1', 'SP-1');
+      expect(spyGet).toHaveBeenCalledWith(expect.stringContaining('/api/v1/flow/cfd-wip'));
+
+      await aiService.getSuggestedPrompts();
+      expect(spyGet).toHaveBeenCalledWith('/api/v1/ai/prompts');
+
+      await developerService.saveMatrixConfig('P1', { min_sp: 10 });
+      expect(spyPost).toHaveBeenCalledWith('/api/v1/developers/matrix/config', { min_sp: 10 }, expect.anything());
+
+      spyPost.mockRejectedValueOnce(new Error('Matrix save error'));
+      await expect(developerService.saveMatrixConfig('P1', {})).rejects.toThrow('Matrix save error');
+
+      await reportService.sendMonthlyReports();
+      expect(spyPost).toHaveBeenCalledWith('/api/v1/reports/send-monthly');
+
+      await projectService.getSprintHealth('P1', 'SP-1');
+      expect(spyGet).toHaveBeenCalledWith('/api/v1/projects/P1/sprints/SP-1/health');
+
+      await developerService.getTeamMatrix('P1', 'SP-1', { custom: true });
+      expect(spyGet).toHaveBeenCalledWith('/api/v1/developers/matrix', {
+        params: { proyecto_id: 'P1', custom: true, sprint_id: 'SP-1' }
+      });
+    });
+  });
 });
+

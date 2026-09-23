@@ -15,14 +15,19 @@ import {
   Zap,
   ShieldAlert,
   Activity,
-  Bot
+  Bot,
+  Check,
+  CheckCheck
 } from 'lucide-react';
 import { useAuth } from '../../../features/auth/context/AuthContext';
 import { jiraService } from '../../../services/api';
 import {
   getReadNotificationIds,
+  getAcceptedNotificationIds,
   markNotificationAsRead,
+  markNotificationAsAccepted,
   markAllNotificationsAsRead,
+  markAllNotificationsAsAccepted,
   subscribeToNotificationUpdates
 } from '../../../services/notificationStore';
 import { generateNubiMetricAlerts } from '../../../services/nubiAlertsService';
@@ -52,7 +57,7 @@ export default function LiderNotificationBell({
   const [isOpen, setIsOpen] = useState(false);
   const [opensUpward, setOpensUpward] = useState(false);
   const [alignLeft, setAlignLeft] = useState(true);
-  const [activeFilterTab, setActiveFilterTab] = useState('TODAS'); // 'TODAS' | 'ALERTAS_IA' | 'CRITICAS'
+  const [activeFilterTab, setActiveFilterTab] = useState('TODAS'); // 'TODAS' | 'ALERTAS_IA' | 'CRITICAS' | 'ACEPTADAS'
   const [syncingId, setSyncingId] = useState(null);
   const [syncMsg, setSyncMsg] = useState('');
   const [scanningNubi, setScanningNubi] = useState(false);
@@ -79,9 +84,11 @@ export default function LiderNotificationBell({
     const filteredBase = dynamicNotifications.length > 0 ? base.filter(n => n.type !== 'TASK_ASSIGNED') : base;
     const combined = [...nubiAlerts, ...dynamicNotifications, ...filteredBase];
     const readIds = getReadNotificationIds();
+    const acceptedIds = getAcceptedNotificationIds();
     return combined.map(n => ({
       ...n,
-      isRead: n.isRead || readIds.includes(n.id)
+      isRead: n.isRead || readIds.includes(n.id) || acceptedIds.includes(n.id),
+      isAccepted: n.isAccepted || acceptedIds.includes(n.id)
     }));
   };
 
@@ -95,8 +102,11 @@ export default function LiderNotificationBell({
     return unsubscribe;
   }, [activeRole, dynamicNotifications, nubiAlerts]);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-  const criticalCount = notifications.filter(n => (n.severity === 'CRITICAL' || n.type === 'CRITICAL') && !n.isRead).length;
+  const unreadCount = notifications.filter(n => !n.isRead && !n.isAccepted).length;
+  const criticalCount = notifications.filter(n => (n.severity === 'CRITICAL' || n.type === 'CRITICAL') && !n.isAccepted).length;
+  const activeCount = notifications.filter(n => !n.isAccepted).length;
+  const acceptedCount = notifications.filter(n => n.isAccepted).length;
+  const nubiActiveCount = notifications.filter(n => (n.type === 'NUBI_ALERT' || n.nubiDiagnosis) && !n.isAccepted).length;
 
   useEffect(() => {
     function handleClickOutside(event) {
@@ -121,8 +131,21 @@ export default function LiderNotificationBell({
     handleMarkAsRead(id);
   };
 
+  const handleAcceptAlert = (id, e) => {
+    if (e) e.stopPropagation();
+    markNotificationAsAccepted(id);
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, isAccepted: true, isRead: true } : n));
+  };
+
+  const handleAcceptAll = () => {
+    const targetIds = filteredNotifications.map(n => n.id);
+    markAllNotificationsAsAccepted(targetIds);
+    setNotifications(prev => prev.map(n => targetIds.includes(n.id) ? { ...n, isAccepted: true, isRead: true } : n));
+  };
+
   const handleMarkAllAsRead = () => {
-    markAllNotificationsAsRead();
+    const allIds = notifications.map(n => n.id);
+    markAllNotificationsAsRead(allIds);
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
@@ -219,6 +242,12 @@ export default function LiderNotificationBell({
   };
 
   const filteredNotifications = notifications.filter(notif => {
+    if (activeFilterTab === 'ACEPTADAS') {
+      return notif.isAccepted;
+    }
+    // En pestañas activas, ocultamos las que ya fueron aceptadas
+    if (notif.isAccepted) return false;
+
     if (activeFilterTab === 'ALERTAS_IA') return notif.type === 'NUBI_ALERT' || notif.nubiDiagnosis;
     if (activeFilterTab === 'CRITICAS') return notif.severity === 'CRITICAL' || notif.type === 'CRITICAL' || notif.type === 'BUG' || notif.type === 'SYNC_FAIL';
     return true;
@@ -313,7 +342,8 @@ export default function LiderNotificationBell({
               </div>
               <div>
                 <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <span>Alertas Nubi AI & Notificaciones</span>
+                  <span>Alertas Nubi AI & </span>
+                  <span>Notificaciones</span>
                   <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[9px] border border-indigo-500/20">
                     Tiempo Real
                   </span>
@@ -359,7 +389,7 @@ export default function LiderNotificationBell({
                   : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
               }`}
             >
-              Todas ({notifications.length})
+              Todas ({activeCount})
             </button>
             <button
               type="button"
@@ -371,7 +401,7 @@ export default function LiderNotificationBell({
               }`}
             >
               <Zap size={11} />
-              <span>Nubi AI ({nubiAlerts.length})</span>
+              <span>Nubi AI ({nubiActiveCount})</span>
             </button>
             <button
               type="button"
@@ -384,6 +414,18 @@ export default function LiderNotificationBell({
             >
               <ShieldAlert size={11} />
               <span>Críticas ({criticalCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveFilterTab('ACEPTADAS')}
+              className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                activeFilterTab === 'ACEPTADAS'
+                  ? 'bg-emerald-600 text-white shadow-2xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <CheckCheck size={11} />
+              <span>Aceptadas ({acceptedCount})</span>
             </button>
           </div>
 
@@ -479,76 +521,114 @@ export default function LiderNotificationBell({
                     </div>
                   </div>
 
-                  {/* ACCIÓN RÁPIDA CONTEXTUAL */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#232752]/70">
+                  {/* ACCIÓN RÁPIDA CONTEXTUAL & BOTÓN ACEPTAR */}
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#232752]/70 flex-wrap gap-2">
                     <span className="text-[10px] font-bold text-slate-400">
                       {notif.projectKey ? `Proyecto: ${notif.projectKey}` : 'MCHAV Analytics'}
                     </span>
 
-                    {notif.targetTab ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleNavigate(notif.targetTab);
-                        }}
-                        className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <span>Resolver / Ver Métrica</span>
-                        <ArrowRight size={13} />
-                      </button>
-                    ) : notif.type === 'TASK_ASSIGNED' ? (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleOpenTask(notif.issueKey);
-                        }}
-                        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <span>Ver tarea</span>
-                        <ArrowRight size={13} />
-                      </button>
-                    ) : notif.type === 'SYNC_FAIL' ? (
-                      <button
-                        onClick={() => handleRetrySync(notif.id)}
-                        disabled={syncingId === notif.id}
-                        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <RefreshCw size={13} className={syncingId === notif.id ? 'animate-spin' : ''} />
-                        {syncingId === notif.id ? 'Reintentando...' : 'Reintentar'}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleGoToHub}
-                        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                      >
-                        <span>Ver en Hub</span>
-                        <ArrowRight size={13} />
-                      </button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {!notif.isAccepted ? (
+                        <button
+                          type="button"
+                          onClick={(e) => handleAcceptAlert(notif.id, e)}
+                          className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                          title="Aceptar y archivar esta alerta para que no siga activa"
+                        >
+                          <Check size={13} />
+                          <span>Aceptar Alerta</span>
+                        </button>
+                      ) : (
+                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
+                          <CheckCheck size={12} />
+                          <span>Aceptada</span>
+                        </span>
+                      )}
+
+                      {notif.targetTab ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNavigate(notif.targetTab);
+                          }}
+                          className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <span>Resolver / Ver Métrica</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      ) : notif.type === 'TASK_ASSIGNED' ? (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenTask(notif.issueKey);
+                          }}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <span>Ver tarea</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      ) : notif.type === 'SYNC_FAIL' ? (
+                        <button
+                          onClick={() => handleRetrySync(notif.id)}
+                          disabled={syncingId === notif.id}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <RefreshCw size={13} className={syncingId === notif.id ? 'animate-spin' : ''} />
+                          {syncingId === notif.id ? 'Reintentando...' : 'Reintentar'}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleGoToHub}
+                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                        >
+                          <span>Ver en Hub</span>
+                          <ArrowRight size={13} />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="py-10 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
                 <Inbox size={32} className="text-slate-400 dark:text-slate-600" />
-                <span className="text-xs font-medium">No tienes alertas pendientes para este filtro 🎉</span>
+                <span className="text-xs font-medium">
+                  {activeFilterTab === 'ACEPTADAS' 
+                    ? 'Aún no has aceptado ninguna alerta.' 
+                    : 'No tienes alertas pendientes para este filtro 🎉'}
+                </span>
               </div>
             )}
           </div>
 
           {/* PIE DE PANEL EMERGENTE */}
           <div className="pt-2 border-t border-slate-100 dark:border-[#232752] flex items-center justify-between">
-            <button
-              onClick={handleMarkAllRead}
-              className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-            >
-              Marcar leídas
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleMarkAllRead}
+                className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+              >
+                Marcar leídas
+              </button>
+              {activeFilterTab !== 'ACEPTADAS' && filteredNotifications.length > 0 && (
+                <>
+                  <span className="text-slate-300 dark:text-slate-700">•</span>
+                  <button
+                    onClick={handleAcceptAll}
+                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                  >
+                    <CheckCheck size={13} />
+                    <span>Aceptar todas</span>
+                  </button>
+                </>
+              )}
+            </div>
             <button
               onClick={handleGoToHub}
               className="py-1.5 px-3 text-center text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
             >
               <span>Ver Centro de Actividad completo</span>
+              <span className="sr-only">Ir al Centro de Actividad completo</span>
               <ArrowRight size={14} />
             </button>
           </div>

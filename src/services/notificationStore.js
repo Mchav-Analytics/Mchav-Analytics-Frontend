@@ -4,6 +4,7 @@
 // ============================================================================
 
 const STORAGE_KEY = 'mchav_read_notification_ids';
+const ACCEPTED_STORAGE_KEY = 'mchav_accepted_nubi_alert_ids';
 const NOTIFICATION_EVENT = 'mchav-notifications-updated';
 
 /**
@@ -15,6 +16,19 @@ export function getReadNotificationIds() {
     return raw ? JSON.parse(raw) : [];
   } catch (err) {
     console.error('Error al leer notificaciones de localStorage:', err);
+    return [];
+  }
+}
+
+/**
+ * Obtiene el conjunto de IDs de alertas aceptadas almacenadas.
+ */
+export function getAcceptedNotificationIds() {
+  try {
+    const raw = localStorage.getItem(ACCEPTED_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (err) {
+    console.error('Error al leer alertas aceptadas de localStorage:', err);
     return [];
   }
 }
@@ -33,6 +47,50 @@ export function markNotificationAsRead(id) {
     }
   } catch (err) {
     console.error('Error al guardar notificación leída:', err);
+  }
+}
+
+/**
+ * Marca una alerta como ACEPTADA (y leída) de forma permanente en localStorage.
+ */
+export function markNotificationAsAccepted(id) {
+  if (!id) return;
+  try {
+    // 1. Guardar en aceptadas
+    const accepted = getAcceptedNotificationIds();
+    const updatedAccepted = accepted.includes(id) ? accepted : [...accepted, id];
+    localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updatedAccepted));
+
+    // 2. Marcar también como leída
+    const read = getReadNotificationIds();
+    const updatedRead = read.includes(id) ? read : [...read, id];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRead));
+
+    window.dispatchEvent(new CustomEvent(NOTIFICATION_EVENT, { detail: { acceptedId: id } }));
+  } catch (err) {
+    console.error('Error al marcar alerta como aceptada:', err);
+  }
+}
+
+/**
+ * Marca múltiples alertas como ACEPTADAS simultáneamente.
+ */
+export function markAllNotificationsAsAccepted(ids = []) {
+  if (!ids || ids.length === 0) return;
+  try {
+    const accepted = getAcceptedNotificationIds();
+    const newAccepted = ids.filter(id => !accepted.includes(id));
+    const updatedAccepted = [...accepted, ...newAccepted];
+    localStorage.setItem(ACCEPTED_STORAGE_KEY, JSON.stringify(updatedAccepted));
+
+    const read = getReadNotificationIds();
+    const newRead = ids.filter(id => !read.includes(id));
+    const updatedRead = [...read, ...newRead];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRead));
+
+    window.dispatchEvent(new CustomEvent(NOTIFICATION_EVENT, { detail: { acceptedIds: ids } }));
+  } catch (err) {
+    console.error('Error al marcar todas las alertas como aceptadas:', err);
   }
 }
 

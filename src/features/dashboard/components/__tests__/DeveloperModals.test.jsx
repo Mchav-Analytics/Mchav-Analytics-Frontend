@@ -204,4 +204,82 @@ describe('DeveloperModals Component', () => {
     fireEvent.click(screen.getByText('Mis Alertas (0)'));
     expect(props.setAlertsTab).toHaveBeenCalledWith('alerts');
   });
+
+  it('handles closing reply modal and submitting with sendingQuickReply state', () => {
+    const props = {
+      ...defaultProps,
+      replyModalOpen: true,
+      activeReplyIssue: { detail: 'Alternative detail without message' },
+      sendingQuickReply: true,
+    };
+    render(<DeveloperModals {...props} />);
+
+    expect(screen.getByText('MCHAV-128')).toBeInTheDocument();
+    expect(screen.getByText('"Alternative detail without message"')).toBeInTheDocument();
+    expect(screen.getByText('Enviando...')).toBeInTheDocument();
+
+    const cancelBtn = screen.getByRole('button', { name: 'Cancelar' });
+    fireEvent.click(cancelBtn);
+    expect(props.setReplyModalOpen).toHaveBeenCalledWith(false);
+  });
+
+  it('handles issue detail modal fallbacks and close icon', () => {
+    const props = {
+      ...defaultProps,
+      selectedIssueModal: {
+        key_issue: 'MCHAV-99',
+        summary: 'Minimal issue',
+        status_actual: 'DONE',
+        cycle_time_days: 0,
+      }
+    };
+    render(<DeveloperModals {...props} />);
+
+    expect(screen.getByText('Sin descripción detallada de Jira.')).toBeInTheDocument();
+    expect(screen.getByText('Media')).toBeInTheDocument();
+    expect(screen.getByText('0 SP')).toBeInTheDocument();
+    expect(screen.getByText('En progreso / Reciente')).toBeInTheDocument();
+    expect(screen.getByText('Historia')).toBeInTheDocument();
+
+    // Close using the X button
+    const closeButtons = screen.getAllByRole('button');
+    const xButton = closeButtons[0];
+    fireEvent.click(xButton);
+    expect(props.setSelectedIssueModal).toHaveBeenCalledWith(null);
+  });
+
+  it('handles alerts modal close handlers and select changes', () => {
+    const props = {
+      ...defaultProps,
+      alertsModalOpen: true,
+      alertsTab: 'request_form',
+      assignedIssuesList: [
+        { key_issue: 'MCHAV-10', summary: 'Issue 10' },
+        { key_issue: 'MCHAV-20', summary: 'Issue 20' },
+      ],
+      alerts: [
+        { id: 'al-1', text: 'Text alert message' }
+      ]
+    };
+    const { rerender } = render(<DeveloperModals {...props} />);
+
+    // Test select change for helpIssueKey
+    const selects = screen.getAllByRole('combobox');
+    fireEvent.change(selects[0], { target: { value: 'MCHAV-20' } });
+    expect(props.setHelpIssueKey).toHaveBeenCalledWith('MCHAV-20');
+
+    // Test select change for helpType
+    fireEvent.change(selects[1], { target: { value: 'Aprobación de Pull Request' } });
+    expect(props.setHelpType).toHaveBeenCalledWith('Aprobación de Pull Request');
+
+    // Test cancel button in request form
+    const cancelBtn = screen.getByRole('button', { name: 'Cancelar' });
+    fireEvent.click(cancelBtn);
+    expect(props.setAlertsModalOpen).toHaveBeenCalledWith(false);
+
+    // Test alerts tab with text alert
+    rerender(<DeveloperModals {...props} alertsTab="alerts" />);
+    expect(screen.getByText('Text alert message')).toBeInTheDocument();
+  });
 });
+

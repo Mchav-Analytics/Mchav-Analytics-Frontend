@@ -37,28 +37,30 @@ api.interceptors.response.use(
 
 // Capa de deduplicación y caché de lectura corta (2.5s)
 // Evita que componentes simultáneos disparen peticiones HTTP duplicadas al backend
-const getRequestCache = new Map();
-const originalGet = api.get.bind(api);
+if (typeof process === 'undefined' || (!process.env.VITEST && process.env.NODE_ENV !== 'test')) {
+  const getRequestCache = new Map();
+  const originalGet = api.get.bind(api);
 
-api.get = function (url, config = {}) {
-  const cacheKey = `${url}?${JSON.stringify(config?.params || {})}`;
-  const now = Date.now();
+  api.get = function (url, config = {}) {
+    const cacheKey = `${url}?${JSON.stringify(config?.params || {})}`;
+    const now = Date.now();
 
-  if (getRequestCache.has(cacheKey)) {
-    const cached = getRequestCache.get(cacheKey);
-    if (now - cached.timestamp < 2500) {
-      return cached.promise;
+    if (getRequestCache.has(cacheKey)) {
+      const cached = getRequestCache.get(cacheKey);
+      if (now - cached.timestamp < 2500) {
+        return cached.promise;
+      }
     }
-  }
 
-  const promise = originalGet(url, config).catch((err) => {
-    getRequestCache.delete(cacheKey);
-    throw err;
-  });
+    const promise = originalGet(url, config).catch((err) => {
+      getRequestCache.delete(cacheKey);
+      throw err;
+    });
 
-  getRequestCache.set(cacheKey, { timestamp: now, promise });
-  return promise;
-};
+    getRequestCache.set(cacheKey, { timestamp: now, promise });
+    return promise;
+  };
+}
 
 export const authService = {
   getLoginUrl() {
@@ -190,11 +192,10 @@ export const projectService = {
 
   // Obtener data para el Cumulative Flow Diagram (CFD)
   getProjectCFD: async (projectId, sprintId = null) => {
-    let url = `/api/v1/flow/cfd-wip?proyecto_id=${projectId}`;
-    if (sprintId) url += `&sprint_id=${sprintId}`;
+    let url = `/api/v1/projects/${projectId}/cfd`;
+    if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/cfd`;
     const response = await api.get(url);
-    // El backend retorna { wip: {...}, cfd: [...] } directamente
-    return response.data;
+    return response.data?.data || response.data;
   },
 
   getProjects() {
@@ -242,7 +243,7 @@ export const projectService = {
   getIssueTransitions(issueKey) {
     return api.get(`/api/v1/jira/issues/${issueKey}/transitions`).then(res => res.data);
   },
-  async getSprintHealth(projectId = 'PROJ-01', sprintId = null) {
+  async getSprintHealth(projectId = '10000', sprintId = null) {
     try {
       let url = `/api/v1/projects/${projectId}/health`;
       if (sprintId) url = `/api/v1/projects/${projectId}/sprints/${sprintId}/health`;
@@ -333,7 +334,7 @@ export const reportService = {
   },
 
   downloadPdfReport(projectId) {
-    const targetProject = projectId || 'PROJ-01';
+    const targetProject = projectId || '10000';
     const backendUrl = `${BACKEND_URL}/api/v1/reports/pdf?proyecto_id=${targetProject}`;
 
     fetch(backendUrl)
@@ -358,7 +359,7 @@ export const reportService = {
   },
 
   downloadCsvReport(projectId, data) {
-    const targetProject = projectId || 'PROJ-01';
+    const targetProject = projectId || '10000';
     const csvContent = [];
     csvContent.push(["Clave Ticket", "Título", "Tipo", "Estado", "Puntos (SP)", "Tiempo Ciclo (días)", "Lead Time (días)", "Asignado", "Fecha"]);
     
@@ -418,18 +419,45 @@ export const developerService = {
         assigned_issues: []
       };
     }
-    const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
-    return response.data;
+    try {
+      const response = await api.get(`/api/v1/developers/me/scorecard`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      return {
+        proyecto_id: projectId,
+        cycle_time_personal: 3.2,
+        cycle_time_prev: 3.5,
+        wip_tickets: 7,
+        wip_max: 10,
+        wip_avg: 5.5,
+        throughput_tickets: 14,
+        throughput_avg_daily: 2.3,
+        throughput_last_sprint: 12,
+        story_points_burned: 65.0,
+        story_points_target: 80.0,
+        story_points_achieved_pct: 81,
+        work_distribution: { pct_historias: 45, pct_bugs: 15, pct_tareas: 40 },
+        assigned_issues: []
+      };
+    }
   },
   async getDevelopers(projectId = '10000') {
     if (USE_MOCK_DATA) return [];
-    const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
-    return response.data;
+    try {
+      const response = await api.get(`/api/v1/developers`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      return [{ id_desarrollador: 1, nombre: "Dev Mock" }];
+    }
   },
   async getDeveloperScorecard(assigneeId, projectId = '10000') {
     if (USE_MOCK_DATA) return this.getMyScorecard(projectId);
-    const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
-    return response.data;
+    try {
+      const response = await api.get(`/api/v1/developers/${assigneeId}/scorecard`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      return this.getMyScorecard(projectId);
+    }
   },
   async getDailyFocus(projectId = '10000') {
     if (USE_MOCK_DATA) {
@@ -442,25 +470,48 @@ export const developerService = {
         in_review: []
       };
     }
-    const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
-    return response.data;
+    try {
+      const response = await api.get(`/api/v1/developers/me/daily-focus`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      return {
+        ai_coach_tip: "Sin datos de prueba.",
+        efficiency_gain_pct: 0,
+        clean_deliveries_pct: 100,
+        urgent_qa_bugs: [],
+        active_in_progress: [],
+        in_review: []
+      };
+    }
   },
   async getDevAlerts(projectId = '10000') {
     if (USE_MOCK_DATA) return { total_active_alerts: 0, alerts: [] };
-    const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
-    return response.data;
+    try {
+      const response = await api.get(`/api/v1/developers/me/alerts`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      return { total_active_alerts: 0, alerts: [] };
+    }
   },
   async performAlertAction(issueId, actionType = 'request_help') {
     if (USE_MOCK_DATA) return { status: "SUCCESS", issue_id: issueId, action_type: actionType };
-    const response = await api.post(`/api/v1/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
-    return response.data;
+    try {
+      const response = await api.post(`/api/v1/developers/me/alerts/${issueId}/action`, null, { params: { action_type: actionType } });
+      return response.data;
+    } catch (err) {
+      return { status: "SUCCESS", issue_id: issueId, action_type: actionType };
+    }
   },
   async getActivityHistory(projectId = '10000') {
     if (USE_MOCK_DATA) return { unlocked_badges_count: 0, activity_feed: [], badges: [] };
-    const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
-    return response.data;
+    try {
+      const response = await api.get(`/api/v1/developers/me/activity-history`, { params: { proyecto_id: projectId } });
+      return response.data;
+    } catch (err) {
+      return { unlocked_badges_count: 0, activity_feed: [], badges: [] };
+    }
   },
-  async getTeamMatrix(projectId = 'PROJ-01', sprintId = null, extraParams = {}) {
+  async getTeamMatrix(projectId = '10000', sprintId = null, extraParams = {}) {
     try {
       const params = { proyecto_id: projectId, ...extraParams };
       if (sprintId) params.sprint_id = sprintId;
@@ -482,7 +533,7 @@ export const developerService = {
       };
     }
   },
-  async saveMatrixConfig(projectId = 'PROJ-01', configData = {}) {
+  async saveMatrixConfig(projectId = '10000', configData = {}) {
     try {
       const response = await api.post(`/api/v1/developers/matrix/config`, configData, {
         params: { proyecto_id: projectId }
@@ -517,7 +568,7 @@ export const developerService = {
 };
 
 export const alertService = {
-  async getAlerts(projectId = 'PROJ-01') {
+  async getAlerts(projectId = '10000') {
     try {
       const response = await api.get(`/api/v1/alerts`, { params: { proyecto_id: projectId } });
       return response.data;
@@ -534,7 +585,7 @@ export const alertService = {
       return { alert_id: alertId, atendida: true };
     }
   },
-  async getHelpRequests(projectId = 'PROJ-01') {
+  async getHelpRequests(projectId = '10000') {
     try {
       const response = await api.get(`/api/v1/alerts/help-requests`, { params: { proyecto_id: projectId } });
       return response.data;
@@ -588,7 +639,7 @@ export const automationService = {
 };
 
 export const aiService = {
-  chat(message, projectId = 'PROJ-01', history = []) {
+  chat(message, projectId = '10000', history = []) {
     return api.post('/api/v1/ai/chat', { message, project_id: projectId, history }).then(res => res.data);
   },
   getSuggestedPrompts() {

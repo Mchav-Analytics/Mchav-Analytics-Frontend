@@ -10,6 +10,10 @@ vi.mock('../features/auth/views/LoginView', () => ({
   default: () => <div data-testid="login-view">Login View</div>
 }));
 
+vi.mock('../features/auth/views/PendingApprovalView', () => ({
+  default: () => <div data-testid="pending-approval-view">Pending Approval View</div>
+}));
+
 vi.mock('../components/layout/MainLayout', () => ({
   default: ({ children, activeTab, setActiveTab, topbarTitle, handleSyncNow, setIsDarkMode }) => (
     <div data-testid="main-layout">
@@ -26,7 +30,6 @@ vi.mock('../components/layout/MainLayout', () => ({
 // Mock all the tab views
 vi.mock('../features/dashboard/views/DashboardView', () => ({ default: () => <div data-testid="dashboard-view">Dashboard</div> }));
 vi.mock('../features/dashboard/views/LiderTecnicoDashboardView', () => ({ default: () => <div data-testid="lider-dashboard">Lider Dashboard</div> }));
-vi.mock('../features/dashboard/views/DeveloperView', () => ({ default: () => <div data-testid="developer-view">Developer View</div> }));
 vi.mock('../features/projects/views/ProyectosDashboardView', () => ({ default: () => <div data-testid="proyectos-view">Proyectos View</div> }));
 vi.mock('../features/users/views/AdminUsuariosView', () => ({ default: () => <div data-testid="usuarios-view">Usuarios View</div> }));
 vi.mock('../features/dashboard/views/DailyFocusView', () => ({ default: () => <div data-testid="daily-focus-view">Daily Focus</div> }));
@@ -105,6 +108,21 @@ describe('App Root Component', () => {
 
     render(<App />);
     expect(screen.getByTestId('login-view')).toBeInTheDocument();
+  });
+
+  it('renders PendingApprovalView when user has USER role', async () => {
+    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+      user: { rol: 'USER' },
+      isAuthenticated: true,
+      loading: false
+    });
+
+    await act(async () => {
+      render(<App />);
+    });
+
+    expect(screen.getByTestId('pending-approval-view')).toBeInTheDocument();
+    expect(screen.queryByTestId('main-layout')).not.toBeInTheDocument();
   });
 
   it('renders MainLayout and Executive Dashboard for MANAGER role', async () => {

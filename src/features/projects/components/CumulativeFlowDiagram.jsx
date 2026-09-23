@@ -11,7 +11,18 @@ import {
 } from 'recharts';
 
 export const CumulativeFlowDiagram = ({ data, isAnimationActive = true, width, height }) => {
-  if (!data || data.length === 0) {
+  const normalizedData = React.useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return [];
+    return data.map((d, index) => ({
+      fecha_real: d.fecha_real || d.date || d.fecha || `Día ${index + 1}`,
+      completado: Number(d.completado !== undefined ? d.completado : (d.Done ?? 0)),
+      en_revision: Number(d.en_revision !== undefined ? d.en_revision : (d.Waiting ?? (d.en_espera ?? 0))),
+      en_progreso: Number(d.en_progreso !== undefined ? d.en_progreso : (d.Active ?? 0)),
+      por_hacer: Number(d.por_hacer !== undefined ? d.por_hacer : ((d['To Do'] ?? 0) + (d.Blocked ?? 0))),
+    }));
+  }, [data]);
+
+  if (!normalizedData || normalizedData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
         <span className="text-slate-500 dark:text-slate-400 font-medium text-sm">
@@ -60,16 +71,16 @@ export const CumulativeFlowDiagram = ({ data, isAnimationActive = true, width, h
             {[...payload].reverse().map((entry, index) => {
               let labelName = entry.name;
               let color = entry.color;
-              if (entry.dataKey === 'completado') {
+              if (entry.dataKey === 'completado' || entry.dataKey === 'Done') {
                 labelName = 'Completado';
                 color = '#10b981';
-              } else if (entry.dataKey === 'en_revision') {
+              } else if (entry.dataKey === 'en_revision' || entry.dataKey === 'Waiting') {
                 labelName = 'En Revisión / QA';
                 color = '#a855f7';
-              } else if (entry.dataKey === 'en_progreso') {
+              } else if (entry.dataKey === 'en_progreso' || entry.dataKey === 'Active') {
                 labelName = 'En Progreso';
                 color = '#3b82f6';
-              } else if (entry.dataKey === 'por_hacer') {
+              } else if (entry.dataKey === 'por_hacer' || entry.dataKey === 'To Do') {
                 labelName = 'Por Hacer';
                 color = '#64748b';
               }
@@ -101,7 +112,7 @@ export const CumulativeFlowDiagram = ({ data, isAnimationActive = true, width, h
     <div className={`w-full ${height ? '' : 'h-[360px] min-h-[360px]'}`}>
       <Wrapper {...wrapperProps}>
         <AreaChart
-          data={data}
+          data={normalizedData}
           margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
           {...chartProps}
         >

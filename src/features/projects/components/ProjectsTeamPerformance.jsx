@@ -150,9 +150,9 @@ export const ProjectsTeamPerformance = ({ activeVelocityData, velocityStats, act
                   <ReferenceLine y={activePercentilesData.p50} stroke="#10b981" strokeDasharray="3 3" strokeWidth={1.5} />
                   <ReferenceLine y={activePercentilesData.p85} stroke="#f59e0b" strokeDasharray="3 3" strokeWidth={1.5} />
                   <ReferenceLine y={activePercentilesData.p95} stroke="#f43f5e" strokeDasharray="3 3" strokeWidth={1.5} />
-                  <Scatter name="Issues" data={activePercentilesData.scatterPoints} fill="#8884d8">
-                    {activePercentilesData.scatterPoints.map((entry, index) => (
-                      <Cell key={`cell-scatter-${index}`} fill={entry.y <= activePercentilesData.p50 ? '#10b981' : entry.y <= activePercentilesData.p85 ? '#f59e0b' : '#f43f5e'} />
+                  <Scatter name="Issues" data={activePercentilesData?.scatterPoints || []} fill="#8884d8">
+                    {(activePercentilesData?.scatterPoints || []).map((entry, index) => (
+                      <Cell key={`cell-scatter-${index}`} fill={entry.y <= (activePercentilesData?.p50 || 0) ? '#10b981' : entry.y <= (activePercentilesData?.p85 || 0) ? '#f59e0b' : '#f43f5e'} />
                     ))}
                   </Scatter>
                 </ScatterChart>

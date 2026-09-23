@@ -132,4 +132,23 @@ describe('ProjectsTable', () => {
     render(<ProjectsTable {...mockProps} selectedProjectObj={{ name: 'Mi Super Proyecto' }} />);
     expect(screen.getByText('Detalle del Proyecto: Mi Super Proyecto')).toBeInTheDocument();
   });
+
+  it('calls onNavigateToHealth when clicking "Salud del Sprint & Flow"', () => {
+    const onNavigateToHealth = vi.fn();
+    render(<ProjectsTable {...mockProps} onNavigateToHealth={onNavigateToHealth} />);
+    const buttons = screen.getAllByRole('button', { name: /Salud del Sprint & Flow/i });
+    fireEvent.click(buttons[0]);
+    expect(onNavigateToHealth).toHaveBeenCalledWith('P1');
+  });
+
+  it('switches to cards view when clicking "Tarjetas"', () => {
+    render(<ProjectsTable {...mockProps} />);
+    const cardViewBtn = screen.getByRole('button', { name: /Tarjetas/i });
+    fireEvent.click(cardViewBtn);
+    
+    // In card view, clicking a card calls setSelectedProjectId
+    const card = screen.getByText('Proyecto Alpha').closest('div');
+    fireEvent.click(card);
+    expect(mockProps.setSelectedProjectId).toHaveBeenCalled();
+  });
 });

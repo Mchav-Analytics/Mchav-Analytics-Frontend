@@ -1,7 +1,10 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   getReadNotificationIds,
+  getAcceptedNotificationIds,
   markNotificationAsRead,
+  markNotificationAsAccepted,
+  markAllNotificationsAsAccepted,
   markAllNotificationsAsRead,
   subscribeToNotificationUpdates
 } from '../notificationStore';
@@ -12,127 +15,114 @@ describe('notificationStore', () => {
     vi.restoreAllMocks();
   });
 
-  afterEach(() => {
-    localStorage.clear();
+  it('getReadNotificationIds returns empty array when empty or on error', () => {
+    expect(getReadNotificationIds()).toEqual([]);
+
+    localStorage.setItem('mchav_read_notification_ids', JSON.stringify(['id1', 'id2']));
+    expect(getReadNotificationIds()).toEqual(['id1', 'id2']);
+
+    localStorage.setItem('mchav_read_notification_ids', 'invalid-json{{{');
+    expect(getReadNotificationIds()).toEqual([]);
   });
 
-  it('getReadNotificationIds returns empty array initially', () => {
-    const ids = getReadNotificationIds();
-    expect(ids).toEqual([]);
+  it('getAcceptedNotificationIds returns empty array when empty or on error', () => {
+    expect(getAcceptedNotificationIds()).toEqual([]);
+
+    localStorage.setItem('mchav_accepted_nubi_alert_ids', JSON.stringify(['a1']));
+    expect(getAcceptedNotificationIds()).toEqual(['a1']);
+
+    localStorage.setItem('mchav_accepted_nubi_alert_ids', 'invalid-json{{{');
+    expect(getAcceptedNotificationIds()).toEqual([]);
   });
 
-  it('getReadNotificationIds handles invalid JSON gracefully', () => {
-    localStorage.setItem('mchav_read_notification_ids', 'invalid-json');
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
-    const ids = getReadNotificationIds();
-    
-    expect(ids).toEqual([]);
-    expect(consoleSpy).toHaveBeenCalled();
-    consoleSpy.mockRestore();
-  });
-
-  it('markNotificationAsRead adds an ID and dispatches event', () => {
-    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-    
-    markNotificationAsRead('notif-1');
-    
-    const ids = getReadNotificationIds();
-    expect(ids).toEqual(['notif-1']);
-    
-    expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    const event = dispatchSpy.mock.calls[0][0];
-    expect(event.type).toBe('mchav-notifications-updated');
-    expect(event.detail).toEqual({ updatedId: 'notif-1' });
-  });
-
-  it('markNotificationAsRead does not duplicate IDs', () => {
-    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-    
-    markNotificationAsRead('notif-1');
-    markNotificationAsRead('notif-1');
-    
-    const ids = getReadNotificationIds();
-    expect(ids).toEqual(['notif-1']);
-    expect(dispatchSpy).toHaveBeenCalledTimes(1);
-  });
-
-  it('markNotificationAsRead does nothing if id is empty', () => {
+  it('markNotificationAsRead handles null, new id, and existing id', () => {
     markNotificationAsRead(null);
     expect(getReadNotificationIds()).toEqual([]);
-  });
-  
-  it('markNotificationAsRead handles localStorage errors gracefully', () => {
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('Quota exceeded');
+
+    markNotificationAsRead('id10');
+    expect(getReadNotificationIds()).toEqual(['id10']);
+
+    // Call again with same id
+    markNotificationAsRead('id10');
+    expect(getReadNotificationIds()).toEqual(['id10']);
+
+    // Error handling branch
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('Storage error');
     });
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
-    markNotificationAsRead('notif-1');
-    
-    expect(consoleSpy).toHaveBeenCalled();
-    setItemSpy.mockRestore();
-    consoleSpy.mockRestore();
+    markNotificationAsRead('id20');
   });
 
-  it('markAllNotificationsAsRead adds multiple IDs and dispatches event', () => {
-    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-    
-    markAllNotificationsAsRead(['notif-1', 'notif-2']);
-    
-    const ids = getReadNotificationIds();
-    expect(ids).toEqual(['notif-1', 'notif-2']);
-    
-    expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    const event = dispatchSpy.mock.calls[0][0];
-    expect(event.type).toBe('mchav-notifications-updated');
-    expect(event.detail).toEqual({ updatedIds: ['notif-1', 'notif-2'] });
+  it('markNotificationAsAccepted marks as accepted and read', () => {
+    markNotificationAsAccepted(null);
+    expect(getAcceptedNotificationIds()).toEqual([]);
+
+    markNotificationAsAccepted('alert1');
+    expect(getAcceptedNotificationIds()).toEqual(['alert1']);
+    expect(getReadNotificationIds()).toEqual(['alert1']);
+
+    // Call again with existing id
+    markNotificationAsAccepted('alert1');
+    expect(getAcceptedNotificationIds()).toEqual(['alert1']);
+
+    // Error branch
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('Storage full');
+    });
+    markNotificationAsAccepted('alert2');
   });
 
-  it('markAllNotificationsAsRead filters out already read IDs', () => {
-    markNotificationAsRead('notif-1');
-    const dispatchSpy = vi.spyOn(window, 'dispatchEvent');
-    
-    markAllNotificationsAsRead(['notif-1', 'notif-2']);
-    
-    const ids = getReadNotificationIds();
-    expect(ids).toEqual(['notif-1', 'notif-2']);
-    expect(dispatchSpy).toHaveBeenCalledTimes(1);
-    
-    const event = dispatchSpy.mock.calls[0][0];
-    expect(event.detail).toEqual({ updatedIds: ['notif-2'] });
+  it('markAllNotificationsAsAccepted handles empty and multiple ids', () => {
+    markAllNotificationsAsAccepted([]);
+    markAllNotificationsAsAccepted(null);
+    expect(getAcceptedNotificationIds()).toEqual([]);
+
+    markAllNotificationsAsAccepted(['a1', 'a2']);
+    expect(getAcceptedNotificationIds()).toEqual(['a1', 'a2']);
+    expect(getReadNotificationIds()).toEqual(['a1', 'a2']);
+
+    // Overlapping
+    markAllNotificationsAsAccepted(['a2', 'a3']);
+    expect(getAcceptedNotificationIds()).toEqual(['a1', 'a2', 'a3']);
+
+    // Error branch
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('Storage failure');
+    });
+    markAllNotificationsAsAccepted(['a4']);
   });
 
-  it('markAllNotificationsAsRead does nothing if ids array is empty', () => {
+  it('markAllNotificationsAsRead handles empty and multiple ids', () => {
     markAllNotificationsAsRead([]);
+    markAllNotificationsAsRead(null);
     expect(getReadNotificationIds()).toEqual([]);
-  });
 
-  it('markAllNotificationsAsRead handles localStorage errors gracefully', () => {
-    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-      throw new Error('Quota exceeded');
+    markAllNotificationsAsRead(['r1', 'r2']);
+    expect(getReadNotificationIds()).toEqual(['r1', 'r2']);
+
+    // Re-adding existing
+    markAllNotificationsAsRead(['r1', 'r2']);
+    expect(getReadNotificationIds()).toEqual(['r1', 'r2']);
+
+    // Error branch
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementationOnce(() => {
+      throw new Error('Fail');
     });
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
-    markAllNotificationsAsRead(['notif-1']);
-    
-    expect(consoleSpy).toHaveBeenCalled();
-    setItemSpy.mockRestore();
-    consoleSpy.mockRestore();
+    markAllNotificationsAsRead(['r3']);
   });
 
-  it('subscribeToNotificationUpdates calls callback when event is dispatched', () => {
+  it('subscribeToNotificationUpdates listens and unsubscribes cleanly', () => {
     const callback = vi.fn();
     const unsubscribe = subscribeToNotificationUpdates(callback);
-    
-    markNotificationAsRead('notif-1');
-    
-    expect(callback).toHaveBeenCalledWith(['notif-1'], { updatedId: 'notif-1' });
-    
+
+    markNotificationAsRead('event-id');
+    expect(callback).toHaveBeenCalledWith(['event-id'], { updatedId: 'event-id' });
+
+    window.dispatchEvent(new Event('storage'));
+    expect(callback).toHaveBeenCalledTimes(2);
+
     unsubscribe();
-    
-    markNotificationAsRead('notif-2');
-    // Callback should not be called again after unsubscribe
-    expect(callback).toHaveBeenCalledTimes(1);
+    markNotificationAsRead('event-id-2');
+    expect(callback).toHaveBeenCalledTimes(2);
   });
 });

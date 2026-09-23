@@ -6,8 +6,7 @@ import React, { useEffect, useState } from 'react';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import { authService } from '../../services/api';
-import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
-import { Shield, Briefcase, Code, Layers } from 'lucide-react';
+import { useAuth } from '../../features/auth/context/AuthContext';
 
 function MainLayout({
   children,
@@ -29,9 +28,7 @@ function MainLayout({
 }) {
   const [userProfile, setUserProfile] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const { user, switchViewRole, isRealAdmin } = useAuth();
-
-  const currentRole = normalizeRole(user?.rol);
+  const { user } = useAuth();
 
   useEffect(() => {
     authService.getCurrentUser()
@@ -42,17 +39,6 @@ function MainLayout({
         console.log("Perfil cargado mediante AuthContext");
       });
   }, []);
-
-  const handleRoleSwitch = (newRole) => {
-    switchViewRole(newRole);
-    if (newRole === 'MANAGER') {
-      setActiveTab('proyectos');
-    } else if (newRole === 'DEVELOPER') {
-      setActiveTab('developer');
-    } else {
-      setActiveTab('proyectos');
-    }
-  };
 
   return (
     <div className={`dashboard-layout ${isDarkMode ? 'dark-theme dark' : ''}`}>

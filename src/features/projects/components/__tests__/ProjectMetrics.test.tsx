@@ -13,12 +13,27 @@ vi.mock('recharts', () => {
     Line: () => <div data-testid="line-chart" />,
     Area: () => <div data-testid="area-chart" />,
     Bar: () => <div data-testid="bar-chart" />,
-    XAxis: () => <div data-testid="x-axis" />,
-    YAxis: () => <div data-testid="y-axis" />,
+    XAxis: ({ tickFormatter }) => {
+      if (typeof tickFormatter === 'function') tickFormatter('D1');
+      return <div data-testid="x-axis" />;
+    },
+    YAxis: ({ tickFormatter }) => {
+      if (typeof tickFormatter === 'function') tickFormatter(10);
+      return <div data-testid="y-axis" />;
+    },
     PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
     Pie: () => <div data-testid="pie" />,
     Cell: () => <div data-testid="cell" />,
-    Tooltip: () => <div data-testid="tooltip" />
+    Tooltip: ({ formatter, labelFormatter }) => {
+      if (typeof formatter === 'function') {
+        formatter(20, 'REAL');
+        formatter(15, 'IDEAL');
+      }
+      if (typeof labelFormatter === 'function') {
+        labelFormatter('D3');
+      }
+      return <div data-testid="tooltip" />;
+    }
   };
 });
 
@@ -38,9 +53,9 @@ describe('ProjectMetrics', () => {
       cycleTimeDays: '5.5',
       criticalBugs: 2
     },
-    burnup: [],
+    burnup: [{ day: 'D1', real: 10, ideal: 10 }],
     distribution: [{ name: 'Task', value: 10, color: '#fff', percentage: 100 }],
-    velocity: []
+    velocity: [{ sprint: 'S1', real: 20, ideal: 25 }]
   };
 
   const defaultProps = {

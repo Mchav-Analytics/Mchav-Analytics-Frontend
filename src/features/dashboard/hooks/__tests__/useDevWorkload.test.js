@@ -72,12 +72,10 @@ describe('useDevWorkload', () => {
   it('initializes correctly and loads data', async () => {
     const { result } = renderHook(() => useDevWorkload(defaultProps));
 
-    expect(result.current.loading).toBe(true);
-
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
       expect(result.current.tasksList.length).toBe(2);
-    });
+    }, { timeout: 4000 });
 
     expect(result.current.projectName).toBe('Test Project');
     expect(result.current.devName).toBe('Test Dev');

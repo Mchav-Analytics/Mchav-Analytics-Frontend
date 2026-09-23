@@ -14,7 +14,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
   // 1. Alerta: Eficiencia del Flujo Crítica (< 65% o desviación)
   if (flowEff < 65) {
     alerts.push({
-      id: `nubi-flow-${nowTs}`,
+      id: `nubi-flow-${projectKey}`,
       type: 'NUBI_ALERT',
       severity: 'CRITICAL',
       title: '⚡ IA Nubi: Desplome Severo en Eficiencia del Flujo',
@@ -32,7 +32,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
     });
   } else if (flowEff < 80) {
     alerts.push({
-      id: `nubi-flow-warn-${nowTs}`,
+      id: `nubi-flow-${projectKey}`,
       type: 'NUBI_ALERT',
       severity: 'WARNING',
       title: '⚠️ IA Nubi: Eficiencia del Flujo en Nivel Amarillo',
@@ -53,7 +53,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
   // 2. Alerta: Scope Creep Alto (> 15% o desviación crítica)
   if (scopeCreep > 15) {
     alerts.push({
-      id: `nubi-scope-${nowTs}`,
+      id: `nubi-scope-${projectKey}`,
       type: 'NUBI_ALERT',
       severity: 'CRITICAL',
       title: '🚨 IA Nubi: Alteración Crítica de Alcance (Scope Creep)',
@@ -71,7 +71,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
     });
   } else {
     alerts.push({
-      id: `nubi-scope-info-${nowTs}`,
+      id: `nubi-scope-${projectKey}`,
       type: 'NUBI_ALERT',
       severity: 'INFO',
       title: 'ℹ️ IA Nubi: Estabilidad de Alcance Verificada',
@@ -92,7 +92,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
   // 3. Alerta: Confiabilidad del Compromiso (< 75%)
   if (commitment < 75) {
     alerts.push({
-      id: `nubi-commit-${nowTs}`,
+      id: `nubi-commit-${projectKey}`,
       type: 'NUBI_ALERT',
       severity: 'CRITICAL',
       title: '🚨 IA Nubi: Riesgo de Incumplimiento de Sprint',
@@ -110,7 +110,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
     });
   } else {
     alerts.push({
-      id: `nubi-commit-ok-${nowTs}`,
+      id: `nubi-commit-${projectKey}`,
       type: 'NUBI_ALERT',
       severity: 'INFO',
       title: '✨ IA Nubi: Confiabilidad en Rango Saludable',
@@ -130,7 +130,7 @@ export function generateNubiMetricAlerts(metricsObj = {}, projectKey = 'PA') {
 
   // 4. Alerta: Cuello de Botella Estancado
   alerts.push({
-    id: `nubi-bottleneck-${nowTs}`,
+    id: `nubi-bottleneck-${projectKey}`,
     type: 'NUBI_ALERT',
     severity: 'WARNING',
     title: '⚠️ IA Nubi: Cuello de Botella en "Cola de Espera"',

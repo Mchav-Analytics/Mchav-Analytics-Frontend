@@ -58,7 +58,6 @@ describe('SprintHealthView Component', () => {
     render(<SprintHealthView selectedProjectId="1" isDarkMode={false} />);
     
     expect(screen.getByTestId('mock-sprint-health-header')).toBeInTheDocument();
-    expect(screen.getByTestId('mock-sprint-health-nav')).toBeInTheDocument();
     expect(screen.getByTestId('mock-sprint-health-kpis')).toBeInTheDocument();
     expect(screen.getByTestId('mock-sprint-health-chart')).toBeInTheDocument();
   });

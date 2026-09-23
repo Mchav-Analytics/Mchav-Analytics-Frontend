@@ -11,7 +11,7 @@ interface AdminUserTableProps {
   setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   totalPages: number;
   itemsPerPage: number;
-  handleRoleChange: (userId: string, role: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => void;
+  handleRoleChange: (userId: string, role: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER') => void;
   toggleUserStatus: (userId: string) => void;
 }
 
@@ -57,10 +57,12 @@ export default function AdminUserTable({
           >
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(220px,1.4fr)_minmax(160px,1fr)_minmax(180px,1.1fr)_minmax(140px,0.9fr)] gap-4 xl:gap-5 items-center px-5 py-5">
               <div className="flex items-center gap-4 min-w-0">
-                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 ring-2 shadow-sm ${u.role === 'ADMIN' ? 'bg-gradient-to-br from-purple-500 to-purple-700 ring-purple-300 dark:ring-purple-500/40' :
+                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 ring-2 shadow-sm ${
+                  u.role === 'ADMIN' ? 'bg-gradient-to-br from-purple-500 to-purple-700 ring-purple-300 dark:ring-purple-500/40' :
                   u.role === 'MANAGER' ? 'bg-gradient-to-br from-blue-500 to-blue-700 ring-blue-300 dark:ring-blue-500/40' :
-                    'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-emerald-300 dark:ring-emerald-500/40'
-                  }`}>
+                  u.role === 'USER' ? 'bg-gradient-to-br from-amber-500 to-amber-700 ring-amber-300 dark:ring-amber-500/40' :
+                  'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-emerald-300 dark:ring-emerald-500/40'
+                }`}>
                   {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>
                 <div className="min-w-0 space-y-1">
@@ -69,6 +71,11 @@ export default function AdminUserTable({
                     {u.role === 'ADMIN' && (
                       <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-[10px] font-mono font-bold border border-purple-200 dark:border-purple-500/30">
                         ADMIN
+                      </span>
+                    )}
+                    {u.role === 'USER' && (
+                      <span className="px-2 py-0.5 rounded-md bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-mono font-bold border border-amber-200 dark:border-amber-500/30 animate-pulse">
+                        PENDIENTE
                       </span>
                     )}
                   </h4>
@@ -80,17 +87,23 @@ export default function AdminUserTable({
                 <span className="xl:hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Rol</span>
                 <select
                   value={u.role}
-                  onChange={e => handleRoleChange(u.id, e.target.value as 'ADMIN' | 'MANAGER' | 'DEVELOPER')}
-                  className={`w-full max-w-[200px] border rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer transition-all ${u.role === 'ADMIN'
+                  onChange={e => handleRoleChange(u.id, e.target.value as 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER')}
+                  className={`w-full max-w-[200px] border rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer transition-all ${
+                    u.role === 'ADMIN'
                     ? 'bg-purple-50 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700/60'
                     : u.role === 'MANAGER'
                       ? 'bg-blue-50 dark:bg-blue-950/90 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60'
-                      : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
+                      : u.role === 'USER'
+                        ? 'bg-amber-50 dark:bg-amber-950/90 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 font-black'
+                        : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
                     }`}
                 >
-                  <option value="ADMIN">ADMINISTRADOR</option>
-                  <option value="MANAGER">PLANIFICADOR</option>
+                  {u.role === 'USER' && (
+                    <option value="USER">⚠️ PENDIENTE DE ROL</option>
+                  )}
                   <option value="DEVELOPER">DESARROLLADOR</option>
+                  <option value="MANAGER">PLANIFICADOR</option>
+                  <option value="ADMIN">ADMINISTRADOR</option>
                 </select>
               </div>
 
@@ -123,10 +136,48 @@ export default function AdminUserTable({
                   <Clock size={13} className="text-indigo-500 dark:text-indigo-400" /> {u.lastActive}
                 </span>
                 <span className="text-[11px] text-slate-400 dark:text-slate-500">Reg: {u.joinedDate}</span>
+                <button
+                  onClick={() => setExpandedUserId(u.id)}
+                  className="mt-1 px-2.5 py-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
+                >
+                  Ver Log
+                </button>
               </div>
 
-
-            </div>            </div>
+              {u.role === 'USER' && (
+                <div className="col-span-full mt-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+                    <span>Usuario nuevo en espera de asignación de rol para autorizar su ingreso</span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleRoleChange(u.id, 'DEVELOPER')}
+                      className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 size={13} />
+                      <span>Aprobar como Desarrollador</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRoleChange(u.id, 'MANAGER')}
+                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+                    >
+                      Líder Técnico
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRoleChange(u.id, 'ADMIN')}
+                      className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
+                    >
+                      Admin
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         );
       })}
 

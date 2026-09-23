@@ -7,7 +7,7 @@ export default function TeamDevScorecardsNav({
 }) {
   const { dbProjects: allProjects = [] } = useProjectsData();
   const foundProj = allProjects.find(p => String(p.id || p.id_proyecto) === String(selectedProjectId));
-  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' ? 'MCHAV ANALITYCS' : selectedProjectId);
+  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' || selectedProjectId === '10000' ? 'MCHAV ANALYTICS' : selectedProjectId || 'MCHAV ANALYTICS');
 
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 p-2 sm:p-2.5 px-3 sm:px-4 rounded-2xl shadow-xs backdrop-blur-xs">

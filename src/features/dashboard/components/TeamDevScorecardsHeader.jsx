@@ -9,7 +9,7 @@ export default function TeamDevScorecardsHeader({
 }) {
   const { dbProjects: allProjects = [] } = useProjectsData();
   const foundProj = allProjects.find(p => String(p.id || p.id_proyecto) === String(selectedProjectId));
-  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' ? 'MCHAV ANALITYCS' : selectedProjectId);
+  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' || selectedProjectId === '10000' ? 'MCHAV ANALYTICS' : selectedProjectId || 'MCHAV ANALYTICS');
 
   return (
     <div className="w-full pb-4 border-b border-slate-200/60 dark:border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all">
@@ -42,16 +42,21 @@ export default function TeamDevScorecardsHeader({
           <Users className="w-4 h-4 text-indigo-500 shrink-0" />
           <span className="text-[13px] font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">Proyecto:</span>
           <select
-            value={selectedProjectId || 'PROJ-01'}
+            value={selectedProjectId || '10000'}
             onChange={(e) => onSelectProject && onSelectProject(e.target.value)}
             className="bg-transparent text-[13px] font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate"
           >
-            <option value="PROJ-01" className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">Proyecto MCHAV ANALITYCS</option>
-            {allProjects.map((p) => (
-              <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto} className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
-                {p.name || p.nombre || p.id_proyecto}
+            {allProjects.length === 0 ? (
+              <option value="10000" className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
+                MCHAV ANALYTICS (10000)
               </option>
-            ))}
+            ) : (
+              allProjects.map((p) => (
+                <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto} className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
+                  {p.name || p.nombre || p.id_proyecto}
+                </option>
+              ))
+            )}
           </select>
         </div>
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import ProyectosDashboardView from '../ProyectosDashboardView';
@@ -18,13 +18,18 @@ vi.mock('../../hooks/useProyectosDashboard', () => ({
   useProyectosDashboard: vi.fn()
 }));
 
-// Mock child components to isolate View testing
+// Mock child components
 vi.mock('../../components/ProjectsHeader', () => ({
   ProjectsHeader: () => <div data-testid="projects-header-mock">ProjectsHeader</div>
 }));
 
 vi.mock('../../components/ProjectsTable', () => ({
-  ProjectsTable: () => <div data-testid="projects-table-mock">ProjectsTable</div>
+  ProjectsTable: ({ onNavigateToHealth }) => (
+    <div data-testid="projects-table-mock">
+      ProjectsTable
+      <button data-testid="nav-health-btn" onClick={() => onNavigateToHealth && onNavigateToHealth('P1')}>Nav Health</button>
+    </div>
+  )
 }));
 
 vi.mock('../../components/ProjectsCFD', () => ({
@@ -49,13 +54,13 @@ vi.mock('../../components/ProjectsTeamPerformance', () => ({
   ProjectsTeamPerformance: () => <div data-testid="projects-team-mock">ProjectsTeamPerformance</div>
 }));
 
-
 describe('ProyectosDashboardView', () => {
+  const setSelectedProjectIdMock = vi.fn();
   const defaultHookValues = {
     searchTerm: '',
     setSearchTerm: vi.fn(),
     selectedProjectId: null,
-    setSelectedProjectId: vi.fn(),
+    setSelectedProjectId: setSelectedProjectIdMock,
     expandedTeamProjectId: null,
     setExpandedTeamProjectId: vi.fn(),
     allProjectsList: [],
@@ -78,15 +83,20 @@ describe('ProyectosDashboardView', () => {
     useProyectosDashboard.mockReturnValue(defaultHookValues);
   });
 
-  it('renders correctly with child components', () => {
-    render(<ProyectosDashboardView />);
+  it('renders correctly with child components and handles onNavigateToHealth', () => {
+    const setActiveTab = vi.fn();
+    render(<ProyectosDashboardView setActiveTab={setActiveTab} />);
     
     expect(screen.getByTestId('projects-header-mock')).toBeInTheDocument();
     expect(screen.getByTestId('projects-table-mock')).toBeInTheDocument();
     expect(screen.getByTestId('projects-cfd-mock')).toBeInTheDocument();
     expect(screen.getByTestId('projects-burnup-mock')).toBeInTheDocument();
     expect(screen.getByTestId('projects-team-mock')).toBeInTheDocument();
-    expect(screen.getByText(/Todos los derechos reservados/i)).toBeInTheDocument();
+
+    const navBtn = screen.getByTestId('nav-health-btn');
+    fireEvent.click(navBtn);
+    expect(setSelectedProjectIdMock).toHaveBeenCalledWith('P1');
+    expect(setActiveTab).toHaveBeenCalledWith('sprint_health');
   });
 
   it('displays toast message when toastMsg is provided', () => {
@@ -99,7 +109,7 @@ describe('ProyectosDashboardView', () => {
     expect(screen.getByText('Test Toast Message')).toBeInTheDocument();
   });
 
-  it('renders and closes Burnup Documentation modal', () => {
+  it('renders and closes Burnup Documentation modal via both buttons', () => {
     const setShowBurndownDocModalMock = vi.fn();
     useProyectosDashboard.mockReturnValue({
       ...defaultHookValues,
@@ -107,17 +117,24 @@ describe('ProyectosDashboardView', () => {
       setShowBurndownDocModal: setShowBurndownDocModalMock
     });
 
-    render(<ProyectosDashboardView />);
+    const { rerender } = render(<ProyectosDashboardView />);
     
     expect(screen.getByText('Justificación Técnica: Burnup')).toBeInTheDocument();
     expect(screen.getByText('1. Alcance Total vs. Trabajo Completado')).toBeInTheDocument();
 
+    // Click close icon
+    const closeBtns = screen.getAllByRole('button');
+    const xBtn = closeBtns.find(b => b.querySelector('svg'));
+    if (xBtn) fireEvent.click(xBtn);
+    expect(setShowBurndownDocModalMock).toHaveBeenCalledWith(false);
+
+    // Click bottom 'Cerrar panel'
     const closeBtnPanel = screen.getByText('Cerrar panel');
     fireEvent.click(closeBtnPanel);
     expect(setShowBurndownDocModalMock).toHaveBeenCalledWith(false);
   });
 
-  it('renders and closes CFD Documentation modal', () => {
+  it('renders and closes CFD Documentation modal via both buttons', () => {
     const setShowCfdDocModalMock = vi.fn();
     useProyectosDashboard.mockReturnValue({
       ...defaultHookValues,
@@ -130,9 +147,13 @@ describe('ProyectosDashboardView', () => {
     expect(screen.getByText('Justificación Técnica: CFD')).toBeInTheDocument();
     expect(screen.getByText('1. Áreas Apiladas por Estado')).toBeInTheDocument();
 
+    const closeBtns = screen.getAllByRole('button');
+    const xBtn = closeBtns.find(b => b.querySelector('svg'));
+    if (xBtn) fireEvent.click(xBtn);
+    expect(setShowCfdDocModalMock).toHaveBeenCalledWith(false);
+
     const closeBtnPanel = screen.getByText('Cerrar panel');
     fireEvent.click(closeBtnPanel);
     expect(setShowCfdDocModalMock).toHaveBeenCalledWith(false);
   });
 });
-

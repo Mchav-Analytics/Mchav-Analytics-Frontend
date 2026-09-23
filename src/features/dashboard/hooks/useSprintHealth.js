@@ -51,59 +51,20 @@ export function useSprintHealth(selectedProjectId) {
     return rawStage;
   };
 
-  const DEFAULT_METRICS = {
-    commitment_reliability_pct: 85,
-    scope_creep_pct: 4,
-    carryover_pct: 8,
-    flow_efficiency_pct: 82,
-    sp_planned: 42,
-    sp_completed: 35,
-    sp_added_mid_sprint: 2,
-    sp_removed_mid_sprint: 0,
-    tickets_changed: 1,
-    sp_carryover: 5,
-    active_dev_days: 14,
-    waiting_queue_days: 3
-  };
-
-  const DEFAULT_STAGES = [
-    { stage: "Desarrollo Activo", days: 5.2, percentage: 48, spanishStage: "Desarrollo Activo" },
-    { stage: "Revisión de Código", days: 2.1, percentage: 19, spanishStage: "Revisión de Código" },
-    { stage: "Pruebas de Calidad (QA)", days: 2.3, percentage: 21, spanishStage: "Pruebas de Calidad (QA)" },
-    { stage: "En Cola de Espera", days: 1.2, percentage: 12, spanishStage: "En Cola de Espera" }
-  ];
-
-  const DEFAULT_INSIGHT = {
-    main_stage: "Desarrollo Activo",
-    days_spent: 5.2,
-    percentage: 48,
-    recommendation: "El flujo del sprint es saludable. Se recomienda mantener las revisiones de código ágiles para evitar cuellos de botella."
-  };
-
-  const rawMetrics = healthData?.metrics || {};
-  const hasRealMetrics = (rawMetrics.sp_planned > 0 || rawMetrics.sp_completed > 0 || rawMetrics.commitment_reliability_pct > 0);
-
-  const metrics = hasRealMetrics ? rawMetrics : DEFAULT_METRICS;
-  const healthScore = hasRealMetrics ? (healthData?.health_score ?? 82) : 82;
-  
+  const metrics = healthData?.metrics || {};
+  const healthScore = healthData?.health_score ?? 0;
   const rawStages = healthData?.bottleneck_stages || [];
-  const stages = (rawStages && rawStages.length > 0) 
-    ? rawStages.map(s => ({ ...s, spanishStage: formatSpanishStage(s.stage) }))
-    : DEFAULT_STAGES;
-
-  const insight = (healthData?.bottleneck_insight && healthData?.bottleneck_insight.main_stage)
-    ? healthData.bottleneck_insight
-    : DEFAULT_INSIGHT;
-
+  const stages = rawStages.map(s => ({
+    ...s,
+    spanishStage: formatSpanishStage(s.stage)
+  }));
+  const insight = healthData?.bottleneck_insight || {};
   const warning = healthData?.scope_creep_warning;
 
   return {
     loading,
-    sprints: (sprints && sprints.length > 0) ? sprints : [
-      { id_sprint: 'SPRINT-08', nombre_sprint: 'SCRUM Sprint 8 (Actual)', estado: 'ACTIVE' },
-      { id_sprint: 'SPRINT-07', nombre_sprint: 'SCRUM Sprint 7', estado: 'CLOSED' }
-    ],
-    selectedSprintId: selectedSprintId || 'SPRINT-08',
+    sprints,
+    selectedSprintId,
     setSelectedSprintId,
     metrics,
     healthScore,

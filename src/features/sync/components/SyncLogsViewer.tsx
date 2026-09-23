@@ -191,6 +191,15 @@ export default function SyncLogsViewer({
                       </button>
                       <button
                         type="button"
+                        title="Re-ejecutar"
+                        onClick={() => handleManualSync()}
+                        disabled={syncStatus.status === 'SYNCING'}
+                        className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-40"
+                      >
+                        <RotateCw size={15} />
+                      </button>
+                      <button
+                        type="button"
                         title="Descargar log"
                         onClick={() => handleDownloadLog(log)}
                         className="p-1 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
@@ -219,6 +228,9 @@ export default function SyncLogsViewer({
 
         <div className="flex items-center gap-1.5">
           <button
+            type="button"
+            aria-label="Anterior"
+            title="Anterior"
             onClick={() => setLogPage(p => Math.max(p - 1, 1))}
             disabled={logPage === 1}
             className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#272b5c] bg-white dark:bg-[#141738] text-slate-500 dark:text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer"
@@ -229,6 +241,7 @@ export default function SyncLogsViewer({
           {Array.from({ length: totalLogPages }).map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => setLogPage(i + 1)}
               className={`w-8 h-8 rounded-lg text-[13px] font-bold transition-all shadow-xs ${
                 logPage === i + 1
@@ -241,6 +254,9 @@ export default function SyncLogsViewer({
           ))}
 
           <button
+            type="button"
+            aria-label="Siguiente"
+            title="Siguiente"
             onClick={() => setLogPage(p => Math.min(p + 1, totalLogPages))}
             disabled={logPage === totalLogPages || filteredLogs.length === 0}
             className="w-8 h-8 rounded-lg border border-slate-200 dark:border-[#272b5c] bg-white dark:bg-[#141738] text-slate-500 dark:text-slate-400 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer"

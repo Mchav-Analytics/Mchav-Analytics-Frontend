@@ -13,7 +13,7 @@ import { DeveloperModals } from '../components/DeveloperModals';
 export default function DeveloperView({
   kpis = [],
   projects = [],
-  selectedProjectId = 'PROJ-01',
+  selectedProjectId = '10000',
   setSelectedProjectId,
   syncSuccessMsg,
   alerts = [],

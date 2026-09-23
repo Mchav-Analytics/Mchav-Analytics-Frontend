@@ -173,7 +173,7 @@ export const useDevWorkload = ({ projects, selectedProjectId }) => {
     try {
       const res = await jiraService.executeIssueTransition(selectedTaskModal.key, payload);
       
-      const realStatus = res?.status || targetLabel;
+      const realStatus = res?.new_status || (res?.status !== 'success' ? res?.status : null) || targetLabel;
       let normStatus = realStatus.toUpperCase();
       if (['FINALIZADO', 'DONE', 'COMPLETADA', 'LISTO', 'RESOLVED', 'CLOSED'].some(s => normStatus.includes(s))) normStatus = 'FINALIZADO';
       else if (['IN PROGRESS', 'EN CURSO', 'EN PROGRESO', 'IN DEVELOPMENT', 'DOING'].some(s => normStatus.includes(s))) normStatus = 'EN CURSO';

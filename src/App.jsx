@@ -21,13 +21,13 @@ import TeamDevScorecardsView from './features/dashboard/views/TeamDevScorecardsV
 import TeamMatrixView from './features/dashboard/views/TeamMatrixView';
 import SprintHealthView from './features/dashboard/views/SprintHealthView';
 import AlertsCenterView from './features/dashboard/views/AlertsCenterView';
-import AiRulesView from './features/ai/views/AiRulesView';
 import SystemSyncTab from './features/sync/views/SystemSyncTab';
 import AdminUsuariosView from './features/users/views/AdminUsuariosView';
 import ProyectosDashboardView from './features/projects/views/ProyectosDashboardView';
 import JqlConsultasView from './features/jql/views/JqlConsultasView';
 import FlowAnalyticsView from './features/flow/views/FlowAnalyticsView';
 import LoginView from './features/auth/views/LoginView';
+import PendingApprovalView from './features/auth/views/PendingApprovalView';
 import { useAuth, AuthProvider, normalizeRole } from './features/auth/context/AuthContext';
 import { jiraService, projectService } from './services/api';
 
@@ -139,9 +139,11 @@ function MainAppContent() {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectIdState] = useState(() => {
     try {
-      return localStorage.getItem('mchav_selected_project_id') || null;
+      const saved = localStorage.getItem('mchav_selected_project_id');
+      if (saved && saved !== 'PROJ-01') return saved;
+      return '10000';
     } catch (e) {
-      return null;
+      return '10000';
     }
   });
 
@@ -217,7 +219,7 @@ function MainAppContent() {
         setProjects(data);
         if (data.length > 0) {
           const projectExists = data.some(p => String(p.id_proyecto) === String(selectedProjectId));
-          if (!selectedProjectId || !projectExists) {
+          if (!selectedProjectId || selectedProjectId === 'PROJ-01' || !projectExists) {
             setSelectedProjectId(data[0].id_proyecto);
           }
         }
@@ -396,20 +398,15 @@ function MainAppContent() {
           title: "Análisis de Flujo (Flow Analytics)",
           subtitle: "Distribución de tiempos de ciclo, eficiencia, cuellos de botella y diagrama de flujo acumulado."
         };
-      case 'ai_rules':
-        return {
-          title: "Configuración de Reglas de Inteligencia Artificial",
-          subtitle: "Parametrización de detectores automáticos y reglas heurísticas."
-        };
       case 'sincronizacion':
+        return {
+          title: "Auditoría de ETL y Schedulers",
+          subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
+        };
       case 'reports_center':
         return {
           title: 'Centro de Análisis y Generación de Reportes',
           subtitle: 'Módulo integral para generación de reportes en vivo y auditoría de historiales inmutables.'
-        };
-        return {
-          title: "Auditoría de ETL y Schedulers ",
-          subtitle: "Historial de sincronización, programaciones CRON y tareas automáticas."
         };
 
       case 'dashboard':
@@ -441,6 +438,11 @@ function MainAppContent() {
 
   if (!isAuthenticated) {
     return <LoginView />;
+  }
+
+  const userRole = normalizeRole(user?.rol);
+  if (userRole === 'USER') {
+    return <PendingApprovalView />;
   }
 
   return (
@@ -576,10 +578,6 @@ function MainAppContent() {
 
       {activeTab === 'sincronizacion' && (
         <SystemSyncTab />
-      )}
-
-      {activeTab === 'ai_rules' && (
-        <AiRulesView />
       )}
 
       {activeTab === 'flow_analytics' && (

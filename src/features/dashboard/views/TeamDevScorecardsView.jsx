@@ -8,7 +8,7 @@ import TeamDevSelector from '../components/TeamDevSelector';
 import TeamDevScorecardsDashboard from '../components/TeamDevScorecardsDashboard';
 import TeamDevAssignedIssues from '../components/TeamDevAssignedIssues';
 
-export default function TeamDevScorecardsView({ selectedProjectId = 'PROJ-01', onSelectProject, onNavigateToMatrix, onNavigateToHealth, onNavigateToAlerts }) {
+export default function TeamDevScorecardsView({ selectedProjectId = '10000', onSelectProject, onNavigateToMatrix, onNavigateToHealth, onNavigateToAlerts }) {
   const {
     developers,
     selectedDev,

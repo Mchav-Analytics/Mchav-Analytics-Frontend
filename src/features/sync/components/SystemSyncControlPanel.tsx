@@ -37,23 +37,44 @@ export default function SystemSyncControlPanel({
   return (
     <div className="w-full h-full bg-white dark:bg-[#141738] border border-slate-200/80 dark:border-[#272b5c] rounded-3xl p-6 shadow-xs flex flex-col justify-between gap-5">
       {/* HEADER SECTION */}
-      <div className="flex items-start gap-3">
-        <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
-          <RefreshCcw size={20} />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h2 className="text-[18px] font-black text-slate-900 dark:text-white leading-tight">
-              Sincronización Automática & CRON
-            </h2>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
-              Active
-            </span>
+      <div className="flex flex-col gap-3.5 pb-4 border-b border-slate-100 dark:border-[#272b5c]">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/30 shrink-0">
+            <RefreshCcw size={20} />
           </div>
-          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
-            Control de actualización periódica de Jira Cloud.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-[17px] font-black text-slate-900 dark:text-white leading-tight">
+                Sincronización Automática & Programación de Tareas (CRON)
+              </h2>
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40">
+                Active
+              </span>
+            </div>
+            <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1">
+              Control de actualización periódica de Jira Cloud.
+            </p>
+          </div>
         </div>
+
+        <button
+          type="button"
+          onClick={handleManualSync}
+          disabled={syncStatus.status === 'SYNCING'}
+          className="w-full px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 active:scale-[0.99] text-white text-[13px] font-bold shadow-md shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60"
+        >
+          {syncStatus.status === 'SYNCING' ? (
+            <>
+              <RefreshCcw size={16} className="animate-spin text-white" />
+              <span>Sincronizando en segundo plano...</span>
+            </>
+          ) : (
+            <>
+              <Play size={16} fill="currentColor" className="text-white" />
+              <span>Sincronizar Manualmente Ahora</span>
+            </>
+          )}
+        </button>
       </div>
 
       {/* TARJETAS INTERNAS */}
@@ -169,26 +190,6 @@ export default function SystemSyncControlPanel({
           </div>
         </div>
       </div>
-
-      {/* BOTÓN PRINCIPAL EN LA PARTE INFERIOR ESTILO INSIGNIA CELESTE */}
-      <button
-        type="button"
-        onClick={handleManualSync}
-        disabled={syncStatus.status === 'SYNCING'}
-        className="w-full mt-auto px-4 py-3 rounded-2xl bg-sky-50 hover:bg-sky-100/80 dark:bg-sky-950/60 dark:hover:bg-sky-900/60 text-sky-600 dark:text-sky-400 border border-sky-200/80 dark:border-sky-800/60 text-[14px] font-extrabold flex items-center justify-center gap-2.5 transition-all cursor-pointer disabled:opacity-60 shadow-2xs active:scale-98"
-      >
-        {syncStatus.status === 'SYNCING' ? (
-          <>
-            <RefreshCcw size={16} className="animate-spin text-sky-600 dark:text-sky-400" />
-            <span>Sincronizando en segundo plano...</span>
-          </>
-        ) : (
-          <>
-            <Play size={16} fill="currentColor" className="text-sky-600 dark:text-sky-400" />
-            <span>Sincronizar Manualmente Ahora</span>
-          </>
-        )}
-      </button>
     </div>
   );
 }

@@ -14,7 +14,7 @@ export default function TeamDevSelector({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-[17px] font-black text-slate-800 dark:text-white tracking-tight flex items-center gap-2">
           <Users size={18} className="text-indigo-600 dark:text-indigo-400" /> 
-          Desarrolladores del proyecto ({developers.length})
+          <span>{`Desarrolladores del Proyecto (${developers.length})`}</span>
           <Info size={14} className="text-slate-400 cursor-pointer" />
         </h2>
         

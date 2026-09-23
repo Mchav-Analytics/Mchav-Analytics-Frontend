@@ -1,5 +1,6 @@
 import React from 'react';
 import { Activity, ArrowLeft } from 'lucide-react';
+import LiderNotificationBell from './LiderNotificationBell';
 import { useProjectsData } from '../../../hooks/useProjectsData';
 
 export default function SprintHealthHeader({ 
@@ -10,7 +11,7 @@ export default function SprintHealthHeader({
 }) {
   const { dbProjects: allProjects = [] } = useProjectsData();
   const foundProj = allProjects.find(p => String(p.id || p.id_proyecto) === String(selectedProjectId));
-  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' ? 'MCHAV Core' : selectedProjectId);
+  const projectNameDisplay = foundProj?.name || foundProj?.nombre || (selectedProjectId === 'PROJ-01' || selectedProjectId === '10000' ? 'MCHAV ANALYTICS' : selectedProjectId || 'MCHAV ANALYTICS');
 
   const handleBackToProjects = () => {
     if (onNavigateToProjects) {
@@ -36,7 +37,7 @@ export default function SprintHealthHeader({
         </div>
         <div className="space-y-0.5 text-left">
           <div className="flex items-center gap-1.5 text-[13px] mb-2 font-medium">
-            <span className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline transition-all" onClick={handleBackToProjects}>Proyectos</span>
+            <span className="cursor-pointer text-blue-600 dark:text-blue-400 hover:underline transition-all" onClick={handleBackToProjects}>Matriz de Rendimiento</span>
             <span className="text-slate-400 dark:text-slate-500 mx-0.5">&gt;</span>
             <span className="text-slate-900 dark:text-white font-bold">Salud del Sprint</span>
           </div>
@@ -45,7 +46,7 @@ export default function SprintHealthHeader({
               Predictability Engine
             </span>
             <span className="text-xs font-medium text-slate-500 dark:text-slate-400">
-              • Proyecto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{projectNameDisplay} {selectedProjectId && selectedProjectId !== projectNameDisplay ? `(${selectedProjectId})` : ''}</strong>
+              • Proyecto: <strong className="text-slate-800 dark:text-slate-200 font-bold">{selectedProjectId}</strong>
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -90,6 +91,8 @@ export default function SprintHealthHeader({
             </span>
           </div>
         </div>
+
+        <LiderNotificationBell />
       </div>
     </div>
   );

@@ -11,9 +11,9 @@ export const TEAM_DEVS = [
 ];
 
 export function useCapacityCalculator() {
-  const [devCount, setDevCount] = useState(5);
+  const [devCount, setDevCount] = useState(4);
   const [sprintDays, setSprintDays] = useState(10);
-  const [vacationDays, setVacationDays] = useState(0);
+  const [vacationDays, setVacationDays] = useState(2);
   const [sickDevsCount, setSickDevsCount] = useState(0);
   const [sickDays, setSickDays] = useState(0);
   const [avgDevVelocity, setAvgDevVelocity] = useState(10);
@@ -21,7 +21,17 @@ export function useCapacityCalculator() {
   const [liveDevs, setLiveDevs] = useState(TEAM_DEVS);
 
   // Lista de ausencias/incapacidades programadas por fecha
-  const [absenceEvents, setAbsenceEvents] = useState([]);
+  const [absenceEvents, setAbsenceEvents] = useState([
+    {
+      id: 1,
+      devName: 'Valentina Montalvo',
+      type: 'VACATION',
+      startDate: '2026-09-01',
+      endDate: '2026-09-02',
+      days: 2,
+      note: 'Vacaciones programadas'
+    }
+  ]);
 
   // Lista viva de incidencias de Jira para permitir reasignación en tiempo real
   const [jiraTasks, setJiraTasks] = useState(REAL_JIRA_ISSUES_DB);
@@ -53,7 +63,12 @@ export function useCapacityCalculator() {
                   project: p.nombre || p.key_proyecto,
                   projectId: projId,
                   summary: i.summary || 'Sin resumen',
-                  status: (i.status_actual || '').toLowerCase().includes('done') || (i.status_actual || '').toLowerCase().includes('finalizado') ? 'Completados' : ((i.status_actual || '').toLowerCase().includes('curso') || (i.status_actual || '').toLowerCase().includes('progress') ? 'En Progreso' : 'Por Hacer'),
+                  status: (() => {
+                    const st = (i.status_actual || '').toLowerCase();
+                    if (st.includes('done') || st.includes('finalizado') || st.includes('listo') || st.includes('cerrado') || st.includes('resuelto')) return 'Completados';
+                    if (st.includes('curso') || st.includes('progress') || st.includes('desarr') || st.includes('doing') || st.includes('active')) return 'En Progreso';
+                    return 'Por Hacer';
+                  })(),
                   rawStatus: i.status_actual || 'Por hacer',
                   assignee: i.assignee_name || 'Sin Asignar',
                   sp: Math.round(parseFloat(i.story_points || 1)),

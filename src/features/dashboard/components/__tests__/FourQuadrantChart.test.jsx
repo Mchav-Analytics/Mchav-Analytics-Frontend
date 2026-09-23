@@ -60,8 +60,8 @@ describe('FourQuadrantChart', () => {
 
   it('renders title and descriptions correctly', () => {
     render(<FourQuadrantChart developers={mockDevelopers} isDarkMode={false} />);
-    expect(screen.getByText('Matriz de Rendimiento & Calidad del Equipo')).toBeInTheDocument();
-    expect(screen.getByText('¿Cómo interpretar este gráfico?')).toBeInTheDocument();
+    expect(screen.getByText(/Developer Workload & Flow Profile/i)).toBeInTheDocument();
+    expect(screen.getByText(/¿Cómo interpretar este perfil\?/i)).toBeInTheDocument();
   });
 
   it('renders all filter buttons', () => {
@@ -121,7 +121,7 @@ describe('FourQuadrantChart', () => {
     document.documentElement.classList.add('dark');
     render(<FourQuadrantChart developers={mockDevelopers} />);
     // Since it's internal logic that affects colors, we mainly check it renders without errors
-    expect(screen.getByText('Matriz de Rendimiento & Calidad del Equipo')).toBeInTheDocument();
+    expect(screen.getByText(/Developer Workload & Flow Profile/i)).toBeInTheDocument();
     document.documentElement.classList.remove('dark');
   });
 });

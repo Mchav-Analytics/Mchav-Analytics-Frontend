@@ -87,7 +87,7 @@ describe('DeveloperView Integration', () => {
       render(<DeveloperView selectedProjectId="PROJ-01" projects={[]} />);
     });
     
-    expect(screen.getByText('CYCLE TIME')).toBeInTheDocument();
+    expect(screen.getByText(/CYCLE TIME/i)).toBeInTheDocument();
     expect(screen.getByText('TICKETS WIP')).toBeInTheDocument();
     
     await waitFor(() => {

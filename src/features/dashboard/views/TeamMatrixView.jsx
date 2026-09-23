@@ -13,7 +13,7 @@ import MatrixMethodologyGuide from '../components/MatrixMethodologyGuide';
 import NubiDevAnalysisModal from '../components/NubiDevAnalysisModal';
 
 function TeamMatrixView({
-  selectedProjectId = 'PROJ-01',
+  selectedProjectId = '10000',
   onSelectProject,
   onSelectDevForScorecard,
   onNavigateToHealth,

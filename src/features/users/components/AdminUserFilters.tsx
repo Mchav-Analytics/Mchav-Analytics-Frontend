@@ -4,6 +4,7 @@ import { Search, X } from 'lucide-react';
 interface AdminUserFiltersProps {
   usersCount: number;
   pendingRequestsCount: number;
+  pendingUsersCount?: number;
   roleFilter: string;
   setRoleFilter: (role: string) => void;
   statusFilter: string;
@@ -15,6 +16,7 @@ interface AdminUserFiltersProps {
 export default function AdminUserFilters({
   usersCount,
   pendingRequestsCount,
+  pendingUsersCount = 0,
   roleFilter,
   setRoleFilter,
   statusFilter,
@@ -24,7 +26,7 @@ export default function AdminUserFilters({
 }: AdminUserFiltersProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-[#191c3d] border border-slate-200 dark:border-[#33376b] p-3 px-4 rounded-xl shadow-sm dark:shadow-lg backdrop-blur-md">
-      {/* Botones de Filtro Todos / Inactivos */}
+      {/* Botones de Filtro Todos / Inactivos / Pendientes */}
       <div className="flex items-center gap-2 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
         <button
           onClick={() => { setRoleFilter('ALL'); setStatusFilter('ALL'); }}
@@ -37,7 +39,14 @@ export default function AdminUserFilters({
           Todos ({usersCount})
         </button>
         <button
-          onClick={() => setStatusFilter(statusFilter === 'INACTIVE' ? 'ALL' : 'INACTIVE')}
+          onClick={() => {
+            if (statusFilter === 'INACTIVE') {
+              setStatusFilter('ALL');
+            } else {
+              setStatusFilter('INACTIVE');
+              setRoleFilter('ALL');
+            }
+          }}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             statusFilter === 'INACTIVE'
               ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
@@ -45,6 +54,24 @@ export default function AdminUserFilters({
           }`}
         >
           Inactivos ({pendingRequestsCount})
+        </button>
+        <button
+          onClick={() => {
+            if (roleFilter === 'USER') {
+              setRoleFilter('ALL');
+              setStatusFilter('ALL');
+            } else {
+              setRoleFilter('USER');
+              setStatusFilter('ALL');
+            }
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
+            roleFilter === 'USER'
+              ? 'bg-amber-500 text-white shadow-md shadow-amber-500/20'
+              : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30'
+          }`}
+        >
+          Pendientes ({pendingUsersCount})
         </button>
       </div>
 

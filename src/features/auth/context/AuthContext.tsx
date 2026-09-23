@@ -11,16 +11,17 @@ export interface AuthUser {
   id?: string;
   name?: string;
   email: string;
-  rol: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | string;
+  rol: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER' | string;
   status?: 'ACTIVE' | 'INACTIVE' | 'PENDING' | string;
   [key: string]: any;
 }
 
-export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPER' {
+export function normalizeRole(rawRole?: string): 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER' {
   if (!rawRole) return 'DEVELOPER';
   const str = String(rawRole).toUpperCase();
   if (str.includes('ADMIN')) return 'ADMIN';
-  if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER')) return 'MANAGER';
+  if (str.includes('MANAG') || str.includes('LÍDER') || str.includes('LIDER') || str.includes('PLANIF')) return 'MANAGER';
+  if (str.includes('USER') || str.includes('USUARIO')) return 'USER';
   if (str.includes('DEV') || str.includes('DESARROLLADOR')) return 'DEVELOPER';
   return 'DEVELOPER';
 }

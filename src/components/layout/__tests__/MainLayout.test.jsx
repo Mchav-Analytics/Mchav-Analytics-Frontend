@@ -90,10 +90,9 @@ describe('MainLayout', () => {
     consoleSpy.mockRestore();
   });
 
-  it('renders topbar view switcher when user is logged in and handles clicks', async () => {
+  it('does not render view mode switcher regardless of user login status', async () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: { id: 1, rol: 'ADMIN' },
-      switchViewRole: mockSwitchViewRole,
       isRealAdmin: true
     });
     vi.spyOn(AuthContext, 'normalizeRole').mockReturnValue('ADMIN');
@@ -106,24 +105,7 @@ describe('MainLayout', () => {
       );
     });
 
-    expect(screen.getByText('Modo de Vista:')).toBeInTheDocument();
-
-    // Click Vista Admin
-    const adminBtn = screen.getByTitle('Ir a la Vista de Administrador');
-    fireEvent.click(adminBtn);
-    expect(mockSwitchViewRole).toHaveBeenCalledWith('ADMIN');
-    expect(mockSetActiveTab).toHaveBeenCalledWith('proyectos');
-
-    // Click Vista Líder Técnico
-    const liderBtn = screen.getByTitle('Ir a la Vista de Líder Técnico');
-    fireEvent.click(liderBtn);
-    expect(mockSwitchViewRole).toHaveBeenCalledWith('MANAGER');
-    expect(mockSetActiveTab).toHaveBeenCalledWith('proyectos');
-
-    // Click Vista Desarrollador
-    const devBtn = screen.getByTitle('Ir a la Vista de Desarrollador');
-    fireEvent.click(devBtn);
-    expect(mockSwitchViewRole).toHaveBeenCalledWith('DEVELOPER');
-    expect(mockSetActiveTab).toHaveBeenCalledWith('developer');
+    expect(screen.queryByText('Modo de Vista:')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Ir a la Vista de Administrador')).not.toBeInTheDocument();
   });
 });

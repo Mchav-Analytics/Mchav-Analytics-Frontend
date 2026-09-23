@@ -59,11 +59,11 @@ describe('SyncLogsViewer', () => {
     expect(screen.getByText('5')).toBeDefined();
     expect(screen.getByText('2m 5s')).toBeDefined(); // 125 seconds
     
-    // Check error details rendering on hover/click is available in the DOM
+    // Check error details rendering
     expect(screen.getByText('Error message here')).toBeDefined();
   });
 
-  it('calls handler functions on button clicks', () => {
+  it('calls handler functions on button clicks and context menu', () => {
     render(<SyncLogsViewer {...defaultProps} />);
     
     const detailsButtons = screen.getAllByTitle('Ver detalles');
@@ -77,6 +77,17 @@ describe('SyncLogsViewer', () => {
     const downloadButtons = screen.getAllByTitle('Descargar log');
     fireEvent.click(downloadButtons[0]);
     expect(defaultProps.handleDownloadLog).toHaveBeenCalledWith(mockLogs[0]);
+
+    // Open context menu and trigger actions
+    const menuButtons = screen.getAllByRole('button');
+    // ContextMenu buttons have MoreVertical icon
+    const contextTrigger = menuButtons.find(b => b.querySelector('svg.lucide-more-vertical'));
+    if (contextTrigger) {
+      fireEvent.click(contextTrigger);
+      const jsonAction = screen.getByText('Descargar log JSON');
+      fireEvent.click(jsonAction);
+      expect(defaultProps.handleDownloadLog).toHaveBeenCalledWith(mockLogs[0]);
+    }
   });
 
   it('handles empty state', () => {
@@ -91,7 +102,7 @@ describe('SyncLogsViewer', () => {
     expect(defaultProps.setTimeFilter).toHaveBeenCalledWith('30d');
   });
 
-  it('handles pagination button clicks', () => {
+  it('handles pagination button clicks and page number selection', () => {
     const setLogPageMock = vi.fn();
     render(
       <SyncLogsViewer 
@@ -109,5 +120,10 @@ describe('SyncLogsViewer', () => {
     const nextButton = screen.getByRole('button', { name: 'Siguiente' });
     fireEvent.click(nextButton);
     expect(setLogPageMock).toHaveBeenCalled();
+
+    // Click direct page number 3
+    const page3Btn = screen.getByText('3');
+    fireEvent.click(page3Btn);
+    expect(setLogPageMock).toHaveBeenCalledWith(3);
   });
 });

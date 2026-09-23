@@ -47,21 +47,24 @@ const ExecutiveReportTemplate = forwardRef(({ reportType, filters, user, reportD
 
   // 4. Datos Percentiles (ScatterChart)
   const p50 = stats.cycleTime > 0 ? stats.cycleTime : 2.5;
-  const p85 = p50 * 1.5;
-  const p95 = p50 * 2.0;
+  const p85 = reportData?.percentilesData?.p85 ? parseFloat(reportData.percentilesData.p85) : p50 * 1.5;
+  const p95 = reportData?.percentilesData?.p95 ? parseFloat(reportData.percentilesData.p95) : p50 * 2.0;
   
-  const scatterPoints = [
-    { x: 1, y: p50 * 0.5 }, { x: 2, y: p50 * 0.8 }, { x: 3, y: p50 }, 
-    { x: 4, y: p50 * 1.2 }, { x: 5, y: p85 * 0.9 }, { x: 6, y: p85 }, 
-    { x: 7, y: p95 * 0.95 }
-  ];
+  const rawPoints = reportData?.percentilesData?.scatterPoints || reportData?.scatterPoints;
+  const scatterPoints = (Array.isArray(rawPoints) && rawPoints.length > 0)
+    ? rawPoints
+    : [
+        { x: 1, y: +(p50 * 0.5).toFixed(1) }, { x: 2, y: +(p50 * 0.8).toFixed(1) }, { x: 3, y: +p50.toFixed(1) }, 
+        { x: 4, y: +(p50 * 1.2).toFixed(1) }, { x: 5, y: +(p85 * 0.9).toFixed(1) }, { x: 6, y: +p85.toFixed(1) }, 
+        { x: 7, y: +(p95 * 0.95).toFixed(1) }
+      ];
 
   const percentilesData = {
     p50: p50.toFixed(1),
     p85: p85.toFixed(1),
     p95: p95.toFixed(1),
     scatterPoints,
-    predictabilityText: "La dispersión se mantiene agrupada, lo que indica alta predictibilidad."
+    predictabilityText: reportData?.percentilesData?.predictabilityText || `El 85% de los tickets se completa en ≤ ${p85.toFixed(1)} días.`
   };
 
   const dates = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });

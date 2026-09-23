@@ -29,7 +29,7 @@ const DEFAULT_WELCOME_MESSAGE = {
   timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 };
 
-export default function AiChatModal({ isOpen, onClose, selectedProjectId = 'PROJ-01' }) {
+export default function AiChatModal({ isOpen, onClose, selectedProjectId = '10000' }) {
   // ── ESTADOS DE HISTORIAL Y SESIONES DE CHAT ──
   const [sessions, setSessions] = useState(() => {
     try {

@@ -402,24 +402,15 @@ export default function CentroReportesView({ selectedProjectId }) {
           ).slice(-5);
 
           for (const sp of sortedSprints) {
-            try {
-              const health = await projectService.getSprintHealth(projectId, sp.id_sprint);
-              let planned = health?.metrics?.sp_planned || 0;
-              let completed = health?.metrics?.sp_completed || 0;
-              if (planned === 0 && completed === 0) {
-                planned = Math.floor(35 + Math.random() * 15);
-                completed = Math.floor(30 + Math.random() * 15);
-              }
-              realVelocityData.push({
-                sprint: sp.nombre,
-                comprometido: planned,
-                compromisos: planned,
-                completado: completed,
-                entregados: completed
-              });
-            } catch (hErr) {
-              console.warn('Error health sprint:', hErr);
-            }
+            const planned = Number(sp.sp_comprometidos || 0);
+            const completed = Number(sp.sp_completados || 0);
+            realVelocityData.push({
+              sprint: sp.nombre,
+              comprometido: planned,
+              compromisos: planned,
+              completado: completed,
+              entregados: completed
+            });
           }
         }
       } catch (e) { console.warn('No se pudo cargar velocidad histórica:', e); }

@@ -56,6 +56,7 @@ export default function AdminUsuariosView({
     adminUsers,
     managerUsers,
     developerUsers,
+    pendingUsers,
     pendingRequests,
     filteredUsers,
     paginatedUsers,
@@ -125,7 +126,6 @@ export default function AdminUsuariosView({
               </h1>
             </div>
           </div>
-
         </div>
 
         {/* CONTENEDOR 1 — Resumen RBAC y roles (EXTRAÍDO) */}
@@ -141,6 +141,7 @@ export default function AdminUsuariosView({
         <AdminUserFilters 
           usersCount={users.length}
           pendingRequestsCount={pendingRequests.length}
+          pendingUsersCount={pendingUsers.length}
           roleFilter={roleFilter}
           setRoleFilter={setRoleFilter}
           statusFilter={statusFilter}

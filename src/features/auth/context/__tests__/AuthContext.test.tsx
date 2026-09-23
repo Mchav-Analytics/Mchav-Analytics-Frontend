@@ -68,6 +68,11 @@ describe('AuthContext', () => {
       expect(normalizeRole('ADMIN')).toBe('ADMIN');
       expect(normalizeRole('UNKNOWN')).toBe('DEVELOPER');
     });
+
+    it('normalizes USER and USUARIO roles to USER', () => {
+      expect(normalizeRole('USER')).toBe('USER');
+      expect(normalizeRole('Usuario')).toBe('USER');
+    });
   });
 
   it('renders default values correctly when not authenticated', async () => {

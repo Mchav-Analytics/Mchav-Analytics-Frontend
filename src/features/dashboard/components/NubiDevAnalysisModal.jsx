@@ -1,6 +1,6 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
-import { X, Sparkles, CheckCircle2, AlertTriangle, Lightbulb, Trophy, ShieldCheck, ChevronRight, BarChart3, Bot } from 'lucide-react';
+import { X, Sparkles, CheckCircle2, AlertTriangle, Lightbulb, Trophy, ShieldCheck, BarChart3, Bot } from 'lucide-react';
 
 function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorecard }) {
   if (!isOpen || !developer) return null;
@@ -222,23 +222,12 @@ function NubiDevAnalysisModal({ isOpen, onClose, developer, onSelectDevForScorec
         </div>
 
         {/* PIE DEL MODAL */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#141738]">
+        <div className="flex items-center justify-end px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-[#141738]">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all cursor-pointer"
+            className="px-5 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-xl transition-all cursor-pointer"
           >
             Cerrar
-          </button>
-          
-          <button
-            onClick={() => {
-              onClose();
-              if (onSelectDevForScorecard) onSelectDevForScorecard(developer.assignee_id);
-            }}
-            className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-500/25 transition-all cursor-pointer"
-          >
-            <span>Ver Scorecard Completo</span>
-            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 

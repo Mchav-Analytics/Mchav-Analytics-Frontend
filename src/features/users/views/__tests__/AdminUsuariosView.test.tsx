@@ -118,21 +118,12 @@ describe('AdminUsuariosView - Integration', () => {
     expect(screen.getByText(/✨ Rol de User Manager actualizado a DESARROLLADOR/i)).toBeInTheDocument();
   });
 
-  it('calls window.print when Exportar PDF is clicked', async () => {
-    const printSpy = vi.spyOn(window, 'print').mockImplementation(() => {});
-    const user = userEvent.setup();
-    
+  it('does not render the Exportar PDF button', async () => {
     await act(async () => {
       renderWithProviders(<AdminUsuariosView />);
     });
 
-    const printBtn = screen.getByRole('button', { name: /Exportar PDF/i });
-    await act(async () => {
-      await user.click(printBtn);
-    });
-
-    expect(printSpy).toHaveBeenCalled();
-    printSpy.mockRestore();
+    expect(screen.queryByRole('button', { name: /Exportar PDF/i })).not.toBeInTheDocument();
   });
 
   it('closes the toast message when X is clicked', async () => {

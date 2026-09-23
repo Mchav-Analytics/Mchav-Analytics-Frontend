@@ -5,7 +5,7 @@ export interface ManagementUser {
   id: string;
   name: string;
   email: string;
-  role: 'ADMIN' | 'MANAGER' | 'DEVELOPER';
+  role: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER';
   status: 'ACTIVE' | 'INACTIVE';
   joinedDate: string;
   lastActive: string;
@@ -47,7 +47,9 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
             ? 'ADMIN'
             : (rawRolStr.includes('PLANIF') || rawRolStr.includes('MANAG') || rawRolStr.includes('LIDER'))
               ? 'MANAGER'
-              : 'DEVELOPER';
+              : (rawRolStr.includes('USER') || rawRolStr.includes('USUARIO'))
+                ? 'USER'
+                : 'DEVELOPER';
 
           return {
             id: String(u.id_usuario),
@@ -92,7 +94,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     setTimeout(() => setToastMessage(null), 3500);
   };
 
-  const handleRoleChange = async (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER') => {
+  const handleRoleChange = async (userId: string, targetRole: 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER') => {
     const targetUser = users.find(u => u.id === userId);
 
     setUsers(prev =>
@@ -119,7 +121,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
       /* ignore storage errors */
     }
 
-    const displayRoleName = targetRole === 'MANAGER' ? 'PLANIFICADOR' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : 'DESARROLLADOR';
+    const displayRoleName = targetRole === 'MANAGER' ? 'PLANIFICADOR' : targetRole === 'ADMIN' ? 'ADMINISTRADOR' : targetRole === 'USER' ? 'USUARIO' : 'DESARROLLADOR';
     showToast(`✨ Rol de ${targetUser?.name || 'usuario'} actualizado a ${displayRoleName}`);
   };
 
@@ -168,6 +170,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
   const adminUsers = users.filter(u => u.role === 'ADMIN');
   const managerUsers = users.filter(u => u.role === 'MANAGER');
   const developerUsers = users.filter(u => u.role === 'DEVELOPER');
+  const pendingUsers = users.filter(u => u.role === 'USER');
   const pendingRequests = users.filter(u => u.status === 'INACTIVE');
 
   const filteredUsers = users.filter(u => {
@@ -216,6 +219,7 @@ export function useAdminUsers(approveUserPermission?: any, approvedUsers?: strin
     adminUsers,
     managerUsers,
     developerUsers,
+    pendingUsers,
     pendingRequests,
     filteredUsers,
     paginatedUsers,

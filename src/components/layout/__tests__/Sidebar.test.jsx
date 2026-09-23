@@ -145,36 +145,16 @@ describe('Sidebar Component', () => {
     expect(mockLogout).toHaveBeenCalledTimes(1);
   });
 
-  it('calls switchViewRole for all three roles', async () => {
-    const user = userEvent.setup();
-    const switchRoleMock = vi.fn();
+  it('does not render view mode switch buttons', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: { rol: 'ADMIN', nombre: 'John Doe', email: 'admin@test.com' },
       logout: mockLogout,
-      switchViewRole: switchRoleMock,
       isRealAdmin: true
     });
     render(<Sidebar {...defaultProps} />);
     
-    const adminBtn = screen.getByTitle('Cambiar a Vista Administrador');
-    const leaderBtn = screen.getByTitle('Cambiar a Vista Líder Técnico');
-    const devBtn = screen.getByTitle('Cambiar a Vista Desarrollador');
-
-    await act(async () => {
-      await user.click(adminBtn);
-    });
-    expect(switchRoleMock).toHaveBeenCalledWith('ADMIN');
-
-    await act(async () => {
-      await user.click(leaderBtn);
-    });
-    expect(switchRoleMock).toHaveBeenCalledWith('MANAGER');
-
-    await act(async () => {
-      await user.click(devBtn);
-    });
-    expect(switchRoleMock).toHaveBeenCalledWith('DEVELOPER');
+    expect(screen.queryByTitle('Cambiar a Vista Administrador')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Cambiar a Vista Líder Técnico')).not.toBeInTheDocument();
+    expect(screen.queryByTitle('Cambiar a Vista Desarrollador')).not.toBeInTheDocument();
   });
-
-
 });

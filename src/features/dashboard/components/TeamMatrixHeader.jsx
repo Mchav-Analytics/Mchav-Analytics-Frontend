@@ -42,16 +42,21 @@ export default function TeamMatrixHeader({
           <Users className="w-4 h-4 text-indigo-500 shrink-0" />
           <span className="text-[13px] font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">Equipo:</span>
           <select
-            value={selectedProjectId}
+            value={selectedProjectId || '10000'}
             onChange={(e) => onSelectProject && onSelectProject(e.target.value)}
             className="bg-transparent text-[13px] font-extrabold text-slate-900 dark:text-white focus:outline-none cursor-pointer max-w-[140px] sm:max-w-[220px] truncate"
           >
-            <option value="PROJ-01" className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">Proyecto PROJ-01 (MCHAV Core)</option>
-            {allProjects.map((p) => (
-              <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto} className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
-                {p.name || p.nombre || p.id_proyecto}
+            {allProjects.length === 0 ? (
+              <option value="10000" className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
+                MCHAV ANALYTICS (10000)
               </option>
-            ))}
+            ) : (
+              allProjects.map((p) => (
+                <option key={p.id || p.id_proyecto} value={p.id || p.id_proyecto} className="bg-white dark:bg-[#191c3d] text-slate-900 dark:text-white font-bold">
+                  {p.name || p.nombre || p.id_proyecto}
+                </option>
+              ))
+            )}
           </select>
         </div>
 

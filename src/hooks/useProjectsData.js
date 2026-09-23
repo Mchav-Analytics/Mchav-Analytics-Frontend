@@ -8,12 +8,13 @@ export const useProjectsData = () => {
 
   const fetchUsersAndProjects = useCallback(async () => {
     try {
+      if (!api || typeof api.get !== 'function') return;
       const [uRes, pRes] = await Promise.all([
         api.get('/api/v1/users'),
         api.get('/api/v1/projects')
       ]);
-      setDbUsers(uRes.data || []);
-      setDbProjects(pRes.data || []);
+      setDbUsers(uRes?.data || []);
+      setDbProjects(pRes?.data || []);
     } catch (e) {
       console.error("Error fetching devs and projects", e);
     }

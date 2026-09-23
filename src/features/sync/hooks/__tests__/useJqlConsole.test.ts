@@ -120,4 +120,51 @@ describe('useJqlConsole (sync module)', () => {
 
     getElementByIdSpy.mockRestore();
   });
+
+  it('exports issues to CSV correctly', async () => {
+    const { result } = renderHook(() => useJqlConsole());
+    const mockEvent = { preventDefault: vi.fn() } as any;
+
+    (jqlService.executeJql as any).mockResolvedValueOnce({
+      total: 1,
+      issues: [{
+        key: 'TEST-1',
+        fields: {
+          issuetype: { name: 'Bug' },
+          summary: 'Problema con comillas "dobles"',
+          status: { name: 'En curso' },
+          assignee: { displayName: 'Juan Pérez' }
+        }
+      }]
+    });
+
+    await act(async () => {
+      await result.current.handleExecuteJql(mockEvent);
+    });
+
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const appendSpy = vi.spyOn(document.body, 'appendChild');
+
+    act(() => {
+      result.current.exportJqlToCsv();
+    });
+
+    expect(clickSpy).toHaveBeenCalled();
+    expect(appendSpy).toHaveBeenCalled();
+
+    clickSpy.mockRestore();
+    appendSpy.mockRestore();
+  });
+
+  it('does nothing when exporting empty issues to CSV', () => {
+    const { result } = renderHook(() => useJqlConsole());
+    const appendSpy = vi.spyOn(document.body, 'appendChild');
+
+    act(() => {
+      result.current.exportJqlToCsv();
+    });
+
+    expect(appendSpy).not.toHaveBeenCalled();
+    appendSpy.mockRestore();
+  });
 });

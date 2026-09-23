@@ -6,7 +6,7 @@ import SprintHealthHeader from '../components/SprintHealthHeader';
 import SprintHealthKpis from '../components/SprintHealthKpis';
 import SprintHealthChart from '../components/SprintHealthChart';
 
-export default function SprintHealthView({ selectedProjectId = 'PROJ-01', onNavigateToProjects, onNavigateToMatrix, onNavigateToScorecards, isDarkMode }) {
+export default function SprintHealthView({ selectedProjectId = '10000', onNavigateToProjects, onNavigateToMatrix, onNavigateToScorecards, isDarkMode }) {
   const {
     loading,
     sprints,

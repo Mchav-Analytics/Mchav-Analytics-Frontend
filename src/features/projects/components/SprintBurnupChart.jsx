@@ -12,7 +12,18 @@ import {
 } from 'recharts';
 
 export const SprintBurnupChart = ({ data, isAnimationActive = true, width, height }) => {
-  if (!data || data.length === 0) {
+  const normalizedData = React.useMemo(() => {
+    if (!Array.isArray(data) || data.length === 0) return [];
+    return data.map((d, idx) => ({
+      fecha_real: d.fecha_real || d.date || d.fecha || `Día ${idx + 1}`,
+      alcance_total: Number(d.alcance_total ?? d.scope ?? 0),
+      trabajo_completado: Number(d.trabajo_completado ?? d.completed ?? 0),
+      ritmo_ideal: Number(d.ritmo_ideal ?? d.ideal ?? 0),
+      tareas_completadas: Number(d.tareas_completadas ?? d.tasks_done ?? 0)
+    }));
+  }, [data]);
+
+  if (!normalizedData || normalizedData.length === 0) {
     return (
       <div className="flex items-center justify-center h-64 bg-slate-50 dark:bg-slate-900/30 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700">
         <span className="text-slate-500 dark:text-slate-400 font-medium text-sm">
@@ -95,7 +106,7 @@ export const SprintBurnupChart = ({ data, isAnimationActive = true, width, heigh
     <div className={`w-full ${height ? '' : 'h-[360px] min-h-[360px]'}`}>
       <Wrapper {...wrapperProps}>
         <ComposedChart
-          data={data}
+          data={normalizedData}
           margin={{ top: 20, right: 30, left: 10, bottom: 20 }}
           {...chartProps}
         >

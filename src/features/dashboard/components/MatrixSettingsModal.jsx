@@ -25,11 +25,13 @@ const PRESETS = [
   }
 ];
 
+const DEFAULT_WEIGHTS = { w_tp: 25, w_sp: 20, w_ct: 20, w_com: 20, w_qual: 15 };
+
 function MatrixSettingsModal({
   isOpen,
   onClose,
   initialThreshold = 80,
-  initialWeights = { w_tp: 25, w_sp: 20, w_ct: 20, w_com: 20, w_qual: 15 },
+  initialWeights = DEFAULT_WEIGHTS,
   selectedProjectName = 'Proyecto',
   onSaveConfig,
   onApplyPreview
