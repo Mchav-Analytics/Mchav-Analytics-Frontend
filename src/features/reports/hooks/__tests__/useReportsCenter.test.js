@@ -11,8 +11,10 @@ vi.mock('../../../auth/context/AuthContext', () => ({
 
 vi.mock('../../../../services/api', () => ({
   default: {
-    get: vi.fn()
-  }
+    get: vi.fn(),
+    defaults: { baseURL: 'http://localhost:8000' }
+  },
+  BACKEND_URL: 'http://localhost:8000'
 }));
 
 vi.mock('react-to-print', () => ({
