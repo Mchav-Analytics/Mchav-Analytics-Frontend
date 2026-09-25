@@ -81,6 +81,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const checkAuthSession = async () => {
     setLoading(true);
     setError(null);
+    
+    // Timer de seguridad: desactiva la pantalla de carga si el backend tarda más de 3.5s
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 3500);
+
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const isLoginSuccess = urlParams.get('login') === 'success';
@@ -99,6 +105,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (!existingToken && !storedSession && !tokenParam) {
         setUser(null);
+        clearTimeout(safetyTimer);
         setLoading(false);
         return;
       }
@@ -114,6 +121,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         localStorage.removeItem('mchav_jwt_token');
         localStorage.removeItem('mock_user_session');
         setUser(null);
+        clearTimeout(safetyTimer);
         setLoading(false);
         return;
       }
@@ -143,6 +151,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       console.log("Sin sesión activa actualmente:", err);
       setUser(null);
     } finally {
+      clearTimeout(safetyTimer);
       setLoading(false);
     }
   };

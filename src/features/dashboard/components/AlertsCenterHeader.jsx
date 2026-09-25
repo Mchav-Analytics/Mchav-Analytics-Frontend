@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plus, MessageSquare, Clock, CheckCircle2, TrendingUp, Calendar, Folder, Filter, History, Send, ChevronRight, Check, Search, Mail, Sparkles } from 'lucide-react';
+import { Plus, MessageSquare, Clock, CheckCircle2, TrendingUp, Calendar, Folder, Filter, History, Send, ChevronRight, Check, Search, Mail, Sparkles, Loader2, AlertCircle } from 'lucide-react';
 import LastSyncBadge from './LastSyncBadge';
 import { useAuth } from '../../auth/context/AuthContext';
 import { reportService } from '../../../services/api';
@@ -33,26 +33,6 @@ export const AlertsCenterHeader = ({
   const isDev = isDevProp !== undefined ? isDevProp : (!isAdminCalculated && !isLeaderCalculated);
   const isAdmin = isAdminProp !== undefined ? isAdminProp : isAdminCalculated;
   const isLeader = isLeaderProp !== undefined ? isLeaderProp : (!isAdmin && !isDev);
-
-  const [sendingEmails, setSendingEmails] = React.useState(false);
-  const [emailStatusMsg, setEmailStatusMsg] = React.useState('');
-
-  const handleSendMonthlyEmails = async () => {
-    setSendingEmails(true);
-    setEmailStatusMsg('Generando reporte con Nubi AI y enviando correos...');
-    try {
-      const data = await reportService.sendMonthlyReports();
-      setEmailStatusMsg(`¡Éxito! Correos enviados a Admins (${data.admins_notified || 1}) y Líderes (${data.leaders_notified || 1}).`);
-    } catch (err) {
-      console.error('Error enviando reportes:', err);
-      setEmailStatusMsg(`Atención: ${err.response?.data?.detail || 'Verifique la conexión con el servidor'}`);
-    } finally {
-      setTimeout(() => {
-        setSendingEmails(false);
-        setEmailStatusMsg('');
-      }, 6000);
-    }
-  };
 
   if (isDev) {
     // ── VISTA DESARROLLADOR: CENTRO DE ACTIVIDAD (3 TARJETAS - IMAGEN 3) ──
@@ -217,26 +197,18 @@ export const AlertsCenterHeader = ({
                 className="w-full bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#252a4e] pl-9 pr-3 py-2 rounded-xl text-xs text-slate-800 dark:text-slate-100 placeholder-slate-400 font-medium outline-none focus:border-indigo-500 transition-colors shadow-xs"
               />
             </div>
-
+            
             <button
               type="button"
-              onClick={handleSendMonthlyEmails}
-              disabled={sendingEmails}
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-extrabold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
-              title="Despachar reportes mensuales por correo a Administradores y Líderes"
+              onClick={() => setShowCreateModal(true)}
+              className="px-4 py-2 rounded-xl text-xs font-extrabold transition-all shadow-md shadow-indigo-600/20 flex items-center gap-2 cursor-pointer active:scale-95 bg-indigo-600 hover:bg-indigo-500 text-white"
             >
-              <Mail size={15} className={sendingEmails ? 'animate-bounce' : ''} />
-              <span>{sendingEmails ? 'Enviando...' : 'Enviar Reportes por Correo'}</span>
+              <Plus size={15} />
+              <span>Nuevo feedback</span>
             </button>
           </div>
         </div>
 
-        {emailStatusMsg && (
-          <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-200 dark:border-indigo-800/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold text-center animate-in fade-in flex items-center justify-center gap-2 shadow-xs">
-            <Sparkles size={14} className="animate-spin text-indigo-500" />
-            <span>{emailStatusMsg}</span>
-          </div>
-        )}
 
         {/* SUBHEADER FILTER PILLS ROW */}
         <div className="flex items-center gap-2.5 pt-1 overflow-x-auto pb-1">

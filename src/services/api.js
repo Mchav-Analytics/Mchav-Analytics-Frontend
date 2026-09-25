@@ -14,6 +14,7 @@ export const BACKEND_URL = 'http://localhost:8000';
 const api = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
+  timeout: 10000,
 });
 
 api.interceptors.request.use((config) => {

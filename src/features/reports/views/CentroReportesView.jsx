@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
-import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2 } from 'lucide-react';
-import api, { projectService } from '../../../services/api';
+import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2, Mail, Loader2 } from 'lucide-react';
+import api, { projectService, reportService } from '../../../services/api';
 import { useReactToPrint } from 'react-to-print';
 import DynamicAIReportTemplate from '../components/DynamicAIReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -12,6 +12,31 @@ export default function CentroReportesView({ selectedProjectId }) {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+
+  const [sendingEmails, setSendingEmails] = useState(false);
+  const [emailStatusMsg, setEmailStatusMsg] = useState('');
+  const [emailStatusType, setEmailStatusType] = useState('loading');
+
+  const handleSendMonthlyEmails = async () => {
+    if (sendingEmails) return;
+    setSendingEmails(true);
+    setEmailStatusType('loading');
+    setEmailStatusMsg('Generando reporte PDF con Nubi AI y enviando correos... Por favor espere unos segundos.');
+    try {
+      const data = await reportService.sendMonthlyReports();
+      setEmailStatusType('success');
+      setEmailStatusMsg(`¡Éxito! El reporte mensual PDF ha sido generado y enviado por correo a los administradores y líderes.`);
+    } catch (err) {
+      console.error('Error enviando reportes:', err);
+      setEmailStatusType('error');
+      setEmailStatusMsg(`Atención: ${err.response?.data?.detail || 'No se pudo despachar el reporte. Verifique la conexión con el servidor.'}`);
+    } finally {
+      setTimeout(() => {
+        setSendingEmails(false);
+        setEmailStatusMsg('');
+      }, 7000);
+    }
+  };
 
   // ── Historial Persistente de Reportes ──
   const [savedReports, setSavedReports] = useState(() => {
@@ -401,30 +426,32 @@ export default function CentroReportesView({ selectedProjectId }) {
             a.nombre.localeCompare(b.nombre, undefined, { numeric: true, sensitivity: 'base' })
           ).slice(-5);
 
-          for (const sp of sortedSprints) {
-            try {
-              const health = await projectService.getSprintHealth(projectId, sp.id_sprint);
-              let planned = health?.metrics?.sp_planned || 0;
-              let completed = health?.metrics?.sp_completed || 0;
-              if (planned === 0 && completed === 0) {
-                planned = Math.floor(35 + Math.random() * 15);
-                completed = Math.floor(30 + Math.random() * 15);
-              }
-              realVelocityData.push({
-                sprint: sp.nombre,
-                comprometido: planned,
-                compromisos: planned,
-                completado: completed,
-                entregados: completed
-              });
-            } catch (hErr) {
-              console.warn('Error health sprint:', hErr);
-            }
-          }
+          const healthPromises = sortedSprints.map(sp => 
+            projectService.getSprintHealth(projectId, sp.id_sprint)
+              .then(health => {
+                let planned = health?.metrics?.sp_planned || 0;
+                let completed = health?.metrics?.sp_completed || 0;
+                if (planned === 0 && completed === 0) {
+                  planned = Math.floor(35 + Math.random() * 15);
+                  completed = Math.floor(30 + Math.random() * 15);
+                }
+                return {
+                  sprint: sp.nombre,
+                  comprometido: planned,
+                  compromisos: planned,
+                  completado: completed,
+                  entregados: completed
+                };
+              })
+              .catch(() => null)
+          );
+          
+          const results = await Promise.all(healthPromises);
+          realVelocityData = results.filter(Boolean);
         }
       } catch (e) { console.warn('No se pudo cargar velocidad histórica:', e); }
 
-      // 6. Generar Insights con IA
+      // 6. Generar Insights con IA (Timeout de 6s para evitar bloqueos)
       let aiInsightsData = null;
       try {
         const metricsData = {
@@ -436,14 +463,16 @@ export default function CentroReportesView({ selectedProjectId }) {
           bugs: kpis?.metrics?.bugs_count || 0,
           totalScope: Math.max(kpis?.metrics?.completed_sp || 0, 40),
           sprintHealth: kpis?.health_score || 0,
-          sprintName: sprintName
+          sprintName: sprintName,
+          targetName: targetName,
+          projectName: realProjectName
         };
-        const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
+        const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData, { timeout: 6000 });
         if (aiResponse.data && aiResponse.data.data) {
           aiInsightsData = aiResponse.data.data;
         }
       } catch (e) {
-        console.error("Error al generar AI insights:", e);
+        console.error("Error al generar AI insights (usando fallback rápido):", e);
       }
 
       setIsGenerating(false);
@@ -1289,8 +1318,39 @@ export default function CentroReportesView({ selectedProjectId }) {
             <p className="text-slate-500 text-sm font-medium">Genera, consulta y compara el rendimiento de tus proyectos y equipos.</p>
         </div>
         
-        <div className="flex p-1.5 bg-slate-100/80 dark:bg-[#141738]/50 backdrop-blur-md rounded-[1.25rem] border border-slate-200/80 dark:border-white/5 w-full md:w-auto mt-6 md:mt-0 shadow-inner">
-            <button 
+        <div className="flex flex-col gap-4 md:items-end w-full md:w-auto mt-6 md:mt-0">
+            <button
+              type="button"
+              onClick={handleSendMonthlyEmails}
+              disabled={sendingEmails}
+              className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2.5 self-start md:self-end ${
+                sendingEmails
+                  ? 'bg-slate-400 text-white cursor-not-allowed opacity-80 shadow-none'
+                  : 'bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white shadow-indigo-600/30 cursor-pointer'
+              }`}
+              title="Despachar reportes mensuales por correo a Administradores y Líderes"
+            >
+              {sendingEmails ? (
+                <>
+                  <Loader2 size={16} className="animate-spin text-white shrink-0" />
+                  <span>Generando y Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <Mail size={16} className="shrink-0" />
+                  <span>Enviar Reportes por Correo</span>
+                </>
+              )}
+            </button>
+
+            {emailStatusMsg && (
+              <div className={`text-xs font-semibold px-3 py-1.5 rounded-lg max-w-sm text-right ${emailStatusType === 'error' ? 'text-red-600 bg-red-100 dark:bg-red-500/20 dark:text-red-400' : emailStatusType === 'success' ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-400' : 'text-blue-600 bg-blue-100 dark:bg-blue-500/20 dark:text-blue-400'}`}>
+                {emailStatusMsg}
+              </div>
+            )}
+
+            <div className="flex p-1.5 bg-slate-100/80 dark:bg-[#141738]/50 backdrop-blur-md rounded-[1.25rem] border border-slate-200/80 dark:border-white/5 w-full md:w-auto shadow-inner">
+                <button 
                 onClick={() => setActiveTab('generacion')} 
                 className={`flex items-center gap-2.5 px-6 py-3 rounded-xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'generacion' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_12px_rgba(99,102,241,0.3)] ring-1 ring-slate-200 dark:ring-0 scale-[1.02]' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5'}`}
             >
@@ -1305,6 +1365,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                 Historial
             </button>
         </div>
+      </div>
       </div>
 
       <div className="flex-1 flex flex-col w-full relative z-20">
