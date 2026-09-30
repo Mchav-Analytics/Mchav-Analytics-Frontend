@@ -380,6 +380,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
   const [sidebarCategory, setSidebarCategory] = useState('ALL');
   const [sidebarPriority, setSidebarPriority] = useState('ALL');
   const [sidebarStatus, setSidebarStatus] = useState('ALL');
+  const [timeRange, setTimeRange] = useState('30');
 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [formTitle, setFormTitle] = useState('');
@@ -822,6 +823,8 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     newCommentText, setNewCommentText, handleAddComment, handleToggleStatus,
     sidebarProject, setSidebarProject, sidebarCategory, setSidebarCategory,
     sidebarPriority, setSidebarPriority, sidebarStatus, setSidebarStatus,
+    timeRange, setTimeRange,
     categoryCounts, projectCounts, trendData, trendTimeframe, setTrendTimeframe
   };
 };
+

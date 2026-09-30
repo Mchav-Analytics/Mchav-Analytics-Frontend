@@ -20,6 +20,8 @@ export const AlertsCenterHeader = ({
   setSidebarCategory,
   sidebarPriority = 'ALL',
   setSidebarPriority,
+  timeRange = '30',
+  setTimeRange,
   projectsList = [],
   isDev: isDevProp,
   isAdmin: isAdminProp,
@@ -197,8 +199,8 @@ export const AlertsCenterHeader = ({
             <div className="flex items-center gap-2 bg-white dark:bg-[#14192b] border border-slate-200 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs shrink-0">
               <Calendar size={15} className="text-slate-400" />
               <select
-                value={sidebarPriority || '30'}
-                onChange={e => setSidebarPriority && setSidebarPriority(e.target.value)}
+                value={timeRange || '30'}
+                onChange={e => setTimeRange && setTimeRange(e.target.value)}
                 className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
               >
                 <option value="30" className="bg-white dark:bg-slate-900">Últimos 30 días</option>
@@ -379,8 +381,8 @@ export const AlertsCenterHeader = ({
           <div className="flex items-center gap-2 bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-[#252a4e] px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs shrink-0">
             <Calendar size={15} className="text-slate-400" />
             <select
-              value={sidebarPriority || '30'}
-              onChange={e => setSidebarPriority && setSidebarPriority(e.target.value)}
+              value={timeRange || '30'}
+              onChange={e => setTimeRange && setTimeRange(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-800 dark:text-slate-100 outline-none cursor-pointer"
             >
               <option value="30" className="bg-white dark:bg-slate-900">Últimos 30 días</option>

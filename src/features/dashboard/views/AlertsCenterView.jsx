@@ -23,6 +23,7 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
     newCommentText, setNewCommentText, handleAddComment, handleToggleStatus,
     sidebarProject, setSidebarProject, sidebarCategory, setSidebarCategory,
     sidebarPriority, setSidebarPriority, sidebarStatus, setSidebarStatus,
+    timeRange, setTimeRange,
     categoryCounts, projectCounts, trendData, trendTimeframe, setTrendTimeframe,
     isAdmin, isLeader, isDev
   } = useAlertsCenter({ selectedProjectId });
@@ -62,11 +63,14 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
         setSidebarCategory={setSidebarCategory}
         sidebarPriority={sidebarPriority}
         setSidebarPriority={setSidebarPriority}
+        timeRange={timeRange}
+        setTimeRange={setTimeRange}
         projectsList={projectsList}
         isAdmin={isAdmin}
         isLeader={isLeader}
         isDev={isDev}
       />
+
 
       {/* Main Grid: Feed List (8 cols) + Sidebar / Detail Panel (4 cols) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -81,6 +85,7 @@ export default function AlertsCenterView({ selectedProjectId = null, onNavigateT
           handleAddComment={handleAddComment}
           setSidebarCategory={setSidebarCategory}
           setSidebarPriority={setSidebarPriority}
+          sidebarStatus={sidebarStatus}
           setSidebarStatus={setSidebarStatus}
           isAdmin={isAdmin}
           isLeader={isLeader}
