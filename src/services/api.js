@@ -14,6 +14,7 @@ export const BACKEND_URL = 'http://localhost:8000';
 const api = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
+  timeout: 10000,
 });
 
 api.interceptors.request.use((config) => {
@@ -116,6 +117,14 @@ export const jiraService = {
   },
   reassignIssuesBulk(assignments) {
     return api.post('/api/v1/jira/issues/reassign-bulk', { assignments }).then(res => res.data);
+  },
+  updateCronTime(cronTime) {
+    if (USE_MOCK_DATA) return Promise.resolve({ message: "Horario actualizado con éxito", cron_sync_time: cronTime });
+    return api.put('/api/v1/jira/sync/cron', { cron_time: cronTime }).then(res => res.data);
+  },
+  toggleAutoSync(enabled) {
+    if (USE_MOCK_DATA) return Promise.resolve({ message: "Sincronización automática " + (enabled ? "activada" : "desactivada") });
+    return api.put('/api/v1/jira/sync/auto', { enabled }).then(res => res.data);
   }
 };
 
