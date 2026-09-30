@@ -392,7 +392,7 @@ const GraficaDistribucion = ({ data }) => {
 /** Clases del prose de Markdown — estilo limpio de documento ejecutivo */
 const PROSE = `
   prose prose-sm max-w-none
-  prose-headings:font-bold prose-headings:text-[#1e293b] prose-headings:uppercase prose-headings:tracking-wide
+  prose-headings:font-sans prose-headings:font-bold prose-headings:text-[#1e293b] prose-headings:uppercase prose-headings:tracking-wide
   prose-h1:text-base prose-h1:mb-3
   prose-h2:text-[11px] prose-h2:mt-6 prose-h2:mb-3
   prose-h3:text-[10.5px] prose-h3:mt-4 prose-h3:mb-2 prose-h3:text-slate-600
@@ -466,14 +466,14 @@ const GraficaPortafolioVelocidad = ({ metrics }) => {
 
 
 function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, reportType, reportData, devScore) {
-  const isProyecto = reportType === 'proyecto';
-  const isDesarrollador = reportType === 'desarrollador';
-  const isGeneral = reportType === 'general';
+  const isProyecto = reportType === 'proyecto' || reportType === 'cierre_proyecto';
+  const isDesarrollador = reportType === 'desarrollador' || reportType === 'cierre_desarrollador';
+  const isGeneral = reportType === 'general' || reportType === 'cierre_general';
 
   // Dividir según el formato del reporte
   const splitRegex = isProyecto 
     ? /(?=(?:^|\n)(?:\*\*)?\[PROYECTO_\d\])/gi 
-    : /(?=(?:^|\n)# 0\d)/gi;
+    : /(?=(?:^|\n)#+\s*0?\d[\s.\-—]+)/gi;
   
   const pages = markdownText.split(splitRegex).filter(Boolean);
 
@@ -483,7 +483,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
     if (isProyecto) {
       titleMatch = pageText.match(/^(?:#+\s*|\*\*)?\[PROYECTO_\d\]\s*(.*?)(?:\*\*)?$/mi);
     } else {
-      titleMatch = pageText.match(/^#\s*0\d\s*[-—?\s]+(.*)$/mi);
+      titleMatch = pageText.match(/^#+\s*0?\d[\s.\-—]+(.*)$/mi);
     }
     return titleMatch ? titleMatch[1].trim() : null;
   }).filter(Boolean);
@@ -501,7 +501,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
       const match = pageText.match(/\[PROYECTO_(\d)\]/i);
       if (match) sectionNum = parseInt(match[1], 10);
     } else {
-      const sectionMatch = pageText.trim().match(/^# 0(\d)/i);
+      const sectionMatch = pageText.trim().match(/^#+\s*0?(\d)/i);
       sectionNum = sectionMatch ? parseInt(sectionMatch[1], 10) : null;
     }
 
@@ -510,11 +510,10 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
 
     // Limpiar prefijos de título para formato limpio
     if (isProyecto) {
-      // Eliminar el tag [PROYECTO_X] para que no se vea en el PDF final, dejando solo el texto del título como H3
       trimmed = trimmed.replace(/^(?:#+\s*|\*\*)?\[PROYECTO_\d\]\s*(.*?)(?:\*\*)?$/gmi, '### $1');
     } else {
-      trimmed = trimmed.replace(/^#\s*0\d\s*[-—?\s]+/gi, '# ');
-      trimmed = trimmed.replace(/^#\s*ACTO\s*\d*:?\s*/gi, '# ');
+      trimmed = trimmed.replace(/^#+\s*0?\d[\s.\-—]+/gi, '# ');
+      trimmed = trimmed.replace(/^#+\s*ACTO\s*\d*:?\s*/gi, '# ');
     }
 
     // Extraer %%HIGHLIGHT%%
@@ -579,7 +578,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
         )}
 
         {/* ═══ KPIs (Solo Sprint, sección 2) ═══ */}
-        {!isProyecto && !isDesarrollador && sectionNum === 2 && (
+        {!isProyecto && !isDesarrollador && !isGeneral && sectionNum === 2 && (
           <div style={{ display: 'flex', gap: '20px', margin: '20px 0', alignItems: 'center', justifyContent: 'space-around', background: '#f8fafc', padding: '30px 15px', borderRadius: '12px' }}>
             <div style={{ textAlign: 'center' }}>
               <p style={{ fontSize: '42px', fontWeight: 900, color: '#3b82f6', margin: 0, lineHeight: 1 }}>
@@ -607,7 +606,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
 
 
         {/* ═══ Tabla comparativa (Solo Sprint, sección 3) ═══ */}
-        {!isProyecto && !isDesarrollador && sectionNum === 3 && (
+        {!isProyecto && !isDesarrollador && !isGeneral && sectionNum === 3 && (
           <div style={{ margin: '40px 0', pageBreakInside: 'avoid' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', fontFamily: '"Inter", system-ui, sans-serif' }}>
               <thead>
@@ -644,7 +643,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
 
         {/* ANÁLISIS (Texto de la IA) con INYECCIÓN INLINE PARA SECCIÓN 3 */}
         {(() => {
-          if (!isProyecto && !isDesarrollador && sectionNum === 3) {
+          if (!isProyecto && !isDesarrollador && !isGeneral && sectionNum === 3) {
             let renderedBurnup = false;
             let renderedVelocidad = false;
             
@@ -985,18 +984,20 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
       display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', minHeight: '100vh',
       background: 'white'
     }}>
-      <h2 style={{ fontSize: '18px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '10px', marginBottom: '24px', letterSpacing: '0.5px' }}>
+      <h2 style={{ fontFamily: '"Inter", sans-serif', fontSize: '18px', fontWeight: 900, color: '#0f172a', textTransform: 'uppercase', borderBottom: '2px solid #0f172a', paddingBottom: '10px', marginBottom: '24px', letterSpacing: '0.5px' }}>
         0. INTRODUCCIÓN, PROPÓSITO Y METODOLOGÍA
       </h2>
 
       {/* Propósito del Documento */}
       <div style={{ marginBottom: '20px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
+        <h3 style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
           📌 Propósito del Documento
         </h3>
         <p style={{ fontSize: '11px', color: '#334155', lineHeight: 1.6, textAlign: 'justify', margin: 0 }}>
           {isProyecto ? (
             'Este informe analiza la evolución multitemporal del proyecto a través de múltiples Sprints y periodos operativos. Responde fundamentalmente a la pregunta central: "¿Cómo ha evolucionado el proyecto durante el periodo?", evaluando variaciones de velocidad de entrega, cuellos de botella en el flujo (CFD), tiempos de ciclo matizados por complejidad (P50/P85/P95) y la estabilidad del alcance frente a adiciones tardías.'
+          ) : isDesarrollador ? (
+            `Este informe consolidado tiene como objetivo evaluar el desempeño individual, la constancia en el flujo de trabajo, la velocidad de entrega y el ritmo de progreso de ${reportData?.targetName || 'Desarrollador'} durante el período evaluado. Sirve como herramienta de acompañamiento técnico y profesional para apoyar el crecimiento continuo del desarrollador.`
           ) : (
             'Este informe ejecutivo consolidado tiene como objetivo evaluar el desempeño operativo, la estabilidad del flujo de trabajo, la velocidad de entrega y la predictibilidad del equipo durante el período evaluado. Sirve como herramienta de apoyo analítico para la toma de decisiones informada y el seguimiento metodológico de compromisos.'
           )}
@@ -1005,18 +1006,29 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
 
       {/* Metodología de Análisis */}
       <div style={{ marginBottom: '24px' }}>
-        <h3 style={{ fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
+        <h3 style={{ fontFamily: '"Inter", sans-serif', fontSize: '13px', fontWeight: 800, color: '#1e293b', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.05em' }}>
           🔬 Metodología de Análisis y Criterios
         </h3>
         <p style={{ fontSize: '11px', color: '#334155', lineHeight: 1.6, textAlign: 'justify', marginBottom: '10px' }}>
           El diagnóstico se construye a partir de un <strong>Snapshot Único Consolidado</strong> de datos históricos extraídos en tiempo real. Un total de <strong>{stats.throughput || reportData?.totalIssues || 0} incidencias</strong> fueron procesadas cuantitativamente.
         </p>
         <ul style={{ fontSize: '10.5px', color: '#475569', lineHeight: 1.6, paddingLeft: '20px', margin: 0 }}>
-          <li style={{ marginBottom: '4px' }}><strong>Evolución de Entrega (Velocidad & Throughput):</strong> Medición de Story Points (SP) y tickets cerrados por sprint, evaluando la tendencia media histórica.</li>
-          <li style={{ marginBottom: '4px' }}><strong>Análisis de Flujo y WIP (CFD):</strong> Diagrama de Flujo Acumulado para cuantificar la acumulación concurrente de tareas (Work In Progress) y variaciones en cuellos de botella.</li>
-          <li style={{ marginBottom: '4px' }}><strong>Tiempos de Ciclo y Predictibilidad (Scatter Plot):</strong> Días hábiles laborables (excluyendo fines de semana/festivos) con percentiles P50 (Mediana), P85 (SLA objetivo) y P95 (Outliers/bloqueos), contextualizados por complejidad y tipo de issue.</li>
-          <li style={{ marginBottom: '4px' }}><strong>Estabilidad de Alcance (Burnup Chart):</strong> Seguimiento de trabajo comprometido vs. completado vs. Scope Creep (adiciones durante la marcha).</li>
-          <li style={{ marginBottom: '4px' }}><strong>Narrativa Evidenciada:</strong> Análisis discursivo con reglas estrictas de lenguaje técnico (diferencias porcentuales, evitación de adjetivos subjetivos y cita explícita de gráficas).</li>
+          {isDesarrollador ? (
+            <>
+              <li style={{ marginBottom: '4px' }}><strong>Evolución de Entrega (Velocidad & Throughput):</strong> Medición de Story Points (SP) y tickets cerrados, evaluando el desempeño y constancia individual.</li>
+              <li style={{ marginBottom: '4px' }}><strong>Análisis de Flujo (CFD & Tipología):</strong> Diagrama de Flujo y distribución para analizar en qué tipos de trabajo se invierte el esfuerzo y evidenciar cuellos de botella personales.</li>
+              <li style={{ marginBottom: '4px' }}><strong>Tiempos de Ciclo:</strong> Promedio de días hábiles laborables requeridos para la finalización de incidencias, desde su inicio hasta el cierre.</li>
+              <li style={{ marginBottom: '4px' }}><strong>Narrativa y Plan de Mejora:</strong> Análisis técnico enfocado en identificar fortalezas y puntos de mejora constructivos para el crecimiento de {reportData?.targetName || 'Desarrollador'}.</li>
+            </>
+          ) : (
+            <>
+              <li style={{ marginBottom: '4px' }}><strong>Evolución de Entrega (Velocidad & Throughput):</strong> Medición de Story Points (SP) y tickets cerrados por sprint, evaluando la tendencia media histórica.</li>
+              <li style={{ marginBottom: '4px' }}><strong>Análisis de Flujo y WIP (CFD):</strong> Diagrama de Flujo Acumulado para cuantificar la acumulación concurrente de tareas (Work In Progress) y variaciones en cuellos de botella.</li>
+              <li style={{ marginBottom: '4px' }}><strong>Tiempos de Ciclo y Predictibilidad (Scatter Plot):</strong> Días hábiles laborables (excluyendo fines de semana/festivos) con percentiles P50 (Mediana), P85 (SLA objetivo) y P95 (Outliers/bloqueos), contextualizados por complejidad y tipo de issue.</li>
+              <li style={{ marginBottom: '4px' }}><strong>Estabilidad de Alcance (Burnup Chart):</strong> Seguimiento de trabajo comprometido vs. completado vs. Scope Creep (adiciones durante la marcha).</li>
+              <li style={{ marginBottom: '4px' }}><strong>Narrativa Evidenciada:</strong> Análisis discursivo con reglas estrictas de lenguaje técnico (diferencias porcentuales, evitación de adjetivos subjetivos y cita explícita de gráficas).</li>
+            </>
+          )}
         </ul>
       </div>
 
@@ -1153,7 +1165,15 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
 
   // ── Metadatos ──────────────────────────────────────────────────────────────
   const dates = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-  const titleMap = { general: 'INFORME EJECUTIVO DE RENDIMIENTO', proyecto: 'INFORME EJECUTIVO DEL PROYECTO', sprint: 'REPORTE EJECUTIVO DE SPRINT', desarrollador: 'INFORME EJECUTIVO DE DESEMPEÑO INDIVIDUAL' };
+  const titleMap = { 
+    general: 'INFORME EJECUTIVO DE RENDIMIENTO', 
+    proyecto: 'INFORME EJECUTIVO DEL PROYECTO', 
+    sprint: 'REPORTE EJECUTIVO DE SPRINT', 
+    desarrollador: 'INFORME EJECUTIVO DE DESEMPEÑO INDIVIDUAL',
+    cierre_general: 'CIERRE MENSUAL DE RENDIMIENTO',
+    cierre_proyecto: 'CIERRE MENSUAL DEL PROYECTO',
+    cierre_desarrollador: 'CIERRE MENSUAL DE DESEMPEÑO INDIVIDUAL'
+  };
   // ── Generación de Markdown estructurado de respaldo en caso de fallo de IA ──
   const defaultProyectoMarkdown = `[PROYECTO_1] CONTEXTO DEL PERÍODO Y SALUD GLOBAL
 El presente informe evalúa la evolución operativa y la salud técnica del proyecto ${projectName}. Durante el período analizado se registraron ${stats.throughput} incidencias procesadas con una velocidad de ${stats.velocity} Story Points entregados y un tiempo de ciclo promedio de ${stats.cycleTime} días hábiles.
@@ -1232,7 +1252,7 @@ Se recomienda mantener la gestión controlada del WIP y priorizar el cierre de t
   const markdownText = rawMarkdown;
 
   return (
-    <div style={{ position: 'fixed', left: '-9999px', top: '-9999px', width: '210mm', height: 0, overflow: 'hidden', pointerEvents: 'none', zIndex: -1 }}>
+    <div>
       <div ref={ref} className="bg-white text-black w-full mx-auto font-serif text-[12pt] leading-loose">
         <style type="text/css" media="print">{`
           @page { 
@@ -1292,16 +1312,16 @@ Se recomienda mantener la gestión controlada del WIP y priorizar el cierre de t
           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
             <img src="/Logo_sf.png" alt="MCHAV Analytics" style={{ height: '220px', objectFit: 'contain', marginBottom: '32px' }} />
             <h1 style={{ fontSize: '22px', fontWeight: 900, color: '#243b67', textTransform: 'uppercase', letterSpacing: '0.12em', textAlign: 'center', marginBottom: '10px', maxWidth: '420px', lineHeight: 1.25 }}>
-              {reportType === 'sprint' ? `REPORTE DE ${sprintName}` : reportType === 'desarrollador' ? `EVALUACIÓN DE DESEMPEÑO` : (titleMap[reportType] || titleMap.general)}
+              {reportType === 'sprint' ? `REPORTE DE ${sprintName}` : (reportType === 'desarrollador' || reportType === 'cierre_desarrollador') ? (titleMap[reportType] || `EVALUACIÓN DE DESEMPEÑO`) : (titleMap[reportType] || titleMap.general)}
             </h1>
             
-            {reportType === 'desarrollador' && (
+            {(reportType === 'desarrollador' || reportType === 'cierre_desarrollador') && (
               <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6', textTransform: 'uppercase', letterSpacing: '0.08em', textAlign: 'center', marginBottom: '50px' }}>
                 {targetName}
               </h2>
             )}
 
-            {reportType !== 'desarrollador' && <div style={{ marginBottom: '60px' }} />}
+            {(reportType !== 'desarrollador' && reportType !== 'cierre_desarrollador') && <div style={{ marginBottom: '60px' }} />}
 
             {/* Metadatos */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', alignItems: 'center' }}>

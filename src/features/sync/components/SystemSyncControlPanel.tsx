@@ -110,62 +110,13 @@ export default function SystemSyncControlPanel({
             </span>
             <Info size={13} className="text-slate-400" />
           </div>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">
-            Próxima ejecución: <strong className="text-slate-700 dark:text-slate-300">{syncStatus.nextScheduledSync}</strong>
-          </p>
-        </div>
-
-        {/* TARJETA 3: FRECUENCIA Y HORARIO CRON */}
-        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1a1e47]/60 border border-slate-200/70 dark:border-[#272b5c] space-y-3">
-          <div className="flex items-center gap-2">
-            <div className="p-1 bg-sky-100 dark:bg-sky-950/60 rounded-lg text-sky-600 dark:text-sky-400">
-              <Calendar size={13} />
-            </div>
-            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              FRECUENCIA Y HORARIO CRON
-            </span>
-          </div>
-
-          <div className="space-y-2.5">
-            <div>
-              <label className="text-[12px] font-medium text-slate-500 dark:text-slate-400 block mb-1">Frecuencia</label>
-              <div className="relative">
-                <select
-                  id="cronSelect"
-                  value={cronSchedule}
-                  onChange={(e) => setCronSchedule(e.target.value)}
-                  className="w-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer appearance-none"
-                >
-                  <option value="6h">Cada 6 Horas</option>
-                  <option value="12h">Cada 12 Horas</option>
-                  <option value="24h">Diario (24 Horas)</option>
-                </select>
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">▼</div>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[12px] font-medium text-slate-500 dark:text-slate-400 block mb-1">Hora de Ejecución</label>
-              <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="time"
-                    value={cronTime}
-                    onChange={handleCronTimeChange}
-                    disabled={isSavingCron}
-                    className="w-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSaveCronTime}
-                  disabled={isSavingCron || cronTime === savedCronTime}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 py-2 text-[13px] font-bold transition-all disabled:opacity-40 cursor-pointer shrink-0"
-                >
-                  {isSavingCron ? '...' : 'Ok'}
-                </button>
-              </div>
-            </div>
+          <div className="flex flex-col gap-1">
+            <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              Frecuencia: <strong className="text-slate-700 dark:text-slate-300">Cada 24 horas</strong>
+            </p>
+            <p className="text-[12px] text-slate-500 dark:text-slate-400">
+              Próxima ejecución: <strong className="text-slate-700 dark:text-slate-300">{syncStatus.nextScheduledSync}</strong>
+            </p>
           </div>
         </div>
       </div>
