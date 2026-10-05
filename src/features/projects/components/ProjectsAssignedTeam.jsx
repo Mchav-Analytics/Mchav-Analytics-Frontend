@@ -55,11 +55,11 @@ export const ProjectsAssignedTeam = ({ assignedTeam }) => {
                 {/* Rol Badge */}
                 <td className="py-2 px-3">
                   <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold inline-flex items-center gap-1.5 ${
-                    member.role === 'LÍDER'
+                    member.role === 'LÍDER' || member.role === 'PLANIFICADOR'
                       ? 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20'
                       : 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20'
                   }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${member.role === 'LÍDER' ? 'bg-purple-500' : 'bg-blue-500'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${member.role === 'LÍDER' || member.role === 'PLANIFICADOR' ? 'bg-purple-500' : 'bg-blue-500'}`} />
                     {member.role}
                   </span>
                 </td>

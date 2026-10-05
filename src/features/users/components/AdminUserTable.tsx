@@ -204,19 +204,34 @@ export default function AdminUserTable({
             </button>
 
             <div className="flex items-center gap-1">
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(pg => (
-                <button
-                  key={pg}
-                  onClick={() => setCurrentPage(pg)}
-                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                    currentPage === pg
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }`}
-                >
-                  {pg}
-                </button>
-              ))}
+              {(() => {
+                const delta = 1;
+                const range = [];
+                for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+                  range.push(i);
+                }
+                if (currentPage - delta > 2) range.unshift("...");
+                if (currentPage + delta < totalPages - 1) range.push("...");
+                range.unshift(1);
+                if (totalPages > 1) range.push(totalPages);
+                
+                return range.map((pg, i) => (
+                  <button
+                    key={i}
+                    onClick={() => pg !== "..." && setCurrentPage(pg)}
+                    disabled={pg === "..."}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+                      pg === "..."
+                        ? 'bg-transparent text-slate-400 cursor-default shadow-none border-none'
+                        : currentPage === pg
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    }`}
+                  >
+                    {pg}
+                  </button>
+                ));
+              })()}
             </div>
 
             <button

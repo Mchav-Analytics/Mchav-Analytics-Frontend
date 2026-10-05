@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { 
   Search, ChevronLeft, ChevronRight, ChevronDown, Activity, Users, 
-  Zap, Clock, TrendingUp, Layers, ArrowLeft, Grid, List, Sparkles, CheckCircle2 
+  Zap, Clock, TrendingUp, Layers, ArrowLeft, Grid, List, Sparkles, CheckCircle2,
+  UserCheck, AlertTriangle
 } from 'lucide-react';
 import { InfoTooltip } from './Tooltips';
 import { ProjectsAssignedTeam } from './ProjectsAssignedTeam';
+import { useAuth } from '../../auth/context/AuthContext';
 
 export const ProjectsTable = ({
   selectedProjectObj,
@@ -18,7 +20,10 @@ export const ProjectsTable = ({
   assignedTeam = [],
   onNavigateToHealth
 }) => {
-  const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
+  const { user } = useAuth();
+  const userRoleStr = (user?.rol || user?.role || user?.nombre_rol || localStorage.getItem('mchav_active_role') || '').toUpperCase();
+  const isAdmin = userRoleStr.includes('ADMIN') || userRoleStr === 'ADMINISTRADOR';
 
   const isAllSelected = (!selectedProjectId || selectedProjectId === 'ALL') && !selectedProjectObj;
 
@@ -40,7 +45,7 @@ export const ProjectsTable = ({
             
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
               
-              {/* Lado Izquierdo: Avatar + Título + Estado */}
+              {/* Lado Izquierdo: Avatar + Título + Estado + Líder */}
               <div className="flex items-center gap-3.5 shrink-0">
                 <div 
                   className="w-12 h-12 rounded-2xl text-white font-black text-sm flex items-center justify-center shrink-0 border border-white/20 shadow-md"
@@ -67,7 +72,7 @@ export const ProjectsTable = ({
                     {`Detalle del Proyecto: ${selectedProjectObj.name}`}
                     <InfoTooltip text="Detalle de métricas ejecutivas para el proyecto seleccionado." />
                   </h2>
-                  <div className="flex items-center gap-2 text-xs">
+                  <div className="flex items-center flex-wrap gap-2 text-xs">
                     <span className="font-mono text-slate-400 font-bold">{selectedProjectObj.key}</span>
                     <span className="text-slate-300 dark:text-slate-700">•</span>
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 ${
@@ -78,6 +83,24 @@ export const ProjectsTable = ({
                       <span className={`w-1.5 h-1.5 rounded-full ${selectedProjectObj.status === 'Activo' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                       {selectedProjectObj.status}
                     </span>
+
+                    {/* Badge de Planificador / Líder a cargo (Visible únicamente en Vista Admin) */}
+                    {isAdmin && (
+                      <>
+                        <span className="text-slate-300 dark:text-slate-700">•</span>
+                        {selectedProjectObj.leaderName ? (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 border border-indigo-500/25 shadow-2xs">
+                            <UserCheck size={11} className="text-indigo-600 dark:text-indigo-400" />
+                            <span>{selectedProjectObj.leaderLabel || 'Planificador'}: <strong className="font-extrabold text-slate-900 dark:text-white">{selectedProjectObj.leaderName}</strong></span>
+                          </span>
+                        ) : (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1.5 bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 shadow-2xs" title="No hay un Planificador o Líder asignado a este proyecto">
+                            <AlertTriangle size={11} className="text-amber-600 dark:text-amber-400" />
+                            <span>Sin planificador asignado</span>
+                          </span>
+                        )}
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -524,7 +547,8 @@ export const ProjectsTable = ({
                         <ChevronRight size={16} className="text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all shrink-0" />
                       </div>
 
-                      <div className="flex items-center justify-between">
+                      {/* Status Badge + Leader Indicator */}
+                      <div className="flex items-center justify-between gap-1">
                         <span className={`px-2.5 py-0.5 rounded-full text-[9.5px] font-bold inline-flex items-center gap-1.5 ${
                           proj.status === 'Activo'
                             ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
@@ -535,6 +559,24 @@ export const ProjectsTable = ({
                           <span className={`w-1.5 h-1.5 rounded-full ${proj.status === 'Activo' ? 'bg-emerald-500' : isSickOrReview ? 'bg-rose-500' : 'bg-amber-500'}`} />
                           {proj.status}
                         </span>
+
+                        {isAdmin && (
+                          <span className={`text-[9.5px] font-bold inline-flex items-center gap-1 truncate max-w-[130px] ${
+                            proj.leaderName ? 'text-indigo-600 dark:text-indigo-400' : 'text-amber-600 dark:text-amber-400'
+                          }`} title={proj.leaderName ? `${proj.leaderLabel || 'Planificador'}: ${proj.leaderName}` : 'Sin planificador asignado'}>
+                            {proj.leaderName ? (
+                              <>
+                                <UserCheck size={11} className="shrink-0" />
+                                <span className="truncate">{proj.leaderName}</span>
+                              </>
+                            ) : (
+                              <>
+                                <AlertTriangle size={11} className="shrink-0" />
+                                <span>Sin planificador</span>
+                              </>
+                            )}
+                          </span>
+                        )}
                       </div>
                     </div>
 

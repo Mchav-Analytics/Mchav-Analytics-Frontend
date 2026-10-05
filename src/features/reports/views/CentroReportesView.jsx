@@ -1,8 +1,11 @@
-import React, {useState, useEffect, useRef} from 'react';
-import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2 } from 'lucide-react';
-import api, { projectService, BACKEND_URL } from '../../../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2, Mail, Loader2, Printer, X } from 'lucide-react';
+import api, { projectService, reportService, BACKEND_URL } from '../../../services/api';
 import { useReactToPrint } from 'react-to-print';
+import { jsPDF } from 'jspdf';
+import { toPng } from 'html-to-image';
 import DynamicAIReportTemplate from '../components/DynamicAIReportTemplate';
+import ComparativeReportTemplate from '../components/ComparativeReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
 
 export default function CentroReportesView({ selectedProjectId }) {
@@ -13,10 +16,38 @@ export default function CentroReportesView({ selectedProjectId }) {
   const [customEndDate, setCustomEndDate] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
+  const [sendingEmails, setSendingEmails] = useState(false);
+  const [emailStatusMsg, setEmailStatusMsg] = useState('');
+  const [emailStatusType, setEmailStatusType] = useState('loading');
+
+  const handleSendMonthlyEmails = async () => {
+    if (sendingEmails) return;
+    setSendingEmails(true);
+    setEmailStatusType('loading');
+    setEmailStatusMsg('Generando reporte PDF con Nubi AI y enviando correos... Por favor espere unos segundos.');
+    try {
+      const data = await reportService.sendMonthlyReports();
+      setEmailStatusType('success');
+      setEmailStatusMsg(`¡Éxito! El reporte mensual PDF ha sido generado y enviado por correo a los administradores y líderes.`);
+    } catch (err) {
+      console.error('Error enviando reportes:', err);
+      setEmailStatusType('error');
+      setEmailStatusMsg(`Atención: ${err.response?.data?.detail || 'No se pudo despachar el reporte. Verifique la conexión con el servidor.'}`);
+    } finally {
+      setTimeout(() => {
+        setSendingEmails(false);
+        setEmailStatusMsg('');
+      }, 7000);
+    }
+  };
+
   // ── Historial Persistente de Reportes ──
+  // Cada rol (Admin / Líder) tiene su propio historial, ya que la narrativa IA difiere por rol.
+  const getHistoryKey = () => `mchav_generated_reports_${(localStorage.getItem('mchav_active_role') || 'ADMIN').toUpperCase()}`;
+
   const [savedReports, setSavedReports] = useState(() => {
     try {
-      const stored = localStorage.getItem('mchav_generated_reports');
+      const stored = localStorage.getItem(getHistoryKey());
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       return [];
@@ -27,7 +58,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     setSavedReports(prev => {
       const updated = [reportItem, ...prev];
       try {
-        localStorage.setItem('mchav_generated_reports', JSON.stringify(updated));
+        localStorage.setItem(getHistoryKey(), JSON.stringify(updated));
       } catch (e) {
         console.error("Error al guardar reporte en localStorage:", e);
       }
@@ -40,7 +71,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     setSavedReports(prev => {
       const updated = prev.filter(r => r.id !== reportId);
       try {
-        localStorage.setItem('mchav_generated_reports', JSON.stringify(updated));
+        localStorage.setItem(getHistoryKey(), JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -49,7 +80,7 @@ export default function CentroReportesView({ selectedProjectId }) {
   const handleOpenSavedReport = (report) => {
     if (report && report.reportData) {
       setReportData(report.reportData);
-      setShouldPrint(true);
+      setShowReportModal(true);
     }
   };
 
@@ -66,27 +97,125 @@ export default function CentroReportesView({ selectedProjectId }) {
   const handlePrint = useReactToPrint({
     contentRef: reportRef,
     documentTitle: "MCHAV_Reporte_Ejecutivo",
-    pageStyle: "@page { size: A4; margin: 0 !important; } @media print { body { margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }"
+    pageStyle: "@page { size: A4; margin: 0 !important; } @media print { body { margin: 0 !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }",
+    onAfterPrint: () => setShowReportModal(false)
   });
   const [reportData, setReportData] = useState(null);
-  const [shouldPrint, setShouldPrint] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
-  useEffect(() => {
-    if (shouldPrint && reportData) {
-      const timer = setTimeout(() => {
-        handlePrint();
-        setShouldPrint(false);
-      }, 1500);
-      return () => clearTimeout(timer);
+  const handleDirectDownload = async () => {
+    if (!reportRef.current) return;
+    try {
+      setIsDownloadingPdf(true);
+      const element = reportRef.current;
+      const dataUrl = await toPng(element, { 
+        quality: 0.98,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        // Optional: Ensure it doesn't try to parse cross-origin svgs if not needed, or force it
+      });
+
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pages = element.querySelectorAll('.pdf-page');
+      
+      if (pages.length === 0) {
+          const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 2, backgroundColor: '#ffffff' });
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+          pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      } else {
+          let currentY = 0;
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfPageHeight = pdf.internal.pageSize.getHeight();
+
+          for (let i = 0; i < pages.length; i++) {
+            const pageEl = pages[i];
+            const dataUrl = await toPng(pageEl, { 
+                quality: 0.98, 
+                pixelRatio: 2, 
+                backgroundColor: '#ffffff' 
+            });
+            const blockHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
+            
+            // Si es la portada (primer elemento) y ocupa casi toda la página, forzar página nueva después
+            if (i === 0 && blockHeight > 250) {
+                pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, blockHeight);
+                if (i < pages.length - 1) {
+                    pdf.addPage();
+                    currentY = 0;
+                }
+                continue;
+            }
+
+            // Flujo continuo para las demás secciones
+            if (currentY + blockHeight > pdfPageHeight) {
+                // Si el bloque es más grande que una página entera (muy raro, pero posible)
+                if (blockHeight > pdfPageHeight) {
+                    pdf.addPage();
+                    currentY = 0;
+                    
+                    let heightLeft = blockHeight;
+                    let position = 0;
+
+                    pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, blockHeight);
+                    heightLeft -= pdfPageHeight;
+
+                    while (heightLeft > 0) {
+                      position = position - pdfPageHeight;
+                      pdf.addPage();
+                      pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, blockHeight);
+                      heightLeft -= pdfPageHeight;
+                    }
+                    // CurrentY es lo que sobró en la última página
+                    currentY = blockHeight % pdfPageHeight; 
+                } else {
+                    // El bloque cabe en una página, pero no en el espacio sobrante de la actual
+                    pdf.addPage();
+                    currentY = 0;
+                    pdf.addImage(dataUrl, 'PNG', 0, currentY, pdfWidth, blockHeight);
+                    currentY += blockHeight;
+                }
+            } else {
+                // El bloque cabe perfectamente en el espacio sobrante
+                pdf.addImage(dataUrl, 'PNG', 0, currentY, pdfWidth, blockHeight);
+                currentY += blockHeight;
+            }
+          }
+      }
+
+      // Add pagination numbers
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let j = 1; j <= totalPages; j++) {
+        pdf.setPage(j);
+        pdf.setFontSize(8);
+        pdf.setTextColor(150);
+        pdf.text(`Página ${j} de ${totalPages}`, pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() - 8, { align: 'center' });
+      }
+      pdf.save(`Reporte_${reportData?.targetName || 'General'}_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.pdf`);
+      
+      // Close the modal upon successful download
+      setShowReportModal(false);
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      alert("Hubo un error al generar el PDF: " + (error?.message || error?.toString() || JSON.stringify(error)) + ". Puedes intentar usar la opción de imprimir (icono de impresora).");
+    } finally {
+      setIsDownloadingPdf(false);
     }
-  }, [shouldPrint, reportData, handlePrint]);
+  };
+
   
   const [selectedMonth, setSelectedMonth] = useState('');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [cierreReportType, setCierreReportType] = useState('Resumen General');
   const [cierreReportParam, setCierreReportParam] = useState('');
   const [cierreProject, setCierreProject] = useState('');
-  const [rangoReportType, setRangoReportType] = useState('Resumen General');
+  const [rangoReportType, setRangoReportType] = useState('Proyecto');
   const [rangoReportParam, setRangoReportParam] = useState('');
   const [rangoProject, setRangoProject] = useState('');
   const [isFullHistory, setIsFullHistory] = useState(false);
@@ -119,14 +248,25 @@ export default function CentroReportesView({ selectedProjectId }) {
     }
   };
 
-  const [compareMonth, setCompareMonth] = useState('');
   const [compareYear, setCompareYear] = useState(new Date().getFullYear().toString());
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [loadingCustomRange, setLoadingCustomRange] = useState(false);
   const [error, setError] = useState(null);
   
   const { user, token } = useAuth();
   const userRoleStr = user?.rol || user?.role || user?.nombre_rol || '';
   const isLeader = String(userRoleStr).toUpperCase().includes('LIDER') || String(userRoleStr).toUpperCase().includes('MANAG') || userRoleStr === 'MANAGER';
+
+  // Recargar el historial correspondiente cuando se cambia de rol (Admin ⇄ Líder)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(getHistoryKey());
+      setSavedReports(stored ? JSON.parse(stored) : []);
+    } catch (e) {
+      setSavedReports([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRoleStr]);
 
   const [dbProjects, setDbProjects] = useState([]);
   const [dbUsers, setDbUsers] = useState([]);
@@ -201,11 +341,19 @@ export default function CentroReportesView({ selectedProjectId }) {
     fetchGen();
   }, [genProjectId]);
 
-  const handleGenerateLiveReport = async () => {
+  const handleGenerateLiveReport = async (overrideType = null, overrideParam = null, overrideProject = null, overrideCompareParam = null, isHistorical = false) => {
     setIsGenerating(true);
     
+    // Si la función es llamada directamente por un onClick, el primer argumento es un SyntheticEvent (objeto).
+    const isEvent = overrideType && typeof overrideType === 'object' && overrideType.nativeEvent;
+    
+    const activeReportType = (isEvent || !overrideType) ? reportType : overrideType;
+    const activeReportParam = (isEvent || overrideParam === undefined || overrideParam === null) ? reportParam : overrideParam;
+    const activeGenProjectId = (isEvent || overrideProject === undefined || overrideProject === null) ? genProjectId : overrideProject;
+    const activeCompareSprintId = isEvent ? null : overrideCompareParam;
+    
     try {
-      if (reportType === 'general') {
+      if (activeReportType === 'general') {
         if (!selectedGeneralProjects || selectedGeneralProjects.length === 0) {
            setIsGenerating(false);
            alert("Por favor selecciona al menos un proyecto.");
@@ -286,6 +434,8 @@ export default function CentroReportesView({ selectedProjectId }) {
         }
         
         setIsGenerating(false);
+        const joinedProjectNames = allKpis.map(k => k.projectName).join(', ');
+
         const finalReportData = {
             reportType: 'general',
             month: "Reporte en Vivo", 
@@ -293,7 +443,7 @@ export default function CentroReportesView({ selectedProjectId }) {
             totalIssues: totalRecordsAgg, 
             blockedDays: totalBlockedDays,
             targetName: 'Resumen General',
-            projectName: 'Portafolio Multi-Proyecto',
+            projectName: joinedProjectNames,
             sprintName: 'N/A',
             projectMetrics: allKpis,
             aiInsights: { markdown: aiInsightsData }
@@ -307,12 +457,12 @@ export default function CentroReportesView({ selectedProjectId }) {
             timestamp: Date.now(),
             reportData: finalReportData
         });
-        setShouldPrint(true);
+        setShowReportModal(true);
         return;
       }
 
       // 1. Determinar el proyecto a consultar para reportes individuales
-      const projectId = reportType === 'proyecto' ? reportParam : genProjectId;
+      const projectId = activeReportType === 'proyecto' ? activeReportParam : activeGenProjectId;
         
       if (!projectId) {
         setIsGenerating(false);
@@ -327,29 +477,33 @@ export default function CentroReportesView({ selectedProjectId }) {
 
       // Extraer nombre del proyecto real siempre
       let realProjectName = 'MCHAV Analytics';
-      const currentProj = dbProjects.find(p => p.id_proyecto === (reportType === 'proyecto' ? projectId : genProjectId));
+      const currentProj = dbProjects.find(p => p.id_proyecto === (activeReportType === 'proyecto' ? projectId : activeGenProjectId));
       if (currentProj) {
         realProjectName = currentProj.nombre || currentProj.name || 'MCHAV Analytics';
       }
 
       let sprintName = 'Sprint Actual';
 
-      if (reportType === 'sprint') {
-        const sprint = dbSprints.find(s => String(s.id_sprint) === String(reportParam));
+      if (activeReportType === 'sprint') {
+        const sprint = dbSprints.find(s => String(s.id_sprint) === String(activeReportParam));
         if (sprint) {
           params.sprint_id = sprint.id_sprint;
           targetName = sprint.nombre_sprint || sprint.nombre || sprint.id_sprint;
           sprintName = targetName;
+        } else {
+          params.sprint_id = activeReportParam;
+          targetName = `Sprint ${activeReportParam}`;
+          sprintName = targetName;
         }
         minimumRequired = 3;
-      } else if (reportType === 'desarrollador') {
-        const dev = dbUsers.find(u => String(u.id_usuario) === String(reportParam));
+      } else if (activeReportType === 'desarrollador') {
+        const dev = dbUsers.find(u => String(u.id_usuario) === String(activeReportParam));
         if (dev) {
           params.assignee_id = dev.id_usuario;
           targetName = dev.nombre;
         }
         minimumRequired = 2;
-      } else if (reportType === 'proyecto') {
+      } else if (activeReportType === 'proyecto') {
         targetName = realProjectName;
         minimumRequired = 5;
       }
@@ -415,41 +569,143 @@ export default function CentroReportesView({ selectedProjectId }) {
         }
       } catch (e) { console.warn('No se pudo cargar velocidad histórica:', e); }
 
-      // 6. Generar Insights con IA
+      // 6. Generar Insights con IA (Timeout de 6s para evitar bloqueos)
       let aiInsightsData = null;
-      try {
-        const metricsData = {
-          reportType: reportType || 'sprint',
-          velocity: kpis?.metrics?.completed_sp || 0,
-          throughput: totalRecords,
-          cycleTime: kpis?.metrics?.avg_cycle_time || 0,
-          blockedDays: kpis?.metrics?.blocked_days || 0,
-          bugs: kpis?.metrics?.bugs_count || 0,
-          totalScope: Math.max(kpis?.metrics?.completed_sp || 0, 40),
-          sprintHealth: kpis?.health_score || 0,
-          sprintName: sprintName
+      
+      // Función auxiliar para extraer métricas independientemente del formato del backend
+      const extractMetrics = (kpiData) => {
+        if (!kpiData) return {};
+        const isArray = Array.isArray(kpiData);
+        const obj = isArray ? (kpiData[0] || {}) : kpiData;
+        const metrics = obj.metrics || {};
+        
+        return {
+          velocity: metrics.completed_sp || obj.velocity_total_sp || obj.completed_sp || 0,
+          throughput: metrics.completed_issues || obj.throughput_issues || 0,
+          cycleTime: metrics.avg_cycle_time || obj.cycle_time_promedio_dias || 0,
+          blockedDays: metrics.blocked_days || obj.blocked_days || 0,
+          bugs: metrics.bugs_count || obj.bugs_count || 0,
+          sprintHealth: obj.health_score || 0,
+          plannedSp: metrics.planned_sp || obj.planned_sp || obj.velocity_total_sp || 0
         };
-        const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData);
-        if (aiResponse.data && aiResponse.data.data) {
-          aiInsightsData = aiResponse.data.data;
+      };
+
+      const baseM = extractMetrics(kpis);
+
+      const metricsData = {
+        reportType: (activeReportType === 'sprint' && activeCompareSprintId) ? 'sprint_comparativo' : (activeReportType || 'sprint'),
+        sprintNameBase: sprintName,
+        targetName: targetName,
+        projectName: realProjectName,
+        // Base sprint metrics
+        velocity: baseM.velocity,
+        throughput: baseM.throughput || totalRecords || 0,
+        cycleTime: baseM.cycleTime,
+        blockedDays: baseM.blockedDays,
+        bugs: baseM.bugs,
+        sprintHealth: baseM.sprintHealth,
+        planned1: baseM.plannedSp,
+        predictability1: baseM.plannedSp ? Math.round((baseM.velocity / baseM.plannedSp) * 100) : 0,
+        ticketsCompleted1: detailRes?.issues?.filter(i => ['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0,
+        ticketsPending1: detailRes?.issues?.filter(i => !['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0,
+      };
+
+        // Si es comparativo, agregamos métricas del segundo sprint para la IA
+        let kpisCompare = null;
+        let burnupCompare = [];
+        let sprintNameCompare = 'Sprint A Comparar';
+        
+        if (activeReportType === 'sprint' && activeCompareSprintId) {
+          try {
+            const sprintComp = dbSprints.find(s => String(s.id_sprint) === String(activeCompareSprintId));
+            sprintNameCompare = sprintComp ? (sprintComp.nombre_sprint || sprintComp.nombre || sprintComp.id_sprint) : `Sprint ${activeCompareSprintId}`;
+            
+            const detailC = await projectService.getKpiIssuesDetail(projectId, { sprint_id: activeCompareSprintId });
+            const totalRecordsC = detailC?.total_issues || detailC?.issues?.length || 0;
+            if (totalRecordsC < minimumRequired) {
+              setValidationError({
+                targetName: sprintNameCompare,
+                totalRecords: totalRecordsC,
+                minimumRequired
+              });
+              setIsGenerating(false);
+              return;
+            }
+
+            kpisCompare = await projectService.getKpis(projectId, activeCompareSprintId);
+            const burnResC = await projectService.getProjectBurnup(projectId, activeCompareSprintId);
+            burnupCompare = burnResC?.data || (Array.isArray(burnResC) ? burnResC : []);
+            
+            const compM = extractMetrics(kpisCompare);
+
+            metricsData.velocityCompare = compM.velocity;
+            metricsData.sprintHealthCompare = compM.sprintHealth;
+            metricsData.sprintNameCompare = sprintNameCompare;
+            
+            metricsData.throughputCompare = totalRecordsC || compM.throughput || 0;
+            metricsData.cycleTimeCompare = compM.cycleTime;
+            metricsData.planned2 = compM.plannedSp;
+            metricsData.predictability2 = compM.plannedSp ? Math.round((compM.velocity / compM.plannedSp) * 100) : 0;
+            metricsData.ticketsCompleted2 = detailC?.issues?.filter(i => ['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0;
+            metricsData.ticketsPending2 = detailC?.issues?.filter(i => !['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0;
+          } catch(e) { console.warn("Error cargando segundo sprint para comparar", e); }
         }
-      } catch (e) {
-        console.error("Error al generar AI insights:", e);
-      }
+
+        try {
+          const aiResponse = await api.post('/api/v1/ai/generate-report-insights', metricsData, { timeout: 15000 });
+          if (aiResponse.data && aiResponse.data.data) {
+            aiInsightsData = aiResponse.data.data;
+          }
+        } catch (e) {
+          console.error("Error al generar AI insights para el reporte:", e);
+        }
+
+        if (activeReportType === 'sprint' && activeCompareSprintId) {
+          setIsGenerating(false);
+          const finalReportData = {
+            ...metricsData, // Contiene velocity, throughput, cycleTime, predictability, etc. para ambos sprints
+            reportType: 'sprint_comparativo',
+            projectName: realProjectName,
+            dateStr: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+            sprintNameBase: sprintName,
+            sprintNameCompare: sprintNameCompare,
+            kpisBase: kpis,
+            kpisCompare: kpisCompare,
+            burnupBase: realBurnupData,
+            burnupCompare: burnupCompare,
+            aiInsights: { markdown: aiInsightsData }
+          };
+          setReportData(finalReportData);
+          saveReportToHistory({
+              id: `rep_${Date.now()}`,
+              type: 'Sprint Comparativo',
+              name: `${sprintName} vs ${sprintNameCompare}`,
+              date: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+              timestamp: Date.now(),
+              reportData: finalReportData
+          });
+          setShowReportModal(true);
+          return;
+        }
+
 
       setIsGenerating(false);
+      const isHistoricalSprint = activeReportType === 'sprint' && isHistorical;
+      
       const finalReportData = {
-          reportType: reportType,
+          reportType: isHistoricalSprint ? 'sprint_historico' : activeReportType,
           month: "Reporte en Vivo",
-          pointsCompleted: kpis?.metrics?.completed_sp || 0,
-          sprintHealth: kpis?.health_score || 0,
-          totalIssues: totalRecords,
-          blockedDays: kpis?.metrics?.blocked_days || 0,
+          pointsCompleted: kpis.velocity_total_sp || 0,
+          sprintHealth: kpis.health_score || 0,
+          totalIssues: totalRecords || kpis.throughput_issues || 0,
+          blockedDays: kpis.blocked_days || 0,
           targetName: targetName,
           projectName: realProjectName,
+          sprintNameBase: sprintName,
+          kpisBase: kpis,
+          burnupBase: realBurnupData,
           sprintName: sprintName,
           kpis: kpis,
-          // ✅ Datos reales de gráficas
           realBurnupData,
           realCfdData,
           realVelocityData,
@@ -458,7 +714,7 @@ export default function CentroReportesView({ selectedProjectId }) {
 
       setReportData(finalReportData);
       
-      const reportTypeTitle = reportType === 'proyecto' ? 'Proyecto' : reportType === 'sprint' ? 'Sprint' : reportType === 'desarrollador' ? 'Desarrollador' : 'General';
+      const reportTypeTitle = activeReportType === 'proyecto' ? 'Proyecto' : activeReportType === 'sprint' ? 'Sprint' : activeReportType === 'desarrollador' ? 'Desarrollador' : 'General';
       saveReportToHistory({
           id: `rep_${Date.now()}`,
           type: reportTypeTitle,
@@ -468,7 +724,7 @@ export default function CentroReportesView({ selectedProjectId }) {
           reportData: finalReportData
       });
 
-      setShouldPrint(true);
+      setShowReportModal(true);
 
       
     } catch (error) {
@@ -727,15 +983,219 @@ export default function CentroReportesView({ selectedProjectId }) {
   );
 
   const handleFetchHistory = async () => {
-    if (!selectedMonth || !selectedProjectId) return setError("Faltan parámetros.");
+    if (!selectedMonth || !selectedYear) return setError("Faltan parámetros (mes o año).");
+    
+    // Obtener proyecto, sprint o desarrollador objetivo
+    const targetId = cierreReportType === 'Proyecto' ? cierreReportParam : (cierreProject || selectedProjectId);
+    if (!targetId && cierreReportType !== 'Resumen General') {
+      return alert("Por favor selecciona un objetivo válido.");
+    }
+
     setLoadingHistory(true);
     try {
-        const url = `${BACKEND_URL}/api/v1/reports/historical?proyecto_id=${selectedProjectId}&month=${selectedYear}-${selectedMonth}`;
+        // Calcular el primer y último día del mes seleccionado
+        const startDate = `${selectedYear}-${selectedMonth}-01`;
+        const lastDay = new Date(selectedYear, parseInt(selectedMonth, 10), 0).getDate();
+        const endDate = `${selectedYear}-${selectedMonth}-${lastDay}`;
+        
+        let url = `${BACKEND_URL || 'http://localhost:8000'}/api/v1/reports/historical/range?proyecto_id=${targetId}&start_date=${startDate}&end_date=${endDate}`;
+        if (cierreReportType === 'Desarrollador' && cierreReportParam) {
+            url += `&desarrollador_id=${cierreReportParam}`;
+        }
         const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
-        if (!res.ok) throw new Error('Error al reconstruir el historial.');
-        setReportData(await res.json());
-    } catch (err) { console.error(err); } 
-    finally { setLoadingHistory(false); }
+        if (!res.ok) throw new Error('Error al reconstruir el historial mensual.');
+        const data = await res.json();
+        
+        let aiInsightsData = null;
+        let realProjectName = 'Proyecto';
+        const currentProj = dbProjects.find(p => p.id_proyecto === targetId);
+        if (currentProj) {
+            realProjectName = currentProj.nombre || currentProj.name || 'Proyecto';
+        }
+
+        let realTargetName = `Cierre de ${selectedMonth}-${selectedYear}`;
+        if (cierreReportType === 'Desarrollador') {
+            const dev = dbUsers.find(u => String(u.id_usuario) === String(cierreReportParam));
+            if (dev) realTargetName = `Cierre de ${dev.nombre} en ${selectedMonth}-${selectedYear}`;
+        }
+
+        try {
+          const aiPayload = {
+            reportType: "cierre_" + cierreReportType.toLowerCase(),
+            velocity: data.totalPoints || 0,
+            throughput: data.totalIssues || 0,
+            cycleTime: 0,
+            blockedDays: data.blockedDays || 0,
+            bugs: 0,
+            totalScope: data.totalPoints || 0,
+            sprintHealth: 100,
+            sprintName: `Mes: ${selectedMonth}-${selectedYear}`,
+            targetName: realTargetName,
+            projectName: realProjectName
+          };
+          const aiResponse = await api.post('/api/v1/ai/generate-report-insights', aiPayload, { timeout: 60000 });
+          if (aiResponse.data && aiResponse.data.data) {
+            aiInsightsData = aiResponse.data.data;
+          }
+        } catch (e) {
+          console.error("Error al generar AI insights para cierre mensual:", e);
+        }
+
+        // Formatear para que el visualizador lo acepte
+        const finalReportData = {
+            reportType: "cierre_" + cierreReportType.toLowerCase(),
+            month: `${selectedMonth}-${selectedYear}`,
+            pointsCompleted: data.totalPoints || 0,
+            sprintHealth: 100,
+            totalIssues: data.totalIssues || 0,
+            blockedDays: data.blockedDays || 0,
+            targetName: realTargetName,
+            projectName: realProjectName,
+            sprintName: 'N/A',
+            kpis: { metrics: { completed_sp: data.totalPoints, bugs_count: 0 } },
+            aiInsights: { markdown: aiInsightsData || `## Análisis Mensual\nSe analizaron ${data.totalIssues} tickets en el mes de ${selectedMonth}-${selectedYear}.` }
+        };
+
+        setReportData(finalReportData);
+        setShowReportModal(true);
+    } catch (err) { 
+        console.error(err); 
+        alert("Ocurrió un error al generar el reporte del mes.");
+    } finally { setLoadingHistory(false); }
+  };
+
+  const handleFetchCustomRange = async () => {
+    // Validaciones básicas
+    if (rangoReportType === 'Proyecto' && !rangoReportParam) {
+      return alert("Por favor selecciona un proyecto.");
+    }
+    if (rangoReportType !== 'Resumen General' && rangoReportType !== 'Proyecto' && !rangoProject) {
+      return alert("Por favor selecciona un proyecto base.");
+    }
+    if (rangoReportType === 'Sprint' && !rangoReportParam) {
+      return alert("Por favor selecciona un sprint.");
+    }
+    if (rangoReportType === 'Sprint' && isComparingSprints && !rangoCompareSprint) {
+      return alert("Por favor selecciona el segundo sprint a comparar.");
+    }
+    if (rangoReportType === 'Desarrollador' && !rangoReportParam) {
+      return alert("Por favor selecciona un desarrollador.");
+    }
+    if (rangoReportType !== 'Sprint' && !isFullHistory && (!customStartDate || !customEndDate)) {
+      return alert("Por favor selecciona las fechas de inicio y fin.");
+    }
+
+    // Para Sprint, reutilizamos la lógica poderosa del Wizard (handleGenerateLiveReport) 
+    // pero inyectando las variables del panel inferior.
+    if (rangoReportType === 'Sprint') {
+      // Guardar temporalmente el estado del wizard
+      const backupType = reportType;
+      const backupParam = reportParam;
+      const backupGenProject = genProjectId;
+
+      // Inyectar el estado del rango personalizado
+      setReportType(rangoReportType.toLowerCase());
+      setReportParam(rangoReportParam);
+      if (rangoProject) setGenProjectId(rangoProject);
+
+      // Si es comparativo de Sprints, mostramos un mensaje de que la IA se encargará
+      if (rangoReportType === 'Sprint' && isComparingSprints) {
+        // Podríamos enviar ambos IDs al backend, pero por ahora el Wizard analiza 
+        // el sprint base y Nubi compara con el histórico automáticamente.
+      }
+
+      // Llamar al generador pasando los parámetros directamente para evitar problemas asíncronos de React state
+      await handleGenerateLiveReport(
+        rangoReportType.toLowerCase(), 
+        rangoReportParam, 
+        rangoProject || selectedProjectId, 
+        (rangoReportType === 'Sprint' && isComparingSprints) ? rangoCompareSprint : null,
+        true // isHistorical
+      );
+
+      return;
+    }
+
+    // Para Proyecto o Desarrollador que usen fechas estrictas:
+    setLoadingCustomRange(true);
+    try {
+        const targetProjectId = rangoReportType === 'Proyecto' ? rangoReportParam : (rangoProject || selectedProjectId);
+        if (!targetProjectId) {
+           setLoadingCustomRange(false);
+           return alert("Por favor selecciona un proyecto.");
+        }
+        let realProjectName = 'Proyecto';
+        const currentProj = dbProjects.find(p => p.id_proyecto === targetProjectId);
+        if (currentProj) {
+            realProjectName = currentProj.nombre || currentProj.name || 'Proyecto';
+        }
+
+        let url = `http://localhost:8000/api/v1/reports/historical/range?proyecto_id=${targetProjectId}`;
+        if (rangoReportType === 'Desarrollador' && rangoReportParam) {
+            url += `&desarrollador_id=${rangoReportParam}`;
+        }
+
+        if (!isFullHistory) {
+            url += `&start_date=${customStartDate}&end_date=${customEndDate}`;
+        } else {
+            url += `&all_time=true`;
+        }
+        const res = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` }});
+        if (!res.ok) throw new Error('Error al generar el reporte de rango personalizado.');
+        const data = await res.json();
+        
+        let aiInsightsData = null;
+        let realTargetName = 'Resumen por Fechas';
+        if (rangoReportType === 'Desarrollador') {
+            const dev = dbUsers.find(u => String(u.id_usuario) === String(rangoReportParam));
+            if (dev) realTargetName = `Desempeño de ${dev.nombre} por Fechas`;
+        }
+
+        try {
+          const aiPayload = {
+            reportType: rangoReportType.toLowerCase(),
+            velocity: data.totalPoints || 0,
+            throughput: data.totalIssues || 0,
+            cycleTime: 0,
+            blockedDays: data.blockedDays || 0,
+            bugs: 0,
+            totalScope: data.totalPoints || 0,
+            sprintHealth: 100,
+            sprintName: isFullHistory ? "Historial Completo" : `${customStartDate} a ${customEndDate}`,
+            targetName: realTargetName,
+            projectName: realProjectName
+          };
+          const aiResponse = await api.post('/api/v1/ai/generate-report-insights', aiPayload, { timeout: 60000 });
+          if (aiResponse.data && aiResponse.data.data) {
+            aiInsightsData = aiResponse.data.data;
+          }
+        } catch (e) {
+          console.error("Error al generar AI insights para rango personalizado:", e);
+        }
+
+        // Formatear para que el visualizador lo acepte
+        const finalReportData = {
+            reportType: rangoReportType.toLowerCase(),
+            month: isFullHistory ? "Historial Completo" : `${customStartDate} a ${customEndDate}`,
+            pointsCompleted: data.totalPoints || 0,
+            sprintHealth: 100,
+            totalIssues: data.totalIssues || 0,
+            blockedDays: data.blockedDays || 0,
+            targetName: realTargetName,
+            projectName: realProjectName,
+            sprintName: 'N/A',
+            kpis: { metrics: { completed_sp: data.totalPoints, bugs_count: 0 } },
+            aiInsights: { markdown: aiInsightsData || `## Análisis de Rango\nSe analizaron ${data.totalIssues} tickets en el periodo seleccionado.` }
+        };
+
+        setReportData(finalReportData);
+        setShowReportModal(true);
+    } catch (err) { 
+        console.error(err);
+        alert(err.message);
+    } finally { 
+        setLoadingCustomRange(false); 
+    }
   };
 
   const filteredReports = savedReports.filter(report => {
@@ -861,8 +1321,16 @@ export default function CentroReportesView({ selectedProjectId }) {
               </div>
             </div>
 
-            <button onClick={handleFetchHistory} className="w-full mt-auto py-3.5 bg-indigo-400 hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
-              Cargar mes &rarr;
+            <button 
+              onClick={handleFetchHistory} 
+              disabled={loadingHistory || isGenerating}
+              className={`w-full mt-auto py-3.5 ${loadingHistory || isGenerating ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-indigo-400 hover:bg-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600 shadow-sm'} text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all`}
+            >
+              {loadingHistory ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Cargando mes...</>
+              ) : (
+                <>Cargar mes &rarr;</>
+              )}
             </button>
           </div>
 
@@ -893,7 +1361,6 @@ export default function CentroReportesView({ selectedProjectId }) {
                       setRangoCompareSprint('');
                     }}
                   >
-                    <option value="Resumen General">Resumen General</option>
                     <option value="Proyecto">Proyecto</option>
                     <option value="Sprint">Sprint</option>
                     <option value="Desarrollador">Desarrollador</option>
@@ -1007,34 +1474,62 @@ export default function CentroReportesView({ selectedProjectId }) {
                 </div>
               )}
 
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={isFullHistory}
-                  onClick={() => setIsFullHistory(!isFullHistory)}
-                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${isFullHistory ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
-                >
-                  <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isFullHistory ? 'translate-x-4' : 'translate-x-0'}`} />
-                </button>
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer" onClick={() => setIsFullHistory(!isFullHistory)}>Consultar Historial Completo</label>
-              </div>
-
-              {!isFullHistory && (
-                  <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
-                    <div className="relative flex-1">
-                      <input type="date" className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all shadow-sm" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)} />
-                    </div>
-                    <span className="text-emerald-500 font-bold">&rarr;</span>
-                    <div className="relative flex-1">
-                      <input type="date" className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all shadow-sm" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)} />
-                    </div>
+              {(rangoReportType === 'Proyecto' || rangoReportType === 'Desarrollador') && (
+                <>
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={isFullHistory}
+                      onClick={() => setIsFullHistory(!isFullHistory)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 ${isFullHistory ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isFullHistory ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </button>
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer" onClick={() => setIsFullHistory(!isFullHistory)}>Consultar Historial Completo</label>
                   </div>
+
+                  {!isFullHistory && (
+                      <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="relative flex-1">
+                          <input type="date" className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all shadow-sm" value={customStartDate} onChange={e => setCustomStartDate(e.target.value)} />
+                        </div>
+                        <span className="text-emerald-500 font-bold">&rarr;</span>
+                        <div className="relative flex-1">
+                          <input type="date" className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 transition-all shadow-sm" value={customEndDate} onChange={e => setCustomEndDate(e.target.value)} />
+                        </div>
+                      </div>
+                  )}
+                </>
               )}
             </div>
+            
+            {validationError && (
+              <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 mb-4">
+                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200/60 dark:border-amber-700/30">
+                  <div className="p-2 bg-amber-100 dark:bg-amber-800/40 rounded-lg text-amber-600 dark:text-amber-400 shrink-0">
+                    <AlertCircle className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-800 dark:text-amber-300">¡Ups! Datos insuficientes</h4>
+                    <p className="text-xs text-amber-700 dark:text-amber-400/80 mt-0.5 leading-relaxed">
+                      {validationError.targetName} solo tiene {validationError.totalRecords} ticket{validationError.totalRecords !== 1 ? 's' : ''} registrado{validationError.totalRecords !== 1 ? 's' : ''}. Para poder generar el reporte se requiere al menos {validationError.minimumRequired === 3 ? '3 a 5' : validationError.minimumRequired} tickets. Por favor, selecciona un periodo con más movimiento.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
-            <button className="w-full mt-auto py-3.5 bg-emerald-400 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600 text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm">
-              {isFullHistory ? 'Consultar historial completo \u2192' : (isComparingSprints && rangoReportType === 'Sprint' ? 'Comparar sprints \u2192' : 'Consultar rango \u2192')}
+            <button 
+              onClick={handleFetchCustomRange} 
+              disabled={loadingCustomRange || isGenerating}
+              className={`w-full mt-auto py-3.5 ${loadingCustomRange || isGenerating ? 'bg-slate-400 dark:bg-slate-700 cursor-not-allowed opacity-70' : 'bg-emerald-400 hover:bg-emerald-500 dark:bg-emerald-500 dark:hover:bg-emerald-600 shadow-[0_4px_20px_rgba(52,211,153,0.4)]'} text-white rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm`}
+            >
+              {loadingCustomRange || isGenerating ? (
+                <><Loader2 className="w-5 h-5 animate-spin" /> Generando...</>
+              ) : (
+                <>{isFullHistory ? 'Consultar historial completo \u2192' : (isComparingSprints && rangoReportType === 'Sprint' ? 'Comparar sprints \u2192' : 'Consultar rango \u2192')}</>
+              )}
             </button>
           </div>
         </div>
@@ -1238,15 +1733,34 @@ export default function CentroReportesView({ selectedProjectId }) {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`w-8 h-8 rounded-lg text-sm font-bold transition-all shadow-sm ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-indigo-500/30' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/50'}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                    {(() => {
+                      const delta = 1;
+                      const range = [];
+                      for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+                        range.push(i);
+                      }
+                      if (currentPage - delta > 2) range.unshift("...");
+                      if (currentPage + delta < totalPages - 1) range.push("...");
+                      range.unshift(1);
+                      if (totalPages > 1) range.push(totalPages);
+                      
+                      return range.map((p, i) => (
+                        <button
+                          key={i}
+                          onClick={() => p !== "..." && setCurrentPage(p)}
+                          disabled={p === "..."}
+                          className={`w-8 h-8 rounded-lg text-sm font-bold transition-all shadow-sm ${
+                            p === "..." 
+                              ? 'bg-transparent text-slate-400 cursor-default shadow-none border-none' 
+                              : currentPage === p 
+                                ? 'bg-indigo-600 text-white shadow-indigo-500/30' 
+                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/50'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ));
+                    })()}
                   </div>
                   <button 
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
@@ -1280,8 +1794,39 @@ export default function CentroReportesView({ selectedProjectId }) {
             <p className="text-slate-500 text-sm font-medium">Genera, consulta y compara el rendimiento de tus proyectos y equipos.</p>
         </div>
         
-        <div className="flex p-1.5 bg-slate-100/80 dark:bg-[#141738]/50 backdrop-blur-md rounded-[1.25rem] border border-slate-200/80 dark:border-white/5 w-full md:w-auto mt-6 md:mt-0 shadow-inner">
-            <button 
+        <div className="flex flex-col gap-4 md:items-end w-full md:w-auto mt-6 md:mt-0">
+            <button
+              type="button"
+              onClick={handleSendMonthlyEmails}
+              disabled={sendingEmails}
+              className={`px-5 py-2.5 rounded-xl text-xs font-extrabold transition-all shadow-md flex items-center justify-center gap-2.5 self-start md:self-end ${
+                sendingEmails
+                  ? 'bg-slate-400 text-white cursor-not-allowed opacity-80 shadow-none'
+                  : 'bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white shadow-indigo-600/30 cursor-pointer'
+              }`}
+              title="Despachar reportes mensuales por correo a Administradores y Líderes"
+            >
+              {sendingEmails ? (
+                <>
+                  <Loader2 size={16} className="animate-spin text-white shrink-0" />
+                  <span>Generando y Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <Mail size={16} className="shrink-0" />
+                  <span>Enviar Reportes por Correo</span>
+                </>
+              )}
+            </button>
+
+            {emailStatusMsg && (
+              <div className={`text-xs font-semibold px-3 py-1.5 rounded-lg max-w-sm text-right ${emailStatusType === 'error' ? 'text-red-600 bg-red-100 dark:bg-red-500/20 dark:text-red-400' : emailStatusType === 'success' ? 'text-emerald-600 bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-400' : 'text-blue-600 bg-blue-100 dark:bg-blue-500/20 dark:text-blue-400'}`}>
+                {emailStatusMsg}
+              </div>
+            )}
+
+            <div className="flex p-1.5 bg-slate-100/80 dark:bg-[#141738]/50 backdrop-blur-md rounded-[1.25rem] border border-slate-200/80 dark:border-white/5 w-full md:w-auto shadow-inner">
+                <button 
                 onClick={() => setActiveTab('generacion')} 
                 className={`flex items-center gap-2.5 px-6 py-3 rounded-xl font-bold text-[13px] transition-all duration-300 ${activeTab === 'generacion' ? 'bg-white dark:bg-indigo-600 text-indigo-600 dark:text-white shadow-[0_4px_12px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_12px_rgba(99,102,241,0.3)] ring-1 ring-slate-200 dark:ring-0 scale-[1.02]' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-200/50 dark:hover:bg-white/5'}`}
             >
@@ -1297,13 +1842,72 @@ export default function CentroReportesView({ selectedProjectId }) {
             </button>
         </div>
       </div>
+      </div>
 
       <div className="flex-1 flex flex-col w-full relative z-20">
         {activeTab === 'generacion' ? renderGeneracion() : renderHistorial()}
       </div>
 
-      {/* Plantilla dinámica con IA y gráficas integradas */}
-      <DynamicAIReportTemplate ref={reportRef} reportType={reportType} filters={{}} user={useAuth().user} reportData={reportData} aiInsights={reportData?.aiInsights} />
+      {/* Modal de Vista Previa del Reporte */}
+      {showReportModal && reportData && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 sm:p-6 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
+          <div className="bg-slate-50 dark:bg-[#0f172a] w-full max-w-6xl h-full sm:h-[95vh] rounded-3xl shadow-2xl flex flex-col overflow-hidden border border-slate-200 dark:border-white/10 animate-in zoom-in-95 duration-300">
+            
+            {/* Modal Header */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between px-6 py-4 border-b border-slate-200 dark:border-white/10 bg-white dark:bg-[#1e293b] gap-4">
+              <div>
+                <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-indigo-500" />
+                  Reporte Generado
+                </h2>
+                <p className="text-sm font-semibold text-slate-500 mt-1">Revisa el reporte antes de imprimirlo o guardarlo como PDF.</p>
+              </div>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <button 
+                  onClick={handleDirectDownload}
+                  disabled={isDownloadingPdf}
+                  className={`flex-1 sm:flex-none px-6 py-2.5 ${isDownloadingPdf ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:-translate-y-0.5 active:translate-y-0'} text-white text-sm font-extrabold rounded-xl shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all`}
+                >
+                  {isDownloadingPdf ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Procesando...</>
+                  ) : (
+                    <><Download className="w-4 h-4" /> Descargar PDF</>
+                  )}
+                </button>
+                <button 
+                  onClick={handlePrint}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl shadow-sm flex items-center justify-center gap-2 transition-all"
+                  title="Imprimir clásico (Nativo)"
+                >
+                  <Printer className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setShowReportModal(false)}
+                  className="p-2.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-xl transition-all"
+                  title="Cerrar vista previa"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto overflow-x-auto bg-slate-200/50 dark:bg-slate-950 p-4 sm:p-8 flex justify-center custom-scrollbar">
+              <div className="bg-white shadow-2xl rounded-sm w-[210mm] max-w-none origin-top transition-transform" style={{ minHeight: '297mm', transformOrigin: 'top center' }}>
+                {(reportData?.reportType === 'sprint_comparativo' || reportData?.reportType === 'sprint_historico') ? (
+                  <ComparativeReportTemplate ref={reportRef} data={reportData} user={user} />
+                ) : (
+                  <DynamicAIReportTemplate ref={reportRef} reportType={reportData.reportType || 'general'} filters={{}} user={user} reportData={reportData} aiInsights={reportData?.aiInsights} />
+                )}
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* DOM oculto para ReactToPrint si es necesario */}
+      <div style={{ display: 'none' }}></div>
     </div>
   );
 }

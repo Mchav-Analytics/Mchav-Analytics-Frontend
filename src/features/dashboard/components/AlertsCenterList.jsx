@@ -266,20 +266,35 @@ export const AlertsCenterList = ({
               ‹
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pNum => (
-              <button
-                key={pNum}
-                type="button"
-                onClick={() => setCurrentPage(pNum)}
-                className={`w-7 h-7 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                  currentPage === pNum
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-white dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#252a4e] text-slate-700 dark:text-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                {pNum}
-              </button>
-            ))}
+            {(() => {
+              const delta = 1;
+              const range = [];
+              for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+                range.push(i);
+              }
+              if (currentPage - delta > 2) range.unshift("...");
+              if (currentPage + delta < totalPages - 1) range.push("...");
+              range.unshift(1);
+              if (totalPages > 1) range.push(totalPages);
+              
+              return range.map((p, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  onClick={() => p !== "..." && setCurrentPage(p)}
+                  disabled={p === "..."}
+                  className={`w-7 h-7 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                    p === "..."
+                      ? 'bg-transparent text-slate-400 cursor-default shadow-none border-none'
+                      : currentPage === p
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'bg-white dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#252a4e] text-slate-700 dark:text-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              ));
+            })()}
 
             <button
               type="button"

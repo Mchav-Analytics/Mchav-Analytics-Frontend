@@ -72,6 +72,11 @@ export function useSystemSync() {
     try {
       localStorage.setItem('mchav_is_auto_sync', String(val));
     } catch (e) {}
+    
+    // Llamar al backend para persistir el estado del toggle
+    jiraService.toggleAutoSync(val).catch(err => {
+        console.error("Error toggling auto sync on backend:", err);
+    });
   };
 
   const [cronSchedule, setCronScheduleState] = useState(() => {
@@ -116,6 +121,14 @@ export function useSystemSync() {
 
   useEffect(() => {
     fetchLogsFromApi();
+    
+    // Poll every 5 seconds to detect automatic background cron executions
+    // AND to update the UI when they finish
+    const interval = setInterval(() => {
+      fetchLogsFromApi();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -138,23 +151,30 @@ export function useSystemSync() {
 
   const handleSaveCronTime = () => {
     setIsSavingCron(true);
-    try {
-      localStorage.setItem('mchav_cron_time', cronTime);
-      localStorage.setItem('mchav_cron_schedule', cronSchedule);
-      localStorage.setItem('mchav_is_auto_sync', String(isAutoSync));
-    } catch (e) {}
-
-    setTimeout(() => {
-      setSavedCronTime(cronTime);
-      setIsSavingCron(false);
-      const nextDate = syncStatus.nextScheduledSync.split(' ')[0] || 'Hoy';
-      setSyncStatus(prev => ({
-        ...prev,
-        nextScheduledSync: `${nextDate} ${cronTime}:00`
-      }));
-      setShowSuccessAlert(true);
-      setTimeout(() => setShowSuccessAlert(false), 4000);
-    }, 600);
+    
+    jiraService.updateCronTime(cronTime)
+      .then((res: any) => {
+        try {
+          localStorage.setItem('mchav_cron_time', cronTime);
+          localStorage.setItem('mchav_cron_schedule', cronSchedule);
+          localStorage.setItem('mchav_is_auto_sync', String(isAutoSync));
+        } catch (e) {}
+        
+        setSavedCronTime(cronTime);
+        setIsSavingCron(false);
+        const nextDate = syncStatus.nextScheduledSync.split(' ')[0] || 'Hoy';
+        setSyncStatus(prev => ({
+          ...prev,
+          nextScheduledSync: `${nextDate} ${cronTime}:00`
+        }));
+        setShowSuccessAlert(true);
+        setTimeout(() => setShowSuccessAlert(false), 4000);
+      })
+      .catch((err: any) => {
+        console.error("Error saving cron time to backend:", err);
+        setSyncErrorMsg("No se pudo guardar la configuración de horario en el servidor.");
+        setIsSavingCron(false);
+      });
   };
 
   const handleManualSync = () => {
@@ -209,8 +229,14 @@ export function useSystemSync() {
       })
       .catch(err => {
         console.error("Error triggerSync:", err);
-        setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
-        setSyncErrorMsg("No se pudo iniciar el proceso en segundo plano.");
+        // Si el backend devuelve 400 significa que YA hay una sincronización corriendo (ej. lanzada por Cron)
+        if (err.response && err.response.status === 400) {
+           setSyncErrorMsg("La sincronización automática ya se está ejecutando en segundo plano.");
+           fetchLogsFromApi(); // Forzar actualización visual a SYNCING
+        } else {
+           setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
+           setSyncErrorMsg("No se pudo iniciar el proceso en segundo plano.");
+        }
       });
   };
 

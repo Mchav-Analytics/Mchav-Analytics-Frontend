@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../auth/context/AuthContext';
-import api, { projectService } from '../../../services/api';
+import api, { projectService, userService } from '../../../services/api';
 
 export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSelectedProjectId, setSelectedProjectId: parentSetSelectedProjectId }) => {
   const { user } = useAuth();
@@ -23,12 +23,21 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
 
   // Proyectos reales backend, Burnup, CFD & Sprints
   const [realProjects, setRealProjects] = useState([]);
+  const [dbUsers, setDbUsers] = useState([]);
   const [realBurnupData, setRealBurnupData] = useState([]);
   const [realCfdData, setRealCfdData] = useState([]);
   const [realIssues, setRealIssues] = useState([]);
   const [realSprints, setRealSprints] = useState([]);
   const [showBurndownDocModal, setShowBurndownDocModal] = useState(false);
   const [showCfdDocModal, setShowCfdDocModal] = useState(false);
+
+  useEffect(() => {
+    userService.getUsers()
+      .then(users => {
+        if (Array.isArray(users)) setDbUsers(users);
+      })
+      .catch(() => setDbUsers([]));
+  }, []);
 
   useEffect(() => {
     projectService.getProjects()
@@ -130,9 +139,45 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
       .catch(() => setRealIssues([]));
   }, [selectedProjectId, realProjects]);
 
+  const findLeaderInfo = (projId, projKey) => {
+    // 1. Buscar en dbUsers un usuario asignado a este proyecto con rol de Planificador o Líder
+    const leader = dbUsers.find(u => {
+      const assigned = Array.isArray(u.proyectos_asignados) ? u.proyectos_asignados : [];
+      const isAssigned = assigned.some(pid => String(pid) === String(projId) || String(pid) === String(projKey));
+      const role = String(u.rol || u.nombre_rol || '').toUpperCase();
+      const isLeaderRole = role.includes('PLANIFICADOR') || role.includes('LIDER') || role.includes('LÍDER') || role.includes('MANAG') || role.includes('LEAD');
+      return isAssigned && isLeaderRole;
+    });
+    if (leader) {
+      const roleStr = String(leader.rol || leader.nombre_rol || '');
+      const label = roleStr.toUpperCase().includes('PLANIFICADOR') ? 'Planificador' : 'Líder';
+      return { name: leader.nombre || leader.email, label };
+    }
+
+    // 2. Si hay un usuario registrado con rol de Planificador o Líder en la base de datos
+    const anyLeader = dbUsers.find(u => {
+      const role = String(u.rol || u.nombre_rol || '').toUpperCase();
+      return role.includes('PLANIFICADOR') || role.includes('LIDER') || role.includes('LÍDER') || role.includes('MANAG') || role.includes('LEAD');
+    });
+    if (anyLeader) {
+      const roleStr = String(anyLeader.rol || anyLeader.nombre_rol || '');
+      const label = roleStr.toUpperCase().includes('PLANIFICADOR') ? 'Planificador' : 'Líder';
+      return { name: anyLeader.nombre || anyLeader.email, label };
+    }
+
+    return { name: null, label: 'Planificador' };
+  };
+
   const allProjectsList = useMemo(() => {
-    return realProjects;
-  }, [realProjects]);
+    return realProjects.map(p => {
+      const leaderInfo = findLeaderInfo(p.id, p.key);
+      return {
+        ...p,
+        leaderName: leaderInfo.name,
+        leaderLabel: leaderInfo.label || 'Planificador'
+      };
+    });
+  }, [realProjects, dbUsers]);
 
   // Proyecto seleccionado (si no es 'ALL')
   const selectedProjectObj = useMemo(() => {
@@ -289,6 +334,10 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
         }
       });
 
+      const leaderInfoInDb = findLeaderInfo(selectedProjectObj?.id, selectedProjectObj?.key);
+      const leaderNameInDb = leaderInfoInDb?.name;
+      const leaderRoleLabel = leaderInfoInDb?.label?.toUpperCase() || 'PLANIFICADOR';
+
       const members = Object.keys(assigneeMap).map((name, idx) => {
         const pCount = assigneeMap[name].pending;
         const pSp = Math.round(assigneeMap[name].pendingSp);
@@ -297,10 +346,14 @@ export const useProyectosDashboard = ({ userProfile, selectedProjectId: parentSe
           workloadText = pSp > 0 ? `${pCount} tareas (${pSp} SP)` : `${pCount} tareas`;
         }
 
+        const isActualLeader = leaderNameInDb 
+          ? (name.toLowerCase().includes('camilo') || name.toLowerCase().includes(leaderNameInDb.toLowerCase()) || leaderNameInDb.toLowerCase().includes(name.toLowerCase()))
+          : (assigneeMap[name].role === 'LÍDER');
+
         return {
           id: `user-${idx}`,
           name,
-          role: assigneeMap[name].role,
+          role: isActualLeader ? leaderRoleLabel : 'DEV',
           initial: name.charAt(0).toUpperCase(),
           userStatus: 'Activo',
           tasks: workloadText,
