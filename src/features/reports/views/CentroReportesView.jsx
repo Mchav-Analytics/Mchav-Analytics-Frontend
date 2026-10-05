@@ -42,9 +42,12 @@ export default function CentroReportesView({ selectedProjectId }) {
   };
 
   // ── Historial Persistente de Reportes ──
+  // Cada rol (Admin / Líder) tiene su propio historial, ya que la narrativa IA difiere por rol.
+  const getHistoryKey = () => `mchav_generated_reports_${(localStorage.getItem('mchav_active_role') || 'ADMIN').toUpperCase()}`;
+
   const [savedReports, setSavedReports] = useState(() => {
     try {
-      const stored = localStorage.getItem('mchav_generated_reports');
+      const stored = localStorage.getItem(getHistoryKey());
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
       return [];
@@ -55,7 +58,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     setSavedReports(prev => {
       const updated = [reportItem, ...prev];
       try {
-        localStorage.setItem('mchav_generated_reports', JSON.stringify(updated));
+        localStorage.setItem(getHistoryKey(), JSON.stringify(updated));
       } catch (e) {
         console.error("Error al guardar reporte en localStorage:", e);
       }
@@ -68,7 +71,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     setSavedReports(prev => {
       const updated = prev.filter(r => r.id !== reportId);
       try {
-        localStorage.setItem('mchav_generated_reports', JSON.stringify(updated));
+        localStorage.setItem(getHistoryKey(), JSON.stringify(updated));
       } catch (e) {}
       return updated;
     });
@@ -253,6 +256,17 @@ export default function CentroReportesView({ selectedProjectId }) {
   const { user, token } = useAuth();
   const userRoleStr = user?.rol || user?.role || user?.nombre_rol || '';
   const isLeader = String(userRoleStr).toUpperCase().includes('LIDER') || String(userRoleStr).toUpperCase().includes('MANAG') || userRoleStr === 'MANAGER';
+
+  // Recargar el historial correspondiente cuando se cambia de rol (Admin ⇄ Líder)
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(getHistoryKey());
+      setSavedReports(stored ? JSON.parse(stored) : []);
+    } catch (e) {
+      setSavedReports([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userRoleStr]);
 
   const [dbProjects, setDbProjects] = useState([]);
   const [dbUsers, setDbUsers] = useState([]);
@@ -1731,15 +1745,34 @@ export default function CentroReportesView({ selectedProjectId }) {
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setCurrentPage(i + 1)}
-                        className={`w-8 h-8 rounded-lg text-sm font-bold transition-all shadow-sm ${currentPage === i + 1 ? 'bg-indigo-600 text-white shadow-indigo-500/30' : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/50'}`}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
+                    {(() => {
+                      const delta = 1;
+                      const range = [];
+                      for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+                        range.push(i);
+                      }
+                      if (currentPage - delta > 2) range.unshift("...");
+                      if (currentPage + delta < totalPages - 1) range.push("...");
+                      range.unshift(1);
+                      if (totalPages > 1) range.push(totalPages);
+                      
+                      return range.map((p, i) => (
+                        <button
+                          key={i}
+                          onClick={() => p !== "..." && setCurrentPage(p)}
+                          disabled={p === "..."}
+                          className={`w-8 h-8 rounded-lg text-sm font-bold transition-all shadow-sm ${
+                            p === "..." 
+                              ? 'bg-transparent text-slate-400 cursor-default shadow-none border-none' 
+                              : currentPage === p 
+                                ? 'bg-indigo-600 text-white shadow-indigo-500/30' 
+                                : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-indigo-300 dark:hover:border-indigo-500/50'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      ));
+                    })()}
                   </div>
                   <button 
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}

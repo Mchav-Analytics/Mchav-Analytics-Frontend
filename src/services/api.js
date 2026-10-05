@@ -22,6 +22,11 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Rol de vista activo (Admin / Líder) para que la IA use la narrativa correspondiente
+  const activeRole = localStorage.getItem('mchav_active_role');
+  if (activeRole) {
+    config.headers['X-View-Role'] = activeRole;
+  }
   return config;
 });
 
