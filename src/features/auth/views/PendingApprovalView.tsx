@@ -8,6 +8,14 @@ export default function PendingApprovalView() {
   const [checking, setChecking] = useState(false);
   const [checkedMessage, setCheckedMessage] = useState<string | null>(null);
 
+  // Comprobación automática periódica cada 7 segundos para transicionar sin recargar
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      checkAuthSession();
+    }, 7000);
+    return () => clearInterval(timer);
+  }, []);
+
   const handleRefreshStatus = async () => {
     setChecking(true);
     setCheckedMessage(null);

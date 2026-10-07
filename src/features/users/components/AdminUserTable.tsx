@@ -135,7 +135,7 @@ export default function AdminUserTable({
                     <option value="USER">⚠️ PENDIENTE DE ROL</option>
                   )}
                   <option value="DEVELOPER">DESARROLLADOR</option>
-                  <option value="MANAGER">PLANIFICADOR</option>
+                  <option value="MANAGER">PLANIFICADOR (LÍDER TÉCNICO)</option>
                   <option value="ADMIN">ADMINISTRADOR</option>
                 </select>
               </div>

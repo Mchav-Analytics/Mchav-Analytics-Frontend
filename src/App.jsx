@@ -174,6 +174,12 @@ function MainAppContent() {
         const nextTab = devTabs.includes(savedTab) ? savedTab : 'developer';
         setActiveTab(nextTab);
       }
+    } else if (role === 'MANAGER') {
+      const managerTabs = ['proyectos', 'sprint_health', 'capacity_form', 'capacity_jira', 'flow_analytics', 'team_matrix', 'reports_center', 'sincronizacion', 'alerts_center', 'team_devs'];
+      if (!managerTabs.includes(activeTab) && !activeTab.startsWith('capacity_')) {
+        const nextTab = managerTabs.includes(savedTab) ? savedTab : 'proyectos';
+        setActiveTab(nextTab);
+      }
     }
   }, [user?.rol]);
 
@@ -441,7 +447,7 @@ function MainAppContent() {
   }
 
   const userRole = normalizeRole(user?.rol);
-  if (userRole === 'USER') {
+  if (userRole === 'USER' || user?.status === 'PENDING' || user?.activo === false) {
     return <PendingApprovalView />;
   }
 
