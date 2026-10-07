@@ -84,8 +84,7 @@ export const useDeveloperDashboard = ({ projects, selectedProjectId }) => {
     };
     initData();
 
-    const timer = setInterval(async () => {
-      try { await jiraService.triggerSync(true); } catch (e) {}
+    const timer = setInterval(() => {
       loadScorecard();
     }, 20000);
     return () => clearInterval(timer);

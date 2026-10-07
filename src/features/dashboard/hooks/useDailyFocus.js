@@ -79,7 +79,7 @@ export function useDailyFocus(selectedProjectId, projectName) {
   useEffect(() => {
     fetchIssues(true);
     const timer = setInterval(() => {
-      fetchIssues(true);
+      fetchIssues(false);
     }, 20000);
     return () => clearInterval(timer);
   }, [selectedProjectId]);

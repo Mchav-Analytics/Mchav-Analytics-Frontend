@@ -119,7 +119,7 @@ export const useDevWorkload = ({ projects, selectedProjectId }) => {
   useEffect(() => {
     loadData(true);
     const syncInterval = setInterval(() => {
-      loadData(true);
+      loadData(false);
     }, 20000);
     return () => clearInterval(syncInterval);
   }, [selectedProjectId]);
