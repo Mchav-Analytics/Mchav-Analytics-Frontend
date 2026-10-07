@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Bell,
   X,
-  AlertTriangle,
   MessageSquare,
   RefreshCw,
   FileBarChart2,
@@ -14,7 +13,6 @@ import {
   Sparkles,
   Zap,
   ShieldAlert,
-  Activity,
   Bot,
   Check,
   CheckCheck
@@ -40,6 +38,222 @@ const roleNotifications = {
 
 const EMPTY_ARRAY = [];
 
+function getActiveRole(role) {
+  const upper = (role || 'DEVELOPER').toUpperCase();
+  if (upper.includes('ADMIN')) return 'ADMIN';
+  if (upper.includes('MANAG') || upper.includes('LIDER')) return 'MANAGER';
+  return 'DEVELOPER';
+}
+
+function getCounterBadgeStyle(isOpen, criticalCount) {
+  if (isOpen) return 'bg-white text-indigo-700 ring-indigo-400';
+  if (criticalCount > 0) return 'bg-gradient-to-r from-rose-500 to-red-600 text-white ring-white dark:ring-[#141738] animate-bounce shadow-rose-500/40';
+  return 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white ring-white dark:ring-[#141738]';
+}
+
+function getNotificationBg(notif) {
+  if (notif.isRead) return 'hover:bg-slate-50/80 dark:hover:bg-[#1a1e47]/50';
+  if (notif.severity === 'CRITICAL') return 'bg-rose-50/70 dark:bg-rose-950/20';
+  return 'bg-indigo-50/50 dark:bg-indigo-950/25';
+}
+
+function getIconBadgeColor(notif) {
+  if (notif.severity === 'CRITICAL') return 'bg-rose-500 text-white border border-rose-400';
+  if (notif.severity === 'WARNING') return 'bg-amber-500 text-white border border-amber-400';
+  if (notif.type === 'TASK_ASSIGNED') return 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20';
+  if (notif.type === 'BUG') return 'bg-rose-500/10 text-rose-500 border border-rose-500/20';
+  return 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20';
+}
+
+function getNotificationIcon(type) {
+  switch (type) {
+    case 'NUBI_ALERT': return <Bot size={16} />;
+    case 'TASK_ASSIGNED': return <CheckSquare size={16} />;
+    case 'SOLICITUD': return <MessageSquare size={16} />;
+    case 'BUG': return <Bug size={16} />;
+    case 'SYNC_FAIL': return <RefreshCw size={16} />;
+    case 'USER_REG': return <UserCheck size={16} />;
+    default: return <FileBarChart2 size={16} />;
+  }
+}
+
+function getSeverityBadgeStyle(severity) {
+  if (severity === 'CRITICAL') return 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30';
+  if (severity === 'WARNING') return 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30';
+  return 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30';
+}
+
+function getSeverityBadgeText(severity) {
+  if (severity === 'CRITICAL') return 'Alerta Crítica';
+  if (severity === 'WARNING') return 'Advertencia';
+  return 'Verificado Nubi';
+}
+
+// ── COMPONENTE ATÓMICO DE ELEMENTO DE NOTIFICACIÓN ──
+const NotificationItem = ({
+  notif,
+  onMarkRead,
+  onAcceptAlert,
+  onNavigate,
+  onOpenTask,
+  onRetrySync,
+  onGoToHub,
+  syncingId
+}) => {
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      onMarkRead(notif.id);
+    }
+  };
+
+  const renderActionButton = () => {
+    if (notif.targetTab) {
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNavigate(notif.targetTab);
+          }}
+          className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+        >
+          <span>Resolver / Ver Métrica</span>
+          <ArrowRight size={13} />
+        </button>
+      );
+    }
+    if (notif.type === 'TASK_ASSIGNED') {
+      return (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpenTask(notif.issueKey);
+          }}
+          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+        >
+          <span>Ver tarea</span>
+          <ArrowRight size={13} />
+        </button>
+      );
+    }
+    if (notif.type === 'SYNC_FAIL') {
+      return (
+        <button
+          type="button"
+          onClick={() => onRetrySync(notif.id)}
+          disabled={syncingId === notif.id}
+          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+        >
+          <RefreshCw size={13} className={syncingId === notif.id ? 'animate-spin' : ''} />
+          {syncingId === notif.id ? 'Reintentando...' : 'Reintentar'}
+        </button>
+      );
+    }
+    return (
+      <button
+        type="button"
+        onClick={onGoToHub}
+        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+      >
+        <span>Ver en Hub</span>
+        <ArrowRight size={13} />
+      </button>
+    );
+  };
+
+  return (
+    <article
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+      onClick={() => onMarkRead(notif.id)}
+      className={`py-3.5 px-3 rounded-xl transition-all flex flex-col gap-2.5 cursor-pointer my-0.5 text-left ${getNotificationBg(notif)}`}
+    >
+      <div className="flex items-start gap-3">
+        {/* ÍCONO DE TIPO / SEVERIDAD DE ALERTA */}
+        <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-2xs ${getIconBadgeColor(notif)}`}>
+          {getNotificationIcon(notif.type)}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white whitespace-normal leading-snug break-words flex-1">
+              {notif.title}
+            </h4>
+            <span className="text-[10px] font-mono text-slate-400 shrink-0 pt-0.5">
+              {notif.time}
+            </span>
+          </div>
+
+          {/* BADGE DE SEVERIDAD */}
+          {notif.severity && (
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${getSeverityBadgeStyle(notif.severity)}`}>
+                {getSeverityBadgeText(notif.severity)}
+              </span>
+              {notif.currentValue && (
+                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                  Actual: <strong className="text-indigo-600 dark:text-indigo-400">{notif.currentValue}</strong>
+                </span>
+              )}
+            </div>
+          )}
+
+          <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mt-1 font-medium">
+            {notif.description}
+          </p>
+
+          {/* DIAGNÓSTICO E INSIGHT DE IA NUBI */}
+          {notif.nubiDiagnosis && (
+            <div className="mt-2 p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-1 text-left">
+              <div className="flex items-center gap-1 text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">
+                <Sparkles size={11} />
+                <span>Diagnóstico Nubi AI:</span>
+              </div>
+              <p className="text-[11px] text-indigo-950 dark:text-indigo-200 font-semibold leading-tight">
+                {notif.nubiDiagnosis}
+              </p>
+              {notif.nubiRecommendation && (
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 italic pt-0.5">
+                  💡 <strong>Recomendación:</strong> {notif.nubiRecommendation}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ACCIÓN RÁPIDA CONTEXTUAL & BOTÓN ACEPTAR */}
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#232752]/70 flex-wrap gap-2">
+        <span className="text-[10px] font-bold text-slate-400">
+          {notif.projectKey ? `Proyecto: ${notif.projectKey}` : 'MCHAV Analytics'}
+        </span>
+
+        <div className="flex items-center gap-2">
+          {!notif.isAccepted ? (
+            <button
+              type="button"
+              onClick={(e) => onAcceptAlert(notif.id, e)}
+              className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+              title="Aceptar y archivar esta alerta para que no siga activa"
+            >
+              <Check size={13} />
+              <span>Aceptar Alerta</span>
+            </button>
+          ) : (
+            <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
+              <CheckCheck size={12} />
+              <span>Aceptada</span>
+            </span>
+          )}
+
+          {renderActionButton()}
+        </div>
+      </div>
+    </article>
+  );
+};
+
 export default function LiderNotificationBell({ 
   className = "", 
   onNavigateToHub = undefined, 
@@ -50,13 +264,9 @@ export default function LiderNotificationBell({
   isCollapsed = false
 }) {
   const { user } = useAuth();
-
-  const rawRole = (user?.rol || 'DEVELOPER').toUpperCase();
-  const activeRole = rawRole.includes('ADMIN') ? 'ADMIN' : rawRole.includes('MANAG') || rawRole.includes('LIDER') ? 'MANAGER' : 'DEVELOPER';
+  const activeRole = getActiveRole(user?.rol);
 
   const [isOpen, setIsOpen] = useState(false);
-  const [opensUpward, setOpensUpward] = useState(false);
-  const [alignLeft, setAlignLeft] = useState(true);
   const [activeFilterTab, setActiveFilterTab] = useState('TODAS'); // 'TODAS' | 'ALERTAS_IA' | 'CRITICAS' | 'ACEPTADAS'
   const [syncingId, setSyncingId] = useState(null);
   const [syncMsg, setSyncMsg] = useState('');
@@ -127,10 +337,6 @@ export default function LiderNotificationBell({
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
-  const handleMarkSingleRead = (id) => {
-    handleMarkAsRead(id);
-  };
-
   const handleAcceptAlert = (id, e) => {
     if (e) e.stopPropagation();
     markNotificationAsAccepted(id);
@@ -143,14 +349,10 @@ export default function LiderNotificationBell({
     setNotifications(prev => prev.map(n => targetIds.includes(n.id) ? { ...n, isAccepted: true, isRead: true } : n));
   };
 
-  const handleMarkAllAsRead = () => {
+  const handleMarkAllRead = () => {
     const allIds = notifications.map(n => n.id);
     markAllNotificationsAsRead(allIds);
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  const handleMarkAllRead = () => {
-    handleMarkAllAsRead();
   };
 
   const handleNavigate = (tabName) => {
@@ -171,32 +373,12 @@ export default function LiderNotificationBell({
     }
   };
 
-  const handleOpenTask = (issueKey) => {
+  const handleOpenTaskSafe = (issueKey) => {
     setIsOpen(false);
     if (onOpenTask && issueKey) {
       onOpenTask(issueKey);
     } else if (onNavigateTab) {
       onNavigateTab('dev_workload');
-    }
-  };
-
-  const handleSyncIssue = async (e, issueKey, notifId) => {
-    e.stopPropagation();
-    if (!issueKey) return;
-    setSyncingId(notifId);
-    setSyncMsg(`Sincronizando ${issueKey}...`);
-    try {
-      await jiraService.triggerSync();
-      setSyncMsg(`¡${issueKey} sincronizado con éxito!`);
-      handleMarkAsRead(notifId);
-    } catch (err) {
-      console.error("Error sincronizando issue:", err);
-      setSyncMsg(`Error al sincronizar ${issueKey}`);
-    } finally {
-      setTimeout(() => {
-        setSyncingId(null);
-        setSyncMsg('');
-      }, 3000);
     }
   };
 
@@ -218,29 +400,6 @@ export default function LiderNotificationBell({
     }
   };
 
-  const handleNotificationClick = (notif) => {
-    handleMarkAsRead(notif.id);
-    setIsOpen(false);
-
-    if (notif.issueKey && onOpenTask) {
-      onOpenTask(notif.issueKey);
-      return;
-    }
-
-    if (notif.targetTab && onNavigateTab) {
-      onNavigateTab(notif.targetTab);
-      return;
-    }
-
-    if (onNavigateToHub) {
-      onNavigateToHub();
-      return;
-    }
-    if (onNavigateTab) {
-      onNavigateTab('alerts_center');
-    }
-  };
-
   const filteredNotifications = notifications.filter(notif => {
     if (activeFilterTab === 'ACEPTADAS') {
       return notif.isAccepted;
@@ -255,7 +414,7 @@ export default function LiderNotificationBell({
 
   return (
     <div className={`relative inline-block ${className}`} ref={popoverRef}>
-      {/* BOTÓN ULTRA-PREMIUM DE CAMPANA DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
+      {/* BOTÓN ULTRA-PREMIUM DE CAMPANA DE NOTIFICACIONES */}
       <button
         ref={buttonTriggerRef}
         type="button"
@@ -302,13 +461,7 @@ export default function LiderNotificationBell({
             isCollapsed
               ? 'absolute -top-1 -right-1 min-w-[18px] h-4 px-1 rounded-full text-[9px] z-10'
               : 'min-w-[20px] h-5 px-1.5 rounded-full'
-          } ${
-            isOpen
-              ? 'bg-white text-indigo-700 ring-indigo-400'
-              : criticalCount > 0
-              ? 'bg-gradient-to-r from-rose-500 to-red-600 text-white ring-white dark:ring-[#141738] animate-bounce shadow-rose-500/40'
-              : 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white ring-white dark:ring-[#141738]'
-          }`}>
+          } ${getCounterBadgeStyle(isOpen, criticalCount)}`}>
             {unreadCount}
           </span>
         )}
@@ -323,317 +476,184 @@ export default function LiderNotificationBell({
         )}
       </button>
 
-      {/* MODAL EMERGENTE EN PANTALLA GRANDE DE NOTIFICACIONES & ALERTAS IA DE NUBI */}
+      {/* MODAL EMERGENTE EN PANTALLA GRANDE DE NOTIFICACIONES */}
       {isOpen && (
         <div 
+          role="dialog"
+          aria-modal="true"
           className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 sm:p-6 md:p-8 animate-in fade-in duration-200"
           onClick={() => setIsOpen(false)}
+          onKeyDown={(e) => { if (e.key === 'Escape') setIsOpen(false); }}
         >
           <div 
             className="w-full max-w-4xl max-h-[85vh] bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-3xl shadow-2xl p-6 sm:p-8 flex flex-col space-y-5 text-left animate-in zoom-in-95 duration-200 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
           >
           
-          {/* CABECERA CON ACCIÓN DE ESCANEO DE IA NUBI */}
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-indigo-400/40 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
-                <Bot size={18} className="animate-pulse" />
-              </div>
-              <div>
-                <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                  <span>Alertas Nubi AI & </span>
-                  <span>Notificaciones</span>
-                  <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-extrabold text-[9px] border border-indigo-500/20">
-                    Tiempo Real
-                  </span>
-                </h3>
-                <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
-                  <span>Detección inteligente</span>
-                  <span>• Rol {activeRole}</span>
-                  {unreadCount > 0 && <span className="font-bold text-indigo-500">• {unreadCount} activas</span>}
+            {/* CABECERA CON ACCIÓN DE ESCANEO DE IA NUBI */}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-[#232752] pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 border border-indigo-400/40 flex items-center justify-center text-white shadow-md shadow-indigo-500/20 shrink-0">
+                  <Bot size={18} className="animate-pulse" />
+                </div>
+                <div>
+                  <h3 className="font-black text-xs text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+                    <span>Alertas Nubi AI & </span>
+                    <span>Notificaciones</span>
+                  </h3>
+                  <div className="flex items-center gap-1.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+                    <span>Detección inteligente</span>
+                    <span>• Rol {activeRole}</span>
+                    {unreadCount > 0 && <span className="font-bold text-indigo-500">• {unreadCount} activas</span>}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={handleScanNubiAlerts}
-                disabled={scanningNubi}
-                className="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 text-[10px] font-extrabold transition-all flex items-center gap-1 cursor-pointer"
-                title="Re-analizar métricas y anomalías en tiempo real con Nubi AI"
-              >
-                <Sparkles size={12} className={scanningNubi ? 'animate-spin' : ''} />
-                <span>{scanningNubi ? 'Analizando...' : 'Escanear IA'}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1e47] transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-
-          {/* BARRA DE PESTAÑAS DE FILTRO */}
-          <div className="flex items-center justify-between gap-1 p-1 bg-slate-100/80 dark:bg-[#0f122e] rounded-xl border border-slate-200/60 dark:border-[#1e2348]">
-            <button
-              type="button"
-              onClick={() => setActiveFilterTab('TODAS')}
-              className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
-                activeFilterTab === 'TODAS'
-                  ? 'bg-white dark:bg-[#1d224d] text-slate-900 dark:text-white shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              Todas ({activeCount})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveFilterTab('ALERTAS_IA')}
-              className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                activeFilterTab === 'ALERTAS_IA'
-                  ? 'bg-indigo-600 text-white shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Zap size={11} />
-              <span>Nubi AI ({nubiActiveCount})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveFilterTab('CRITICAS')}
-              className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                activeFilterTab === 'CRITICAS'
-                  ? 'bg-rose-600 text-white shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <ShieldAlert size={11} />
-              <span>Críticas ({criticalCount})</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveFilterTab('ACEPTADAS')}
-              className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
-                activeFilterTab === 'ACEPTADAS'
-                  ? 'bg-emerald-600 text-white shadow-2xs'
-                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <CheckCheck size={11} />
-              <span>Aceptadas ({acceptedCount})</span>
-            </button>
-          </div>
-
-          {syncMsg && (
-            <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold text-center animate-in fade-in flex items-center justify-center gap-2">
-              <Sparkles size={14} className="animate-spin text-indigo-500" />
-              <span>{syncMsg}</span>
-            </div>
-          )}
-
-          {/* LISTA DE NOTIFICACIONES & ALERTAS NUBI AI */}
-          <div className="flex-1 min-h-0 overflow-y-auto max-h-[55vh] divide-y divide-slate-100 dark:divide-[#232752]/70 pr-2 custom-scrollbar">
-            {filteredNotifications.length > 0 ? (
-              filteredNotifications.map((notif) => (
-                <div
-                  key={notif.id}
-                  onClick={() => handleMarkSingleRead(notif.id)}
-                  className={`py-3.5 px-3 rounded-xl transition-all flex flex-col gap-2.5 cursor-pointer my-0.5 ${
-                    !notif.isRead
-                      ? notif.severity === 'CRITICAL'
-                        ? 'bg-rose-50/70 dark:bg-rose-950/20'
-                        : 'bg-indigo-50/50 dark:bg-indigo-950/25'
-                      : 'hover:bg-slate-50/80 dark:hover:bg-[#1a1e47]/50'
-                  }`}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={handleScanNubiAlerts}
+                  disabled={scanningNubi}
+                  className="px-2.5 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/40 text-[10px] font-extrabold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Re-analizar métricas y anomalías en tiempo real con Nubi AI"
                 >
-                  <div className="flex items-start gap-3">
-                    {/* ÍCONO DE TIPO / SEVERIDAD DE ALERTA */}
-                    <div className={`p-2 rounded-xl shrink-0 mt-0.5 shadow-2xs ${
-                      notif.severity === 'CRITICAL' ? 'bg-rose-500 text-white border border-rose-400' :
-                      notif.severity === 'WARNING' ? 'bg-amber-500 text-white border border-amber-400' :
-                      notif.type === 'TASK_ASSIGNED' ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' :
-                      notif.type === 'BUG' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/20' :
-                      'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20'
-                    }`}>
-                      {notif.type === 'NUBI_ALERT' ? <Bot size={16} /> :
-                        notif.type === 'TASK_ASSIGNED' ? <CheckSquare size={16} /> :
-                        notif.type === 'SOLICITUD' ? <MessageSquare size={16} /> :
-                        notif.type === 'BUG' ? <Bug size={16} /> :
-                        notif.type === 'SYNC_FAIL' ? <RefreshCw size={16} /> :
-                        notif.type === 'USER_REG' ? <UserCheck size={16} /> :
-                        <FileBarChart2 size={16} />}
-                    </div>
+                  <Sparkles size={12} className={scanningNubi ? 'animate-spin' : ''} />
+                  <span>{scanningNubi ? 'Analizando...' : 'Escanear IA'}</span>
+                </button>
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 dark:text-white whitespace-normal leading-snug break-words flex-1">
-                          {notif.title}
-                        </h4>
-                        <span className="text-[10px] font-mono text-slate-400 shrink-0 pt-0.5">
-                          {notif.time}
-                        </span>
-                      </div>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1a1e47] transition-colors cursor-pointer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
 
-                      {/* BADGE DE SEVERIDAD */}
-                      {notif.severity && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider ${
-                            notif.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30' :
-                            notif.severity === 'WARNING' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30' :
-                            'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30'
-                          }`}>
-                            {notif.severity === 'CRITICAL' ? 'Alerta Crítica' : notif.severity === 'WARNING' ? 'Advertencia' : 'Verificado Nubi'}
-                          </span>
-                          {notif.currentValue && (
-                            <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
-                              Actual: <strong className="text-indigo-600 dark:text-indigo-400">{notif.currentValue}</strong>
-                            </span>
-                          )}
-                        </div>
-                      )}
+            {/* BARRA DE PESTAÑAS DE FILTRO */}
+            <div className="flex items-center justify-between gap-1 p-1 bg-slate-100/80 dark:bg-[#0f122e] rounded-xl border border-slate-200/60 dark:border-[#1e2348]">
+              <button
+                type="button"
+                onClick={() => setActiveFilterTab('TODAS')}
+                className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all cursor-pointer ${
+                  activeFilterTab === 'TODAS'
+                    ? 'bg-white dark:bg-[#1d224d] text-slate-900 dark:text-white shadow-2xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                Todas ({activeCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilterTab('ALERTAS_IA')}
+                className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  activeFilterTab === 'ALERTAS_IA'
+                    ? 'bg-indigo-600 text-white shadow-2xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <Zap size={11} />
+                <span>Nubi AI ({nubiActiveCount})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilterTab('CRITICAS')}
+                className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  activeFilterTab === 'CRITICAS'
+                    ? 'bg-rose-600 text-white shadow-2xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <ShieldAlert size={11} />
+                <span>Críticas ({criticalCount})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveFilterTab('ACEPTADAS')}
+                className={`flex-1 py-1 px-2 rounded-lg text-[10px] font-extrabold transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  activeFilterTab === 'ACEPTADAS'
+                    ? 'bg-emerald-600 text-white shadow-2xs'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                }`}
+              >
+                <CheckCheck size={11} />
+                <span>Aceptadas ({acceptedCount})</span>
+              </button>
+            </div>
 
-                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-snug mt-1 font-medium">
-                        {notif.description}
-                      </p>
-
-                      {/* DIAGNÓSTICO E INSIGHT DE IA NUBI */}
-                      {notif.nubiDiagnosis && (
-                        <div className="mt-2 p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 space-y-1 text-left">
-                          <div className="flex items-center gap-1 text-[10px] font-extrabold text-indigo-600 dark:text-indigo-400">
-                            <Sparkles size={11} />
-                            <span>Diagnóstico Nubi AI:</span>
-                          </div>
-                          <p className="text-[11px] text-indigo-950 dark:text-indigo-200 font-semibold leading-tight">
-                            {notif.nubiDiagnosis}
-                          </p>
-                          {notif.nubiRecommendation && (
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400 italic pt-0.5">
-                              💡 <strong>Recomendación:</strong> {notif.nubiRecommendation}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ACCIÓN RÁPIDA CONTEXTUAL & BOTÓN ACEPTAR */}
-                  <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-[#232752]/70 flex-wrap gap-2">
-                    <span className="text-[10px] font-bold text-slate-400">
-                      {notif.projectKey ? `Proyecto: ${notif.projectKey}` : 'MCHAV Analytics'}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      {!notif.isAccepted ? (
-                        <button
-                          type="button"
-                          onClick={(e) => handleAcceptAlert(notif.id, e)}
-                          className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                          title="Aceptar y archivar esta alerta para que no siga activa"
-                        >
-                          <Check size={13} />
-                          <span>Aceptar Alerta</span>
-                        </button>
-                      ) : (
-                        <span className="px-2.5 py-1 text-[10px] font-extrabold rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40 flex items-center gap-1">
-                          <CheckCheck size={12} />
-                          <span>Aceptada</span>
-                        </span>
-                      )}
-
-                      {notif.targetTab ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleNavigate(notif.targetTab);
-                          }}
-                          className="px-3 py-1.5 text-xs font-extrabold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        >
-                          <span>Resolver / Ver Métrica</span>
-                          <ArrowRight size={13} />
-                        </button>
-                      ) : notif.type === 'TASK_ASSIGNED' ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenTask(notif.issueKey);
-                          }}
-                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        >
-                          <span>Ver tarea</span>
-                          <ArrowRight size={13} />
-                        </button>
-                      ) : notif.type === 'SYNC_FAIL' ? (
-                        <button
-                          onClick={() => handleRetrySync(notif.id)}
-                          disabled={syncingId === notif.id}
-                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        >
-                          <RefreshCw size={13} className={syncingId === notif.id ? 'animate-spin' : ''} />
-                          {syncingId === notif.id ? 'Reintentando...' : 'Reintentar'}
-                        </button>
-                      ) : (
-                        <button
-                          onClick={handleGoToHub}
-                          className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
-                        >
-                          <span>Ver en Hub</span>
-                          <ArrowRight size={13} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="py-10 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
-                <Inbox size={32} className="text-slate-400 dark:text-slate-600" />
-                <span className="text-xs font-medium">
-                  {activeFilterTab === 'ACEPTADAS' 
-                    ? 'Aún no has aceptado ninguna alerta.' 
-                    : 'No tienes alertas pendientes para este filtro 🎉'}
-                </span>
+            {syncMsg && (
+              <div className="p-2.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 border border-indigo-100 dark:border-indigo-900/40 text-indigo-700 dark:text-indigo-300 text-xs font-bold text-center animate-in fade-in flex items-center justify-center gap-2">
+                <Sparkles size={14} className="animate-spin text-indigo-500" />
+                <span>{syncMsg}</span>
               </div>
             )}
-          </div>
 
-          {/* PIE DE PANEL EMERGENTE */}
-          <div className="pt-2 border-t border-slate-100 dark:border-[#232752] flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleMarkAllRead}
-                className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
-              >
-                Marcar leídas
-              </button>
-              {activeFilterTab !== 'ACEPTADAS' && filteredNotifications.length > 0 && (
-                <>
-                  <span className="text-slate-300 dark:text-slate-700">•</span>
-                  <button
-                    onClick={handleAcceptAll}
-                    className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
-                  >
-                    <CheckCheck size={13} />
-                    <span>Aceptar todas</span>
-                  </button>
-                </>
+            {/* LISTA DE NOTIFICACIONES & ALERTAS NUBI AI */}
+            <div className="flex-1 min-h-0 overflow-y-auto max-h-[55vh] divide-y divide-slate-100 dark:divide-[#232752]/70 pr-2 custom-scrollbar">
+              {filteredNotifications.length > 0 ? (
+                filteredNotifications.map((notif) => (
+                  <NotificationItem
+                    key={notif.id}
+                    notif={notif}
+                    onMarkRead={handleMarkAsRead}
+                    onAcceptAlert={handleAcceptAlert}
+                    onNavigate={handleNavigate}
+                    onOpenTask={handleOpenTaskSafe}
+                    onRetrySync={handleRetrySync}
+                    onGoToHub={handleGoToHub}
+                    syncingId={syncingId}
+                  />
+                ))
+              ) : (
+                <div className="py-10 text-center text-slate-400 flex flex-col items-center justify-center gap-2">
+                  <Inbox size={32} className="text-slate-400 dark:text-slate-600" />
+                  <span className="text-xs font-medium">
+                    {activeFilterTab === 'ACEPTADAS' 
+                      ? 'Aún no has aceptado ninguna alerta.' 
+                      : 'No tienes alertas pendientes para este filtro 🎉'}
+                  </span>
+                </div>
               )}
             </div>
-            <button
-              onClick={handleGoToHub}
-              className="py-1.5 px-3 text-center text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
-            >
-              <span>Ver Centro de Actividad completo</span>
-              <span className="sr-only">Ir al Centro de Actividad completo</span>
-              <ArrowRight size={14} />
-            </button>
+
+            {/* PIE DE PANEL EMERGENTE */}
+            <div className="pt-2 border-t border-slate-100 dark:border-[#232752] flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleMarkAllRead}
+                  className="text-[11px] font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+                >
+                  Marcar leídas
+                </button>
+                {activeFilterTab !== 'ACEPTADAS' && filteredNotifications.length > 0 && (
+                  <>
+                    <span className="text-slate-300 dark:text-slate-700">•</span>
+                    <button
+                      type="button"
+                      onClick={handleAcceptAll}
+                      className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 flex items-center gap-1 cursor-pointer"
+                    >
+                      <CheckCheck size={13} />
+                      <span>Aceptar todas</span>
+                    </button>
+                  </>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleGoToHub}
+                className="py-1.5 px-3 text-center text-xs font-extrabold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 rounded-xl transition-all flex items-center gap-1 cursor-pointer"
+              >
+                <span>Ver Centro de Actividad completo</span>
+                <span className="sr-only">Ir al Centro de Actividad completo</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
           </div>
         </div>
-      </div>
       )}
     </div>
   );

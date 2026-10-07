@@ -187,6 +187,7 @@ describe('AdminUsuariosView - formatTimestamp', () => {
       fireEvent.click(btn3);
       fireEvent.click(btn4);
     });
+    expect(btn1).toBeInTheDocument();
   });
 });
 

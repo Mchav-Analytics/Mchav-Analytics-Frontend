@@ -159,22 +159,24 @@ export default function CapacityForm({
               
               {/* Desarrollador */}
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Desarrollador / Integrante</label>
+                <label htmlFor="cap-dev-select" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Desarrollador / Integrante</label>
                 <select
+                  id="cap-dev-select"
                   value={newDevName}
                   onChange={(e) => setNewDevName(e.target.value)}
                   className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none"
                 >
                   {Array.from({ length: devCount || 4 }).map((_, idx) => (
-                    <option key={idx} value={`Desarrollador ${idx + 1}`}>Desarrollador {idx + 1}</option>
+                    <option key={`dev-option-${idx + 1}`} value={`Desarrollador ${idx + 1}`}>Desarrollador {idx + 1}</option>
                   ))}
                 </select>
               </div>
 
               {/* Tipo de Ausencia */}
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Tipo de Evento</label>
+                <label htmlFor="cap-event-type" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Tipo de Evento</label>
                 <select
+                  id="cap-event-type"
                   value={newAbsenceType}
                   onChange={(e) => setNewAbsenceType(e.target.value)}
                   className="w-full px-2.5 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-bold text-slate-800 dark:text-slate-100 outline-none"
@@ -186,8 +188,9 @@ export default function CapacityForm({
 
               {/* Fecha Inicio (Desde) */}
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Fecha Inicio (Desde)</label>
+                <label htmlFor="cap-start-date" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Fecha Inicio (Desde)</label>
                 <input
+                  id="cap-start-date"
                   type="date"
                   required
                   value={newStartDate}
@@ -198,8 +201,9 @@ export default function CapacityForm({
 
               {/* Fecha Fin (Hasta) */}
               <div>
-                <label className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Fecha Fin (Hasta)</label>
+                <label htmlFor="cap-end-date" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 block mb-1">Fecha Fin (Hasta)</label>
                 <input
+                  id="cap-end-date"
                   type="date"
                   required
                   value={newEndDate}

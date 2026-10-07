@@ -20,16 +20,14 @@ export function calculateBusinessDays(startDateStr, endDateStr) {
   if (!startDateStr || !endDateStr) return 0;
   const start = new Date(startDateStr);
   const end = new Date(endDateStr);
-  if (isNaN(start) || isNaN(end) || start > end) return 0;
+  if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) return 0;
 
   let count = 0;
-  const cur = new Date(start);
-  while (cur <= end) {
+  for (let cur = new Date(start.getTime()); cur <= end; cur = new Date(cur.getTime() + 86400000)) {
     const dayOfWeek = cur.getDay();
     if (dayOfWeek !== 0 && dayOfWeek !== 6) {
       count++;
     }
-    cur.setDate(cur.getDate() + 1);
   }
   return count;
 }

@@ -45,10 +45,10 @@ describe('useAlertsCenter', () => {
   it('handles API error gracefully', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-    renderHook(() => useAlertsCenter({ selectedProjectId: 'P1' }));
+    const { result } = renderHook(() => useAlertsCenter({ selectedProjectId: 'P1' }));
 
     await waitFor(() => {
-      expect(result => expect(result).toBeDefined());
+      expect(result.current.filteredItems).toBeDefined();
     });
     consoleSpy.mockRestore();
   });

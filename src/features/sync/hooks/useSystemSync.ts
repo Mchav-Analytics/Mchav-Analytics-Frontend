@@ -18,11 +18,25 @@ export interface SyncLog {
   detalleError?: string;
 }
 
+interface RawApiLog {
+  id_log?: number | string;
+  id?: number | string;
+  fecha_ejecucion?: string;
+  fecha_inicio?: string;
+  tipo_sincronizacion?: string;
+  issues_procesados?: number;
+  registros_procesados?: number;
+  tiempo_ejecucion_segundos?: number;
+  resultado?: string;
+  ejecutado_por?: string;
+  detalle_error?: string;
+}
+
 const formatTimestamp = (ts: string) => {
   if (!ts) return 'Sin fecha';
   const dateString = ts.endsWith('Z') ? ts : `${ts}Z`;
   const dt = new Date(dateString);
-  if (isNaN(dt.getTime())) return ts.replace('T', ' ').substring(0, 19);
+  if (Number.isNaN(dt.getTime())) return ts.replace('T', ' ').substring(0, 19);
   const day = String(dt.getDate()).padStart(2, '0');
   const month = String(dt.getMonth() + 1).padStart(2, '0');
   const year = dt.getFullYear();
@@ -35,7 +49,7 @@ const formatTimestamp = (ts: string) => {
   return `${day}/${month}/${year}, ${hoursStr}:${minutes} ${ampm}`;
 };
 
-export const mapApiLogToSyncLog = (apiLog: any): SyncLog => ({
+export const mapApiLogToSyncLog = (apiLog: RawApiLog): SyncLog => ({
   id: `log-${apiLog.id_log || apiLog.id}`,
   timestamp: apiLog.fecha_ejecucion || apiLog.fecha_inicio || '',
   executionType: apiLog.tipo_sincronizacion === 'AUTOMATIC' ? 'AUTOMATIC' : 'MANUAL',
@@ -63,6 +77,7 @@ export function useSystemSync() {
       const saved = localStorage.getItem('mchav_is_auto_sync');
       return saved !== null ? saved === 'true' : true;
     } catch (e) {
+      console.warn('Could not read mchav_is_auto_sync from localStorage', e);
       return true;
     }
   });
@@ -71,11 +86,12 @@ export function useSystemSync() {
     setIsAutoSyncState(val);
     try {
       localStorage.setItem('mchav_is_auto_sync', String(val));
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Could not save mchav_is_auto_sync to localStorage', e);
+    }
     
-    // Llamar al backend para persistir el estado del toggle
     jiraService.toggleAutoSync(val).catch(err => {
-        console.error("Error toggling auto sync on backend:", err);
+      console.error("Error toggling auto sync on backend:", err);
     });
   };
 
@@ -83,6 +99,7 @@ export function useSystemSync() {
     try {
       return localStorage.getItem('mchav_cron_schedule') || '24h';
     } catch (e) {
+      console.warn('Could not read mchav_cron_schedule from localStorage', e);
       return '24h';
     }
   });
@@ -91,7 +108,9 @@ export function useSystemSync() {
     setCronScheduleState(val);
     try {
       localStorage.setItem('mchav_cron_schedule', val);
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Could not save mchav_cron_schedule to localStorage', e);
+    }
   };
 
   const [isSavingCron, setIsSavingCron] = useState(false);
@@ -101,15 +120,16 @@ export function useSystemSync() {
 
   const fetchLogsFromApi = () => {
     jiraService.getSyncLogs()
-      .then((data: any) => {
+      .then((data: unknown) => {
         if (Array.isArray(data)) {
           const mapped = data.map(mapApiLogToSyncLog);
           setLogs(mapped);
           if (mapped.length > 0) {
+            const firstResult = data[0].resultado;
             setSyncStatus(prev => ({
               ...prev,
               lastSync: formatTimestamp(mapped[0].timestamp),
-              status: data[0].resultado === 'RUNNING' ? 'SYNCING' : (data[0].resultado === 'FAILED' ? 'FAILED' : 'IDLE')
+              status: firstResult === 'RUNNING' ? 'SYNCING' : (firstResult === 'FAILED' ? 'FAILED' : 'IDLE')
             }));
           }
         }
@@ -122,8 +142,6 @@ export function useSystemSync() {
   useEffect(() => {
     fetchLogsFromApi();
     
-    // Poll every 5 seconds to detect automatic background cron executions
-    // AND to update the UI when they finish
     const interval = setInterval(() => {
       fetchLogsFromApi();
     }, 5000);
@@ -135,11 +153,11 @@ export function useSystemSync() {
     setLogPage(1);
   }, [timeFilter]);
 
-  // Cargar preferencia de hora guardada en localStorage
   const [cronTime, setCronTime] = useState(() => {
     try {
       return localStorage.getItem('mchav_cron_time') || '23:00';
     } catch (e) {
+      console.warn('Could not read mchav_cron_time from localStorage', e);
       return '23:00';
     }
   });
@@ -153,12 +171,14 @@ export function useSystemSync() {
     setIsSavingCron(true);
     
     jiraService.updateCronTime(cronTime)
-      .then((res: any) => {
+      .then(() => {
         try {
           localStorage.setItem('mchav_cron_time', cronTime);
           localStorage.setItem('mchav_cron_schedule', cronSchedule);
           localStorage.setItem('mchav_is_auto_sync', String(isAutoSync));
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Could not update cron settings in localStorage', e);
+        }
         
         setSavedCronTime(cronTime);
         setIsSavingCron(false);
@@ -170,10 +190,50 @@ export function useSystemSync() {
         setShowSuccessAlert(true);
         setTimeout(() => setShowSuccessAlert(false), 4000);
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         console.error("Error saving cron time to backend:", err);
         setSyncErrorMsg("No se pudo guardar la configuración de horario en el servidor.");
         setIsSavingCron(false);
+      });
+  };
+
+  const handlePollIteration = (attempts: number, interval: ReturnType<typeof setInterval>) => {
+    jiraService.getSyncLogs()
+      .then((logRes: unknown) => {
+        if (!Array.isArray(logRes)) {
+          clearInterval(interval);
+          return;
+        }
+
+        const mapped = logRes.map(mapApiLogToSyncLog);
+        setLogs(mapped);
+
+        if (mapped.length === 0) return;
+
+        const latestLog = mapped[0];
+        if (latestLog.result !== 'RUNNING' || attempts > 20) {
+          clearInterval(interval);
+          setSyncStatus(prev => ({
+            ...prev,
+            status: latestLog.result === 'SUCCESS' ? 'IDLE' : (latestLog.result === 'RUNNING' ? 'SYNCING' : 'FAILED'),
+            lastSync: formatTimestamp(latestLog.timestamp)
+          }));
+
+          if (latestLog.result === 'SUCCESS') {
+            setShowSuccessAlert(true);
+            window.dispatchEvent(new CustomEvent('mchav-sync-completed'));
+            setTimeout(() => setShowSuccessAlert(false), 5000);
+          } else if (latestLog.result === 'RUNNING') {
+            setSyncErrorMsg("La sincronización está tomando más tiempo del habitual, pero sigue ejecutándose en segundo plano.");
+          } else {
+            setSyncErrorMsg(latestLog.detalleError || "Error durante la ejecución del job.");
+          }
+        }
+      })
+      .catch(err => {
+        console.error("Error polling logs:", err);
+        clearInterval(interval);
+        setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
       });
   };
 
@@ -188,54 +248,18 @@ export function useSystemSync() {
       .then(() => {
         let attempts = 0;
         const interval = setInterval(() => {
-          jiraService.getSyncLogs()
-            .then((logRes: any) => {
-              if (Array.isArray(logRes)) {
-                const mapped = logRes.map(mapApiLogToSyncLog);
-                setLogs(mapped);
-                attempts++;
-
-                if (mapped.length > 0) {
-                  const latestLog = mapped[0];
-                  if (latestLog.result !== 'RUNNING' || attempts > 20) {
-                    clearInterval(interval);
-                    setSyncStatus(prev => ({
-                      ...prev,
-                      status: latestLog.result === 'SUCCESS' ? 'IDLE' : (latestLog.result === 'RUNNING' ? 'SYNCING' : 'FAILED'),
-                      lastSync: formatTimestamp(latestLog.timestamp)
-                    }));
-
-                    if (latestLog.result === 'SUCCESS') {
-                      setShowSuccessAlert(true);
-                      window.dispatchEvent(new CustomEvent('mchav-sync-completed'));
-                      setTimeout(() => setShowSuccessAlert(false), 5000);
-                    } else if (latestLog.result === 'RUNNING') {
-                      setSyncErrorMsg("La sincronización está tomando más tiempo del habitual, pero sigue ejecutándose en segundo plano.");
-                    } else {
-                      setSyncErrorMsg(latestLog.detalleError || "Error durante la ejecución del job.");
-                    }
-                  }
-                }
-              } else {
-                clearInterval(interval);
-              }
-            })
-            .catch(err => {
-              console.error("Error polling logs:", err);
-              clearInterval(interval);
-              setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
-            });
+          attempts++;
+          handlePollIteration(attempts, interval);
         }, 3000);
       })
-      .catch(err => {
+      .catch((err: any) => {
         console.error("Error triggerSync:", err);
-        // Si el backend devuelve 400 significa que YA hay una sincronización corriendo (ej. lanzada por Cron)
         if (err.response && err.response.status === 400) {
-           setSyncErrorMsg("La sincronización automática ya se está ejecutando en segundo plano.");
-           fetchLogsFromApi(); // Forzar actualización visual a SYNCING
+          setSyncErrorMsg("La sincronización automática ya se está ejecutando en segundo plano.");
+          fetchLogsFromApi();
         } else {
-           setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
-           setSyncErrorMsg("No se pudo iniciar el proceso en segundo plano.");
+          setSyncStatus(prev => ({ ...prev, status: 'FAILED' }));
+          setSyncErrorMsg("No se pudo iniciar el proceso en segundo plano.");
         }
       });
   };
@@ -244,7 +268,7 @@ export function useSystemSync() {
     if (timeFilter === 'all') return true;
     const dateString = log.timestamp.endsWith('Z') ? log.timestamp : `${log.timestamp}Z`;
     const logDate = new Date(dateString);
-    if (isNaN(logDate.getTime())) return true;
+    if (Number.isNaN(logDate.getTime())) return true;
     const now = new Date();
     const diffDays = (now.getTime() - logDate.getTime()) / (1000 * 3600 * 24);
 

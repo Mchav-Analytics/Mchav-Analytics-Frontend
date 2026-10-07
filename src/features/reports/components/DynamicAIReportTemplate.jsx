@@ -99,7 +99,7 @@ const GraficaVelocidad = ({ data }) => {
       <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '10px 14px', fontSize: '11px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
         <p style={{ fontWeight: 800, marginBottom: '4px', color: '#1e293b' }}>{label}</p>
         {payload.map((p, i) => (
-          <p key={i} style={{ color: p.color, margin: '2px 0', fontWeight: 600 }}>
+          <p key={p.dataKey || p.name || `tip-${i}`} style={{ color: p.color, margin: '2px 0', fontWeight: 600 }}>
             {p.name}: <strong style={{ fontSize: '12px' }}>{p.value} SP</strong>
           </p>
         ))}
@@ -237,8 +237,8 @@ const PerfilDesempeno = ({ targetName, score, stats }) => {
           { label: 'Tickets completados', value: stats.throughput || '0' },
           { label: 'Defectos Escapados', value: stats.bugs || '0' },
           { label: 'Días bloqueado', value: stats.blockedDays || '0' }
-        ].map((item, i) => (
-          <div key={i} style={{ textAlign: 'center' }}>
+        ].map(item => (
+          <div key={item.label} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: '24px', fontWeight: 400, color: '#0f172a', fontFamily: '"Georgia", serif' }}>{item.value}</div>
             <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginTop: '4px' }}>
               {item.label}
@@ -330,17 +330,19 @@ const TablaDistribucion = ({ data }) => {
           </tr>
         </thead>
         <tbody>
-          {data.map((item, i) => {
+          {(() => {
             const total = data.reduce((acc, curr) => acc + curr.value, 0);
-            const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
-            return (
-              <tr key={i} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
-                <td style={{ padding: '10px', color: '#1e293b', fontWeight: 600 }}>{item.name}</td>
-                <td style={{ padding: '10px', textAlign: 'center', color: '#64748b' }}>{item.value}</td>
-                <td style={{ padding: '10px', textAlign: 'center', color: '#64748b', fontWeight: 500 }}>{pct}%</td>
-              </tr>
-            );
-          })}
+            return data.map((item, i) => {
+              const pct = total > 0 ? ((item.value / total) * 100).toFixed(1) : 0;
+              return (
+                <tr key={item.name || `data-${i}`} style={{ backgroundColor: i % 2 === 0 ? 'white' : '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                  <td style={{ padding: '10px', color: '#1e293b', fontWeight: 600 }}>{item.name}</td>
+                  <td style={{ padding: '10px', textAlign: 'center', color: '#64748b' }}>{item.value}</td>
+                  <td style={{ padding: '10px', textAlign: 'center', color: '#64748b', fontWeight: 500 }}>{pct}%</td>
+                </tr>
+              );
+            });
+          })()}
         </tbody>
       </table>
     </div>
@@ -367,7 +369,7 @@ const GraficaDistribucion = ({ data }) => {
               labelLine={false}
             >
               {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                <Cell key={`cell-${entry.name || index}`} fill={COLORS[index % COLORS.length]} />
               ))}
             </Pie>
             <RechartsTooltip 
@@ -425,7 +427,7 @@ const TablaPortafolio = ({ metrics }) => {
         </thead>
         <tbody>
           {metrics.map((p, i) => (
-            <tr key={i} style={{ borderBottom: '1px solid #e2e8f0', background: i % 2 === 0 ? 'white' : '#f8fafc' }}>
+            <tr key={p.projectId || p.projectName || `proj-${i}`} style={{ borderBottom: '1px solid #e2e8f0', background: i % 2 === 0 ? 'white' : '#f8fafc' }}>
               <td style={{ padding: '12px 16px', fontWeight: 500, color: '#0f172a' }}>{p.projectName}</td>
               <td style={{ padding: '12px 16px', textAlign: 'center', color: '#10b981', fontWeight: 700 }}>{p.velocity}</td>
               <td style={{ padding: '12px 16px', textAlign: 'center', color: '#3b82f6', fontWeight: 700 }}>{p.throughput}</td>
@@ -628,7 +630,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
                   const diffColor = row.isDirect ? '#64748b' : (diff >= 0 ? '#10b981' : '#ef4444');
                   const diffText = row.isDirect ? diff : `${diff > 0 ? '+' : ''}${diff} ${row.unit}`;
                   return (
-                    <tr key={i} style={{ background: i % 2 === 0 ? '#f8fafc' : 'white', borderBottom: '1px solid #e2e8f0' }}>
+                    <tr key={row.metric} style={{ background: i % 2 === 0 ? '#f8fafc' : 'white', borderBottom: '1px solid #e2e8f0' }}>
                       <td style={{ padding: '10px 15px', fontWeight: 700, color: '#1e293b' }}>{row.metric}</td>
                       <td style={{ padding: '10px 15px', textAlign: 'center', color: '#64748b' }}>{row.planned} {!row.isDirect && row.unit}</td>
                       <td style={{ padding: '10px 15px', textAlign: 'center', fontWeight: 700, color: '#1e293b' }}>{row.delivered} {!row.isDirect && row.unit}</td>
@@ -843,7 +845,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
                                 </thead>
                                 <tbody>
                                   {history.map((h, idx) => (
-                                    <tr key={idx}>
+                                    <tr key={h.sprintName || `hist-${idx}`}>
                                       <td style={{ border: '1px solid black', padding: '8px 12px' }}>{h.sprintName}</td>
                                       <td style={{ border: '1px solid black', padding: '8px 12px', textAlign: 'center' }}>{h.ticketsCompletados}</td>
                                       <td style={{ border: '1px solid black', padding: '8px 12px', textAlign: 'center' }}>{h.cycleTime}</td>
@@ -856,7 +858,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
                           );
                         }
                         if (/\[GR[AÁ]FICA_VELOCIDAD\]/i.test(part)) {
-                          const history = stats.history_data && stats.history_data.length > 0 ? stats.history_data : [
+                          const history = (stats?.history_data?.length > 0) ? stats.history_data : [
                             { sprintName: 'Sprint 18', planned: 28, completed: 24 },
                             { sprintName: 'Sprint 19', planned: 35, completed: 31 },
                             { sprintName: 'Sprint 20', planned: 40, completed: 38 },
@@ -890,17 +892,20 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {chartData.distribucionData && chartData.distribucionData.map((d, idx) => {
-                                    const total = chartData.distribucionData.reduce((acc, curr) => acc + curr.value, 0);
-                                    const perc = total > 0 ? Math.round((d.value / total) * 100) : 0;
-                                    return (
-                                      <tr key={idx} style={{ background: idx % 2 === 0 ? '#f8fafc' : 'white', borderBottom: '1px solid #e2e8f0' }}>
-                                        <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>{d.name}</td>
-                                        <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: '#3b82f6' }}>{d.value}</td>
-                                        <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b' }}>{perc}%</td>
-                                      </tr>
-                                    );
-                                  })}
+                                  {(() => {
+                                    const dist = chartData?.distribucionData || [];
+                                    const total = dist.reduce((acc, curr) => acc + curr.value, 0);
+                                    return dist.map((d, idx) => {
+                                      const perc = total > 0 ? Math.round((d.value / total) * 100) : 0;
+                                      return (
+                                        <tr key={d.name || `dist-${idx}`} style={{ background: idx % 2 === 0 ? '#f8fafc' : 'white', borderBottom: '1px solid #e2e8f0' }}>
+                                          <td style={{ padding: '8px 15px', fontWeight: 700, color: '#1e293b' }}>{d.name}</td>
+                                          <td style={{ padding: '8px 15px', textAlign: 'center', fontWeight: 700, color: '#3b82f6' }}>{d.value}</td>
+                                          <td style={{ padding: '8px 15px', textAlign: 'center', color: '#64748b' }}>{perc}%</td>
+                                        </tr>
+                                      );
+                                    });
+                                  })()}
                                 </tbody>
                               </table>
                             </div>
@@ -947,7 +952,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
 
                       return part.trim() ? (
                         <div key={`inline-txt-${i}`} className={PROSE} style={{ pageBreakInside: 'avoid' }}>
-                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.replace(/\|\s*\|/g, '|\n|').replace(/(?=\|\s*Tipo de)/i, '\n\n')}</ReactMarkdown>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>{part.replaceAll(/\|\s*\|/g, '|\n|').replace(/(?=\|\s*Tipo de)/i, '\n\n')}</ReactMarkdown>
                         </div>
                       ) : null;
                     })}
@@ -1040,7 +1045,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, width: '100%' }}>
             {tableOfContents.map((title, i) => (
-               <li key={`toc-${i}`} style={{ 
+               <li key={`toc-${title}`} style={{ 
                  display: 'flex', alignItems: 'center',
                  padding: '6px 0',
                  fontSize: '12px', color: '#334155', fontWeight: 600,
@@ -1052,7 +1057,7 @@ function renderMarkdownWithCharts(markdownText, chartData, stats, totalScope, re
                  }}>
                    •
                  </span> 
-                 {title.replace(/\*/g, '')}
+                 {title.replaceAll('*', '')}
                </li>
             ))}
           </ul>
@@ -1136,14 +1141,14 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
       ];
 
   const p50 = stats.cycleTime > 0 ? stats.cycleTime : 2.5;
-  const p85 = parseFloat((p50 * 1.5).toFixed(1));
-  const p95 = parseFloat((p50 * 2.0).toFixed(1));
+  const p85 = Number.parseFloat((p50 * 1.5).toFixed(1));
+  const p95 = Number.parseFloat((p50 * 2.0).toFixed(1));
   const scatterPoints = [
-    { x: 1, y: parseFloat((p50 * 0.4).toFixed(1)) }, { x: 2, y: parseFloat((p50 * 0.7).toFixed(1)) },
-    { x: 3, y: parseFloat((p50 * 0.9).toFixed(1)) }, { x: 4, y: parseFloat(p50.toFixed(1)) },
-    { x: 5, y: parseFloat((p50 * 1.1).toFixed(1)) }, { x: 6, y: parseFloat((p85 * 0.9).toFixed(1)) },
-    { x: 7, y: parseFloat(p85.toFixed(1)) }, { x: 8, y: parseFloat((p95 * 0.85).toFixed(1)) },
-    { x: 9, y: parseFloat(p95.toFixed(1)) },
+    { x: 1, y: Number.parseFloat((p50 * 0.4).toFixed(1)) }, { x: 2, y: Number.parseFloat((p50 * 0.7).toFixed(1)) },
+    { x: 3, y: Number.parseFloat((p50 * 0.9).toFixed(1)) }, { x: 4, y: Number.parseFloat(p50.toFixed(1)) },
+    { x: 5, y: Number.parseFloat((p50 * 1.1).toFixed(1)) }, { x: 6, y: Number.parseFloat((p85 * 0.9).toFixed(1)) },
+    { x: 7, y: Number.parseFloat(p85.toFixed(1)) }, { x: 8, y: Number.parseFloat((p95 * 0.85).toFixed(1)) },
+    { x: 9, y: Number.parseFloat(p95.toFixed(1)) },
   ];
 
   const bugsCount = stats.bugs || Math.max(1, Math.floor(stats.throughput * 0.15));
@@ -1169,7 +1174,7 @@ const DynamicAIReportTemplate = forwardRef(({ reportType, filters, user, reportD
     general: 'INFORME EJECUTIVO DE RENDIMIENTO', 
     proyecto: 'INFORME EJECUTIVO DEL PROYECTO', 
     sprint: 'REPORTE EJECUTIVO DE SPRINT', 
-    desarrollador: 'INFORME EJECUTIVO DE DESEMPEÑO INDIVIDUAL',
+    desarrollador: 'EVALUACIÓN DE DESEMPEÑO INDIVIDUAL',
     cierre_general: 'CIERRE MENSUAL DE RENDIMIENTO',
     cierre_proyecto: 'CIERRE MENSUAL DEL PROYECTO',
     cierre_desarrollador: 'CIERRE MENSUAL DE DESEMPEÑO INDIVIDUAL'
@@ -1241,8 +1246,8 @@ Diagnóstico operativo de ${targetName}. Se completaron ${stats.throughput} inci
 # 04 — PLAN DE ACOMPAÑAMIENTO Y RECOMENDACIONES
 Se recomienda mantener la gestión controlada del WIP y priorizar el cierre de tareas en progreso.`;
 
-  let rawMarkdown = aiInsights?.markdown;
-  if (!rawMarkdown || rawMarkdown.includes('Generando análisis inteligente...') || rawMarkdown.trim().length < 50) {
+  let rawMarkdown = aiInsights ? aiInsights.markdown : 'Generando análisis inteligente...';
+  if (aiInsights && (!rawMarkdown || rawMarkdown.trim().length < 50)) {
     if (reportType === 'proyecto') rawMarkdown = defaultProyectoMarkdown;
     else if (reportType === 'general') rawMarkdown = defaultGeneralMarkdown;
     else if (reportType === 'desarrollador') rawMarkdown = defaultDevMarkdown;

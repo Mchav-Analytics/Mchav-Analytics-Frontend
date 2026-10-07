@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, UserCheck, ShieldAlert, Info } from 'lucide-react';
+import { X, UserCheck, Info } from 'lucide-react';
 
 export const AlertsCenterModal = ({
   showCreateModal, setShowCreateModal,
@@ -28,8 +28,11 @@ export const AlertsCenterModal = ({
 
         <form onSubmit={handleCreateFeedback} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-slate-400">Título del Feedback</label>
+            <label htmlFor="feedback-title" className="text-xs font-bold uppercase text-slate-400">
+              Título del Feedback
+            </label>
             <input
+              id="feedback-title"
               type="text"
               required
               placeholder="Ej. Mejorar documentación de APIs"
@@ -42,7 +45,7 @@ export const AlertsCenterModal = ({
           {/* DESPLEGABLE DE DESTINATARIO (A QUIÉN VA DIRIGIDO) */}
           <div className="space-y-1 p-3 rounded-xl bg-slate-50 dark:bg-[#181c3d] border border-slate-200/80 dark:border-[#2a2f5e] space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+              <label htmlFor="feedback-recipient" className="text-xs font-extrabold uppercase text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
                 <UserCheck size={14} className="text-indigo-500" />
                 <span>Destinatario (A quién va dirigido)</span>
               </label>
@@ -52,6 +55,8 @@ export const AlertsCenterModal = ({
             </div>
 
             <select
+              id="feedback-recipient"
+              aria-label="Destinatario"
               value={formRecipient}
               onChange={e => setFormRecipient(e.target.value)}
               className="w-full px-3 py-2 bg-white dark:bg-[#13162b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-100 text-xs font-bold rounded-xl outline-none focus:border-indigo-500 cursor-pointer"
@@ -65,7 +70,7 @@ export const AlertsCenterModal = ({
                     ? u.name
                     : `${u.name} (${roleSuffix})`;
                   return (
-                    <option key={u.id} value={u.name} className="bg-white dark:bg-slate-900 font-semibold">
+                    <option key={u.id || u.email || u.name} value={u.email || u.name} className="bg-white dark:bg-slate-900 font-semibold">
                       {displayName}
                     </option>
                   );
@@ -85,8 +90,11 @@ export const AlertsCenterModal = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-slate-400">Descripción / Detalles</label>
+            <label htmlFor="feedback-summary" className="text-xs font-bold uppercase text-slate-400">
+              Descripción / Detalles
+            </label>
             <textarea
+              id="feedback-summary"
               required
               rows={3}
               placeholder="Describe la oportunidad de mejora o hallazgo..."
@@ -98,8 +106,12 @@ export const AlertsCenterModal = ({
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-slate-400">Tipo de Feedback</label>
+              <label htmlFor="feedback-category" className="text-xs font-bold uppercase text-slate-400">
+                Tipo de Feedback
+              </label>
               <select
+                id="feedback-category"
+                aria-label="Tipo de Feedback"
                 value={formCategory}
                 onChange={e => setFormCategory(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl outline-none focus:border-indigo-500"
@@ -113,8 +125,12 @@ export const AlertsCenterModal = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-bold uppercase text-slate-400">Prioridad</label>
+              <label htmlFor="feedback-priority" className="text-xs font-bold uppercase text-slate-400">
+                Prioridad
+              </label>
               <select
+                id="feedback-priority"
+                aria-label="Prioridad"
                 value={formPriority}
                 onChange={e => setFormPriority(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl outline-none focus:border-indigo-500"
@@ -127,23 +143,27 @@ export const AlertsCenterModal = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold uppercase text-slate-400">Proyecto Asociado</label>
+            <label htmlFor="feedback-project" className="text-xs font-bold uppercase text-slate-400">
+              Proyecto Asociado
+            </label>
             <select
+              id="feedback-project"
+              aria-label="Proyecto Asociado"
               value={formProject}
               onChange={e => setFormProject(e.target.value)}
               className="w-full px-3 py-2 bg-slate-50 dark:bg-[#1a1e3b] border border-slate-200 dark:border-[#2b305b] text-slate-800 dark:text-slate-200 text-xs font-semibold rounded-xl outline-none focus:border-indigo-500"
             >
               {projectsList && projectsList.length > 0 ? (
                 projectsList.map(p => (
-                  <option key={p.id_proyecto || p.id || p.nombre} value={p.nombre || p.id_proyecto}>
+                  <option key={p.id_proyecto || p.id || p.nombre} value={p.id_proyecto || p.id || p.nombre}>
                     {p.nombre || p.id_proyecto}
                   </option>
                 ))
               ) : (
                 <>
-                  <option value="Sistema Analytics MCHAV">Sistema Analytics MCHAV</option>
-                  <option value="Portal de Clientes & Seguridad">Portal de Clientes & Seguridad</option>
-                  <option value="API Gateway ETL">API Gateway ETL</option>
+                  <option key="proj-analytics" value="Sistema Analytics MCHAV">Sistema Analytics MCHAV</option>
+                  <option key="proj-portal" value="Portal de Clientes & Seguridad">Portal de Clientes & Seguridad</option>
+                  <option key="proj-etl" value="API Gateway ETL">API Gateway ETL</option>
                 </>
               )}
             </select>
@@ -169,4 +189,3 @@ export const AlertsCenterModal = ({
     </div>
   );
 };
-

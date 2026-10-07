@@ -1,7 +1,6 @@
 import React from 'react';
-import { Settings, RefreshCcw, Play, Calendar, Hexagon, Info, ChevronRight, Edit3, Power, Sparkles, CheckCircle2 } from 'lucide-react';
+import { RefreshCcw, Play, Calendar, Hexagon, Info, ChevronRight } from 'lucide-react';
 import { SyncStatus } from '../hooks/useSystemSync';
-import ContextMenu from '../../../components/ui/ContextMenu';
 
 interface SystemSyncControlPanelProps {
   syncStatus: SyncStatus;
@@ -30,9 +29,7 @@ export default function SystemSyncControlPanel({
   handleCronTimeChange,
   handleSaveCronTime,
   isSavingCron,
-  savedCronTime,
-  showSuccessAlert,
-  setShowSuccessAlert
+  savedCronTime
 }: SystemSyncControlPanelProps) {
   return (
     <div className="w-full h-full bg-white dark:bg-[#141738] border border-slate-200/80 dark:border-[#272b5c] rounded-3xl p-6 shadow-xs flex flex-col justify-between gap-5">
@@ -138,6 +135,67 @@ export default function SystemSyncControlPanel({
             <p className="text-[12px] text-slate-500 dark:text-slate-400">
               Próxima ejecución: <strong className="text-slate-700 dark:text-slate-300">{syncStatus.nextScheduledSync}</strong>
             </p>
+          </div>
+        </div>
+
+        {/* TARJETA 3: FRECUENCIA Y HORARIO CRON */}
+        <div className="p-4 rounded-2xl bg-slate-50/80 dark:bg-[#1a1e47]/60 border border-slate-200/70 dark:border-[#272b5c] space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="p-1 bg-sky-100 dark:bg-sky-950/60 rounded-lg text-sky-600 dark:text-sky-400">
+              <Calendar size={13} />
+            </div>
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+              FRECUENCIA Y HORARIO CRON
+            </span>
+          </div>
+
+          <div className="space-y-2.5">
+            <div>
+              <label htmlFor="cronSelect" className="text-[12px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                Frecuencia
+              </label>
+              <div className="relative">
+                <select
+                  id="cronSelect"
+                  aria-label="Frecuencia CRON"
+                  value={cronSchedule}
+                  onChange={(e) => setCronSchedule(e.target.value)}
+                  className="w-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 outline-none cursor-pointer appearance-none"
+                >
+                  <option value="6h">Cada 6 Horas</option>
+                  <option value="12h">Cada 12 Horas</option>
+                  <option value="24h">Diario (24 Horas)</option>
+                </select>
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-xs">▼</div>
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="cronTimeInput" className="text-[12px] font-medium text-slate-500 dark:text-slate-400 block mb-1">
+                Hora de Ejecución
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <input
+                    id="cronTimeInput"
+                    aria-label="Hora de Ejecución CRON"
+                    type="time"
+                    value={cronTime}
+                    onChange={handleCronTimeChange}
+                    disabled={isSavingCron}
+                    className="w-full bg-white dark:bg-[#141738] border border-slate-200 dark:border-[#272b5c] rounded-xl px-3 py-2 text-[13px] font-bold text-slate-800 dark:text-slate-200 focus:outline-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSaveCronTime}
+                  disabled={isSavingCron || cronTime === savedCronTime}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl px-4 py-2 text-[13px] font-bold transition-all disabled:opacity-40 cursor-pointer shrink-0"
+                >
+                  {isSavingCron ? '...' : 'Ok'}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

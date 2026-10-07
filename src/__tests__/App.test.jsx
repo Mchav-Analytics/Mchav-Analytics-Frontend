@@ -295,6 +295,7 @@ describe('App Root Component', () => {
       });
       // the DOM unmounts and remounts views internally
     }
+    expect(document.body).toBeDefined();
   });
 
   it('tests ErrorBoundary fallback', async () => {

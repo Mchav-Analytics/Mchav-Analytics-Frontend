@@ -20,7 +20,7 @@ export const ProjectsTable = ({
   assignedTeam = [],
   onNavigateToHealth
 }) => {
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards'
   const { user } = useAuth();
   const userRoleStr = (user?.rol || user?.role || user?.nombre_rol || localStorage.getItem('mchav_active_role') || '').toUpperCase();
   const isAdmin = userRoleStr.includes('ADMIN') || userRoleStr === 'ADMINISTRADOR';

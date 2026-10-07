@@ -15,6 +15,43 @@ interface AdminUserTableProps {
   toggleUserStatus: (userId: string) => void;
 }
 
+const ROLE_AVATAR_GRADIENTS: Record<string, string> = {
+  ADMIN: 'bg-gradient-to-br from-purple-500 to-purple-700 ring-purple-300 dark:ring-purple-500/40',
+  MANAGER: 'bg-gradient-to-br from-blue-500 to-blue-700 ring-blue-300 dark:ring-blue-500/40',
+  USER: 'bg-gradient-to-br from-amber-500 to-amber-700 ring-amber-300 dark:ring-amber-500/40',
+  DEVELOPER: 'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-emerald-300 dark:ring-emerald-500/40'
+};
+
+const ROLE_SELECT_STYLES: Record<string, string> = {
+  ADMIN: 'bg-purple-50 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700/60',
+  MANAGER: 'bg-blue-50 dark:bg-blue-950/90 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60',
+  USER: 'bg-amber-50 dark:bg-amber-950/90 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 font-black',
+  DEVELOPER: 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
+};
+
+function getPaginationRange(currentPage: number, totalPages: number): (number | string)[] {
+  const delta = 1;
+  const range: (number | string)[] = [];
+  for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+    range.push(i);
+  }
+  if (currentPage - delta > 2) range.unshift("...");
+  if (currentPage + delta < totalPages - 1) range.push("...");
+  range.unshift(1);
+  if (totalPages > 1) range.push(totalPages);
+  return range;
+}
+
+function getPaginationButtonClass(pg: number | string, currentPage: number): string {
+  if (pg === "...") {
+    return 'bg-transparent text-slate-400 cursor-default shadow-none border-none';
+  }
+  if (currentPage === pg) {
+    return 'bg-indigo-600 text-white shadow-sm';
+  }
+  return 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700';
+}
+
 export default function AdminUserTable({
   paginatedUsers,
   filteredUsers,
@@ -27,6 +64,8 @@ export default function AdminUserTable({
   handleRoleChange,
   toggleUserStatus
 }: AdminUserTableProps) {
+  const paginationRange = getPaginationRange(currentPage, totalPages);
+
   return (
     <section className="relative bg-[#f8faff] dark:bg-[#14192b] border border-indigo-100/80 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-2xs space-y-4">
       <div className="flex items-center justify-between gap-3 pb-1">
@@ -47,6 +86,9 @@ export default function AdminUserTable({
 
       {paginatedUsers.map(u => {
         const isExpanded = expandedUserId === u.id;
+        const avatarClass = ROLE_AVATAR_GRADIENTS[u.role] || ROLE_AVATAR_GRADIENTS.DEVELOPER;
+        const selectClass = ROLE_SELECT_STYLES[u.role] || ROLE_SELECT_STYLES.DEVELOPER;
+
         return (
           <div
             key={u.id}
@@ -57,12 +99,7 @@ export default function AdminUserTable({
           >
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(220px,1.4fr)_minmax(160px,1fr)_minmax(180px,1.1fr)_minmax(140px,0.9fr)] gap-4 xl:gap-5 items-center px-5 py-5">
               <div className="flex items-center gap-4 min-w-0">
-                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 ring-2 shadow-sm ${
-                  u.role === 'ADMIN' ? 'bg-gradient-to-br from-purple-500 to-purple-700 ring-purple-300 dark:ring-purple-500/40' :
-                  u.role === 'MANAGER' ? 'bg-gradient-to-br from-blue-500 to-blue-700 ring-blue-300 dark:ring-blue-500/40' :
-                  u.role === 'USER' ? 'bg-gradient-to-br from-amber-500 to-amber-700 ring-amber-300 dark:ring-amber-500/40' :
-                  'bg-gradient-to-br from-emerald-500 to-emerald-700 ring-emerald-300 dark:ring-emerald-500/40'
-                }`}>
+                <div className={`w-11 h-11 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 ring-2 shadow-sm ${avatarClass}`}>
                   {u.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                 </div>
                 <div className="min-w-0 space-y-1">
@@ -84,19 +121,15 @@ export default function AdminUserTable({
               </div>
 
               <div className="flex flex-col gap-1.5 xl:items-center">
-                <span className="xl:hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Rol</span>
+                <label htmlFor={`role-select-${u.id}`} className="xl:hidden text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Rol
+                </label>
                 <select
+                  id={`role-select-${u.id}`}
+                  aria-label={`Rol de ${u.name}`}
                   value={u.role}
                   onChange={e => handleRoleChange(u.id, e.target.value as 'ADMIN' | 'MANAGER' | 'DEVELOPER' | 'USER')}
-                  className={`w-full max-w-[200px] border rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer transition-all ${
-                    u.role === 'ADMIN'
-                    ? 'bg-purple-50 dark:bg-purple-950/90 text-purple-700 dark:text-purple-300 border-purple-300 dark:border-purple-700/60'
-                    : u.role === 'MANAGER'
-                      ? 'bg-blue-50 dark:bg-blue-950/90 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-700/60'
-                      : u.role === 'USER'
-                        ? 'bg-amber-50 dark:bg-amber-950/90 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700/60 font-black'
-                        : 'bg-emerald-50 dark:bg-emerald-950/90 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-700/60'
-                    }`}
+                  className={`w-full max-w-[200px] border rounded-xl px-3 py-2.5 text-xs font-bold outline-none cursor-pointer transition-all ${selectClass}`}
                 >
                   {u.role === 'USER' && (
                     <option value="USER">⚠️ PENDIENTE DE ROL</option>
@@ -118,6 +151,7 @@ export default function AdminUserTable({
                     {u.status === 'ACTIVE' ? 'Activo' : 'Inactivo'}
                   </span>
                   <button
+                    type="button"
                     onClick={() => toggleUserStatus(u.id)}
                     className={`px-3 py-1.5 rounded-xl text-[11px] font-extrabold border transition-all cursor-pointer inline-flex items-center gap-1.5 ${u.status === 'ACTIVE'
                       ? 'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-500/30 hover:bg-rose-100 dark:hover:bg-rose-500/20'
@@ -137,6 +171,7 @@ export default function AdminUserTable({
                 </span>
                 <span className="text-[11px] text-slate-400 dark:text-slate-500">Reg: {u.joinedDate}</span>
                 <button
+                  type="button"
                   onClick={() => setExpandedUserId(u.id)}
                   className="mt-1 px-2.5 py-1 text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer"
                 >
@@ -196,6 +231,7 @@ export default function AdminUserTable({
 
           <div className="flex items-center gap-2">
             <button
+              type="button"
               onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"
@@ -204,37 +240,21 @@ export default function AdminUserTable({
             </button>
 
             <div className="flex items-center gap-1">
-              {(() => {
-                const delta = 1;
-                const range = [];
-                for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
-                  range.push(i);
-                }
-                if (currentPage - delta > 2) range.unshift("...");
-                if (currentPage + delta < totalPages - 1) range.push("...");
-                range.unshift(1);
-                if (totalPages > 1) range.push(totalPages);
-                
-                return range.map((pg, i) => (
-                  <button
-                    key={i}
-                    onClick={() => pg !== "..." && setCurrentPage(pg)}
-                    disabled={pg === "..."}
-                    className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
-                      pg === "..."
-                        ? 'bg-transparent text-slate-400 cursor-default shadow-none border-none'
-                        : currentPage === pg
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                    }`}
-                  >
-                    {pg}
-                  </button>
-                ));
-              })()}
+              {paginationRange.map((pg, i) => (
+                <button
+                  key={pg === "..." ? `dots-${i}` : `page-${pg}`}
+                  type="button"
+                  onClick={() => typeof pg === 'number' && setCurrentPage(pg)}
+                  disabled={pg === "..."}
+                  className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors cursor-pointer ${getPaginationButtonClass(pg, currentPage)}`}
+                >
+                  {pg}
+                </button>
+              ))}
             </div>
 
             <button
+              type="button"
               onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
               disabled={currentPage === totalPages}
               className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-bold text-slate-700 dark:text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer"

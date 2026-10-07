@@ -6,7 +6,9 @@ import { jiraService } from '../../../../services/api';
 vi.mock('../../../../services/api', () => ({
   jiraService: {
     getSyncLogs: vi.fn(),
-    triggerSync: vi.fn()
+    triggerSync: vi.fn(),
+    updateCronTime: vi.fn().mockResolvedValue({ message: 'OK' }),
+    toggleAutoSync: vi.fn().mockResolvedValue({ message: 'OK' })
   }
 }));
 

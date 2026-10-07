@@ -111,8 +111,17 @@ export const mockSyncLogs = [
   }
 ];
 
-// Helper asíncrono para emular el retraso natural de la red en milisegundos (0 ms para ejecucion instantanea)
-const delay = () => Promise.resolve();
+// Helper asíncrono para emular el retraso natural de la red en milisegundos
+const delay = (_ms = 0) => Promise.resolve();
+
+const getSecureRandomInt = (min, max) => {
+  if (typeof window !== 'undefined' && window.crypto?.getRandomValues) {
+    const array = new Uint32Array(1);
+    window.crypto.getRandomValues(array);
+    return min + (array[0] % (max - min + 1));
+  }
+  return min + ((Date.now() + min) % (max - min + 1));
+};
 
 // ============================================================================
 // SERVICIOS MOCK (Simulan las llamadas HTTP a la API REST)
@@ -181,8 +190,8 @@ export const mockJiraService = {
       id_log: mockSyncLogs.length + 101,
       fecha_ejecucion: nowIso,
       tipo_sincronizacion: 'MANUAL',
-      issues_procesados: Math.floor(Math.random() * 15) + 38,
-      tiempo_ejecucion_segundos: Math.floor(Math.random() * 4) + 6,
+      issues_procesados: getSecureRandomInt(38, 52),
+      tiempo_ejecucion_segundos: getSecureRandomInt(6, 10),
       resultado: 'SUCCESS',
       ejecutado_por: 'Valka Hoyos',
       detalle_error: null

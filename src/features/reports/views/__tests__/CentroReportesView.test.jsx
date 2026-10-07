@@ -181,7 +181,7 @@ describe('CentroReportesView', () => {
 
     // Cambiar tipo de reporte a Sprint en Rango Personalizado
     const typeSelects = screen.getAllByRole('combobox');
-    const rangoSelect = typeSelects.find(s => s.value === 'Resumen General' && s.nextElementSibling?.className.includes('emerald-500'));
+    const rangoSelect = typeSelects.find(s => (s.value === 'Proyecto' || s.value === 'Resumen General') && s.nextElementSibling?.className.includes('emerald-500')) || typeSelects.find(s => s.nextElementSibling?.className.includes('emerald-500'));
     
     if (rangoSelect) {
       await act(async () => {
@@ -198,6 +198,11 @@ describe('CentroReportesView', () => {
     expect(screen.getByText('2. Sprint Base')).toBeInTheDocument();
     expect(screen.getByText('3. Sprint a Comparar')).toBeInTheDocument();
     
+    // Switch to Proyecto to test full history toggle
+    await act(async () => {
+      fireEvent.change(rangoSelect, { target: { value: 'Proyecto' } });
+    });
+
     // Toggle full history
     const historyLabel = screen.getByText('Consultar Historial Completo');
     await act(async () => {
@@ -218,6 +223,7 @@ describe('CentroReportesView', () => {
       data: { projectName: 'MCHAV', totalIssues: 10 }
     }));
     localStorage.setItem('mchav_generated_reports', JSON.stringify(mockReports));
+    localStorage.setItem('mchav_generated_reports_ADMIN', JSON.stringify(mockReports));
 
     await act(async () => {
       render(<CentroReportesView selectedProjectId="PROJ-01" />);
@@ -267,7 +273,7 @@ describe('CentroReportesView', () => {
     }
 
     // Pagination: click page 2
-    const page2Btn = screen.getByText('2');
+    const page2Btn = screen.getByRole('button', { name: '2' });
     await act(async () => {
       fireEvent.click(page2Btn);
     });
@@ -333,7 +339,8 @@ describe('CentroReportesView', () => {
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith(
         '/api/v1/ai/generate-report-insights',
-        expect.objectContaining({ reportType: 'desarrollador' })
+        expect.objectContaining({ reportType: 'desarrollador' }),
+        expect.anything()
       );
     });
   });

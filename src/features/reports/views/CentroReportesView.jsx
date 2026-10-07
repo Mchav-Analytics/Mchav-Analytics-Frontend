@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Activity, GitMerge, Settings2, Play, Folder, Flag, User, FileText, CheckCircle2, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2, Mail, Loader2, Printer, X } from 'lucide-react';
+import { Calendar, Search, AlertCircle, BarChart2, LayoutDashboard, Clock, History, Folder, Flag, User, FileText, ChevronRight, Check, Download, ArrowLeft, ChevronLeft, Trash2, Mail, Loader2, Printer, X } from 'lucide-react';
 import api, { projectService, reportService, BACKEND_URL } from '../../../services/api';
 import { useReactToPrint } from 'react-to-print';
 import { jsPDF } from 'jspdf';
@@ -7,6 +7,101 @@ import { toPng } from 'html-to-image';
 import DynamicAIReportTemplate from '../components/DynamicAIReportTemplate';
 import ComparativeReportTemplate from '../components/ComparativeReportTemplate';
 import { useAuth } from '../../auth/context/AuthContext';
+
+const DONE_STATUSES = new Set(['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed']);
+const ACTIVE_PROJECT_STATUSES = new Set(['active', 'activo']);
+
+const REPORT_TYPE_TITLES = {
+  proyecto: 'Proyecto',
+  sprint: 'Sprint',
+  desarrollador: 'Desarrollador',
+  general: 'General',
+};
+
+const REPORT_SECTIONS = {
+  proyecto: ['Contexto General', 'Estado de Entrega y Burnup', 'Flujo Operativo (CFD)', 'Predictibilidad y Riesgos', 'Conclusiones Estratégicas', 'Plan de Acción'],
+  sprint: ['KPIs de Rendimiento', 'Análisis de Cumplimiento', 'Sprint Burnup', 'Flujo Acumulado (CFD)', 'Predictibilidad (Scatter)', 'Veredicto del Sprint'],
+  desarrollador: ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo'],
+  general: ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Defectos Escapados', 'Bloqueos y riesgos'],
+};
+
+const generateAndDownloadPdf = async (element, targetName) => {
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4'
+  });
+
+  const pages = element.querySelectorAll('.pdf-page');
+
+  if (pages.length === 0) {
+    const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 2, backgroundColor: '#ffffff' });
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
+    pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
+  } else {
+    let currentY = 0;
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfPageHeight = pdf.internal.pageSize.getHeight();
+
+    for (let i = 0; i < pages.length; i++) {
+      const pageEl = pages[i];
+      const dataUrl = await toPng(pageEl, { 
+        quality: 0.98, 
+        pixelRatio: 2, 
+        backgroundColor: '#ffffff' 
+      });
+      const blockHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
+
+      if (i === 0 && blockHeight > 250) {
+        pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, blockHeight);
+        if (i < pages.length - 1) {
+          pdf.addPage();
+          currentY = 0;
+        }
+        continue;
+      }
+
+      if (currentY + blockHeight > pdfPageHeight) {
+        if (blockHeight > pdfPageHeight) {
+          pdf.addPage();
+          currentY = 0;
+          let heightLeft = blockHeight;
+          let position = 0;
+          pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, blockHeight);
+          heightLeft -= pdfPageHeight;
+
+          while (heightLeft > 0) {
+            position -= pdfPageHeight;
+            pdf.addPage();
+            pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, blockHeight);
+            heightLeft -= pdfPageHeight;
+          }
+          currentY = blockHeight % pdfPageHeight; 
+        } else {
+          pdf.addPage();
+          currentY = 0;
+          pdf.addImage(dataUrl, 'PNG', 0, currentY, pdfWidth, blockHeight);
+          currentY += blockHeight;
+        }
+      } else {
+        pdf.addImage(dataUrl, 'PNG', 0, currentY, pdfWidth, blockHeight);
+        currentY += blockHeight;
+      }
+    }
+  }
+
+  const totalPages = pdf.internal.getNumberOfPages();
+  for (let j = 1; j <= totalPages; j++) {
+    pdf.setPage(j);
+    pdf.setFontSize(8);
+    pdf.setTextColor(150);
+    pdf.text(`Página ${j} de ${totalPages}`, pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() - 8, { align: 'center' });
+  }
+
+  const dateStr = new Date().toLocaleDateString('es-ES').replace(/\//g, '-');
+  pdf.save(`Reporte_${targetName || 'General'}_${dateStr}.pdf`);
+};
 
 export default function CentroReportesView({ selectedProjectId }) {
   const [activeTab, setActiveTab] = useState('generacion');
@@ -26,7 +121,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     setEmailStatusType('loading');
     setEmailStatusMsg('Generando reporte PDF con Nubi AI y enviando correos... Por favor espere unos segundos.');
     try {
-      const data = await reportService.sendMonthlyReports();
+      await reportService.sendMonthlyReports();
       setEmailStatusType('success');
       setEmailStatusMsg(`¡Éxito! El reporte mensual PDF ha sido generado y enviado por correo a los administradores y líderes.`);
     } catch (err) {
@@ -47,9 +142,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
   const [savedReports, setSavedReports] = useState(() => {
     try {
-      const stored = localStorage.getItem(getHistoryKey());
+      const stored = localStorage.getItem(getHistoryKey()) || localStorage.getItem('mchav_generated_reports');
       return stored ? JSON.parse(stored) : [];
     } catch (e) {
+      console.warn("Error leyendo historial de reportes", e);
       return [];
     }
   });
@@ -72,7 +168,9 @@ export default function CentroReportesView({ selectedProjectId }) {
       const updated = prev.filter(r => r.id !== reportId);
       try {
         localStorage.setItem(getHistoryKey(), JSON.stringify(updated));
-      } catch (e) {}
+      } catch (err) {
+        console.warn("Error al actualizar localStorage tras eliminar reporte:", err);
+      }
       return updated;
     });
   };
@@ -108,98 +206,7 @@ export default function CentroReportesView({ selectedProjectId }) {
     if (!reportRef.current) return;
     try {
       setIsDownloadingPdf(true);
-      const element = reportRef.current;
-      const dataUrl = await toPng(element, { 
-        quality: 0.98,
-        pixelRatio: 2,
-        backgroundColor: '#ffffff',
-        // Optional: Ensure it doesn't try to parse cross-origin svgs if not needed, or force it
-      });
-
-      const pdf = new jsPDF({
-        orientation: 'portrait',
-        unit: 'mm',
-        format: 'a4'
-      });
-
-      const pages = element.querySelectorAll('.pdf-page');
-      
-      if (pages.length === 0) {
-          const dataUrl = await toPng(element, { quality: 0.98, pixelRatio: 2, backgroundColor: '#ffffff' });
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = (element.offsetHeight * pdfWidth) / element.offsetWidth;
-          pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      } else {
-          let currentY = 0;
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfPageHeight = pdf.internal.pageSize.getHeight();
-
-          for (let i = 0; i < pages.length; i++) {
-            const pageEl = pages[i];
-            const dataUrl = await toPng(pageEl, { 
-                quality: 0.98, 
-                pixelRatio: 2, 
-                backgroundColor: '#ffffff' 
-            });
-            const blockHeight = (pageEl.offsetHeight * pdfWidth) / pageEl.offsetWidth;
-            
-            // Si es la portada (primer elemento) y ocupa casi toda la página, forzar página nueva después
-            if (i === 0 && blockHeight > 250) {
-                pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, blockHeight);
-                if (i < pages.length - 1) {
-                    pdf.addPage();
-                    currentY = 0;
-                }
-                continue;
-            }
-
-            // Flujo continuo para las demás secciones
-            if (currentY + blockHeight > pdfPageHeight) {
-                // Si el bloque es más grande que una página entera (muy raro, pero posible)
-                if (blockHeight > pdfPageHeight) {
-                    pdf.addPage();
-                    currentY = 0;
-                    
-                    let heightLeft = blockHeight;
-                    let position = 0;
-
-                    pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, blockHeight);
-                    heightLeft -= pdfPageHeight;
-
-                    while (heightLeft > 0) {
-                      position = position - pdfPageHeight;
-                      pdf.addPage();
-                      pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, blockHeight);
-                      heightLeft -= pdfPageHeight;
-                    }
-                    // CurrentY es lo que sobró en la última página
-                    currentY = blockHeight % pdfPageHeight; 
-                } else {
-                    // El bloque cabe en una página, pero no en el espacio sobrante de la actual
-                    pdf.addPage();
-                    currentY = 0;
-                    pdf.addImage(dataUrl, 'PNG', 0, currentY, pdfWidth, blockHeight);
-                    currentY += blockHeight;
-                }
-            } else {
-                // El bloque cabe perfectamente en el espacio sobrante
-                pdf.addImage(dataUrl, 'PNG', 0, currentY, pdfWidth, blockHeight);
-                currentY += blockHeight;
-            }
-          }
-      }
-
-      // Add pagination numbers
-      const totalPages = pdf.internal.getNumberOfPages();
-      for (let j = 1; j <= totalPages; j++) {
-        pdf.setPage(j);
-        pdf.setFontSize(8);
-        pdf.setTextColor(150);
-        pdf.text(`Página ${j} de ${totalPages}`, pdf.internal.pageSize.getWidth() / 2, pdf.internal.pageSize.getHeight() - 8, { align: 'center' });
-      }
-      pdf.save(`Reporte_${reportData?.targetName || 'General'}_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.pdf`);
-      
-      // Close the modal upon successful download
+      await generateAndDownloadPdf(reportRef.current, reportData?.targetName);
       setShowReportModal(false);
     } catch (error) {
       console.error("Error generating PDF:", error);
@@ -606,8 +613,8 @@ export default function CentroReportesView({ selectedProjectId }) {
         sprintHealth: baseM.sprintHealth,
         planned1: baseM.plannedSp,
         predictability1: baseM.plannedSp ? Math.round((baseM.velocity / baseM.plannedSp) * 100) : 0,
-        ticketsCompleted1: detailRes?.issues?.filter(i => ['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0,
-        ticketsPending1: detailRes?.issues?.filter(i => !['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0,
+        ticketsCompleted1: detailRes?.issues?.filter(i => DONE_STATUSES.has(i.status_actual))?.length || 0,
+        ticketsPending1: detailRes?.issues?.filter(i => !DONE_STATUSES.has(i.status_actual))?.length || 0,
       };
 
         // Si es comparativo, agregamos métricas del segundo sprint para la IA
@@ -646,8 +653,8 @@ export default function CentroReportesView({ selectedProjectId }) {
             metricsData.cycleTimeCompare = compM.cycleTime;
             metricsData.planned2 = compM.plannedSp;
             metricsData.predictability2 = compM.plannedSp ? Math.round((compM.velocity / compM.plannedSp) * 100) : 0;
-            metricsData.ticketsCompleted2 = detailC?.issues?.filter(i => ['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0;
-            metricsData.ticketsPending2 = detailC?.issues?.filter(i => !['Done', 'Cerrado', 'Finalizado', 'Terminado', 'Resolved', 'Closed'].includes(i.status_actual))?.length || 0;
+            metricsData.ticketsCompleted2 = detailC?.issues?.filter(i => DONE_STATUSES.has(i.status_actual))?.length || 0;
+            metricsData.ticketsPending2 = detailC?.issues?.filter(i => !DONE_STATUSES.has(i.status_actual))?.length || 0;
           } catch(e) { console.warn("Error cargando segundo sprint para comparar", e); }
         }
 
@@ -714,7 +721,7 @@ export default function CentroReportesView({ selectedProjectId }) {
 
       setReportData(finalReportData);
       
-      const reportTypeTitle = activeReportType === 'proyecto' ? 'Proyecto' : activeReportType === 'sprint' ? 'Sprint' : activeReportType === 'desarrollador' ? 'Desarrollador' : 'General';
+      const reportTypeTitle = REPORT_TYPE_TITLES[activeReportType] || 'General';
       saveReportToHistory({
           id: `rep_${Date.now()}`,
           type: reportTypeTitle,
@@ -763,31 +770,38 @@ export default function CentroReportesView({ selectedProjectId }) {
               { id: 'general', icon: FileText, title: 'Resumen General', desc: 'Visión de alto nivel', 
                 theme: { bg: 'bg-gradient-to-br from-amber-100/80 to-amber-50/30 dark:from-amber-900/40 dark:to-amber-900/10', border: 'border-amber-200/60 dark:border-amber-500/20', iconBg: 'bg-amber-500', iconShadow: 'shadow-amber-500/30', activeBorder: 'border-amber-500 dark:border-amber-400', ring: 'ring-amber-500/20' } 
               }
-            ].map(item => (
-              <div 
-                key={item.id} 
-                onClick={() => {
-                  setReportType(item.id);
-                  setReportParam('');
-                }}
-                className={`p-6 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 text-center flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 relative overflow-hidden group ${item.theme.bg} ${reportType === item.id ? `${item.theme.activeBorder} ring-4 ${item.theme.ring} scale-[1.02]` : `${item.theme.border} hover:border-white/50`}`}
-              >
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg ${item.theme.iconBg} ${item.theme.iconShadow} transition-transform duration-300 group-hover:scale-110`}>
-                  <item.icon className="w-6 h-6" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.title}</h4>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{item.desc}</p>
-                </div>
-                
-                {/* Indicador de selección estilo medalla/check */}
-                {reportType === item.id && (
-                    <div className={`absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm ${item.theme.iconBg} animate-in zoom-in duration-300`}>
-                        <Check className="w-3.5 h-3.5" />
-                    </div>
-                )}
-              </div>
-            ))}
+            ].map(item => {
+              const isSelected = reportType === item.id;
+              const selectionClass = isSelected 
+                ? (item.theme.activeBorder + ' ring-4 ' + item.theme.ring + ' scale-[1.02]')
+                : (item.theme.border + ' hover:border-white/50');
+              return (
+                <button
+                  type="button" 
+                  key={item.id} 
+                  onClick={() => {
+                    setReportType(item.id);
+                    setReportParam('');
+                  }}
+                  className={`p-6 rounded-[1.5rem] border-2 cursor-pointer transition-all duration-300 text-center flex flex-col items-center justify-center gap-4 shadow-sm hover:shadow-md hover:-translate-y-1 relative overflow-hidden group ${item.theme.bg} ${selectionClass}`}
+                >
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg ${item.theme.iconBg} ${item.theme.iconShadow} transition-transform duration-300 group-hover:scale-110`}>
+                    <item.icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white text-sm">{item.title}</h4>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 leading-relaxed">{item.desc}</p>
+                  </div>
+                  
+                  {/* Indicador de selección estilo medalla/check */}
+                  {isSelected && (
+                      <div className={`absolute top-4 right-4 w-6 h-6 rounded-full flex items-center justify-center text-white shadow-sm ${item.theme.iconBg} animate-in zoom-in duration-300`}>
+                          <Check className="w-3.5 h-3.5" />
+                      </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -811,9 +825,9 @@ export default function CentroReportesView({ selectedProjectId }) {
                 <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="space-y-3">
                     <div>
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                      <span className="block text-sm font-bold text-slate-700 dark:text-slate-300">
                         Selecciona los proyectos a incluir
-                      </label>
+                      </span>
                       <p className="text-xs text-slate-500 mt-1">Marca únicamente los proyectos que deseas sumar en el resumen global.</p>
                     </div>
 
@@ -862,11 +876,12 @@ export default function CentroReportesView({ selectedProjectId }) {
                 <div className="space-y-4">
                   {/* Selector de Proyecto (Aplica para Proyecto, Sprint y Desarrollador) */}
                   <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                    <label htmlFor="report-project-select" className="text-sm font-bold text-slate-700 dark:text-slate-300">
                       {reportType === 'proyecto' ? 'Selecciona el Proyecto' : '1. Selecciona el Proyecto'}
                     </label>
                     <div className="relative">
                       <select 
+                          id="report-project-select"
                           className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none appearance-none"
                           value={reportType === 'proyecto' ? reportParam : genProjectId} 
                           onChange={(e) => reportType === 'proyecto' ? setReportParam(e.target.value) : setGenProjectId(e.target.value)}
@@ -881,9 +896,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                   {/* Selector de Sprint */}
                   {reportType === 'sprint' && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Sprint</label>
+                      <label htmlFor="report-sprint-select" className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Sprint</label>
                       <div className="relative">
                         <select 
+                          id="report-sprint-select"
                           className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none appearance-none"
                           value={reportParam} onChange={(e) => setReportParam(e.target.value)}
                         >
@@ -898,9 +914,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                   {/* Selector de Desarrollador */}
                   {reportType === 'desarrollador' && (
                     <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Desarrollador</label>
+                      <label htmlFor="report-dev-select" className="text-sm font-bold text-slate-700 dark:text-slate-300">2. Selecciona el Desarrollador</label>
                       <div className="relative">
                         <select 
+                          id="report-dev-select"
                           className="w-full pl-4 pr-10 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] text-slate-700 dark:text-slate-200 shadow-[0_2px_10px_rgb(0,0,0,0.02)] dark:shadow-none transition-shadow hover:shadow-md focus:border-fuchsia-500 focus:ring-1 focus:ring-fuchsia-500 outline-none appearance-none"
                           value={reportParam} onChange={(e) => setReportParam(e.target.value)}
                         >
@@ -927,15 +944,8 @@ export default function CentroReportesView({ selectedProjectId }) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ml-0 md:ml-12 mb-20 flex-1">
-              {(reportType === 'proyecto' 
-                ? ['Contexto General', 'Estado de Entrega y Burnup', 'Flujo Operativo (CFD)', 'Predictibilidad y Riesgos', 'Conclusiones Estratégicas', 'Plan de Acción']
-                : reportType === 'sprint'
-                ? ['KPIs de Rendimiento', 'Análisis de Cumplimiento', 'Sprint Burnup', 'Flujo Acumulado (CFD)', 'Predictibilidad (Scatter)', 'Veredicto del Sprint']
-                : reportType === 'desarrollador'
-                ? ['Perfil del desarrollador', 'Story points completados', 'Velocidad y tendencia', 'Calidad del código', 'Tareas por estado', 'Comparativa con el equipo']
-                : ['Resumen ejecutivo', 'Indicadores clave', 'Tendencia y evolución', 'Distribución del trabajo', 'Defectos Escapados', 'Bloqueos y riesgos']
-              ).map((item, idx) => (
-                <div key={idx} className="flex items-center gap-2">
+              {(REPORT_SECTIONS[reportType] || REPORT_SECTIONS.general).map((item) => (
+                <div key={item} className="flex items-center gap-2">
                   <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center shrink-0">
                     <Check className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                   </div>
@@ -1231,9 +1241,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo de Reporte</label>
+                <label htmlFor="cierre-type-select" className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo de Reporte</label>
                 <div className="relative">
                   <select 
+                    id="cierre-type-select"
                     className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-400/50 appearance-none transition-all shadow-sm"
                     value={cierreReportType} 
                     onChange={(e) => {
@@ -1254,11 +1265,12 @@ export default function CentroReportesView({ selectedProjectId }) {
               {cierreReportType !== 'Resumen General' && (
                 <div className={`grid gap-3 ${cierreReportType === 'Proyecto' ? 'grid-cols-1' : 'grid-cols-2'}`}>
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                    <label htmlFor="cierre-project-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                       {cierreReportType === 'Proyecto' ? 'Proyecto' : '1. Proyecto'}
                     </label>
                     <div className="relative">
                       <select 
+                        id="cierre-project-select"
                         className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-400/50 appearance-none transition-all shadow-sm"
                         value={cierreReportType === 'Proyecto' ? cierreReportParam : cierreProject} 
                         onChange={(e) => cierreReportType === 'Proyecto' ? setCierreReportParam(e.target.value) : setCierreProject(e.target.value)}
@@ -1272,9 +1284,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
                   {cierreReportType === 'Sprint' && (
                     <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Sprint</label>
+                      <label htmlFor="cierre-sprint-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Sprint</label>
                       <div className="relative">
                         <select 
+                          id="cierre-sprint-select"
                           className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-400/50 appearance-none transition-all shadow-sm"
                           value={cierreReportParam} onChange={(e) => setCierreReportParam(e.target.value)}
                         >
@@ -1288,9 +1301,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
                   {cierreReportType === 'Desarrollador' && (
                     <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Desarrollador</label>
+                      <label htmlFor="cierre-dev-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Desarrollador</label>
                       <div className="relative">
                         <select 
+                          id="cierre-dev-select"
                           className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-indigo-400/50 appearance-none transition-all shadow-sm"
                           value={cierreReportParam} onChange={(e) => setCierreReportParam(e.target.value)}
                         >
@@ -1348,9 +1362,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo de Reporte</label>
+                <label htmlFor="rango-type-select" className="text-xs font-bold text-slate-700 dark:text-slate-300">Tipo de Reporte</label>
                 <div className="relative">
                   <select 
+                    id="rango-type-select"
                     className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 appearance-none transition-all shadow-sm"
                     value={rangoReportType} 
                     onChange={(e) => {
@@ -1373,11 +1388,12 @@ export default function CentroReportesView({ selectedProjectId }) {
                 <div className="space-y-4">
                   <div className={`grid gap-3 ${rangoReportType === 'Proyecto' ? 'grid-cols-1' : 'grid-cols-2'}`}>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                      <label htmlFor="rango-project-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
                         {rangoReportType === 'Proyecto' ? 'Proyecto' : '1. Proyecto'}
                       </label>
                       <div className="relative">
                         <select 
+                          id="rango-project-select"
                           className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 appearance-none transition-all shadow-sm"
                           value={rangoReportType === 'Proyecto' ? rangoReportParam : rangoProject} 
                           onChange={(e) => rangoReportType === 'Proyecto' ? setRangoReportParam(e.target.value) : setRangoProject(e.target.value)}
@@ -1391,9 +1407,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
                     {rangoReportType === 'Sprint' && !isComparingSprints && (
                       <div className="space-y-1.5 animate-in fade-in slide-in-from-top-1 duration-300">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Sprint</label>
+                        <label htmlFor="rango-sprint-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Sprint</label>
                         <div className="relative">
                           <select 
+                            id="rango-sprint-select"
                             className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 appearance-none transition-all shadow-sm"
                             value={rangoReportParam} onChange={(e) => setRangoReportParam(e.target.value)}
                           >
@@ -1407,9 +1424,10 @@ export default function CentroReportesView({ selectedProjectId }) {
 
                     {rangoReportType === 'Desarrollador' && (
                       <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Desarrollador</label>
+                        <label htmlFor="rango-dev-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Desarrollador</label>
                         <div className="relative">
                           <select 
+                            id="rango-dev-select"
                             className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 appearance-none transition-all shadow-sm"
                             value={rangoReportParam} onChange={(e) => setRangoReportParam(e.target.value)}
                           >
@@ -1434,17 +1452,18 @@ export default function CentroReportesView({ selectedProjectId }) {
                         >
                           <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isComparingSprints ? 'translate-x-4' : 'translate-x-0'}`} />
                         </button>
-                        <label className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer" onClick={() => setIsComparingSprints(!isComparingSprints)}>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer" onClick={() => setIsComparingSprints(!isComparingSprints)}>
                           Comparar con otro Sprint
-                        </label>
+                        </span>
                       </div>
 
                       {isComparingSprints && (
                         <div className="grid grid-cols-2 gap-3 animate-in fade-in zoom-in-95 duration-300">
                           <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Sprint Base</label>
+                            <label htmlFor="rango-sprint-base-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">2. Sprint Base</label>
                             <div className="relative">
                               <select 
+                                id="rango-sprint-base-select"
                                 className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 appearance-none transition-all shadow-sm"
                                 value={rangoReportParam} onChange={(e) => setRangoReportParam(e.target.value)}
                               >
@@ -1455,9 +1474,10 @@ export default function CentroReportesView({ selectedProjectId }) {
                             </div>
                           </div>
                           <div className="space-y-1.5">
-                            <label className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">3. Sprint a Comparar</label>
+                            <label htmlFor="rango-sprint-compare-select" className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">3. Sprint a Comparar</label>
                             <div className="relative">
                               <select 
+                                id="rango-sprint-compare-select"
                                 className="w-full p-3 rounded-xl border-0 bg-white/70 dark:bg-[#0f172a]/60 text-sm font-medium text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-emerald-400/50 appearance-none transition-all shadow-sm"
                                 value={rangoCompareSprint} onChange={(e) => setRangoCompareSprint(e.target.value)}
                               >
@@ -1486,7 +1506,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                     >
                       <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isFullHistory ? 'translate-x-4' : 'translate-x-0'}`} />
                     </button>
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer" onClick={() => setIsFullHistory(!isFullHistory)}>Consultar Historial Completo</label>
+                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 cursor-pointer" onClick={() => setIsFullHistory(!isFullHistory)}>Consultar Historial Completo</span>
                   </div>
 
                   {!isFullHistory && (
@@ -1528,7 +1548,11 @@ export default function CentroReportesView({ selectedProjectId }) {
               {loadingCustomRange || isGenerating ? (
                 <><Loader2 className="w-5 h-5 animate-spin" /> Generando...</>
               ) : (
-                <>{isFullHistory ? 'Consultar historial completo \u2192' : (isComparingSprints && rangoReportType === 'Sprint' ? 'Comparar sprints \u2192' : 'Consultar rango \u2192')}</>
+                isFullHistory 
+                  ? 'Consultar historial completo \u2192' 
+                  : (isComparingSprints && rangoReportType === 'Sprint' 
+                      ? 'Comparar sprints \u2192' 
+                      : 'Consultar rango \u2192')
               )}
             </button>
           </div>
@@ -1746,7 +1770,7 @@ export default function CentroReportesView({ selectedProjectId }) {
                       
                       return range.map((p, i) => (
                         <button
-                          key={i}
+                          key={p === '...' ? (i < 3 ? 'ellipsis-left' : 'ellipsis-right') : `page-${p}`}
                           onClick={() => p !== "..." && setCurrentPage(p)}
                           disabled={p === "..."}
                           className={`w-8 h-8 rounded-lg text-sm font-bold transition-all shadow-sm ${

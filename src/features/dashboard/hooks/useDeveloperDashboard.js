@@ -137,8 +137,12 @@ export const useDeveloperDashboard = ({ projects, selectedProjectId }) => {
     e.preventDefault();
     if (!helpMessage.trim()) return;
 
+    const randSuffix = typeof window !== 'undefined' && window.crypto?.randomUUID 
+      ? window.crypto.randomUUID().slice(0, 6) 
+      : Date.now().toString().slice(-4);
+
     const newRequest = {
-      id: `SOL-${Math.floor(800 + Math.random() * 100)}`,
+      id: `SOL-${randSuffix}`,
       issueKey: helpIssueKey,
       type: helpType,
       urgency: helpUrgency,

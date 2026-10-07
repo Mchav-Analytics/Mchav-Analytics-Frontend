@@ -4,47 +4,25 @@
 // Integra los filtros superiores, la campanita con modal centrado y el menú desplegable
 // de perfil estilo Google Account para Administrador y Desarrollador.
 
-import React, { useState } from 'react';
-import DatePickerDropdown from '../ui/DatePickerDropdown';
-import ProjectPickerDropdown from '../ui/ProjectPickerDropdown';
-import ThemeToggleSwitch from '../ui/ThemeToggleSwitch';
-import ProfileSettingsModal from '../../features/auth/components/ProfileSettingsModal';
-import { Settings, Bell, CheckCircle2, UserCheck, X, Shield, Code, Briefcase, Sun, Moon, RefreshCcw } from 'lucide-react';
-import { useAuth, normalizeRole } from '../../features/auth/context/AuthContext';
+import React, { useState, useMemo } from 'react';
+import { Bell, UserCheck, X, Code, Briefcase } from 'lucide-react';
+import { useAuth } from '../../features/auth/context/AuthContext';
 
 function Topbar({
   title = "Resumen 👋",
   subtitle = "Aquí tienes un panorama general de tus proyectos.",
-  projects = [],
-  selectedProjectId,
-  setSelectedProjectId,
-  syncLoading,
-  handleSyncNow,
-  userProfile: propUserProfile,
-  dateFilter,
-  setDateFilter,
-  isDarkMode,
-  setIsDarkMode,
-  setActiveTab,
-  alerts,
-  setAlerts
+  userProfile: propUserProfile
 }) {
-  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-
   // Estado para el Modal Centrado en pantalla de asignación de rol
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const [selectedRoleForUser, setSelectedRoleForUser] = useState('DEVELOPER'); // 'DEVELOPER' o 'MANAGER'
 
-  const { user: authUser, logout, approveUserPermission, approvedUsers, switchViewRole, isRealAdmin } = useAuth(); // Hook de autenticación global
+  const { user: authUser, approveUserPermission, approvedUsers } = useAuth(); // Hook de autenticación global
 
   const activeUser = authUser || propUserProfile;
 
-  // Evaluar si el usuario está en estado pendiente de aprobación para deshabilitar selectores
-  const isPendingUser = activeUser?.status === 'PENDING';
-
   // Evaluar dinámicamente cuál usuario tiene solicitud de rol pendiente
-  const pendingUsersList = React.useMemo(() => {
+  const pendingUsersList = useMemo(() => {
     if (activeUser?.rol !== 'ADMIN') return [];
     const candidates = [
       { name: 'Andrés Felipe Torres', email: 'aftorres@mchav.com', initials: 'AF', defaultRole: 'MANAGER' },
@@ -56,37 +34,11 @@ function Topbar({
 
   const [selectedPendingUser, setSelectedPendingUser] = useState(null);
 
-  const pendingRequestsCount = pendingUsersList.length;
-
-  // --- NUEVO: Conteo de alertas de sistema y total acumulado ---
-  const systemAlertsCount = alerts?.length || 0;
-  const totalNotificationCount = activeUser?.rol === 'ADMIN'
-    ? pendingRequestsCount + systemAlertsCount
-    : systemAlertsCount;
-
   // Abrir modal de asignación para un usuario específico
   const handleOpenRoleModalForUser = (userCandidate) => {
     setSelectedPendingUser(userCandidate);
-    setSelectedRoleForUser(userCandidate.defaultRole || 'DEVELOPER');
+    setSelectedRoleForUser(userCandidate?.defaultRole || 'DEVELOPER');
     setIsRoleModalOpen(true);
-  };
-
-  // Obtener iniciales del usuario para mostrar en el avatar circular
-  const getUserInitials = () => {
-    if (!activeUser || !activeUser.nombre) return "VH";
-    const parts = activeUser.nombre.trim().split(" ");
-    if (parts.length >= 2) {
-      return (parts[0][0] + parts[1][0]).toUpperCase();
-    }
-    return parts[0].substring(0, 2).toUpperCase();
-  };
-
-  // Formatear la etiqueta legible del rol (ADMIN -> Administrador, DEVELOPER -> Desarrollador)
-  const getRoleLabel = () => {
-    if (!activeUser || !activeUser.rol) return 'Administrador';
-    if (activeUser.rol === 'DEVELOPER') return 'Desarrollador';
-    if (activeUser.rol === 'ADMIN') return 'Administrador';
-    return activeUser.rol;
   };
 
   // Confirmar y aplicar la aprobación del rol guardando el estado sin redirigir al Admin
@@ -97,7 +49,6 @@ function Topbar({
     }
     setIsRoleModalOpen(false);
     setSelectedPendingUser(null);
-    setIsNotificationsOpen(false);
   };
 
   return (
@@ -171,13 +122,12 @@ function Topbar({
 
             {/* Opciones de Asignación de Rol (Desarrollador vs Líder Técnico) */}
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
                 🛡️ Selecciona el Rol Jerárquico:
-              </label>
+              </span>
 
               {/* Opción 1: Desarrollador */}
-              <div
-                onClick={() => setSelectedRoleForUser('DEVELOPER')}
+              <label
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${selectedRoleForUser === 'DEVELOPER'
                     ? 'bg-indigo-50/70 dark:bg-indigo-500/10 border-indigo-500 text-indigo-900 dark:text-indigo-200 ring-2 ring-indigo-500/30'
                     : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300'
@@ -199,11 +149,10 @@ function Topbar({
                     Acceso a su espacio de trabajo personal, métricas de Cycle Time, Throughput personal y consola JQL libre.
                   </p>
                 </div>
-              </div>
+              </label>
 
               {/* Opción 2: Líder Técnico / Manager */}
-              <div
-                onClick={() => setSelectedRoleForUser('MANAGER')}
+              <label
                 className={`p-3.5 rounded-2xl border transition-all cursor-pointer flex items-start gap-3 ${selectedRoleForUser === 'MANAGER'
                     ? 'bg-purple-50/70 dark:bg-purple-500/10 border-purple-500 text-purple-900 dark:text-purple-200 ring-2 ring-purple-500/30'
                     : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 hover:border-slate-300'
@@ -225,7 +174,7 @@ function Topbar({
                     Acceso a los dashboards consolidados de equipo, informes de velocidad de sprint y gestión de proyectos.
                   </p>
                 </div>
-              </div>
+              </label>
             </div>
 
             {/* Botones de Acción del Modal */}

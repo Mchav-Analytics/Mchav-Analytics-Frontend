@@ -33,8 +33,14 @@ try {
 
 if (typeof global !== 'undefined' && !global.ResizeObserver) {
   global.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
+    observe() {
+      // Intentionally empty: mock ResizeObserver for jsdom
+    }
+    unobserve() {
+      // Intentionally empty: mock ResizeObserver for jsdom
+    }
+    disconnect() {
+      // Intentionally empty: mock ResizeObserver for jsdom
+    }
   };
 }

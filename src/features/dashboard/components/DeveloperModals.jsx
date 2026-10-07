@@ -298,8 +298,8 @@ export const DeveloperModals = ({
 
             {alertsTab === 'alerts' && (
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                {alerts && alerts.length > 0 ? alerts.map(a => (
-                  <div key={a.id || Math.random()} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
+                {alerts && alerts.length > 0 ? alerts.map((a, idx) => (
+                  <div key={a.id || `alert-${idx}`} className="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-2.5">
                     <AlertTriangle size={15} className="text-amber-400 shrink-0 mt-0.5" />
                     <p className="text-xs text-slate-300 leading-relaxed">{a.description || a.title || a.text}</p>
                   </div>

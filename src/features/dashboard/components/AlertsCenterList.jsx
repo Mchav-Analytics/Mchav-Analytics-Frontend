@@ -279,7 +279,7 @@ export const AlertsCenterList = ({
               
               return range.map((p, i) => (
                 <button
-                  key={i}
+                  key={p === "..." ? `dots-${i}` : `page-${p}`}
                   type="button"
                   onClick={() => p !== "..." && setCurrentPage(p)}
                   disabled={p === "..."}

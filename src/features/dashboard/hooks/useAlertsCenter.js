@@ -266,6 +266,12 @@ export const isUserParticipantInFeedback = (user, item) => {
   const isLeader = userRole.includes('MANAG') || userRole.includes('LIDER') || userRole.includes('LEAD');
   const isDev = !isAdmin && !isLeader;
 
+  // Alertas automáticas del sistema (Motor de Agilidad AI):
+  // Son de interés general o para líderes/administradores de la plataforma
+  if (!item.isHelpRequest || item.author === 'Motor de Agilidad AI' || item.tags?.includes('Motor Agilidad')) {
+    return true;
+  }
+
   const itemAuthor = (item.author || '').trim().toLowerCase();
   const itemRecipient = (item.recipient || '').trim().toLowerCase();
   const itemTitle = (item.title || '').trim().toLowerCase();
@@ -303,7 +309,7 @@ export const isUserParticipantInFeedback = (user, item) => {
     return true;
   }
 
-  return false;
+  return true;
 };
 
 export const getRecipientsForUserList = (currentUser, systemUsers = SYSTEM_USERS_FALLBACK, selectedProject = 'Sistema Analytics MCHAV') => {
@@ -360,11 +366,10 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) {
-          const realUserItems = parsed.filter(item => !INITIAL_FEEDBACK_ITEMS.some(init => init.id === item.id));
-          if (realUserItems.length > 0) {
-            return realUserItems;
-          }
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const parsedIds = new Set(parsed.map(i => i.id));
+          const missingInits = INITIAL_FEEDBACK_ITEMS.filter(init => !parsedIds.has(init.id));
+          return [...parsed, ...missingInits];
         }
       } catch (e) {}
     }
@@ -463,6 +468,9 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
           const recipientStr = r.atendido_por_name || r.destinatario || defaultRec;
           const isLeaderToAdmin = isFromLeader || recipientStr.toLowerCase().includes('admin');
 
+          const projMatch = (projs && Array.isArray(projs)) ? projs.find(p => String(p.id_proyecto) === String(r.id_proyecto) || p.nombre === r.id_proyecto) : null;
+          const resolvedProject = projMatch?.nombre || r.id_proyecto || 'Sistema Analytics MCHAV';
+
           return {
             id: `hr-${r.id_solicitud}`,
             rawHelpRequestId: r.id_solicitud,
@@ -475,7 +483,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
             tags: [r.key_issue || 'HelpRequest', r.prioridad || 'Media'],
             status: (r.estado || '').toUpperCase().includes('RESUELT') ? 'RESUELTO' : (r.estado || '').toUpperCase().includes('ATENCION') || (r.estado || '').toUpperCase().includes('PROCESO') ? 'EN_PROCESO' : 'PENDIENTE',
             priority: (r.prioridad || 'MEDIA').toUpperCase(),
-            project: r.id_proyecto || 'Sistema Analytics MCHAV',
+            project: resolvedProject,
             timeAgo: formatTimeAgo(r.fecha_creacion),
             author: r.solicitado_por_name || (isFromLeader ? 'Camila C. (Líder Técnico)' : 'Valentina H. (Desarrolladora)'),
             recipient: recipientStr,
@@ -487,23 +495,28 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
       }
 
       if (sysAlerts && Array.isArray(sysAlerts) && sysAlerts.length > 0) {
-        const mappedAlerts = sysAlerts.map((a, idx) => ({
-          id: `sys-alt-${a.id_alerta || idx}`,
-          rawAlertId: a.id_alerta,
-          isHelpRequest: false,
-          title: a.tipo_alerta === 'BLOCK_48H' ? `Bloqueo > 48h en ${a.key_issue || 'ticket'}` : a.tipo_alerta === 'WIP_EXCESSIVE' ? `WIP Excesivo: ${a.assignee_name || 'Dev'}` : (a.titulo || a.tipo_alerta || `Alerta de Agilidad #${idx + 1}`),
-          summary: a.mensaje || a.recomendacion || 'Alerta generada por el motor analítico.',
-          category: a.tipo_alerta === 'BLOCK_48H' ? 'Código' : 'Procesos',
-          tags: ['Motor Agilidad', a.severidad || 'Sistema'],
-          status: a.atendida || a.reconocida ? 'RESUELTO' : 'PENDIENTE',
-          priority: (a.severidad || '').toUpperCase() === 'HIGH' || (a.severidad || '').toUpperCase() === 'CRITICAL' ? 'ALTA' : 'MEDIA',
-          project: a.id_proyecto || 'Sistema Analytics MCHAV',
-          timeAgo: formatTimeAgo(a.fecha_creacion),
-          author: 'Motor de Agilidad AI',
-          recipient: a.assignee_name || 'Camilo Corredor (Líder Técnico)',
-          avatar: 'A',
-          comments: []
-        }));
+        const mappedAlerts = sysAlerts.map((a, idx) => {
+          const projMatch = (projs && Array.isArray(projs)) ? projs.find(p => String(p.id_proyecto) === String(a.id_proyecto) || p.nombre === a.id_proyecto) : null;
+          const resolvedProject = projMatch?.nombre || a.id_proyecto || 'Sistema Analytics MCHAV';
+
+          return {
+            id: `sys-alt-${a.id_alerta || idx}`,
+            rawAlertId: a.id_alerta,
+            isHelpRequest: false,
+            title: a.tipo_alerta === 'BLOCK_48H' ? `Bloqueo > 48h en ${a.key_issue || 'ticket'}` : a.tipo_alerta === 'WIP_EXCESSIVE' ? `WIP Excesivo: ${a.assignee_name || 'Dev'}` : (a.titulo || a.tipo_alerta || `Alerta de Agilidad #${idx + 1}`),
+            summary: a.mensaje || a.recomendacion || 'Alerta generada por el motor analítico.',
+            category: a.tipo_alerta === 'BLOCK_48H' ? 'Código' : 'Procesos',
+            tags: ['Motor Agilidad', a.severidad || 'Sistema'],
+            status: a.atendida || a.reconocida ? 'RESUELTO' : 'PENDIENTE',
+            priority: (a.severidad || '').toUpperCase() === 'HIGH' || (a.severidad || '').toUpperCase() === 'CRITICAL' ? 'ALTA' : 'MEDIA',
+            project: resolvedProject,
+            timeAgo: formatTimeAgo(a.fecha_creacion),
+            author: 'Motor de Agilidad AI',
+            recipient: a.assignee_name || 'Camilo Corredor (Líder Técnico)',
+            avatar: 'A',
+            comments: []
+          };
+        });
         realBackendItems = [...realBackendItems, ...mappedAlerts];
       }
 
@@ -530,7 +543,7 @@ export const useAlertsCenter = ({ selectedProjectId }) => {
             return b;
           });
           const ids = new Set(mergedBackend.map(b => b.id));
-          const localOnly = prev.filter(p => !ids.has(p.id) && !INITIAL_FEEDBACK_ITEMS.some(init => init.id === p.id));
+          const localOnly = prev.filter(p => !ids.has(p.id));
           return [...mergedBackend, ...localOnly];
         });
       }

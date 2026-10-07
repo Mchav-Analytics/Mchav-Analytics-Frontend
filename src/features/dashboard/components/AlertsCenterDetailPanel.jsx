@@ -76,7 +76,7 @@ export const AlertsCenterDetailPanel = ({ item, onClose, onAddComment, onToggleS
               title={isResolved ? "Reabrir este feedback" : "Marcar este feedback como resuelto"}
             >
               <Check size={14} strokeWidth={2.5} />
-              <span>{isResolved ? 'Reabrir' : 'Marcar Resuelto'}</span>
+              <span>{isResolved ? 'Reabrir' : 'Marcar como Resuelto'}</span>
             </button>
           )}
         </div>
@@ -153,22 +153,28 @@ export const AlertsCenterDetailPanel = ({ item, onClose, onAddComment, onToggleS
           </div>
 
           {/* Comentarios subsecuentes */}
-          {item.comments && item.comments.length > 0 && item.comments.map((com, idx) => (
-            <div key={com.id || idx} className="flex items-start gap-3 pl-4">
-              <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
-                {(com.author || 'U')[0].toUpperCase()}
-              </div>
-              <div className="flex-1 space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-black text-slate-900 dark:text-white">{com.author}</span>
-                  <span className="text-[10px] font-semibold text-slate-400">{com.time || 'Reciente'}</span>
+          {item.comments && item.comments.length > 0 ? (
+            item.comments.map((com, idx) => (
+              <div key={com.id || idx} className="flex items-start gap-3 pl-4">
+                <div className="w-8 h-8 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-xs">
+                  {(com.author || 'U')[0].toUpperCase()}
                 </div>
-                <div className="bg-blue-50/70 dark:bg-indigo-950/30 border border-blue-100 dark:border-indigo-900/40 p-4 rounded-2xl text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
-                  {com.text}
+                <div className="flex-1 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-slate-900 dark:text-white">{com.author}</span>
+                    <span className="text-[10px] font-semibold text-slate-400">{com.time || 'Reciente'}</span>
+                  </div>
+                  <div className="bg-blue-50/70 dark:bg-indigo-950/30 border border-blue-100 dark:border-indigo-900/40 p-4 rounded-2xl text-xs text-slate-700 dark:text-slate-200 font-medium leading-relaxed">
+                    {com.text}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-xs text-slate-400 italic pl-4 py-2">
+              Aún no hay comentarios en esta conversación.
+            </p>
+          )}
         </div>
       </div>
 

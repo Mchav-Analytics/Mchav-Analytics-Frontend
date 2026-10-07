@@ -17,6 +17,9 @@ vi.mock('../../../../services/api', () => {
       getProjectCFD: vi.fn(),
       getSprints: vi.fn(),
       getKpiIssuesDetail: vi.fn()
+    },
+    userService: {
+      getUsers: vi.fn().mockResolvedValue([])
     }
   };
 });
